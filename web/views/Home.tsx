@@ -17,7 +17,9 @@ import type {
   TruenasData,
   WeatherData,
 } from '../../shared/types.ts';
+import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
+import { useAppearance } from '../lib/appearance.ts';
 import { Empty, Episode, Icon, Ident, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   ago,
@@ -39,12 +41,13 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 export function Home() {
   const { snap } = useStore();
   const now = useNow(15_000);
+  const { homeApps } = useAppearance();
   if (!snap) return <HomeSkeleton />;
 
   return (
     <div className="home">
       <Masthead now={now} />
-      <PatchRow />
+      {homeApps === 'patchbay' ? <PatchRow /> : <AppTiles />}
       <div className="home-grid">
         <div className="home-col">
           <Attention alerts={snap.alerts} now={now} />

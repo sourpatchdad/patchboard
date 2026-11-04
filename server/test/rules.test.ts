@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Catalog, Container, SourceId, SourceState } from '../../shared/types.ts';
 import { checkUrl } from '../adapters/checks.ts';
+import { auditCatalog, guessFromImage } from '../catalog-audit.ts';
 import { computeAlerts, stoppedDetail } from '../alerts.ts';
 import { normalizeImage, pendingUpdates, recordDiunNotice, settleUpdates } from '../updates.ts';
 
@@ -120,4 +121,38 @@ test('Diun notices flag matching containers and clear once the image changes', (
   assert.equal(settleUpdates([sonarr, radarr]), false);
   assert.equal(settleUpdates([{ ...sonarr, imageId: 'ccc' }, radarr]), true);
   assert.equal(pendingUpdates().sonarr, undefined);
+});
+
+test('catalog audit: flags dead entries, finds unlisted apps, skips plumbing', () => {
+  const containers = [
+    ctr('sonarr', { image: 'lscr.io/linuxserver/sonarr:latest' }),
+    ctr('jellyfin', { image: 'jellyfin/jellyfin:latest' }),
+    ctr('notes-api', { image: 'notes-api-notes-api', project: 'notes-api' }),
+    ctr('immich-server', { image: 'ghcr.io/immich-app/immich-server:release', dependsOn: ['immich-postgres'] }),
+    ctr('immich-postgres', { image: 'ghcr.io/immich-app/postgres:15' }),
+    ctr('app-redis', { image: 'redis:7-alpine' }),
+    ctr('acme-scheduler', { image: 'ghcr.io/x/acme:latest' }),
+    down('old-thing'),
+  ];
+  const cat = catalog([
+    { name: 'Sonarr', container: 'sonarr' },
+    { name: 'Immich', container: 'immich-server' },
+    { name: 'Ghost', container: 'ghost' },
+  ]);
+  const ports = (n: string) => (n === 'jellyfin' ? [{ container: '8096/tcp', host: '8096' }] : undefined);
+  const a = auditCatalog(cat, containers, ports, '10.0.0.2');
+  assert.deepEqual(a.missing, [{ service: 'Ghost', container: 'ghost' }]);
+  assert.deepEqual(
+    a.discovered.map((d) => [d.container, d.name, d.href]),
+    [
+      ['jellyfin', 'Jellyfin', 'http://10.0.0.2:8096'],
+      ['notes-api', 'Notes API', undefined],
+    ],
+  );
+});
+
+test('guessFromImage: product names from images, container names for local builds', () => {
+  assert.deepEqual(guessFromImage('plexinc/pms-docker:latest', 'plex'), { name: 'Plex', icon: 'plex.png' });
+  assert.deepEqual(guessFromImage('lscr.io/linuxserver/sonarr:latest', 'sonarr'), { name: 'Sonarr', icon: 'sonarr.png' });
+  assert.equal(guessFromImage('trivia-night-web', 'trivia-night-web').name, 'Trivia Night');
 });

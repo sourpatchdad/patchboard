@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.6.0 — 2026-11-04
+
+Apps that say something.
+
+- **App tiles** replace the patch row on Home (the patch bay is still a
+  setting). Each tile has the full name and one live line: Plex streams,
+  Sonarr/Radarr queue, qBittorrent speed, Miniflux unread, Frigate cameras,
+  otherwise response time or uptime. Trouble overrides it: stopped, failing
+  its health check, not answering, stuck imports, or a catalog entry that
+  points at no container. Only trouble gets color; an image update is a
+  small arrow by the name. Group headers count only what needs attention.
+- **Catalog audit** in Settings and on Apps: entries naming a container that
+  doesn't exist, and running apps the catalog doesn't list (databases,
+  caches, workers and anything another container depends on are skipped),
+  with drafted YAML: a name and icon guessed from the image and a link from
+  the published port.
+- Apps page uses the same tiles, plus "Running, not in the catalog".
+- Settings: Apps on Home (tiles or patch bay).
+- Tests for the audit and name guessing (18 total).
+
 ## 1.5.3 — 2026-11-04
 
 - Removed the bookmark dock from Home. It was start-page furniture with a

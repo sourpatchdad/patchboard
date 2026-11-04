@@ -130,6 +130,23 @@ export interface TruenasData {
   net: { iface: string; rx: number; tx: number }[] | null;
 }
 
+export interface DiscoveredService {
+  container: string;
+  project?: string;
+  name: string;
+  icon: string;
+  href?: string;
+}
+
+export interface CatalogAudit {
+  /** Catalog entries whose container doesn't exist. */
+  missing: { service: string; container: string }[];
+  /** Running containers no entry covers, with a drafted entry. */
+  discovered: DiscoveredService[];
+  /** Drafted YAML for everything discovered. */
+  yaml?: string;
+}
+
 export interface UpdateEligibility {
   ok: boolean;
   reason?: string;

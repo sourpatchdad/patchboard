@@ -9,16 +9,19 @@ export type ThemeId = 'graphite' | 'nbnstack';
 export type Scheme = 'auto' | 'dark' | 'light';
 export type Accent = 'default' | 'blue' | 'green' | 'amber' | 'violet' | 'rose' | 'mono';
 export type IconMode = 'mono' | 'color';
+export type HomeApps = 'tiles' | 'patchbay';
 
 export interface Appearance {
   theme: ThemeId;
   scheme: Scheme;
   accent: Accent;
   icons: IconMode;
+  /** Home's app panel: live tiles, or the compact patch bay. */
+  homeApps: HomeApps;
 }
 
 const KEY = 'pb-appearance';
-const DEFAULTS: Appearance = { theme: 'graphite', scheme: 'auto', accent: 'default', icons: 'mono' };
+const DEFAULTS: Appearance = { theme: 'graphite', scheme: 'auto', accent: 'default', icons: 'mono', homeApps: 'tiles' };
 
 export const THEMES: { id: ThemeId; name: string; note: string; swatch: string[] }[] = [
   { id: 'graphite', name: 'Graphite', note: 'Plain dark, one accent, Geist type.', swatch: ['#0b0c0e', '#191b1f', '#777c85', '#e3e4e6'] },

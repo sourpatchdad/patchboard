@@ -70,6 +70,18 @@ export function Settings() {
         <p className="settings-note">Used for links, the current page, focus and the heat squares. Problems keep their own amber and red.</p>
       </Section>
 
+      <Section title="Apps on Home">
+        <div className="choice-row">
+          {seg('homeApps', [
+            ['tiles', 'Tiles with live stats'],
+            ['patchbay', 'Patch bay'],
+          ])}
+        </div>
+        <p className="settings-note">Tiles show each app's most useful number. The patch bay is denser: icons and status lights only.</p>
+      </Section>
+
+      <CatalogCheck />
+
       <Section title="Service icons">
         <div className="choice-row">
           {seg('icons', [
@@ -170,3 +182,62 @@ function Connections() {
 }
 
 
+
+/** Catalog vs. Docker: entries pointing at nothing, and apps not listed yet. */
+function CatalogCheck() {
+  const [copied, setCopied] = useState(false);
+  const [audit, setAudit] = useState<import('../../shared/types.ts').CatalogAudit | null>(null);
+  useEffect(() => {
+    void (async () => setAudit(await (await fetch('/api/catalog/audit')).json()))();
+  }, []);
+  if (!audit) return null;
+  const clean = !audit.missing.length && !audit.discovered.length;
+  return (
+    <section className="section" id="catalog">
+      <header className="section-head">
+        <h2>Catalog</h2>
+        <span className="section-count">config/services.yaml</span>
+      </header>
+      {clean && <p className="settings-note">Every catalog entry matches a container, and every running app is listed.</p>}
+      {audit.missing.length > 0 && (
+        <dl className="ledger">
+          {audit.missing.map((m) => (
+            <div className="ledger-row" key={m.service}>
+              <dt>{m.service}</dt>
+              <dd>
+                <span className="warn-text">
+                  No container named <span className="mono">{m.container}</span>
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {audit.discovered.length > 0 && (
+        <>
+          <p className="settings-note">
+            {audit.discovered.length} running {audit.discovered.length === 1 ? 'app isn\'t' : 'apps aren\'t'} in the catalog. Here are drafted entries, with names
+            and icons guessed from their images and links from their published ports. Paste them under a group's <code>services:</code> and
+            adjust; the page picks up the change on save.
+          </p>
+          <div className="rb-body">
+            <pre>
+              <code>{audit.yaml}</code>
+              <button
+                type="button"
+                className="copy"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(audit.yaml ?? '');
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1600);
+                }}
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </pre>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}

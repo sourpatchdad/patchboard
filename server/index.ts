@@ -5,6 +5,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
+import type { ContainerDetail } from '../shared/types.ts';
 import { radarrAdapter, sonarrAdapter } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
@@ -31,6 +32,7 @@ import { startDeviceFlow, traktDisconnect, traktStatus } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog } from './catalog.ts';
+import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter()];
@@ -254,6 +256,31 @@ app.post('/api/hooks/diun', async (c) => {
   const flagged = recordDiunNotice(body, hub.containers());
   if (flagged.length) hub.emitUpdates();
   return c.json({ ok: true, flagged });
+});
+
+// Catalog audit: entries pointing at nothing, and running apps not listed.
+app.get('/api/catalog/audit', async (c) => {
+  const containers = hub.containers();
+  const catalog = getCatalog();
+  const hrefHost = catalog.groups
+    .flatMap((g) => g.services)
+    .map((s) => (s.href ? /^https?:\/\/(\d+\.\d+\.\d+\.\d+)/.exec(s.href)?.[1] : undefined))
+    .find(Boolean);
+  // Ports need an inspect per container; only fetch them for candidates.
+  const first = auditCatalog(catalog, containers, () => undefined, hrefHost ?? 'localhost');
+  const ports = new Map<string, ContainerDetail['ports']>();
+  await Promise.all(
+    first.discovered.map(async (d) => {
+      try {
+        const detail = config.demo ? demoInspect(d.container, containers) : await inspectContainer(d.container, containers);
+        if (detail) ports.set(d.container, detail.ports);
+      } catch {
+        // Gone since the list was taken.
+      }
+    }),
+  );
+  const audit = auditCatalog(catalog, containers, (n) => ports.get(n), hrefHost ?? 'localhost');
+  return c.json({ ...audit, yaml: draftYaml(audit.discovered) });
 });
 
 // Runbook sections that name this container's app or compose stack.

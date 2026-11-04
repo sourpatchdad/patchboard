@@ -1,0 +1,89 @@
+// App tiles: every service in the catalog as a compact tile with its icon,
+// full name and one live line (see appstat.ts). Clicking the tile opens the
+// app; the chevron opens its container page. Groups come from the catalog.
+// A group header counts only what needs attention, so a quiet group says
+// nothing at all.
+
+import { Link } from 'react-router-dom';
+import type { Service } from '../../shared/types.ts';
+import { appStat } from '../lib/appstat.ts';
+import { containerMap, isExternal } from '../lib/services.ts';
+import { useStore } from '../lib/store.tsx';
+import { Icon } from './ui.tsx';
+
+export function AppTiles({ filter = '', size = 'normal' }: { filter?: string; size?: 'normal' | 'large' }) {
+  const { snap } = useStore();
+  if (!snap) return <div className="tiles tiles-loading" aria-hidden />;
+  const containers = containerMap(snap);
+  const q = filter.trim().toLowerCase();
+  const match = (s: Service) => !q || s.name.toLowerCase().includes(q) || (s.container ?? '').includes(q);
+
+  return (
+    <div className={`tiles tiles-${size}`}>
+      {snap.catalog.groups.map((g) => {
+        const list = g.services.filter(match);
+        if (!list.length) return null;
+        const stats = list.map((s) => appStat(s, snap, containers));
+        const trouble = stats.filter((x) => x.tone === 'warn' || x.tone === 'crit').length;
+        return (
+          <section className="tile-group" key={g.name} aria-label={g.name}>
+            <header className="tile-group-head">
+              <h3>{g.name}</h3>
+              {trouble > 0 && <span className="tile-group-trouble">{trouble} {trouble === 1 ? 'needs' : 'need'} attention</span>}
+            </header>
+            <ul className="tile-grid">
+              {list.map((s, i) => (
+                <Tile key={s.name} s={s} stat={stats[i]} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
+  const body = (
+    <>
+      <span className="tile-icon">
+        <Icon name={s.name} icon={s.icon} size={24} />
+      </span>
+      <span className="tile-name">
+        {s.name}
+        {stat.update && (
+          <span className="tile-update" title="A newer image is available" aria-label="update available">
+            ↑
+          </span>
+        )}
+      </span>
+      <span className={`tile-stat ${stat.mono ? 'mono' : ''}`}>{stat.text}</span>
+    </>
+  );
+  const main =
+    s.href && isExternal(s.href) ? (
+      <a className="tile-main" href={s.href} target="_blank" rel="noreferrer" title={stat.title}>
+        {body}
+      </a>
+    ) : s.container ? (
+      <Link className="tile-main" to={`/c/${s.container}`} title={stat.title}>
+        {body}
+      </Link>
+    ) : (
+      <span className="tile-main" title={stat.title}>
+        {body}
+      </span>
+    );
+  return (
+    <li className="tile" data-tone={stat.tone}>
+      {main}
+      {s.container && s.href && (
+        <Link className="tile-more" to={`/c/${s.container}`} aria-label={`${s.name} details`} title="Container details">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 3.5 10.5 8 6 12.5" />
+          </svg>
+        </Link>
+      )}
+    </li>
+  );
+}

@@ -1,74 +1,65 @@
+// Every app in the catalog as a live tile, then what's running on the box
+// that the catalog doesn't mention yet, and the bookmarks.
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon } from '../components/ui.tsx';
-import { checkFor, containerMap, isExternal, jackState, jackStateText, shortStatus } from '../lib/services.ts';
+import type { CatalogAudit } from '../../shared/types.ts';
+import { AppTiles } from '../components/AppTiles.tsx';
+import { Icon, Section } from '../components/ui.tsx';
+import { useJson } from '../lib/api.ts';
 import { useStore } from '../lib/store.tsx';
 
 export function Apps() {
   const { snap } = useStore();
   const [q, setQ] = useState('');
+  const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000).data;
   if (!snap) return null;
-  const containers = containerMap(snap);
   const match = (name: string) => name.toLowerCase().includes(q.toLowerCase());
+  const extra = (audit?.discovered ?? []).filter((d) => match(d.name) || match(d.container));
+  const dock = snap.catalog.dock.filter((b) => match(b.name));
 
   return (
-    <div className="page">
+    <div className="page apps-page">
       <div className="page-head">
         <h1 className="page-title">Apps</h1>
         <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       </div>
-      {snap.catalog.groups.map((g) => {
-        const list = g.services.filter((s) => match(s.name));
-        if (!list.length) return null;
-        return (
-          <section className="app-group" key={g.name}>
-            <h2>{g.name}</h2>
-            <ul className="app-grid">
-              {list.map((s) => {
-                const ck = checkFor(snap, s.name);
-                const state = jackState(s, containers, ck);
-                const c = s.container ? containers.get(s.container) : undefined;
-                const status = c ? (c.state === 'running' ? `Up ${shortStatus(c)}` : c.status) : jackStateText[state];
-                const body = (
-                  <>
-                    <Icon name={s.name} icon={s.icon} size={32} />
-                    <span className="app-name">{s.name}</span>
-                    <span className="app-state" data-state={state}>
-                      {ck && !ck.ok ? `${ck.error ?? 'No answer'}, not answering` : ck ? `${status} · ${ck.ms} ms` : status}
-                    </span>
-                  </>
-                );
-                return (
-                  <li key={s.name}>
-                    {s.href && isExternal(s.href) ? (
-                      <a className="app" href={s.href} target="_blank" rel="noreferrer">{body}</a>
-                    ) : s.container ? (
-                      <Link className="app" to={`/c/${s.container}`}>{body}</Link>
-                    ) : (
-                      <div className="app">{body}</div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        );
-      })}
-      {snap.catalog.dock.some((b) => match(b.name)) && (
-        <section className="app-group">
-          <h2>Elsewhere</h2>
-          <ul className="app-grid">
-            {snap.catalog.dock.filter((b) => match(b.name)).map((b) => (
-              <li key={b.name}>
-                <a className="app" href={b.href} target="_blank" rel="noreferrer">
-                  <Icon name={b.name} icon={b.icon} size={32} />
-                  <span className="app-name">{b.name}</span>
-                  <span className="app-state">{new URL(b.href, location.href).hostname}</span>
+      <AppTiles filter={q} size="large" />
+
+      {extra.length > 0 && (
+        <Section title="Running, not in the catalog" count={String(extra.length)} action={{ label: 'Add them', to: '/settings#catalog' }}>
+          <ul className="tile-grid discovered">
+            {extra.map((d) => (
+              <li className="tile" data-tone="none" key={d.container}>
+                <Link className="tile-main" to={`/c/${d.container}`}>
+                  <span className="tile-icon">
+                    <Icon name={d.name} icon={d.icon} size={24} />
+                  </span>
+                  <span className="tile-name">{d.name}</span>
+                  <span className="tile-stat mono">{d.container}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {dock.length > 0 && (
+        <Section title="Elsewhere">
+          <ul className="tile-grid">
+            {dock.map((b) => (
+              <li className="tile" data-tone="none" key={b.name}>
+                <a className="tile-main" href={b.href} target="_blank" rel="noreferrer">
+                  <span className="tile-icon">
+                    <Icon name={b.name} icon={b.icon} size={24} />
+                  </span>
+                  <span className="tile-name">{b.name}</span>
+                  <span className="tile-stat mono">{new URL(b.href, location.href).hostname.replace(/^www\./, '')}</span>
                 </a>
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
     </div>
   );
