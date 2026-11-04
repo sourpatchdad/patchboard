@@ -72,6 +72,37 @@ are set. Leave a block empty and that part of the page simply doesn't appear.
 | `expectStopped` | `true` for one-shot jobs, so their exit isn't an alert. |
 | `check` | `false` to skip the reachability check, `true` to force it, or a URL to check instead of `href`. |
 
+### Registering apps with Docker labels
+
+Instead of (or as well as) editing the catalog, a container can register
+itself with labels in its own compose file, so the entry travels with the app:
+
+```yaml
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    labels:
+      patchboard.name: Sonarr
+      patchboard.group: Media
+      patchboard.href: http://192.168.1.10:8989
+      patchboard.icon: sonarr.png
+```
+
+| Label | |
+|---|---|
+| `patchboard.name` | Required; without it the container isn't listed. |
+| `patchboard.group` | Joins a catalog group of the same name, or starts a new one. Default `Discovered`. |
+| `patchboard.href`, `patchboard.icon`, `patchboard.description` | As in the catalog. |
+| `patchboard.expect-stopped` | `true` for one-shot jobs. |
+| `patchboard.check` | `false`, `true`, or a URL. |
+| `patchboard.order` | Sort position within label-registered services (lower first). |
+
+Homepage's `homepage.name`, `homepage.group`, `homepage.href`,
+`homepage.icon` and `homepage.description` work too, so stacks already set
+up for Homepage appear without changes. `homepage.widget.*` labels, which
+carry API keys, are never read. When the catalog file and labels both
+describe a container, the file wins.
+
 Settings → Catalog compares the file with Docker: entries naming a container
 that doesn't exist, and running apps the catalog doesn't list, with drafted
 entries to paste.

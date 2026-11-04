@@ -43,6 +43,8 @@ export interface Container {
   service?: string;
   /** Container names this one depends on, resolved from compose's depends_on label. */
   dependsOn?: string[];
+  /** patchboard.* and homepage.* catalog labels (name, group, href, icon...), prefix dropped. */
+  labels?: Record<string, string>;
 }
 
 export interface DockerData {
@@ -417,6 +419,8 @@ export interface Service {
    * forces it on, a URL checks that address instead of href.
    */
   check?: boolean | string;
+  /** Where the entry came from: the YAML catalog (default) or Docker labels. */
+  source?: 'yaml' | 'labels';
 }
 
 export interface Bookmark {
@@ -454,4 +458,5 @@ export type ServerEvent =
   | { type: 'source'; state: SourceState }
   | { type: 'alerts'; alerts: Alert[] }
   | { type: 'changes'; changes: ChangeEvent[] }
-  | { type: 'updates'; updates: Record<string, ImageUpdate> };
+  | { type: 'updates'; updates: Record<string, ImageUpdate> }
+  | { type: 'catalog'; catalog: Catalog };

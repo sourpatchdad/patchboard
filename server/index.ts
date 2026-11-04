@@ -28,7 +28,7 @@ import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { recordEvent } from './db.ts';
-import { startDeviceFlow, traktDisconnect, traktStatus } from './trakt-auth.ts';
+import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog } from './catalog.ts';
@@ -59,6 +59,7 @@ const adapters = config.demo ? demoAdapters() : realAdapters();
 const hub = new Hub(adapters);
 initCatalog(() => hub.refreshAlerts());
 hub.start();
+whenTraktConnects(() => void hub.pollNow('trakt'));
 console.log(`patchboard: ${config.demo ? 'DEMO mode, ' : ''}${adapters.map((a) => a.id).join(', ')}`);
 
 const app = new Hono();

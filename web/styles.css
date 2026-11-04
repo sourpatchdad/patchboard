@@ -4212,6 +4212,22 @@ a.vitals:hover .vital-label {
   }
 }
 
+/* Phones: labels and app lines wrap rather than clip. */
+@media (max-width: 760px) {
+  .ledger-row dt {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .tile-stat {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

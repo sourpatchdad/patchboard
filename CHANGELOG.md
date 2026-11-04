@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.0 — 2026-11-04
+
+First piece of v2 (docs/DESIGN-v2.md).
+
+- **Docker label discovery:** a container registers itself with
+  `patchboard.name`, `.group`, `.href`, `.icon` and friends in its own
+  compose file. Homepage's `homepage.*` labels work unchanged (never its
+  widget credentials). Label entries join a catalog group of the same name or
+  start new ones; the YAML file wins when both describe a container. Open
+  tabs pick up catalog changes live.
+- Trakt's calendar loads the moment sign-in completes, not on the next
+  30-minute poll.
+- Phones: ledger labels and tile lines wrap instead of clipping.
+
 ## 1.7.2 — 2026-11-04
 
 - **Trakt works with only a Client ID.** Trakt stopped issuing client

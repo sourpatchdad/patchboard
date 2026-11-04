@@ -6,6 +6,7 @@ import http from 'node:http';
 import type { Container, ContainerDetail, ContainerStats, DockerData, StatsData } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import { pickLabels } from '../labels.ts';
 
 function dockerGet(path: string, signal?: AbortSignal): Promise<http.IncomingMessage> {
   return new Promise((resolve, reject) => {
@@ -83,6 +84,7 @@ export async function listContainers(): Promise<Container[]> {
         project,
         service: c.Labels?.[SERVICE],
         dependsOn: deps.length ? deps : undefined,
+        labels: pickLabels(c.Labels),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

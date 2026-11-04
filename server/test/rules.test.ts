@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import type { Catalog, Container, SourceId, SourceState } from '../../shared/types.ts';
 import { checkUrl } from '../adapters/checks.ts';
 import { auditCatalog, guessFromImage } from '../catalog-audit.ts';
+import { mergeCatalog, pickLabels } from '../labels.ts';
 import { computeAlerts, stoppedDetail } from '../alerts.ts';
 import { normalizeImage, pendingUpdates, recordDiunNotice, settleUpdates } from '../updates.ts';
 
@@ -155,4 +156,35 @@ test('guessFromImage: product names from images, container names for local build
   assert.deepEqual(guessFromImage('plexinc/pms-docker:latest', 'plex'), { name: 'Plex', icon: 'plex.png' });
   assert.deepEqual(guessFromImage('lscr.io/linuxserver/sonarr:latest', 'sonarr'), { name: 'Sonarr', icon: 'sonarr.png' });
   assert.equal(guessFromImage('trivia-night-web', 'trivia-night-web').name, 'Trivia Night');
+});
+
+test('labels: patchboard.* beats homepage.*, and widget credentials are never kept', () => {
+  const l = pickLabels({
+    'homepage.name': 'Old name',
+    'homepage.group': 'Media',
+    'homepage.widget.key': 'secret-api-key',
+    'patchboard.name': 'Sonarr',
+    'com.docker.compose.project': 'arr',
+  });
+  assert.deepEqual(l, { name: 'Sonarr', group: 'Media' });
+});
+
+test('labels: join a YAML group by name, start new groups after, never shadow YAML', () => {
+  const containers = [
+    ctr('sonarr', { labels: { name: 'Sonarr (labels)', group: 'media' } }),
+    ctr('bazarr', { labels: { name: 'Bazarr', group: 'media' } }),
+    ctr('caddy', { labels: { name: 'Caddy', group: 'Edge', check: 'false' } }),
+    ctr('plain'),
+  ];
+  const yaml = catalog([{ name: 'Sonarr', container: 'sonarr' }]);
+  yaml.groups[0].name = 'Media';
+  const m = mergeCatalog(yaml, containers);
+  assert.deepEqual(
+    m.groups.map((g) => [g.name, g.services.map((s) => `${s.name}:${s.source ?? 'yaml'}`)]),
+    [
+      ['Media', ['Sonarr:yaml', 'Bazarr:labels']],
+      ['Edge', ['Caddy:labels']],
+    ],
+  );
+  assert.equal(m.groups[1].services[0].check, false);
 });

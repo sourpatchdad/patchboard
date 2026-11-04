@@ -18,7 +18,7 @@ import type {
   TruenasData,
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
-import { getCatalog } from './catalog.ts';
+import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
 import { firstEventAt, kvGet, kvSet, latestSample, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
 import { demoContainers, demoSampleHistory } from './demo.ts';
@@ -35,6 +35,7 @@ export class Hub {
   private alerts: Alert[] = [];
   private changes: ChangeEvent[] = [];
   private listeners = new Set<Listener>();
+  private lastCatalog = '';
   private adapters: Adapter[];
 
   constructor(adapters: Adapter[]) {
@@ -129,7 +130,16 @@ export class Hub {
     try {
       const data = await a.fetch();
       next = { id: a.id, label: a.label, ok: true, updatedAt: Date.now(), data };
-      if (a.id === 'docker') this.trackContainers((data as DockerData).containers);
+      if (a.id === 'docker') {
+        setCatalogContainers((data as DockerData).containers);
+        // A container gained or lost catalog labels: tabs get the new catalog now.
+        const cat = JSON.stringify(getCatalog());
+        if (cat !== this.lastCatalog) {
+          if (this.lastCatalog) this.emit({ type: 'catalog', catalog: getCatalog() });
+          this.lastCatalog = cat;
+        }
+        this.trackContainers((data as DockerData).containers);
+      }
     } catch (err) {
       const error = (err as Error).message || 'Unknown error';
       if (prev.error !== error) console.warn(`${a.id}: ${error}`);

@@ -120,6 +120,7 @@ export function demoContainers(): Container[] {
       return {
         id: Math.abs(hash(name)).toString(16).padStart(12, '0').slice(0, 12),
         name,
+        labels: name === 'caddy' ? { name: 'Caddy', group: 'Tools', icon: 'caddy.png', href: '#' } : undefined,
         image: IMAGES[name] ?? `lscr.io/linuxserver/${name}:latest`,
         state: 'running',
         status: `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,

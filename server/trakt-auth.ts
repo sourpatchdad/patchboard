@@ -46,6 +46,12 @@ export interface TraktStatus {
 
 const KEY = 'trakt-tokens';
 let pending: (Pending & { deviceCode: string; interval: number }) | null = null;
+let onConnected: () => void = () => {};
+
+/** Called when a sign-in completes, so the calendar loads now rather than on the next poll. */
+export function whenTraktConnects(fn: () => void): void {
+  onConnected = fn;
+}
 let lastError: string | undefined;
 
 function headers(token?: string): Record<string, string> {
@@ -132,6 +138,7 @@ async function pollDevice(deviceCode: string): Promise<void> {
       if (status === 200 && data) {
         save(data, await whoAmI(data.access_token));
         pending = null;
+        onConnected();
         return;
       }
       // 400: not entered yet. 429: polling too fast. Anything else ends the attempt.

@@ -95,7 +95,9 @@ docker compose up -d
 ```
 
 Start with nothing but the Docker socket: containers, stacks, logs, stats and
-health work with no other configuration. Add integrations one block of `.env`
+health work with no other configuration. Apps can register themselves with
+`patchboard.*` labels in their own compose files, and Homepage's
+`homepage.*` labels work unchanged. Add integrations one block of `.env`
 at a time. Settings → Catalog drafts entries for every app it finds running.
 
 Coming from [Homepage](https://gethomepage.dev)? `npm run import-homepage --
