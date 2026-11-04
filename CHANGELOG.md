@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.2 — 2026-11-04
+
+Dependencies, all majors tested together.
+
+- Node 26 (current LTS) in the image and CI
+- Vite 8 with @vitejs/plugin-react 6: client builds in about 0.25 s (was 2.4 s)
+- @hono/node-server 2, marked 18, concurrently 10, @types/node 26
+- GitHub Actions: checkout 7, setup-node 7, setup-buildx 4, build-push 7,
+  which also clears the Node 20 deprecation warnings
+
 ## 1.5.1 — 2026-11-04
 
 Phones.
