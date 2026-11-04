@@ -27,7 +27,10 @@ export const SIZES: WidgetSize[] = ['s', 'm', 'l', 'w', 'xl'];
 export interface Widget {
   id: string;
   type: WidgetType;
+  /** Older boards: a fraction of the row. Kept so they still load. */
   size: WidgetSize;
+  /** Columns this widget spans, 1 to the board's columns. Wins over size. */
+  span?: number;
   /**
    * Settings. Per type (container, json) plus the common ones: title (the
    * header), limit (items shown), style, days. All strings.
@@ -37,7 +40,19 @@ export interface Widget {
 
 export interface Board {
   version: 1;
+  /** How many columns the board has on a wide screen (2 to 6). Narrower screens use fewer. */
+  columns?: number;
   widgets: Widget[];
+}
+
+export const DEFAULT_COLUMNS = 3;
+/** A column is never narrower than this; a narrow window drops columns instead. */
+export const MIN_COLUMN_PX = 320;
+
+/** Columns a widget spans on a board of `cols` columns. */
+export function spanOf(w: Widget, cols: number): number {
+  const raw = w.span ?? Math.round((SPAN[w.size] / 12) * cols);
+  return Math.min(cols, Math.max(1, raw));
 }
 
 export const SPAN: Record<WidgetSize, number> = { s: 3, m: 4, l: 6, w: 8, xl: 12 };
@@ -92,16 +107,17 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
 
 export const DEFAULT_BOARD: Board = {
   version: 1,
+  columns: 3,
   widgets: [
-    { id: 'apps', type: 'apps', size: 'xl' },
-    { id: 'attention', type: 'attention', size: 'm' },
-    { id: 'now', type: 'now', size: 'm' },
-    { id: 'upcoming', type: 'upcoming', size: 'm' },
-    { id: 'inbox', type: 'inbox', size: 'm' },
-    { id: 'vitals', type: 'vitals', size: 'm' },
-    { id: 'feeds', type: 'feeds', size: 'm' },
-    { id: 'changes', type: 'changes', size: 'm' },
-    { id: 'recent', type: 'recent', size: 'xl' },
+    { id: 'apps', type: 'apps', size: 'xl', span: 3 },
+    { id: 'attention', type: 'attention', size: 'm', span: 1 },
+    { id: 'now', type: 'now', size: 'm', span: 1 },
+    { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
+    { id: 'inbox', type: 'inbox', size: 'm', span: 1 },
+    { id: 'vitals', type: 'vitals', size: 'm', span: 1 },
+    { id: 'feeds', type: 'feeds', size: 'm', span: 1 },
+    { id: 'changes', type: 'changes', size: 'm', span: 1 },
+    { id: 'recent', type: 'recent', size: 'xl', span: 3 },
   ],
 };
 
@@ -110,7 +126,7 @@ const CONTAINER = /^[\w.-]{1,128}$/;
 
 /** A clean board from untrusted input, or an error message. */
 export function validateBoard(input: unknown): { board: Board } | { error: string } {
-  const raw = input as { widgets?: unknown } | null;
+  const raw = input as { widgets?: unknown; columns?: unknown } | null;
   if (!raw || !Array.isArray(raw.widgets)) return { error: 'Expected { widgets: [...] }' };
   if (raw.widgets.length > 40) return { error: 'At most 40 widgets' };
   const seen = new Set<string>();
@@ -142,11 +158,13 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
     }
     const common = commonOptions(info, w.config);
     if (Object.keys(common).length) config = { ...(config ?? {}), ...common };
-    widgets.push({ id: w.id, type: w.type as WidgetType, size, ...(config ? { config } : {}) });
+    const span = Number.isInteger(w.span) && (w.span as number) >= 1 && (w.span as number) <= 6 ? (w.span as number) : undefined;
+    widgets.push({ id: w.id, type: w.type as WidgetType, size, ...(span ? { span } : {}), ...(config ? { config } : {}) });
   }
   // Needs attention is part of what Patchboard is; it can move but not leave.
   if (!widgets.some((w) => w.type === 'attention')) widgets.unshift({ id: 'attention', type: 'attention', size: 'm' });
-  return { board: { version: 1, widgets } };
+  const columns = Number.isInteger(raw.columns) && (raw.columns as number) >= 2 && (raw.columns as number) <= 6 ? (raw.columns as number) : undefined;
+  return { board: { version: 1, ...(columns ? { columns } : {}), widgets } };
 }
 
 /** The shared settings, kept only when they make sense for this widget. */

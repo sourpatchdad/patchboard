@@ -5,9 +5,9 @@
 // stored on the server, so every device shows the same one; phones show it
 // as a single column in the same order.
 
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { type Board as BoardData, DEFAULT_BOARD, SPAN, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
+import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData } from '../../shared/types.ts';
@@ -25,8 +25,8 @@ import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
-const SIZE_LABEL: Record<WidgetSize, string> = { s: 'A quarter of the row', m: 'A third', l: 'Half', w: 'Two thirds', xl: 'The full row' };
-const SIZE_SHORT: Record<WidgetSize, string> = { s: '1/4', m: '1/3', l: '1/2', w: '2/3', xl: 'Full' };
+const GAP_PX = 24;
+const spanLabel = (n: number, cols: number) => (n >= cols ? 'Full' : String(n));
 
 function useBoard() {
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -65,6 +65,18 @@ export function Board({ now }: { now: number }) {
   const [error, setError] = useState('');
   const editing = draft !== null;
   const shown = draft ?? board;
+  // Columns: the board's choice, fewer when the window can't fit them.
+  const [boardW, setBoardW] = useState(0);
+  const ro = useRef<ResizeObserver | null>(null);
+  const measureRef = useCallback((el: HTMLDivElement | null) => {
+    ro.current?.disconnect();
+    if (!el) return;
+    setBoardW(el.clientWidth);
+    ro.current = new ResizeObserver(() => setBoardW(el.clientWidth));
+    ro.current.observe(el);
+  }, []);
+  const chosen = shown?.columns ?? DEFAULT_COLUMNS;
+  const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
   const sort = useDragSort('cell', (drag, over) => {
     const ws = draft?.widgets ?? [];
     move(
@@ -90,7 +102,18 @@ export function Board({ now }: { now: number }) {
         {editing ? (
           <>
             <span className="board-bar-title">Arrange your board</span>
-            <span className="board-bar-hint">Drag a widget to move it, drag its right edge to resize it, Settings to rename it or choose what it shows.</span>
+            <span className="board-bar-hint">Drag a widget to move it, drag its right edge to widen it, Settings to rename it or choose what it shows.</span>
+            <span className="board-cols" role="group" aria-label="Columns">
+              <span>Columns</span>
+              <span className="seg">
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
+                    {n}
+                  </button>
+                ))}
+              </span>
+              {cols < chosen && <small>{cols} fit in this window</small>}
+            </span>
             <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
               Add widget
             </button>
@@ -128,7 +151,7 @@ export function Board({ now }: { now: number }) {
         )}
       </div>
 
-      <div className="board">
+      <div className="board" ref={measureRef} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.widgets.map((w, i) => (
           <Cell
             key={w.id}
@@ -136,8 +159,11 @@ export function Board({ now }: { now: number }) {
             editing={editing}
             index={i}
             count={shown.widgets.length}
+            span={Math.min(spanOf(w, chosen), cols)}
+            cols={cols}
+            chosen={chosen}
             onMove={move}
-            onSize={(s) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, size: s } : x)))}
+            onSpan={(n) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, span: n } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
             bind={editing ? sort.bind(w.id) : undefined}
@@ -164,8 +190,9 @@ export function Board({ now }: { now: number }) {
         <SettingsDrawer
           w={draft.widgets.find((x) => x.id === setting)!}
           onClose={() => setSetting(null)}
+          columns={chosen}
           onChange={(cfg) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, config: cfg } : x)))}
-          onSize={(s) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, size: s } : x)))}
+          onSpan={(n) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, span: n } : x)))}
         />
       )}
 
@@ -198,9 +225,13 @@ function Cell(props: {
   editing: boolean;
   index: number;
   count: number;
+  /** Columns spanned now, and the board's columns now and as chosen. */
+  span: number;
+  cols: number;
+  chosen: number;
   children: ReactNode;
   onMove: (from: number, to: number) => void;
-  onSize: (s: WidgetSize) => void;
+  onSpan: (n: number) => void;
   onRemove: () => void;
   onConfigure?: () => void;
   /** Drag-sort props while editing. */
@@ -233,9 +264,10 @@ function Cell(props: {
     <div
       {...(props.bind ?? {})}
       className={`cell ${props.dragging ? 'is-dragging' : ''} ${resizing ? 'is-resizing' : ''}`}
-      data-size={w.size}
+      data-span={props.span}
       data-type={w.type}
-      style={{ gridRowEnd: `span ${rows}` }}
+      id={`w-${w.id}`}
+      style={{ gridRowEnd: `span ${rows}`, gridColumn: `span ${props.span}` }}
     >
       <div ref={inner} className="cell-inner">
         {editing && (
@@ -253,10 +285,10 @@ function Cell(props: {
                     ? `: ${parseConfig(w.config.json)?.title ?? ''}`
                     : ''}
             </span>
-            <span className="cell-sizes" role="group" aria-label="Width">
-              {info.sizes.map((s) => (
-                <button key={s} type="button" aria-pressed={w.size === s} title={SIZE_LABEL[s]} onClick={() => props.onSize(s)}>
-                  {SIZE_SHORT[s]}
+            <span className="cell-sizes" role="group" aria-label="Columns wide">
+              {Array.from({ length: props.chosen }, (_, k) => k + 1).map((n) => (
+                <button key={n} type="button" aria-pressed={spanOf(w, props.chosen) === n} title={`${n} of ${props.chosen} columns`} onClick={() => props.onSpan(n)}>
+                  {spanLabel(n, props.chosen)}
                 </button>
               ))}
             </span>
@@ -278,7 +310,7 @@ function Cell(props: {
             )}
           </div>
         )}
-        {editing && info.sizes.length > 1 && (
+        {editing && props.cols > 1 && (
           <span
             className="cell-resize"
             role="presentation"
@@ -290,20 +322,15 @@ function Cell(props: {
               const cell = handle.closest('.cell') as HTMLElement;
               const left = cell.getBoundingClientRect().left;
               const width = (cell.parentElement as HTMLElement).getBoundingClientRect().width;
-              let current = w.size;
+              let current = props.span;
               handle.setPointerCapture(e.pointerId);
               setResizing(true);
               const onMove = (ev: PointerEvent) => {
                 const frac = (ev.clientX - left) / width;
-                let best = current;
-                let gap = Infinity;
-                for (const s of info.sizes) {
-                  const d = Math.abs(SPAN[s] / 12 - frac);
-                  if (d < gap) [gap, best] = [d, s];
-                }
+                const best = Math.min(props.cols, Math.max(1, Math.round(frac * props.cols)));
                 if (best !== current) {
                   current = best;
-                  props.onSize(best);
+                  props.onSpan(best);
                 }
               };
               const done = () => {
@@ -317,7 +344,9 @@ function Cell(props: {
               handle.addEventListener('pointercancel', done);
             }}
           >
-            <span className="cell-resize-size">{SIZE_SHORT[w.size]}</span>
+            <span className="cell-resize-size">
+              {props.span} of {props.cols}
+            </span>
           </span>
         )}
         <div className="cell-body" inert={editing || undefined}>
@@ -380,13 +409,13 @@ function Vitals() {
   return (
     <Section title="Server" action={{ label: 'Details', to: '/server' }} className="vitals-widget">
       <div className="vw-grid">
-        <div className="vw">
+        <Link to="/server" className="vw">
           <span className="vw-num">{pct(sys.cpuPct)}</span>
           <span className="vw-label">CPU</span>
           <Spark data={h.cpu} max={100} height={22} label="CPU, last 24 hours" />
-        </div>
+        </Link>
         {m && (
-          <div className="vw">
+          <Link to="/server" className="vw">
             <span className="vw-num">{size(used)}</span>
             <span className="vw-label">Memory in use</span>
             <Split
@@ -397,19 +426,19 @@ function Vitals() {
                 { value: Math.max(0, m.available), tone: 'faint', title: `Free ${size(m.available)}` },
               ]}
             />
-          </div>
+          </Link>
         )}
         {storage != null && (
-          <div className="vw">
+          <Link to="/server" className="vw">
             <span className="vw-num">{Math.round(storage)}%</span>
             <span className="vw-label">Storage{pool ? ` on ${pool.name}` : ''}</span>
             <Meter value={storage} level={storage >= 95 ? 'crit' : storage >= 85 ? 'warn' : 'ok'} />
-          </div>
+          </Link>
         )}
-        <div className="vw">
+        <Link to="/server" className="vw">
           <span className="vw-num">{uptime(sys.uptimeSec)}</span>
           <span className="vw-label">Uptime</span>
-        </div>
+        </Link>
       </div>
     </Section>
   );
@@ -518,7 +547,19 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
  * One widget's settings: its name, width, how many items, its look. Changes
  * go into the draft board; Save on the board bar keeps them.
  */
-function SettingsDrawer({ w, onClose, onChange, onSize }: { w: Widget; onClose: () => void; onChange: (cfg: Record<string, string> | undefined) => void; onSize: (s: WidgetSize) => void }) {
+function SettingsDrawer({
+  w,
+  columns,
+  onClose,
+  onChange,
+  onSpan,
+}: {
+  w: Widget;
+  columns: number;
+  onClose: () => void;
+  onChange: (cfg: Record<string, string> | undefined) => void;
+  onSpan: (n: number) => void;
+}) {
   const info = WIDGET_INFO[w.type];
   const o = info.options;
   const cfg = w.config ?? {};
@@ -545,11 +586,11 @@ function SettingsDrawer({ w, onClose, onChange, onSize }: { w: Widget; onClose: 
             </label>
           )}
           <div className="ws-row">
-            <span>Width</span>
-            <span className="seg" role="group" aria-label="Width">
-              {info.sizes.map((s) => (
-                <button key={s} type="button" aria-pressed={w.size === s} title={SIZE_LABEL[s]} onClick={() => onSize(s)}>
-                  {SIZE_SHORT[s]}
+            <span>Columns wide, of {columns}</span>
+            <span className="seg" role="group" aria-label="Columns wide">
+              {Array.from({ length: columns }, (_, k) => k + 1).map((n) => (
+                <button key={n} type="button" aria-pressed={spanOf(w, columns) === n} onClick={() => onSpan(n)}>
+                  {spanLabel(n, columns)}
                 </button>
               ))}
             </span>

@@ -133,8 +133,11 @@ Home is a board. Press **Customize**, then:
 
 - **Move** a widget by dragging it (on a phone, by its ⠿ grip), or with the
   arrows. Everything moves live under your finger.
-- **Size** it by dragging its right edge, or pick a quarter, a third, a half,
-  two thirds or the full row. Wide lists flow into columns.
+- **Columns:** choose how many the board has (2 to 6); a narrower window
+  drops columns on its own so nothing is squeezed, and a phone shows one.
+- **Size** a widget by dragging its right edge, or pick how many columns it
+  spans. Every widget lays itself out for the width it gets: wide lists flow
+  into columns, narrow ones stack.
 - **Settings** on any widget: rename its header, choose how many items it
   shows, one week or two for releases, icons or tiles for apps, names under
   icons or only on hover.

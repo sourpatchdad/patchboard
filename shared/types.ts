@@ -267,13 +267,43 @@ export interface WeatherDay {
   low: number;
   code: number;
   precipPct: number;
+  /** Local ISO times. */
+  sunrise?: string;
+  sunset?: string;
+  uvMax?: number;
+  /** km/h */
+  windMax?: number;
+}
+
+export interface WeatherHour {
+  /** Local ISO time. */
+  time: string;
+  temp: number;
+  code: number;
+  precipPct: number;
+}
+
+export interface WeatherAlert {
+  event: string;
+  headline: string;
+  /** NWS severity: Extreme, Severe, Moderate, Minor, Unknown. */
+  severity: string;
+  until?: string;
 }
 
 export interface WeatherData {
   label: string;
+  /** All temperatures in °C; the browser converts. */
   tempNow: number;
   codeNow: number;
+  feelsNow?: number;
+  /** km/h */
+  windNow?: number;
+  humidityNow?: number;
+  isDay?: boolean;
+  hours?: WeatherHour[];
   days: WeatherDay[];
+  alerts?: WeatherAlert[];
 }
 
 export interface ReleaseItem {

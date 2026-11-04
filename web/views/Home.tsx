@@ -91,7 +91,7 @@ function Masthead({ now }: { now: number }) {
         <span className="date">{date}</span>
       </div>
       {weather && (
-        <div className="masthead-weather">
+        <Link to="/weather" className="masthead-weather" title="Hourly, the week, sunrise and alerts">
           <span className="temp">{deg(weather.tempNow, unit)}°</span>
           <span className="weather-text">
             {weatherText(weather.codeNow)} in {weather.label}.
@@ -108,13 +108,18 @@ function Masthead({ now }: { now: number }) {
               </li>
             ))}
           </ol>
-        </div>
+          {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
+        </Link>
       )}
       <div className={`masthead-status tone-${status.tone}`}>
-        <span className="status-line">
+        <a className="status-line" href={alerts.length ? '#w-attention' : '/stacks'} onClick={(e) => {
+            if (!alerts.length) return;
+            e.preventDefault();
+            document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}>
           <span className="status-led" aria-hidden />
           <span>{status.text}</span>
-        </span>
+        </a>
         <Overnight now={now} />
       </div>
     </header>
@@ -258,7 +263,9 @@ export function NowPlaying() {
     <Section title="Right now" className="now">
       {plexState && (
         <div className="now-block">
-          <h3>{streams.length ? `${plural(streams.length, 'stream')} on Plex` : 'Nobody is watching Plex'}</h3>
+          <h3>
+            <Link to="/c/plex">{streams.length ? `${plural(streams.length, 'stream')} on Plex` : 'Nobody is watching Plex'}</Link>
+          </h3>
           {streams.map((s, i) => (
             <div className="stream" key={i}>
               <div className="stream-line">
@@ -286,7 +293,7 @@ export function NowPlaying() {
       {qbitState && qbit && (
         <div className="now-block">
           <h3>
-            {qbit.downloading ? `Downloading ${qbit.downloading} at ${speed(qbit.down)}` : 'No downloads running'}
+            <Link to="/c/qbittorrent">{qbit.downloading ? `Downloading ${qbit.downloading} at ${speed(qbit.down)}` : 'No downloads running'}</Link>
           </h3>
           {qbit.active.map((t) => (
             <div className="stream" key={t.name}>
@@ -433,6 +440,9 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
 
 export function RecentlyAdded({ now }: { now: number }) {
   const { state, data } = useSource<TautulliData>('tautulli');
+  const plexHref = useStore()
+    .snap?.catalog.groups.flatMap((g) => g.services)
+    .find((s) => s.container === 'plex' || s.name.toLowerCase() === 'plex')?.href;
   const { limit = 12 } = useWidget();
   if (!state || !data?.recent.length) return null;
   return (
@@ -440,12 +450,14 @@ export function RecentlyAdded({ now }: { now: number }) {
       <ul className="posters">
         {data.recent.slice(0, limit).map((r) => (
           <li key={r.id}>
-            <Poster title={r.title} thumb={r.thumb} />
-            <span className="poster-title">{r.title}</span>
-            <span className="poster-sub">
-              {r.subtitle && <Episode text={r.subtitle} />}
-              <time>{ago(r.addedAt, now)}</time>
-            </span>
+            <a className="poster-link" href={plexHref && plexHref !== '#' ? plexHref : undefined} target="_blank" rel="noreferrer" title={plexHref ? 'Open Plex' : undefined}>
+              <Poster title={r.title} thumb={r.thumb} />
+              <span className="poster-title">{r.title}</span>
+              <span className="poster-sub">
+                {r.subtitle && <Episode text={r.subtitle} />}
+                <time>{ago(r.addedAt, now)}</time>
+              </span>
+            </a>
           </li>
         ))}
       </ul>

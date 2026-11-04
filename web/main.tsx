@@ -13,6 +13,7 @@ import { Settings } from './views/Settings.tsx';
 import { initAppearance } from './lib/appearance.ts';
 import { Stacks } from './views/Stacks.tsx';
 import { Upcoming } from './views/Upcoming.tsx';
+import { Weather } from './views/Weather.tsx';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import '@fontsource-variable/dm-sans';
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: '/c/:name', element: <ContainerPage /> },
       { path: '/feeds', element: <Feeds /> },
       { path: '/upcoming', element: <Upcoming /> },
+      { path: '/weather', element: <Weather /> },
       { path: '/logs', element: <Logs /> },
       { path: '/logs/:name', element: <Logs /> },
       { path: '/apps', element: <Apps /> },

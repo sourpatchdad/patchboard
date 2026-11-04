@@ -268,18 +268,42 @@ export function demoAdapters(): Adapter[] {
     demo<TruenasData>('truenas', 'TrueNAS', MINUTE, demoTruenas),
     demo<ChecksData>('checks', 'Service checks', MINUTE, () => demoChecks(demoCatalog)),
     demo<BackupsData>('backups', 'Backups', 5 * MINUTE, demoBackups),
-    demo<WeatherData>('weather', 'Weather', 15 * MINUTE, () => ({
-      label: 'Riverside',
-      tempNow: 17,
-      codeNow: 1,
-      days: [0, 1, 2, 3].map((i) => ({
-        date: dayAt(i, 12).slice(0, 10),
-        high: [23, 22, 19, 21][i],
-        low: [11, 13, 9, 8][i],
-        code: [1, 3, 61, 0][i],
-        precipPct: [0, 10, 70, 0][i],
-      })),
-    })),
+    demo<WeatherData>('weather', 'Weather', 15 * MINUTE, () => {
+      const h0 = new Date();
+      h0.setMinutes(0, 0, 0);
+      const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+      return {
+        label: 'Riverside',
+        tempNow: 17,
+        codeNow: 1,
+        feelsNow: 16,
+        windNow: 14,
+        humidityNow: 58,
+        isDay: true,
+        hours: Array.from({ length: 24 }, (_, i) => {
+          const t = new Date(h0.getTime() + i * 3_600_000);
+          const hr = t.getHours();
+          return {
+            time: local(t),
+            temp: Math.round(14 + 8 * Math.sin(((hr - 9) / 24) * 2 * Math.PI)),
+            code: hr >= 18 && hr <= 21 ? 61 : hr >= 6 && hr <= 18 ? 1 : 0,
+            precipPct: hr >= 17 && hr <= 22 ? [20, 45, 60, 55, 35, 15][hr - 17] : 0,
+          };
+        }),
+        days: [0, 1, 2, 3, 4, 5, 6].map((i) => ({
+          date: dayAt(i, 12).slice(0, 10),
+          high: [23, 22, 19, 21, 25, 24, 18][i],
+          low: [11, 13, 9, 8, 12, 14, 7][i],
+          code: [1, 3, 61, 0, 2, 95, 3][i],
+          precipPct: [0, 10, 70, 0, 5, 80, 20][i],
+          sunrise: `${dayAt(i, 12).slice(0, 10)}T07:${String(14 + i).padStart(2, '0')}`,
+          sunset: `${dayAt(i, 12).slice(0, 10)}T17:${String(32 - i).padStart(2, '0')}`,
+          uvMax: [5, 4, 2, 6, 6, 3, 4][i],
+          windMax: [18, 22, 30, 12, 15, 41, 20][i],
+        })),
+        alerts: [{ event: 'Wind Advisory', headline: 'Wind Advisory until Thursday evening: gusts up to 45 mph', severity: 'Moderate', until: `${dayAt(1, 12).slice(0, 10)}T19:00` }],
+      };
+    }),
     demo<ArrData>('sonarr', 'Sonarr', 5 * MINUTE, () => ({
       upcoming: sonarrUpcoming(),
       queueTotal: 3,

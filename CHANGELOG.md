@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.17.0 — 2026-11-04
+
+A board that holds its shape, and weather worth clicking.
+
+- **Columns:** the board has the number of columns you choose (2 to 6,
+  default 3); each widget spans 1 to all of them. Narrower windows drop
+  columns automatically (never under 320px each); phones show one. Older
+  boards convert on their own.
+- **Widgets fit their width:** each one adapts to its own size (container
+  queries), not the window's: wide feeds, mail and changes flow into
+  columns; a narrow inbox puts the subject under the sender; the Server
+  numbers go 2 or 4 across.
+- **Cards:** every widget is a card with the same padding and the same 24px
+  between them.
+- **Masthead** tightened: smaller clock and weather, less space below.
+- **Weather page** (click the weather): active US alerts from the National
+  Weather Service, feels like, wind, humidity, UV, sunrise and sunset with
+  hours of light, the next 24 hours with rain chances, and the week as
+  temperature ranges on one scale. An active alert shows under the
+  masthead weather too.
+- **Everything leads somewhere:** the Server widget's numbers open Server;
+  Right now's headings open Plex and qBittorrent; posters open Plex; "N
+  things need you" jumps to Needs attention.
+
 ## 1.16.0 — 2026-11-04
 
 Every page, your way.
