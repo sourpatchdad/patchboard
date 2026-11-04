@@ -95,7 +95,7 @@ export function Icon({ name, icon, size = 22 }: { name: string; icon?: string; s
   );
 }
 
-// Muted slates and earths around the nbnstack slate (#304251).
+// Muted slates and earths for posters without art.
 const POSTER_TONES = ['#304251', '#3c3846', '#2d453f', '#4a3e31', '#283a48', '#45373b', '#384132'];
 
 /** Plex poster, or a typographic stand-in built from the title. */

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { CatalogAudit } from '../../shared/types.ts';
-import { AppTiles } from '../components/AppTiles.tsx';
+import { AppTiles, type TileSort } from '../components/AppTiles.tsx';
 import { Icon, Section } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
 import { useStore } from '../lib/store.tsx';
@@ -12,6 +12,7 @@ import { useStore } from '../lib/store.tsx';
 export function Apps() {
   const { snap } = useStore();
   const [q, setQ] = useState('');
+  const [sort, setSort] = useState<TileSort>('catalog');
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000).data;
   if (!snap) return null;
   const match = (name: string) => name.toLowerCase().includes(q.toLowerCase());
@@ -24,7 +25,20 @@ export function Apps() {
         <h1 className="page-title">Apps</h1>
         <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       </div>
-      <AppTiles filter={q} size="large" />
+      <div className="seg sort-seg" role="group" aria-label="Sort apps">
+        {(
+          [
+            ['catalog', 'Your order'],
+            ['status', 'Problems first'],
+            ['name', 'A to Z'],
+          ] as [TileSort, string][]
+        ).map(([v, label]) => (
+          <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <AppTiles filter={q} size="large" sort={sort} legend />
 
       {extra.length > 0 && (
         <Section title="Running, not in the catalog" count={String(extra.length)} action={{ label: 'Add them', to: '/settings#catalog' }}>

@@ -79,7 +79,7 @@ export function appStat(s: Service, snap: Snapshot, containers: Map<string, Cont
 
   // 2. The container itself.
   if (ctr && ctr.state !== 'running') {
-    if (s.expectStopped) return { tone: 'idle', text: 'Runs on a schedule', title: `${s.name} finished its last run: ${ctr.status}` };
+    if (s.expectStopped) return { tone: 'idle', text: 'Scheduled job', title: `${s.name} finished its last run: ${ctr.status}` };
     const exited = /Exited \((\d+)\)/.exec(ctr.status)?.[1];
     // "Exited (1) 2 hours ago" -> "2h ago", short enough for a phone tile.
     const since = ctr.status

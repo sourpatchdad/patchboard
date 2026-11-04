@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.7.1 — 2026-11-04
+
+A clean-up pass, checked by a script that finds clipped text on every page at
+three widths, against real data.
+
+- Removed the nbnstack theme; the patch bay stays as a Home layout.
+- One duration style: Docker's "About an hour" and "Less than a second"
+  become "1 hour" and "seconds".
+- A key under the app tiles: what the dots, the arrow (newer image
+  available), "29 ms" (how fast the app answered) and "Up 6 days" (uptime,
+  for apps with no link to check) mean.
+- Apps page sorts by your order, problems first, or A to Z. Home keeps your
+  order so tiles never move under your hand.
+- Nothing clipped: poster titles take two lines, cloud sync tasks get full
+  rows, disk models and Stacks rows wrap on phones, long titles wrap on
+  Upcoming, app names take two lines on phones.
+- Wide screens (1600px and up): pages widen to 1720px and Home flows into
+  three columns.
+
 ## 1.7.0 — 2026-11-04
 
 Make it yours, and run it anywhere.

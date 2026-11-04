@@ -118,23 +118,6 @@ export const THEMES: ThemeDef[] = [
       accent: '#8a5a2b', ok: '#3d7a55', warn: '#94580f', crit: '#b0402f', termBg: '#fdfcf9',
     },
   },
-  {
-    id: 'nbnstack',
-    name: 'nbnstack',
-    note: 'Warm slate, serif titles, patch-bay hardware.',
-    fonts: 'dm',
-    hardware: true,
-    dark: {
-      bg: '#0e1114', raised: '#14181c', surface: '#1a1f24', line: '#2b3238', lineSoft: '#1f252a',
-      ink: '#e8e5dc', ink2: '#b0ada5', ink3: '#8b8983', head: '#f2efe7',
-      accent: '#69aee8', ok: '#7fb08f', warn: '#e0a458', crit: '#e07a6a', termBg: '#0b0d10',
-    },
-    light: {
-      bg: '#f5f2eb', raised: '#eeeae1', surface: '#e6e1d6', line: '#d9d4ca', lineSoft: '#e6e1d7',
-      ink: '#24272b', ink2: '#4d5156', ink3: '#62656a', head: '#16181b',
-      accent: '#2c6699', ok: '#3d7a55', warn: '#94580f', crit: '#b0402f', termBg: '#fbf9f4',
-    },
-  },
 ];
 
 export const FONTS: Record<FontSet, { label: string; display: string; body: string; mono: string; weight: number; tracking: string; clock: number }> = {

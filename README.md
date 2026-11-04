@@ -71,7 +71,7 @@ browser ──SSE──▶ Hono server ──▶ adapters (one per integration, 
   built-in `node:sqlite`. There's no server build step and no native modules.
 
 Stack: TypeScript, Hono, React 19, Vite, SQLite. No UI kit; the CSS is hand-written
-on the nbnstack.com design system (DM Serif Display, DM Sans, DM Mono, self-hosted).
+on a small token system; themes are data and fonts are self-hosted.
 
 ## Run it
 
@@ -126,8 +126,8 @@ views (`g s` Server, `g k` Stacks), `?` for the full list.
 
 ## Make it yours
 
-Settings (the sliders icon, or `g ,`) is per device: seven themes (Graphite,
-Midnight, Forest, Dusk, Paper, nbnstack, and Custom from any three colors),
+Settings (the sliders icon, or `g ,`) is per device: six themes (Graphite,
+Midnight, Forest, Dusk, Paper, and Custom from any three colors),
 dark, light or system, any accent color, four type pairings, three
 densities, 12- or 24-hour time, °F or °C, which Home sections show, and app
 tiles or a patch bay. Settings copy between devices as a short string.

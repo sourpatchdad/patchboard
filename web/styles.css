@@ -1238,18 +1238,19 @@ a.jack:focus-visible {
 .poster-title {
   font-size: 14.5px;
   font-weight: 500;
-  white-space: nowrap;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .poster-sub {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   font-size: 13px;
   color: var(--ink-3);
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 /* Icons */
@@ -4015,6 +4016,200 @@ a.vitals:hover .vital-label {
 
 :root[data-density='large'] body {
   zoom: 1.1;
+}
+
+/* ---------- Polish: lists that wrap instead of clipping ---------- */
+
+.task-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 16px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.task-name {
+  font-size: 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.task-state {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.task-list .ledger-note {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  /* Disks: name and temperature on top, the model underneath. */
+  .disks li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 2px;
+  }
+
+  .disks .ident {
+    grid-row: 1;
+  }
+
+  .disk-temp {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .disk-model {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    white-space: normal;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+
+  /* Stacks: the name gets the whole first line; status and numbers below. */
+  .srow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    row-gap: 3px;
+  }
+
+  .srow .srow-id {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .srow .srow-status {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .srow .srow-num:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .srow .srow-num:nth-child(5) {
+    grid-column: 3;
+    grid-row: 2;
+    min-width: 64px;
+  }
+
+  .task-list li {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Legend, sorting, wrapping ---------- */
+
+.tile-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 4px 0 0;
+  padding-left: calc(11rem + 24px);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.tile-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tile-legend code {
+  font: 400 11.5px/1 var(--f-mono);
+  color: var(--ink-2);
+}
+
+.tile-legend .tile-update {
+  margin: 0;
+}
+
+.lg-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.lg-warn {
+  background: var(--warn);
+}
+
+.lg-crit {
+  background: var(--crit);
+}
+
+.sort-seg {
+  margin: 6px 0 4px;
+}
+
+.sort-seg button {
+  font-size: 13.5px;
+  padding: 5px 11px;
+}
+
+/* Full pages wrap long titles; Home's compact agenda keeps one line. */
+.agenda:not(.agenda-compact) .rel-title,
+.agenda:not(.agenda-compact) .rel-sub {
+  white-space: normal;
+}
+
+@media (max-width: 1080px) {
+  .tile-legend {
+    padding-left: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tile-name {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .ledger-row dd .mono {
+    overflow-wrap: anywhere;
+  }
+
+  .tile-legend {
+    gap: 6px 14px;
+  }
+}
+
+/* ---------- Wide screens ---------- */
+
+@media (min-width: 1600px) {
+  .home,
+  .page {
+    max-width: 1720px;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  /* Three balanced columns; each section stays whole. */
+  .home-grid {
+    display: block;
+    column-count: 3;
+    column-gap: 56px;
+  }
+
+  .home-col {
+    display: contents;
+  }
+
+  .home-grid > .home-col > .section {
+    display: inline-block;
+    width: 100%;
+    break-inside: avoid;
+  }
+
+  .detail-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: 0 72px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

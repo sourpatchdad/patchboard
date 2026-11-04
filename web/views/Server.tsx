@@ -405,20 +405,22 @@ function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
 function CloudSync({ nas, now }: { nas: TruenasData; now: number }) {
   return (
     <Section title="Cloud sync">
-      <dl className="ledger">
+      <ul className="task-list">
         {nas.cloudSync.map((t) => {
           const bad = t.state === 'FAILED' || t.state === 'ERROR';
+          const state = !t.enabled ? 'Disabled' : t.state === 'RUNNING' ? 'Running now' : t.state ? t.state.charAt(0) + t.state.slice(1).toLowerCase() : 'Never run';
           return (
-            <Row key={t.name} k={t.name}>
-              <span className={bad ? 'crit-text' : ''}>
-                {!t.enabled ? 'Disabled' : t.state === 'RUNNING' ? 'Running now' : t.state ? t.state.charAt(0) + t.state.slice(1).toLowerCase() : 'Never run'}
+            <li key={t.name}>
+              <span className="task-name">{t.name}</span>
+              <span className={`task-state ${bad ? 'crit-text' : ''}`}>
+                {state}
+                {t.finishedAt && <span className="ledger-aside"> {agoLong(t.finishedAt, now)}</span>}
               </span>
-              {t.finishedAt && <span className="ledger-aside">{agoLong(t.finishedAt, now)}</span>}
               {t.error && <span className="ledger-note">{t.error}</span>}
-            </Row>
+            </li>
           );
         })}
-      </dl>
+      </ul>
     </Section>
   );
 }

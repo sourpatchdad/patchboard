@@ -49,7 +49,7 @@ export function Home() {
   return (
     <div className="home">
       <Masthead now={now} />
-      {homeApps === 'patchbay' ? <PatchRow /> : <AppTiles />}
+      {homeApps === 'patchbay' ? <PatchRow /> : <AppTiles legend />}
       <div className="home-grid">
         <div className="home-col">
           <Attention alerts={snap.alerts} now={now} />

@@ -11,7 +11,11 @@ import { containerMap, isExternal } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { Icon } from './ui.tsx';
 
-export function AppTiles({ filter = '', size = 'normal' }: { filter?: string; size?: 'normal' | 'large' }) {
+export type TileSort = 'catalog' | 'name' | 'status';
+
+const TONE_RANK = { crit: 0, warn: 1, ok: 2, idle: 3, none: 4 } as const;
+
+export function AppTiles({ filter = '', size = 'normal', sort = 'catalog', legend = false }: { filter?: string; size?: 'normal' | 'large'; sort?: TileSort; legend?: boolean }) {
   const { snap } = useStore();
   if (!snap) return <div className="tiles tiles-loading" aria-hidden />;
   const containers = containerMap(snap);
@@ -21,9 +25,13 @@ export function AppTiles({ filter = '', size = 'normal' }: { filter?: string; si
   return (
     <div className={`tiles tiles-${size}`}>
       {snap.catalog.groups.map((g) => {
-        const list = g.services.filter(match);
-        if (!list.length) return null;
-        const stats = list.map((s) => appStat(s, snap, containers));
+        const pairs = g.services.filter(match).map((s) => ({ s, st: appStat(s, snap, containers) }));
+        if (!pairs.length) return null;
+        // Catalog order is the default: positions stay put, so muscle memory works.
+        if (sort === 'name') pairs.sort((x, y) => x.s.name.localeCompare(y.s.name));
+        if (sort === 'status') pairs.sort((x, y) => TONE_RANK[x.st.tone] - TONE_RANK[y.st.tone] || x.s.name.localeCompare(y.s.name));
+        const list = pairs.map((x) => x.s);
+        const stats = pairs.map((x) => x.st);
         const trouble = stats.filter((x) => x.tone === 'warn' || x.tone === 'crit').length;
         return (
           <section className="tile-group" key={g.name} aria-label={g.name}>
@@ -39,7 +47,31 @@ export function AppTiles({ filter = '', size = 'normal' }: { filter?: string; si
           </section>
         );
       })}
+      {legend && <TileLegend />}
     </div>
+  );
+}
+
+/** What the marks on a tile mean. */
+export function TileLegend() {
+  return (
+    <p className="tile-legend">
+      <span>
+        <i className="lg-dot lg-warn" /> needs a look
+      </span>
+      <span>
+        <i className="lg-dot lg-crit" /> down
+      </span>
+      <span>
+        <b className="tile-update">↑</b> newer image available
+      </span>
+      <span>
+        <code>29 ms</code> how fast the app answered
+      </span>
+      <span>
+        <code>Up 6 days</code> no link to check, so uptime
+      </span>
+    </p>
   );
 }
 

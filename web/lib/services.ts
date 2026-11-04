@@ -72,11 +72,24 @@ export function ctrState(c: Container, svc?: Service): JackState {
 }
 
 /** "Up 6 days (healthy)" -> "6 days"; problems keep Docker's full wording. */
+/**
+ * Docker's own wording, tidied into one style: "About an hour" becomes
+ * "1 hour", "Less than a second" becomes "seconds", and health notes drop off
+ * (health has its own signal).
+ */
+export function tidyDuration(s: string): string {
+  return s
+    .replace(/\s*\((healthy|unhealthy|health: starting)\)$/, '')
+    .replace(/\bAbout an? /i, '1 ')
+    .replace(/\bLess than a second\b/i, 'seconds')
+    .replace(/\bUp\b/, 'Up')
+    .trim();
+}
+
+/** "Up 6 days (healthy)" -> "6 days"; problems keep Docker's wording, tidied. */
 export function shortStatus(c: Container): string {
-  if (c.state === 'running' && c.health !== 'unhealthy') {
-    return c.status.replace(/^Up\s+/, '').replace(/\s*\((healthy|health: starting)\)$/, '');
-  }
-  return c.status;
+  if (c.state === 'running' && c.health !== 'unhealthy') return tidyDuration(c.status.replace(/^Up\s+/, ''));
+  return tidyDuration(c.status);
 }
 
 export function isExternal(href?: string): boolean {
