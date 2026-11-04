@@ -146,7 +146,8 @@ export function JsonEditor({ initial, onSave, onClose }: { initial: JsonWidgetCo
           </label>
           <label className="jw-wide">
             <span>
-              Headers, one per line. Keep keys in the environment: <code>{'${env:WIDGET_PIHOLE_KEY}'}</code> (only <code>WIDGET_</code> names are allowed).
+              Headers, one per line. Use a key saved in Settings, Keys as <code>{'${secret:NAME}'}</code>, or one from the environment as{' '}
+              <code>{'${env:WIDGET_NAME}'}</code>.
             </span>
             <textarea className="field mono" rows={2} value={headersText} placeholder={'X-Api-Key: ${env:WIDGET_PIHOLE_KEY}'} onChange={(e) => setHeadersText(e.target.value)} />
           </label>

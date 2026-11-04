@@ -66,7 +66,7 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   return null;
 }
 
-export function appStat(s: Service, snap: Snapshot, containers: Map<string, Container>): AppStat {
+export function appStat(s: Service, snap: Snapshot, containers: Map<string, Container>, custom?: { text: string; tone: 'ok' | 'warn' | 'crit' } | null): AppStat {
   const ctr = s.container ? containers.get(s.container) : undefined;
   const ck = (snap.sources.checks?.data as ChecksData | null)?.services[s.name];
   const update = s.container ? snap.updates[s.container] : undefined;
@@ -99,7 +99,11 @@ export function appStat(s: Service, snap: Snapshot, containers: Map<string, Cont
     return withUpdate({ tone: 'warn', text: ck.error ?? 'No answer', title: `${s.name} didn't answer at ${ck.target}: ${ck.error}` });
   }
 
-  // 4. The app's own numbers.
+  // 4. The app's own numbers: one set up in Edit apps first, then built-in ones.
+  if (custom) {
+    const t = [s.name, ctr ? `Up ${shortStatus(ctr)}` : '', ck?.ok ? `answers in ${ck.ms} ms` : ''].filter(Boolean).join(', ');
+    return withUpdate({ tone: custom.tone, text: custom.text, title: t });
+  }
   const line = integrationLine(snap, s);
   if (line && / stuck$/.test(line)) return withUpdate({ tone: 'warn', text: line, title: `${s.name} has downloads it can't import` });
   const up = ctr ? `Up ${shortStatus(ctr)}` : '';

@@ -23,16 +23,22 @@ export function Apps() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000);
-  const startEditing = () => {
+  const startEditing = async () => {
     if (!snap) return;
     setQ('');
     setError('');
-    setDraft(draftFrom(snap.catalog));
+    let stats = {};
+    try {
+      stats = ((await (await fetch('/api/app-order')).json()) as { stats?: object } | null)?.stats ?? {};
+    } catch {
+      /* none yet */
+    }
+    setDraft(draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]));
   };
   // Home's Apps widget links here with ?arrange=1.
   useEffect(() => {
     if (params.get('arrange') !== '1' || !snap || snap.readOnly) return;
-    startEditing();
+    void startEditing();
     const next = new URLSearchParams(params);
     next.delete('arrange');
     setParams(next, { replace: true });
@@ -109,7 +115,7 @@ export function Apps() {
             ))}
           </div>
           {!snap.readOnly && (
-            <button type="button" className="button button-quiet" onClick={startEditing}>
+            <button type="button" className="button button-quiet" onClick={() => void startEditing()}>
               Edit apps
             </button>
           )}
@@ -125,7 +131,7 @@ export function Apps() {
         <Section title="Running, not listed yet" count={String(extra.length)}>
           {!snap.readOnly && (
             <p className="settings-note">
-              <button type="button" className="text-button" onClick={startEditing}>
+              <button type="button" className="text-button" onClick={() => void startEditing()}>
                 Edit apps
               </button>{' '}
               to add any of these in one click.

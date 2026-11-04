@@ -5426,6 +5426,82 @@ body.is-sorting * {
   transform: translate(-50%, 0);
 }
 
+/* ---------- Live number setup ---------- */
+
+.live-number {
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.live-number label {
+  display: grid;
+  gap: 5px;
+}
+
+.live-number .field {
+  width: 100%;
+  margin: 0;
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.live-test {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ok-text {
+  color: var(--ok, var(--accent));
+  font-weight: 500;
+}
+
+.widget-settings {
+  max-height: min(90vh, 920px);
+  overflow: auto;
+}
+
+@media (max-width: 760px) {
+  .live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Settings: keys ---------- */
+
+.keys li {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.key-add {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.key-add .field {
+  width: 100%;
+  margin: 0;
+}
+
+.key-add .crit-text {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  .key-add {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

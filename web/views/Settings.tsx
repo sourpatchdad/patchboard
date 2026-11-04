@@ -137,6 +137,7 @@ export function Settings() {
 
       <Portability />
       <Connections />
+      <Keys />
       <CatalogCheck />
       <Activity />
       </div>
@@ -411,6 +412,9 @@ const ACTION_TEXT: Record<string, string> = {
   'board.reset': 'reset the Home board',
   'apps.order': 'rearranged the apps',
   'apps.order.reset': 'put the apps back in catalog order',
+  'secret.set': 'saved the key',
+  'secret.delete': 'removed the key',
+  'icon.upload': 'uploaded an icon',
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',
@@ -434,7 +438,7 @@ function Activity() {
               <span className="mono audit-who">{r.who}</span>
               <span>
                 {ACTION_TEXT[r.action] ?? r.action}
-                {r.target && r.action.startsWith('container.') && (
+                {r.target && (r.action.startsWith('container.') || r.action.startsWith('secret.')) && (
                   <>
                     {' '}
                     <span className="ident">{r.target}</span>
@@ -446,6 +450,70 @@ function Activity() {
             </li>
           ))}
         </ul>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * Keys pasted for live numbers and API numbers widgets. Names and dates only:
+ * the server never sends a value back, so this list is safe to show.
+ */
+function Keys() {
+  const readOnly = !!useStore().snap?.readOnly;
+  const [list, setList] = useState<{ name: string; at: number }[] | null>(null);
+  const [name, setName] = useState('');
+  const [value, setValue] = useState('');
+  const [err, setErr] = useState('');
+  const load = async () => setList((await (await fetch('/api/secrets')).json()) as { name: string; at: number }[]);
+  useEffect(() => {
+    void load();
+  }, []);
+  const add = async () => {
+    setErr('');
+    const n = name.trim().toUpperCase().replace(/[^A-Z0-9_]+/g, '_');
+    const res = await fetch(`/api/secrets/${n}`, { method: 'PUT', headers: ACTION, body: JSON.stringify({ value }) });
+    if (!res.ok) return setErr(((await res.json()) as { error?: string }).error ?? `HTTP ${res.status}`);
+    setName('');
+    setValue('');
+    await load();
+  };
+  const remove = async (n: string) => {
+    if (!confirm(`Remove the key ${n}? Anything using it stops working until a new one is saved.`)) return;
+    await fetch(`/api/secrets/${n}`, { method: 'DELETE', headers: ACTION });
+    await load();
+  };
+  if (!list) return null;
+  return (
+    <Section title="Keys" count={list.length ? String(list.length) : undefined}>
+      <p className="settings-note">
+        API keys you pasted when setting up an app's live number. They stay on the server and are never shown again. An API numbers widget can use one as{' '}
+        <code>{'${secret:NAME}'}</code>.
+      </p>
+      {list.length > 0 && (
+        <ul className="audit keys">
+          {list.map((k) => (
+            <li key={k.name}>
+              <span className="mono">{k.name}</span>
+              <time>{agoLong(k.at)}</time>
+              {!readOnly && (
+                <button type="button" className="text-button" onClick={() => void remove(k.name)}>
+                  Remove
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {!readOnly && (
+        <div className="key-add">
+          <input className="field mono" value={name} placeholder="NAME" aria-label="Key name" onChange={(e) => setName(e.target.value)} />
+          <input className="field mono" type="password" autoComplete="off" value={value} placeholder="Paste the key" aria-label="Key" onChange={(e) => setValue(e.target.value)} />
+          <button type="button" className="button button-quiet" disabled={!name.trim() || !value.trim()} onClick={() => void add()}>
+            Save key
+          </button>
+          {err && <span className="crit-text">{err}</span>}
+        </div>
       )}
     </Section>
   );

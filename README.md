@@ -155,6 +155,14 @@ Apps has **Edit apps**, so services.yaml is optional:
   image URL, or upload your own (PNG, SVG, WebP, JPEG, GIF or ICO, up to
   512 KB; stored in `DATA_DIR/icons`).
 
+- **Live numbers:** any app's ⋯, Icon and live number. Pick the app
+  (Jellyfin, Immich, Paperless-ngx, Overseerr/Jellyseerr, Tautulli,
+  Sonarr/Radarr, Lidarr/Readarr/Prowlarr, Bazarr, Audiobookshelf, Linkding,
+  Nextcloud, Home Assistant, AdGuard Home, Pi-hole 5, Glances) or any JSON
+  API, paste its key once, choose the value, Test. The number shows on the
+  app's tile and in its icon's bubble. Keys are kept on the server, listed by
+  name in Settings, Keys, and never sent back to the browser.
+
 Apps in services.yaml and Docker labels keep working alongside; edits made in
 the UI sit on top and never rewrite your files. "Start over" drops them.
 

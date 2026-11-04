@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.15.0 — 2026-11-04
+
+A live number on any app, set up by clicking.
+
+- **Live numbers:** in Edit apps, any app's ⋯, Icon and live number. Fifteen
+  presets (Jellyfin, Immich, Paperless-ngx, Overseerr/Jellyseerr, Tautulli,
+  Sonarr/Radarr, Lidarr/Readarr/Prowlarr, Bazarr, Audiobookshelf, Linkding,
+  Nextcloud, Home Assistant, AdGuard Home, Pi-hole 5, Glances), suggested by
+  the app's name, or any JSON API. Paste the key once, choose the value,
+  Test, done. Shows on the tile ("42,506 photos") and in the icon bubble.
+- **Keys** pasted in the UI are stored on the server, listed by name in
+  Settings, Keys (add, replace, remove), referenced as `${secret:NAME}` and
+  never sent back to the browser; checked by test across every endpoint.
+  API numbers widgets can use them too, alongside `${env:WIDGET_*}`.
+- Fetching keeps the API numbers guard rails: only saved setups are
+  fetched, no redirects, link-local and metadata addresses refused, 8 s and
+  512 KB limits, errors never echo the URL.
+- 39 tests.
+
 ## 1.14.0 — 2026-11-04
 
 Customizing for anyone, no YAML required.

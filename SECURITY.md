@@ -63,7 +63,11 @@ docker-compose.example.yml has a commented proxy service to start from.
   the one inline script (the theme painter) is allowed by its SHA-256 hash,
   computed at startup. No frames, no plugins, no form posts elsewhere.
   Plus `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`.
-- **Secrets stay server-side.** Keys live in the environment. The browser
+- **Secrets stay server-side.** Keys live in the environment, or, when
+  pasted in the UI (live numbers, Settings, Keys), in Patchboard's SQLite
+  database in `DATA_DIR`: treat that directory like your `.env`. The API
+  lists key names and dates, never values; requests reference them as
+  `${secret:NAME}` and resolve them only when the server makes the call. The browser
   never receives them; Plex posters are proxied. Error messages never include
   URLs, since some APIs carry keys in the query string.
 - **The JSON widget can't be turned into a proxy.** The server only fetches

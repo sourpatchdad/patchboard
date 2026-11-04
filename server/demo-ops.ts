@@ -321,3 +321,13 @@ export function demoJson(cfg: JsonWidgetConfig, withSample = false) {
     sample: withSample ? JSON.stringify(DEMO_JSON, null, 2) : undefined,
   };
 }
+
+/** Demo: a steady, made-up number for an app's live number. */
+export function demoAppStat(name: string, cfg: JsonWidgetConfig): { values: { label: string; value: unknown }[]; at: number; error?: string } {
+  let h = 0;
+  for (const ch of name + cfg.fields[0]?.path) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  const f = cfg.fields[0];
+  const n = Math.abs(h);
+  const value = f?.format === 'percent' ? (n % 900) / 10 : f?.format === 'bytes' ? (n % 4000) * 1e9 : f?.format === 'duration' ? n % 500000 : n % 50000;
+  return { values: [{ label: f?.label ?? '', value }], at: Date.now() };
+}

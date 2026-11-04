@@ -441,6 +441,8 @@ export interface Catalog {
   hiddenDock?: Bookmark[];
   /** App or bookmark name -> icon chosen in the UI. */
   iconOverrides?: Record<string, string>;
+  /** Apps with a live number set up in the UI. */
+  statApps?: string[];
 }
 
 export interface Links {

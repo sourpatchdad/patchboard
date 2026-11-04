@@ -7,18 +7,29 @@
 // - http and https only; redirects are refused, not followed.
 // - Cloud metadata and link-local addresses are refused.
 // - 8 s timeout, 512 KB response cap, JSON only.
-// - ${env:NAME} references resolve only for WIDGET_* variables, and resolved
-//   values never leave the server.
+// - ${env:NAME} references resolve only for WIDGET_* variables, ${secret:NAME}
+//   to keys saved in the UI; resolved values never leave the server.
 
 import { isIP } from 'node:net';
 import { lookup } from 'node:dns/promises';
-import { ENV_REF, type JsonWidgetConfig, readPath } from '../shared/jsonwidget.ts';
+import { ENV_REF, type JsonWidgetConfig, readPath, SECRET_REF } from '../shared/jsonwidget.ts';
+import { getSecret } from './secrets.ts';
 
 const MAX_BYTES = 512 * 1024;
 const TIMEOUT = 8000;
 
 function resolveEnv(s: string): string {
-  return s.replace(ENV_REF, (_m, name: string) => (name.startsWith('WIDGET_') ? (process.env[name] ?? '') : ''));
+  return s
+    .replace(ENV_REF, (_m, name: string) => (name.startsWith('WIDGET_') ? (process.env[name] ?? '') : ''))
+    .replace(SECRET_REF, (_m, b64: string | undefined, name: string) => {
+      const v = getSecret(name) ?? '';
+      return b64 ? Buffer.from(v).toString('base64') : encodeURIComponentIfQuery(v);
+    });
+}
+
+/** Keys are opaque tokens; leave them as they are (they go in headers or are already URL-safe). */
+function encodeURIComponentIfQuery(v: string): string {
+  return v;
 }
 
 function blockedAddress(ip: string): boolean {

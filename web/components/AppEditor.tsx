@@ -6,7 +6,9 @@
 // Save; the result is one layout stored on the server.
 
 import { useMemo, useRef, useState } from 'react';
+import type { JsonWidgetConfig } from '../../shared/jsonwidget.ts';
 import type { AddedApp, AppOrder } from '../../shared/order.ts';
+import { liveConfig, liveDraft, LiveNumberFields, saveKey } from './LiveNumber.tsx';
 import { orderOf } from '../../shared/order.ts';
 import type { Bookmark, Catalog, DiscoveredService, Service } from '../../shared/types.ts';
 import { moved, useDragSort } from '../lib/dragsort.ts';
@@ -26,18 +28,21 @@ export interface Draft {
   dock: Bookmark[];
   hiddenDock: Bookmark[];
   icons: Record<string, string>;
+  /** App name -> its live number setup. */
+  stats: Record<string, JsonWidgetConfig>;
 }
 
 let seq = 0;
 const key = () => `g${++seq}`;
 
-export function draftFrom(cat: Catalog): Draft {
+export function draftFrom(cat: Catalog, stats: Record<string, JsonWidgetConfig> = {}): Draft {
   return {
     groups: cat.groups.map((g) => ({ key: key(), name: g.name, from: g.name, services: g.services })),
     hidden: cat.hiddenApps ?? [],
     dock: cat.dock,
     hiddenDock: cat.hiddenDock ?? [],
     icons: { ...(cat.iconOverrides ?? {}) },
+    stats: { ...stats },
   };
 }
 
@@ -51,7 +56,9 @@ export function layoutOf(d: Draft, prevRenamed?: Record<string, string>): AppOrd
       .map((s) => ({ name: s.name, group: g.name, href: s.href, icon: s.icon, container: s.container, description: s.description })),
   );
   const hidden = [...d.hidden.map((h) => h.service.name), ...d.hiddenDock.map((b) => b.name)];
-  return { ...base, hidden, icons: d.icons, added };
+  const exists = new Set([...groups.flatMap((g) => g.services.map((s) => s.name)), ...d.hidden.map((h) => h.service.name)]);
+  const stats = Object.fromEntries(Object.entries(d.stats).filter(([n]) => exists.has(n)));
+  return { ...base, hidden, icons: d.icons, added, stats };
 }
 
 /** Problems that would stop a save, in plain words. */
@@ -219,7 +226,10 @@ export function EditApps({
                     <Icon name={s.name} icon={s.icon} size={24} />
                   </span>
                   <span className="tile-name">{s.name}</span>
-                  <span className="tile-stat">{SOURCE[s.source ?? 'yaml']}</span>
+                  <span className="tile-stat">
+                    {SOURCE[s.source ?? 'yaml']}
+                    {draft.stats[s.name] ? ', live number' : ''}
+                  </span>
                 </span>
                 <span className="cell-btn move-to tile-menu" title="Edit, hide or move">
                   ⋯
@@ -227,7 +237,7 @@ export function EditApps({
                     <option value="" disabled>
                       {s.name}
                     </option>
-                    <option value="edit">{s.source === 'ui' ? 'Edit...' : 'Change icon...'}</option>
+                    <option value="edit">{s.source === 'ui' ? 'Edit...' : 'Icon and live number...'}</option>
                     {s.source === 'ui' ? <option value="delete">Delete</option> : <option value="hide">Hide</option>}
                     {i > 0 && <option value="up">Move earlier</option>}
                     {i < g.services.length - 1 && <option value="down">Move later</option>}
@@ -352,15 +362,19 @@ export function EditApps({
           isNew={form.isNew}
           groups={groups.map((g) => g.name)}
           containers={containers}
+          stat={draft.stats[form.app.name]}
           taken={(n) => n !== form.app.name && allNames.has(n)}
           onClose={() => setForm(null)}
-          onSave={(app, group) => {
+          onSave={(app, group, stat) => {
+            const stats = { ...draft.stats };
+            delete stats[form.app.name];
+            if (stat) stats[app.name] = stat;
             if (app.source !== 'ui') {
               // Catalog apps: only the icon changes, kept as an override.
               const icons = { ...draft.icons };
-              if (app.icon) icons[app.name] = app.icon;
-              else delete icons[app.name];
-              set({ icons, groups: groups.map((g) => ({ ...g, services: g.services.map((s) => (s.name === app.name ? { ...s, icon: app.icon } : s)) })) });
+              if (!app.icon) delete icons[app.name];
+              else if (app.icon !== form.app.icon) icons[app.name] = app.icon;
+              set({ icons, stats, groups: groups.map((g) => ({ ...g, services: g.services.map((s) => (s.name === app.name ? { ...s, icon: app.icon } : s)) })) });
             } else {
               let gs = groups.map((g) => ({ ...g, services: g.services.filter((s) => s.name !== form.app.name || form.isNew) }));
               let gi = gs.findIndex((g) => g.name === group);
@@ -376,7 +390,7 @@ export function EditApps({
                 else next.push(app);
                 return { ...g, services: next };
               });
-              set({ groups: gs });
+              set({ groups: gs, stats });
             }
             setForm(null);
           }}
@@ -413,6 +427,7 @@ function AppForm({
   isNew,
   groups,
   containers,
+  stat,
   taken,
   onClose,
   onSave,
@@ -422,9 +437,10 @@ function AppForm({
   isNew: boolean;
   groups: string[];
   containers: string[];
+  stat?: JsonWidgetConfig;
   taken: (name: string) => boolean;
   onClose: () => void;
-  onSave: (app: Service, group: string) => void;
+  onSave: (app: Service, group: string, stat: JsonWidgetConfig | null) => void;
 }) {
   const ours = app.source === 'ui';
   const [v, setV] = useState<Service>(app);
@@ -433,6 +449,7 @@ function AppForm({
   const [busy, setBusy] = useState(false);
   const file = useRef<HTMLInputElement>(null);
   const autoIcon = slug(v.name);
+  const [live, setLive] = useState(() => liveDraft(app, stat));
 
   const upload = async (f: File) => {
     setErr('');
@@ -449,7 +466,7 @@ function AppForm({
     setBusy(false);
   };
 
-  const done = () => {
+  const done = async () => {
     const name = v.name.trim();
     if (ours) {
       if (!name) return setErr('Give it a name.');
@@ -463,7 +480,15 @@ function AppForm({
       }
       if (!g.trim()) return setErr('Pick a group.');
     }
-    onSave({ ...v, name, icon: v.icon?.trim() || (ours ? autoIcon || undefined : undefined), href: v.href?.trim() || undefined, container: v.container || undefined }, g.trim());
+    let cfg: JsonWidgetConfig | null;
+    try {
+      cfg = liveConfig(name || app.name, live);
+    } catch (e) {
+      return setErr((e as Error).message);
+    }
+    const keyErr = await saveKey(name || app.name, live.key);
+    if (keyErr) return setErr(keyErr);
+    onSave({ ...v, name, icon: v.icon?.trim() || (ours ? autoIcon || undefined : undefined), href: v.href?.trim() || undefined, container: v.container || undefined }, g.trim(), cfg);
   };
 
   return (
@@ -475,7 +500,7 @@ function AppForm({
             Cancel
           </button>
         </header>
-        {!ours && <p className="settings-note">This app comes from {app.source === 'labels' ? 'a Docker label' : 'services.yaml'}. Its name and link are set there; its icon you can change here.</p>}
+        {!ours && <p className="settings-note">This app comes from {app.source === 'labels' ? 'a Docker label' : 'services.yaml'}. Its name and link are set there; its icon and live number you can change here.</p>}
         <div className="ws-form">
           {ours && (
             <>
@@ -537,9 +562,10 @@ function AppForm({
               A name from <a href="https://dashboardicons.com" target="_blank" rel="noreferrer">dashboard icons</a> (like <code>jellyfin</code>), any image URL, or your own file.
             </span>
           </div>
+          <LiveNumberFields app={{ ...v, name: v.name || app.name }} d={live} onChange={setLive} />
         </div>
         <div className="jw-actions">
-          <button type="button" className="button board-save" onClick={done}>
+          <button type="button" className="button board-save" onClick={() => void done()}>
             {isNew ? 'Add' : 'Done'}
           </button>
           {err && <span className="crit-text">{err}</span>}

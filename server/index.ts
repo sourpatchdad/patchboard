@@ -29,9 +29,11 @@ import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
 import { type Board, DEFAULT_BOARD, validateBoard } from '../shared/board.ts';
-import { validateJsonConfig } from '../shared/jsonwidget.ts';
+import { type JsonField, validateJsonConfig } from '../shared/jsonwidget.ts';
 import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
-import { demoJson } from './demo-ops.ts';
+import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts';
+import { PRESETS } from '../shared/presets.ts';
+import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
@@ -150,7 +152,9 @@ app.post('/api/widgets/preview', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const v = validateJsonConfig(await c.req.json().catch(() => null));
   if ('error' in v) return c.json({ error: v.error }, 400);
-  return c.json(config.demo ? demoJson(v.config, true) : await fetchJsonWidget(v.config, true));
+  // Demo: app live numbers (presets) get made-up values; widgets map the demo document.
+  if (config.demo) return c.json(v.config.title === 'custom' || PRESETS.some((p) => p.id === v.config.title) ? demoAppStat('preview', v.config) : demoJson(v.config, true));
+  return c.json(await fetchJsonWidget(v.config, true));
 });
 
 app.get('/api/snapshot', (c) => c.json(hub.snapshot()));
@@ -389,6 +393,8 @@ app.put('/api/app-order', async (c) => {
   return c.json({ ok: true });
 });
 
+app.get('/api/app-order', (c) => c.json(kvGet<AppOrder>('app-order') ?? null));
+
 app.delete('/api/app-order', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   kvSet('app-order', null);
@@ -397,6 +403,45 @@ app.delete('/api/app-order', (c) => {
   recordAudit(who(c), 'apps.order.reset', 'apps');
   return c.json({ ok: true });
 })
+
+// Keys pasted in the UI. Names and dates go out; values never do.
+app.get('/api/secrets', (c) => c.json(listSecrets()));
+
+app.put('/api/secrets/:name', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const name = c.req.param('name');
+  if (!SECRET_NAME.test(name)) return c.json({ error: 'Names use A to Z, 0 to 9 and _' }, 400);
+  const body = (await c.req.json().catch(() => null)) as { value?: unknown } | null;
+  const value = typeof body?.value === 'string' ? body.value.trim() : '';
+  if (!value || value.length > 4000) return c.json({ error: 'Paste the key' }, 400);
+  setSecret(name, value);
+  recordAudit(who(c), 'secret.set', name);
+  return c.json({ ok: true });
+});
+
+app.delete('/api/secrets/:name', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const name = c.req.param('name');
+  if (!deleteSecret(name)) return c.json({ error: 'No such key' }, 404);
+  recordAudit(who(c), 'secret.delete', name);
+  return c.json({ ok: true });
+});
+
+// Live numbers for apps, set up in Edit apps. Only configurations saved in
+// the layout are fetched; each is cached for its own interval.
+app.get('/api/appstats', async (c) => {
+  const saved = kvGet<AppOrder>('app-order');
+  const v = saved ? validateOrder(saved) : null;
+  const stats = v && 'order' in v ? (v.order.stats ?? {}) : {};
+  const out: Record<string, { value: unknown; field: JsonField; at: number; error?: string }> = {};
+  await Promise.all(
+    Object.entries(stats).map(async ([name, cfg]) => {
+      const r = config.demo ? demoAppStat(name, cfg) : await cachedJsonWidget(`app:${name}`, cfg);
+      out[name] = { value: r.values[0]?.value ?? null, field: cfg.fields[0], at: r.at, ...(r.error ? { error: r.error } : {}) };
+    }),
+  );
+  return c.json(out);
+});
 
 // Uploaded icons. Named by content hash, so the same file uploads once and
 // can be cached forever. Served with a sandboxing CSP: an SVG opened directly

@@ -3,12 +3,14 @@
 // clicking a jack opens the service. One glance answers "is everything up?"
 
 import { Link } from 'react-router-dom';
+import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { useStore } from '../lib/store.tsx';
 import { checkFor, checkText, containerMap, isExternal, jackState, jackStateText, tapeLabel } from '../lib/services.ts';
 import { Icon } from './ui.tsx';
 
 export function PatchRow({ names = false }: { names?: boolean }) {
   const { snap } = useStore();
+  const nums = useAppNumbers();
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
   const containers = containerMap(snap);
 
@@ -33,20 +35,20 @@ export function PatchRow({ names = false }: { names?: boolean }) {
               );
               if (s.href && isExternal(s.href)) {
                 return (
-                  <a key={s.name} className="jack" data-state={state} data-name={s.name} href={s.href} target="_blank" rel="noreferrer" title={label} aria-label={label}>
+                  <a key={s.name} className="jack" data-state={state} data-name={numberText(nums[s.name]) ? `${s.name}: ${numberText(nums[s.name])!.text}` : s.name} href={s.href} target="_blank" rel="noreferrer" title={label} aria-label={label}>
                     {inner}
                   </a>
                 );
               }
               if (s.container) {
                 return (
-                  <Link key={s.name} className="jack" data-state={state} data-name={s.name} to={`/c/${s.container}`} title={`${label}. Open details`} aria-label={`${label}. Open details`}>
+                  <Link key={s.name} className="jack" data-state={state} data-name={numberText(nums[s.name]) ? `${s.name}: ${numberText(nums[s.name])!.text}` : s.name} to={`/c/${s.container}`} title={`${label}. Open details`} aria-label={`${label}. Open details`}>
                     {inner}
                   </Link>
                 );
               }
               return (
-                <span key={s.name} className="jack" data-state={state} data-name={s.name} title={label}>
+                <span key={s.name} className="jack" data-state={state} data-name={numberText(nums[s.name]) ? `${s.name}: ${numberText(nums[s.name])!.text}` : s.name} title={label}>
                   {inner}
                 </span>
               );

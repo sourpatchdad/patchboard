@@ -3,8 +3,10 @@
 // it, each with an optional threshold that turns it amber or red.
 //
 // No secrets live here: header values and the URL may reference environment
-// variables as ${env:WIDGET_NAME}, resolved only on the server, and only for
-// names starting with WIDGET_ so a board edit can't reach Patchboard's own keys.
+// variables as ${env:WIDGET_NAME} (only WIDGET_ names, so a board edit can't
+// reach Patchboard's own keys) or keys saved in the UI as ${secret:NAME}
+// (${secret64:NAME} sends it base64-encoded, for Basic auth). All resolve only
+// on the server.
 
 export type FieldFormat = 'number' | 'percent' | 'bytes' | 'duration' | 'relative' | 'text';
 
@@ -34,6 +36,9 @@ export interface JsonWidgetConfig {
 
 export const FORMATS: FieldFormat[] = ['number', 'percent', 'bytes', 'duration', 'relative', 'text'];
 export const ENV_REF = /\$\{env:([A-Z0-9_]+)\}/g;
+export const SECRET_REF = /\$\{secret(64)?:([A-Z0-9_]{1,40})\}/g;
+const ANY_REF = /\$\{([a-z0-9]+):/g;
+const badRef = (s: string) => [...s.matchAll(ANY_REF)].map((m) => m[1]).find((k) => !['env', 'secret', 'secret64'].includes(k));
 
 const str = (v: unknown, max: number) => (typeof v === 'string' && v.length <= max ? v : undefined);
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : undefined);
@@ -45,10 +50,12 @@ export function validateJsonConfig(input: unknown): { config: JsonWidgetConfig }
   const url = str(c.url, 500);
   if (!url || !/^https?:\/\/[^\s]+$/i.test(url)) return { error: 'URL must start with http:// or https://' };
   for (const m of url.matchAll(ENV_REF)) if (!m[1].startsWith('WIDGET_')) return { error: `Only WIDGET_* variables can be used, not ${m[1]}` };
+  if (badRef(url)) return { error: `Unknown reference \${${badRef(url)}:...}` };
   const headers: Record<string, string> = {};
   for (const [k, v] of Object.entries((c.headers as Record<string, unknown>) ?? {}).slice(0, 10)) {
     if (!/^[A-Za-z0-9-]{1,64}$/.test(k) || typeof v !== 'string' || v.length > 1000) return { error: `Bad header ${k}` };
     for (const m of v.matchAll(ENV_REF)) if (!m[1].startsWith('WIDGET_')) return { error: `Only WIDGET_* variables can be used, not ${m[1]}` };
+    if (badRef(v)) return { error: `Unknown reference \${${badRef(v)}:...}` };
     headers[k] = v;
   }
   const fields: JsonField[] = [];

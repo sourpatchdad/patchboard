@@ -7,6 +7,7 @@
 import { Link } from 'react-router-dom';
 import type { Service } from '../../shared/types.ts';
 import { appStat } from '../lib/appstat.ts';
+import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { containerMap, isExternal } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { Icon } from './ui.tsx';
@@ -28,6 +29,7 @@ export function AppTiles({
   legend?: boolean;
 }) {
   const { snap } = useStore();
+  const nums = useAppNumbers();
   if (!snap) return <div className="tiles tiles-loading" aria-hidden />;
   const containers = containerMap(snap);
   const q = filter.trim().toLowerCase();
@@ -36,7 +38,7 @@ export function AppTiles({
   return (
     <div className={`tiles tiles-${size}`}>
       {snap.catalog.groups.map((g) => {
-        const pairs = g.services.filter(match).map((s) => ({ s, st: appStat(s, snap, containers) }));
+        const pairs = g.services.filter(match).map((s) => ({ s, st: appStat(s, snap, containers, numberText(nums[s.name])) }));
         if (!pairs.length) return null;
         // Catalog order is the default: positions stay put, so muscle memory works.
         if (sort === 'name') pairs.sort((x, y) => x.s.name.localeCompare(y.s.name));

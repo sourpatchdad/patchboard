@@ -5,6 +5,7 @@
 // Anything the layout doesn't mention (an app added to services.yaml later)
 // lands in its catalog group, after the arranged ones, so nothing disappears.
 
+import { type JsonWidgetConfig, validateJsonConfig } from './jsonwidget.ts';
 import type { Bookmark, Catalog, Service } from './types.ts';
 
 /** An app created in the UI rather than in services.yaml or labels. */
@@ -30,6 +31,8 @@ export interface AppOrder {
   icons?: Record<string, string>;
   /** Apps added in the UI. */
   added?: AddedApp[];
+  /** App name -> where its live number comes from. */
+  stats?: Record<string, JsonWidgetConfig>;
 }
 
 const NAME_MAX = 120;
@@ -99,6 +102,17 @@ export function validateOrder(input: unknown): { order: AppOrder } | { error: st
     }
     if (added.length) order.added = added;
   }
+  if (raw.stats !== undefined) {
+    if (!isMap(raw.stats) || Object.keys(raw.stats).length > 200) return { error: 'Bad live numbers' };
+    const stats: Record<string, JsonWidgetConfig> = {};
+    for (const [name, cfg] of Object.entries(raw.stats)) {
+      if (!isName(name)) return { error: 'Bad live number' };
+      const v = validateJsonConfig(cfg);
+      if ('error' in v) return { error: `${name}: ${v.error}` };
+      stats[name] = { ...v.config, fields: v.config.fields.slice(0, 1) };
+    }
+    if (Object.keys(stats).length) order.stats = stats;
+  }
   return { order };
 }
 
@@ -164,6 +178,7 @@ export function applyOrder(cat: Catalog, order: AppOrder | null | undefined): Ca
     hiddenApps,
     hiddenDock,
     iconOverrides: order.icons,
+    statApps: order.stats ? Object.keys(order.stats) : undefined,
   };
 }
 
