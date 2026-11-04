@@ -4,20 +4,50 @@
 // A group header counts only what needs attention, so a quiet group says
 // nothing at all.
 
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import type { Service } from '../../shared/types.ts';
+import type { Catalog, Service } from '../../shared/types.ts';
 import { appStat } from '../lib/appstat.ts';
 import { containerMap, isExternal } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { Icon } from './ui.tsx';
 
 export type TileSort = 'catalog' | 'name' | 'status';
+export const TILE_SORTS = ['catalog', 'status', 'name'] as const;
+
+type Groups = Catalog['groups'];
+
+/** Rearranging: the working order, and where to send a change. */
+export interface Arrange {
+  groups: Groups;
+  onChange: (groups: Groups) => void;
+}
+
+const moved = <T,>(list: T[], from: number, to: number): T[] => {
+  const next = [...list];
+  const [x] = next.splice(from, 1);
+  next.splice(to, 0, x);
+  return next;
+};
 
 const TONE_RANK = { crit: 0, warn: 1, ok: 2, idle: 3, none: 4 } as const;
 
-export function AppTiles({ filter = '', size = 'normal', sort = 'catalog', legend = false }: { filter?: string; size?: 'normal' | 'large'; sort?: TileSort; legend?: boolean }) {
+export function AppTiles({
+  filter = '',
+  size = 'normal',
+  sort = 'catalog',
+  legend = false,
+  arrange,
+}: {
+  filter?: string;
+  size?: 'normal' | 'large';
+  sort?: TileSort;
+  legend?: boolean;
+  arrange?: Arrange;
+}) {
   const { snap } = useStore();
   if (!snap) return <div className="tiles tiles-loading" aria-hidden />;
+  if (arrange) return <ArrangeTiles {...arrange} size={size} />;
   const containers = containerMap(snap);
   const q = filter.trim().toLowerCase();
   const match = (s: Service) => !q || s.name.toLowerCase().includes(q) || (s.container ?? '').includes(q);
@@ -48,6 +78,103 @@ export function AppTiles({ filter = '', size = 'normal', sort = 'catalog', legen
         );
       })}
       {legend && <TileLegend />}
+    </div>
+  );
+}
+
+/**
+ * Rearranging: drag a tile within its group or a group by its name. The
+ * arrow buttons do the same for touch and keyboard. Links are off meanwhile,
+ * so a drag never opens an app.
+ */
+function ArrangeTiles({ groups, onChange, size }: Arrange & { size: string }) {
+  const drag = useRef<{ g: number; i?: number } | null>(null);
+  const moveGroup = (from: number, to: number) => to >= 0 && to < groups.length && onChange(moved(groups, from, to));
+  const moveApp = (g: number, from: number, to: number) => {
+    const list = groups[g].services;
+    if (to < 0 || to >= list.length) return;
+    onChange(groups.map((x, j) => (j === g ? { ...x, services: moved(list, from, to) } : x)));
+  };
+  return (
+    <div className={`tiles tiles-${size} tiles-arranging`}>
+      {groups.map((g, gi) => (
+        <section
+          className="tile-group"
+          key={g.name}
+          aria-label={g.name}
+          onDragOver={(e) => drag.current?.i === undefined && drag.current && e.preventDefault()}
+          onDrop={(e) => {
+            const d = drag.current;
+            if (d && d.i === undefined && d.g !== gi) {
+              e.preventDefault();
+              moveGroup(d.g, gi);
+            }
+            drag.current = null;
+          }}
+        >
+          <header className="tile-group-head arrange-head" draggable onDragStart={() => (drag.current = { g: gi })} onDragEnd={() => (drag.current = null)}>
+            <h3>
+              <span className="grip" aria-hidden>
+                ⠿
+              </span>
+              {g.name}
+            </h3>
+            <span className="arrange-btns">
+              <button type="button" className="cell-btn" disabled={gi === 0} onClick={() => moveGroup(gi, gi - 1)} aria-label={`Move ${g.name} up`}>
+                ↑
+              </button>
+              <button type="button" className="cell-btn" disabled={gi === groups.length - 1} onClick={() => moveGroup(gi, gi + 1)} aria-label={`Move ${g.name} down`}>
+                ↓
+              </button>
+            </span>
+          </header>
+          <ul className="tile-grid">
+            {g.services.map((s, i) => (
+              <li
+                key={s.name}
+                className="tile tile-arrange"
+                data-tone="none"
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  drag.current = { g: gi, i };
+                }}
+                onDragEnd={() => (drag.current = null)}
+                onDragOver={(e) => {
+                  if (drag.current?.g === gi && drag.current.i !== undefined) e.preventDefault();
+                }}
+                onDrop={(e) => {
+                  const d = drag.current;
+                  if (d?.g === gi && d.i !== undefined) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    moveApp(gi, d.i, i);
+                    drag.current = null;
+                  }
+                }}
+              >
+                <span className="tile-main">
+                  <span className="tile-icon">
+                    <Icon name={s.name} icon={s.icon} size={24} />
+                  </span>
+                  <span className="tile-name">{s.name}</span>
+                  <span className="tile-stat">
+                    {i + 1} of {g.services.length}
+                  </span>
+                </span>
+                <span className="arrange-btns tile-arrange-btns">
+                  <button type="button" className="cell-btn" disabled={i === 0} onClick={() => moveApp(gi, i, i - 1)} aria-label={`Move ${s.name} earlier`}>
+                    ←
+                  </button>
+                  <button type="button" className="cell-btn" disabled={i === g.services.length - 1} onClick={() => moveApp(gi, i, i + 1)} aria-label={`Move ${s.name} later`}>
+                    →
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }

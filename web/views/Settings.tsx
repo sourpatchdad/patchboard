@@ -409,6 +409,8 @@ const ACTION_TEXT: Record<string, string> = {
   'container.rollback': 'rolled back an update',
   'board.save': 'saved the Home board',
   'board.reset': 'reset the Home board',
+  'apps.order': 'rearranged the apps',
+  'apps.order.reset': 'put the apps back in catalog order',
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',

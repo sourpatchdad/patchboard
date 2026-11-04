@@ -4857,6 +4857,113 @@ a.jw-title:hover {
   }
 }
 
+/* ---------- Sorting rows and rearranging ---------- */
+
+.sort-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.seg-small {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+}
+
+.seg-small button {
+  flex: 1 1 auto;
+  font-size: 12.5px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.arrange-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 6px 0 4px;
+  padding: 10px 14px;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-lg);
+}
+
+.arrange-bar p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.arrange-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.arrange-btns {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.arrange-head {
+  cursor: grab;
+}
+
+.arrange-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grip {
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.tile-arrange {
+  cursor: grab;
+  align-items: center;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.tile-arrange:active {
+  cursor: grabbing;
+}
+
+.tile-arrange .tile-main {
+  cursor: inherit;
+}
+
+/* Arrows sit on the second line, beside "3 of 7", so names keep the width. */
+.tile-arrange-btns {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+}
+
+.tile-arrange-btns .cell-btn {
+  min-width: 26px;
+  padding: 1px 5px;
+}
+
+@media (max-width: 760px) {
+  .arrange-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .arrange-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -179,6 +179,13 @@ export class Hub {
   }
 
   /** Diun reported something, or an update was applied: tell every tab. */
+  /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */
+  emitCatalog(): void {
+    const cat = getCatalog();
+    this.lastCatalog = JSON.stringify(cat);
+    this.emit({ type: 'catalog', catalog: cat });
+  }
+
   emitUpdates(): void {
     this.emit({ type: 'updates', updates: pendingUpdates() });
     this.refreshAlerts();

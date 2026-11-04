@@ -11,6 +11,7 @@ import { useJson } from '../lib/api.ts';
 import { pct, plural, size } from '../lib/format.ts';
 import { containerMap, ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
+import { useUrlChoice } from '../lib/url.ts';
 
 const LOOSE = 'Standalone';
 type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
@@ -22,14 +23,7 @@ export function Stacks() {
   const [q, setQ] = useState('');
   const [params, setParams] = useSearchParams();
   const onlyUpdates = params.get('updates') === '1';
-  // The sort lives in the URL, so it survives a reload and can be shared.
-  const sort = (['problems', 'name', 'cpu', 'memory'].includes(params.get('sort') ?? '') ? params.get('sort') : 'problems') as SortKey;
-  const setSort = (v: SortKey) => {
-    const next = new URLSearchParams(params);
-    if (v === 'problems') next.delete('sort');
-    else next.set('sort', v);
-    setParams(next, { replace: true });
-  };
+  const [sort, setSort] = useUrlChoice<SortKey>('sort', ['problems', 'name', 'cpu', 'memory'], 'problems');
   const { hash } = useLocation();
   const uptime = useJson<UptimeData>('/api/uptime?days=14', 5 * 60_000).data;
 

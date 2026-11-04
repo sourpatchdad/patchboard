@@ -38,7 +38,8 @@ import { currentUser, login, logout, readOnlyGuard, requireAuth, securityHeaders
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
-import { getCatalog } from './catalog.ts';
+import { getCatalog, setCatalogOrder } from './catalog.ts';
+import { type AppOrder, validateOrder } from '../shared/order.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
 function realAdapters(): Adapter[] {
@@ -64,6 +65,11 @@ if (config.demo) {
 }
 const adapters = config.demo ? demoAdapters() : realAdapters();
 const hub = new Hub(adapters);
+{
+  const saved = kvGet<AppOrder>('app-order');
+  const v = saved ? validateOrder(saved) : null;
+  setCatalogOrder(v && 'order' in v ? v.order : null);
+}
 initCatalog(() => hub.refreshAlerts());
 hub.start();
 whenTraktConnects(() => void hub.pollNow('trakt'));
@@ -368,6 +374,28 @@ app.delete('/api/board', (c) => {
   recordAudit(who(c), 'board.reset', 'home');
   return c.json({ board: DEFAULT_BOARD, custom: false });
 });
+
+// The order apps appear in, when rearranged in the UI. Applied to the catalog
+// on the server so every view and every device agrees.
+app.put('/api/app-order', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const v = validateOrder(await c.req.json().catch(() => null));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  kvSet('app-order', v.order);
+  setCatalogOrder(v.order);
+  hub.emitCatalog();
+  recordAudit(who(c), 'apps.order', 'apps');
+  return c.json({ ok: true });
+});
+
+app.delete('/api/app-order', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  kvSet('app-order', null);
+  setCatalogOrder(null);
+  hub.emitCatalog();
+  recordAudit(who(c), 'apps.order.reset', 'apps');
+  return c.json({ ok: true });
+})
 
 // Catalog audit: entries pointing at nothing, and running apps not listed.
 app.get('/api/catalog/audit', async (c) => {

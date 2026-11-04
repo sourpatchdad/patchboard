@@ -8,11 +8,19 @@ import type { Catalog } from '../shared/types.ts';
 import { config } from './config.ts';
 import { demoCatalog } from './demo.ts';
 import { mergeCatalog } from './labels.ts';
+import { type AppOrder, applyOrder } from '../shared/order.ts';
 import type { Container } from '../shared/types.ts';
 
 let catalog: Catalog = { groups: [], dock: [] };
 let containers: Container[] = [];
 let merged: Catalog | null = null;
+let order: AppOrder | null = null;
+
+/** The order someone arranged in the UI, or null for the catalog's own. */
+export function setCatalogOrder(o: AppOrder | null): void {
+  order = o;
+  merged = null;
+}
 
 /** The hub hands over the container list on every poll, for label discovery. */
 export function setCatalogContainers(list: Container[]): void {
@@ -38,7 +46,7 @@ function load(): void {
 
 /** The YAML catalog merged with services registered through Docker labels. */
 export function getCatalog(): Catalog {
-  merged ??= mergeCatalog(catalog, containers);
+  merged ??= applyOrder(mergeCatalog(catalog, containers), order);
   return merged;
 }
 

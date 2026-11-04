@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.11.0 — 2026-11-04
+
+Arrange it your way.
+
+- **Rearrange apps:** Apps, Rearrange. Drag apps within a group or a group
+  by its name; arrows do the same on a phone or keyboard. Saved on the
+  server, so Home, the Apps page and the command palette all follow, on
+  every device. "Use catalog order" goes back to services.yaml. New apps
+  you add later land after the arranged ones, never hidden. Recorded in
+  Activity; refused in read-only mode.
+- **Sorts stay put:** the sort on Apps, Stacks and Logs is kept in the URL,
+  so it survives reloads, the back button and shared links.
+- **Logs list:** sort by problems first, A to Z or newest; the filter also
+  matches compose project names; statuses shortened to match Stacks.
+- 30 tests.
+
 ## 1.10.0 — 2026-11-04
 
 Safe to hand to someone else.

@@ -432,6 +432,8 @@ export interface Bookmark {
 export interface Catalog {
   groups: { name: string; services: Service[] }[];
   dock: Bookmark[];
+  /** True when someone rearranged the apps in the UI (see shared/order.ts). */
+  ordered?: boolean;
 }
 
 export interface Links {

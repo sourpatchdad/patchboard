@@ -7,6 +7,11 @@ import { Empty } from '../components/ui.tsx';
 import { containerMap } from '../lib/services.ts';
 import { lineClass, useLogStream } from '../lib/logs.ts';
 import { useStore } from '../lib/store.tsx';
+import { ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
+import { useUrlChoice } from '../lib/url.ts';
+
+type ListSort = 'problems' | 'name' | 'recent';
+const RANK: Record<JackState, number> = { down: 0, warn: 1, up: 2, idle: 3, none: 4 };
 
 export function Logs() {
   const { name } = useParams();
@@ -14,6 +19,7 @@ export function Logs() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [listFilter, setListFilter] = useState('');
+  const [listSort, setListSort] = useUrlChoice<ListSort>('sort', ['problems', 'name', 'recent'], 'problems');
   const [follow, setFollow] = useState(true);
   const [wrap, setWrap] = useState(true);
   const paneRef = useRef<HTMLDivElement>(null);
@@ -34,7 +40,17 @@ export function Logs() {
   }, [lines, filter]);
 
   const dozzle = snap?.links.dozzle;
-  const listed = containers.filter((c) => !listFilter || c.name.includes(listFilter.toLowerCase()));
+  const lf = listFilter.trim().toLowerCase();
+  const stateOf = (c: (typeof containers)[number]) => (snap ? ctrState(c, serviceFor(snap, c.name)) : 'none');
+  const listed = containers
+    .filter((c) => !lf || c.name.toLowerCase().includes(lf) || (c.project ?? '').toLowerCase().includes(lf))
+    .sort((a, b) =>
+      listSort === 'name'
+        ? a.name.localeCompare(b.name)
+        : listSort === 'recent'
+          ? (b.created ?? 0) - (a.created ?? 0) || a.name.localeCompare(b.name)
+          : RANK[stateOf(a)] - RANK[stateOf(b)] || a.name.localeCompare(b.name),
+    );
 
   return (
     <div className={`logs-layout ${name ? 'has-selection' : ''}`}>
@@ -50,13 +66,26 @@ export function Logs() {
           value={listFilter}
           onChange={(e) => setListFilter(e.target.value)}
         />
+        <div className="seg seg-small" role="group" aria-label="Sort containers">
+          {(
+            [
+              ['problems', 'Problems first'],
+              ['name', 'A to Z'],
+              ['recent', 'Newest'],
+            ] as [ListSort, string][]
+          ).map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={listSort === v} onClick={() => setListSort(v)}>
+              {label}
+            </button>
+          ))}
+        </div>
         <ul className="ctr-list">
           {listed.map((c) => (
             <li key={c.name}>
-              <Link to={`/logs/${c.name}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
+              <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
-                <span className="ctr-status">{c.status}</span>
+                <span className="ctr-status" title={c.status}>{shortStatus(c)}</span>
               </Link>
             </li>
           ))}
@@ -67,7 +96,7 @@ export function Logs() {
         {name ? (
           <>
             <header className="logs-head">
-              <button type="button" className="text-button reader-back" onClick={() => navigate('/logs')}>
+              <button type="button" className="text-button reader-back" onClick={() => navigate(`/logs${listSort === 'problems' ? '' : `?sort=${listSort}`}`)}>
                 All containers
               </button>
               <div className="logs-title">
