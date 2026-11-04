@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { isIP } from 'node:net';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -65,6 +66,38 @@ whenTraktConnects(() => void hub.pollNow('trakt'));
 console.log(`patchboard: ${config.demo ? 'DEMO mode, ' : ''}${adapters.map((a) => a.id).join(', ')}`);
 
 const app = new Hono();
+
+// DNS rebinding: a hostile page can point its own hostname at this server's
+// address and then call the API from a visitor's browser as same-origin. The
+// attacker's hostname still arrives in the Host header, so the API only
+// answers requests addressed to an IP literal, localhost, or a hostname listed
+// in ALLOWED_HOSTS. Changes must also carry a matching Origin when one is sent.
+// (Homepage's CVE-2024-42364 was this attack.)
+const allowedHosts = new Set(['localhost', ...config.allowedHosts]);
+function hostAllowed(hostHeader: string | undefined): boolean {
+  if (!hostHeader) return false;
+  const host = hostHeader.replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
+  return allowedHosts.has(host) || isIP(host) !== 0;
+}
+app.use('/api/*', async (c, next) => {
+  const host = c.req.header('host');
+  if (!hostAllowed(host)) {
+    return c.json({ error: `Requests to ${host ?? 'an unknown host'} are refused. Add it to ALLOWED_HOSTS if it's yours.` }, 403);
+  }
+  if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
+    const origin = c.req.header('origin');
+    if (origin) {
+      let originHost = '';
+      try {
+        originHost = new URL(origin).host.toLowerCase();
+      } catch {
+        // fall through to the refusal
+      }
+      if (originHost !== (host ?? '').toLowerCase()) return c.json({ error: 'Cross-origin request refused' }, 403);
+    }
+  }
+  await next();
+});
 
 app.get('/api/snapshot', (c) => c.json(hub.snapshot()));
 

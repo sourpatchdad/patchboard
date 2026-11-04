@@ -31,6 +31,8 @@ export function traktAdapter(): Adapter<TraktData> {
         'Content-Type': 'application/json',
         'trakt-api-version': '2',
         'trakt-api-key': clientId,
+        // api.trakt.tv answers 403 to requests without a proper User-Agent.
+        'User-Agent': 'Patchboard/1 (self-hosted)',
         Authorization: `Bearer ${await traktToken()}`,
       };
       const start = new Date().toISOString().slice(0, 10);

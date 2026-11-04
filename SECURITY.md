@@ -21,6 +21,10 @@ Patchboard as access to the server.
 
 - **Bound to the tailnet address only** in the example compose file, never
   `0.0.0.0`.
+- **DNS rebinding is blocked.** The API answers only requests addressed to
+  an IP address, `localhost`, or a hostname in `ALLOWED_HOSTS`. A hostile
+  page that rebinds its own name to this server still sends its own name in
+  `Host`, and is refused. Changes with an `Origin` header must match `Host`.
 - **State-changing requests** are POSTs that require an `X-Patchboard: action`
   header. Browsers won't send a custom header cross-origin without a CORS
   preflight, which Patchboard never grants, so another site can't trigger an

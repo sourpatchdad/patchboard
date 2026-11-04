@@ -46,6 +46,15 @@ export const config = {
   poolWarnPct: Number(env.POOL_WARN_PCT ?? 85),
   diskWarnC: Number(env.DISK_WARN_C ?? 50),
 
+  /**
+   * Hostnames the API answers to besides IP addresses and localhost, e.g. the
+   * name a reverse proxy serves Patchboard on. Protects against DNS rebinding.
+   */
+  allowedHosts: (str('ALLOWED_HOSTS') ?? '')
+    .split(',')
+    .map((d) => d.trim().toLowerCase())
+    .filter(Boolean),
+
   /** Domains whose service links get reachability checks, e.g. "nbnstack.com,ledger.fyi". */
   checkDomains: (str('CHECK_DOMAINS') ?? '')
     .split(',')

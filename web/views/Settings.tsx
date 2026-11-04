@@ -37,10 +37,9 @@ export function Settings() {
       </div>
       <p className="page-lede">Connections and the catalog are shared by every device. Everything else is saved on this device, so the phone and the desktop can differ.</p>
 
-      <Connections />
-      <CatalogCheck />
+      <div className="settings-grid">
 
-      <Section title="Theme" count={`${THEMES.length + 1} themes`}>
+      <Section title="Theme" count={`${THEMES.length + 1} themes`} className="span-all">
         <div className="theme-grid">
           {THEMES.map((t) => (
             <ThemeCard key={t.id} id={t.id} name={t.name} note={t.note} active={a.theme === t.id} />
@@ -135,6 +134,9 @@ export function Settings() {
       </Section>
 
       <Portability />
+      <Connections />
+      <CatalogCheck />
+      </div>
     </div>
   );
 }
@@ -337,7 +339,7 @@ function CatalogCheck() {
   if (!audit) return null;
   const clean = !audit.missing.length && !audit.discovered.length;
   return (
-    <section className="section" id="catalog">
+    <section className="section span-all" id="catalog">
       <header className="section-head">
         <h2>Catalog</h2>
         <span className="section-count">config/services.yaml</span>

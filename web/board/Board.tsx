@@ -174,7 +174,13 @@ function Cell(props: {
   useLayoutEffect(() => {
     const el = inner.current;
     if (!el) return;
-    const measure = () => setRows(Math.max(1, Math.ceil(el.getBoundingClientRect().height / 4)));
+    // Measure in layout pixels. getBoundingClientRect is scaled by the density
+    // setting's CSS zoom, but grid rows are not, so divide the zoom back out;
+    // otherwise every widget comes up short and the next one overlaps it.
+    const measure = () => {
+      const zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+      setRows(Math.max(1, Math.ceil(el.getBoundingClientRect().height / zoom / 4)));
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);

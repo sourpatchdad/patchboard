@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "description": "A control center and start page for a home server.",
   "type": "module",

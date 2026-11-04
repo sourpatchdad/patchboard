@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.9.1 — 2026-11-04
+
+- **Fixed: Trakt said "Can't reach" while Settings said connected.** Trakt's
+  API refuses requests without a proper User-Agent (HTTP 403); its sign-in
+  host doesn't. The calendar calls now send one.
+- **Fixed: board widgets overlapped at Compact and Large density.** The board
+  measured heights through the density zoom; it now measures in layout pixels.
+- **DNS-rebinding protection.** The API answers only requests addressed to an
+  IP address, localhost, or a hostname in `ALLOWED_HOSTS`, and refuses
+  cross-origin changes. This closes the class of attack behind Homepage's
+  CVE-2024-42364. If you put Patchboard behind a reverse proxy name, add that
+  name to `ALLOWED_HOSTS`.
+- **Room to breathe.** Pages use the width from 1100px up. The board shows
+  three columns only from 1680px; between 1100 and 1680px third-width widgets
+  become halves. More space between widgets.
+- **Settings** is a responsive grid of panels; the theme picker and catalog
+  span the full width, the rest sit two or three across.
+
 ## 1.9.0 — 2026-11-04
 
 Home is a board you arrange.
