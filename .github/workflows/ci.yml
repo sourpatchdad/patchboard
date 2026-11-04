@@ -28,10 +28,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Scans the full history, so a key committed and later deleted still fails the build.
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The whole history, every time, so a key committed and later deleted
+      # still fails the build. The CLI rather than gitleaks-action, which
+      # crashes scanning a range that starts at the first commit.
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.24.3             git /repo --redact --verbose --exit-code 1
 
   image:
     runs-on: ubuntu-latest

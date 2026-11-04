@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.1 — 2026-11-04
+
+Phones.
+
+- Nothing scrolls sideways any more. The page clips horizontally, and the
+  bookmark dock (which pushed real Home to 490px on a 390px phone) wraps.
+- The patch row is a wrapping grid on phones: every app visible, no
+  sideways strip inside a vertical page.
+- Phone Home order: status, Needs attention, apps, then the rest.
+- Search moved from the floating button into the top bar; it opens as a
+  sheet at the top. The page behind search and the shortcut list stays put.
+- Inputs are 16px on phones, so iOS no longer zooms in on focus.
+- Long episode titles, image names and identifiers truncate or wrap instead
+  of widening their row; inner log panes don't drag the page when they hit
+  their end.
+- CI: secret scan uses the gitleaks CLI over the full history (the GitHub
+  action crashed on a range starting at the first commit).
+
 ## 1.5.0 — 2026-11-04
 
 Update containers from the UI.

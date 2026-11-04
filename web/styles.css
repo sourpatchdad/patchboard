@@ -186,6 +186,10 @@
 html,
 body {
   margin: 0;
+  /* The page never scrolls sideways. clip (not hidden) keeps sticky headers working. */
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background: var(--bg);
   color: var(--ink);
   font: 400 15.5px/1.5 var(--f-body);
@@ -195,6 +199,27 @@ body {
 
 a {
   color: inherit;
+}
+
+html {
+  overscroll-behavior-y: none;
+}
+
+/* While a dialog is open the page behind it stays put. */
+html.is-locked,
+html.is-locked body {
+  overflow: hidden;
+}
+
+/* Inner scroll areas (logs, output) scroll on their own without dragging the page. */
+.logs-out,
+.palette-results {
+  overscroll-behavior: contain;
+}
+
+a,
+button {
+  touch-action: manipulation;
 }
 
 button {
@@ -1950,32 +1975,70 @@ a.app:hover {
   }
 
   .dock {
-    overflow-x: auto;
+    flex-wrap: wrap;
   }
 
+  .masthead > * {
+    min-width: 0;
+  }
+
+  /* Every app visible at once: bays stack, jacks wrap into rows. */
   .patchrow {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    display: grid;
+    gap: 18px;
     margin: 0 -16px;
-    padding: 20px 28px 18px;
+    padding: 18px 16px 16px;
     border-radius: 0;
     border-left: none;
     border-right: none;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 28px;
-    scrollbar-width: none;
   }
 
-  .bay {
-    flex-shrink: 0;
-    scroll-snap-align: start;
+  .bay-jacks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    row-gap: 14px;
   }
 
-  /* Phone order: Attention, Inbox, This week, Feeds, Right now, Changes. */
-  .home-grid {
+  .jack {
+    width: auto;
+    min-height: 64px;
+  }
+
+  .jack-label {
+    max-width: 100%;
+  }
+
+  .fab {
+    display: none;
+  }
+
+  .field,
+  .palette-input,
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Phone order: status, then anything broken, then the apps, then the rest.
+     The grid and its columns dissolve so every section is a flex child of
+     .home and can be ordered freely. */
+  .home {
     display: flex;
     flex-direction: column;
-    margin-top: 32px;
+  }
+
+  .masthead {
+    order: -2;
+  }
+
+  .patchrow {
+    order: 0;
+    margin-bottom: 32px;
+  }
+
+  .home-grid {
+    display: contents;
   }
 
   .home-col {
@@ -1983,7 +2046,8 @@ a.app:hover {
   }
 
   .attention {
-    order: 1;
+    order: -1;
+    margin-top: 8px;
   }
 
   .inbox {
@@ -3495,6 +3559,67 @@ a.vitals:hover .vital-label {
 @media (max-width: 760px) {
   .ctr-actions-wrap {
     margin-left: 0;
+  }
+}
+
+/* ---------- Width discipline ---------- */
+
+.rel-main,
+.rel > a,
+.mail li > a,
+.feedlist a,
+.stream-line,
+.alert > a,
+.alert > div,
+.ledger-row dd,
+.home-col,
+.detail-titles,
+.srow-id {
+  min-width: 0;
+}
+
+.rel-main {
+  overflow: hidden;
+}
+
+.rel-main > * {
+  min-width: 0;
+}
+
+.rel-title,
+.rel-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-ident .ident,
+.alert-title,
+.change-text {
+  overflow-wrap: anywhere;
+}
+
+.topbar-search {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .topbar-search {
+    display: grid;
+  }
+
+  .stack-load {
+    display: none;
+  }
+
+  .topbar-end {
+    gap: 4px;
+  }
+
+  /* Search opens as a sheet at the top, clear of the keyboard. */
+  .palette {
+    width: auto;
+    margin: calc(env(safe-area-inset-top) + 10px) 10px 0;
   }
 }
 
