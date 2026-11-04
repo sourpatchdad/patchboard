@@ -1,0 +1,123 @@
+// The decisions Patchboard makes on its own: what raises an alert, which
+// links get checked, and how Diun notices map to containers.
+
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import type { Catalog, Container, SourceId, SourceState } from '../../shared/types.ts';
+import { checkUrl } from '../adapters/checks.ts';
+import { computeAlerts, stoppedDetail } from '../alerts.ts';
+import { normalizeImage, pendingUpdates, recordDiunNotice, settleUpdates } from '../updates.ts';
+
+const ctr = (name: string, over: Partial<Container> = {}): Container => ({
+  id: name.slice(0, 12),
+  name,
+  image: `example/${name}:latest`,
+  state: 'running',
+  status: 'Up 2 days',
+  health: null,
+  ...over,
+});
+const down = (name: string, over: Partial<Container> = {}) => ctr(name, { state: 'exited', status: 'Exited (1) 5 minutes ago', ...over });
+
+const sources = (s: Partial<Record<SourceId, unknown>>): Partial<Record<SourceId, SourceState>> =>
+  Object.fromEntries(Object.entries(s).map(([id, data]) => [id, { id: id as SourceId, label: id, ok: true, updatedAt: Date.now(), data }]));
+
+const catalog = (services: Catalog['groups'][number]['services'] = []): Catalog => ({ groups: [{ name: 'G', services }], dock: [] });
+
+test('healthy containers raise nothing', () => {
+  const alerts = computeAlerts(sources({ docker: { containers: [ctr('plex'), ctr('sonarr')] } }), catalog());
+  assert.deepEqual(alerts, []);
+});
+
+test('a stopped container is critical; expectStopped ones are not', () => {
+  const alerts = computeAlerts(
+    sources({ docker: { containers: [down('unpackerr'), down('recyclarr', { status: 'Exited (0) 9 hours ago' })] } }),
+    catalog([{ name: 'Recyclarr', container: 'recyclarr', expectStopped: true }]),
+  );
+  assert.deepEqual(alerts.map((a) => a.id), ['ctr-down-unpackerr']);
+  assert.equal(alerts[0].level, 'critical');
+  assert.equal(alerts[0].href, '/c/unpackerr');
+});
+
+test('root-cause folding: dependents fold under the container they depend on', () => {
+  const containers = [
+    down('immich-postgres'),
+    down('immich-server', { dependsOn: ['immich-postgres', 'immich-redis'] }),
+    down('immich-machine-learning', { dependsOn: ['immich-server'] }),
+    ctr('immich-redis'),
+  ];
+  const alerts = computeAlerts(sources({ docker: { containers } }), catalog());
+  assert.deepEqual(alerts.map((a) => a.id), ['ctr-down-immich-postgres']);
+  assert.match(alerts[0].detail ?? '', /Also down because of it: immich-server, immich-machine-learning/);
+});
+
+test('a dependency loop does not hang the folding', () => {
+  const containers = [down('a', { dependsOn: ['b'] }), down('b', { dependsOn: ['a'] })];
+  const alerts = computeAlerts(sources({ docker: { containers } }), catalog());
+  assert.ok(alerts.length >= 1);
+});
+
+test('service checks: two misses raise a warning, one does not', () => {
+  const svc = [{ name: 'Sonarr', container: 'sonarr', href: 'http://10.0.0.2:8989' }];
+  const check = (fails: number) => ({ services: { Sonarr: { name: 'Sonarr', target: '10.0.0.2:8989', ok: false, status: 502, ms: 20, at: Date.now(), fails, error: 'HTTP 502' } } });
+  const one = computeAlerts(sources({ docker: { containers: [ctr('sonarr')] }, checks: check(1) }), catalog(svc));
+  assert.equal(one.length, 0);
+  const two = computeAlerts(sources({ docker: { containers: [ctr('sonarr')] }, checks: check(2) }), catalog(svc));
+  assert.deepEqual(two.map((a) => a.title), ["Sonarr isn't answering"]);
+  assert.match(two[0].detail ?? '', /HTTP 502 from 10\.0\.0\.2:8989, though its container is running/);
+});
+
+test('service checks: a stopped container is reported once, not twice', () => {
+  const svc = [{ name: 'Sonarr', container: 'sonarr', href: 'http://10.0.0.2:8989' }];
+  const checks = { services: { Sonarr: { name: 'Sonarr', target: '10.0.0.2:8989', ok: false, status: null, ms: null, at: Date.now(), fails: 5, error: 'Connection refused' } } };
+  const alerts = computeAlerts(sources({ docker: { containers: [down('sonarr')] }, checks }), catalog(svc));
+  assert.deepEqual(alerts.map((a) => a.id), ['ctr-down-sonarr']);
+});
+
+test('backups: a failed item and a missed night both warn', () => {
+  const H = 3_600_000;
+  const run = (ago: number, failed?: string) => ({
+    startedAt: Date.now() - ago,
+    finishedAt: Date.now() - ago + 60_000,
+    items: ['Immich', 'Joplin'].map((label) => ({ label, ok: label !== failed })),
+  });
+  const failing = computeAlerts(sources({ backups: { db: [run(5 * H, 'Joplin')], files: [run(5 * H)] } }), catalog());
+  assert.deepEqual(failing.map((a) => a.title), ["Last night's database backup failed for Joplin"]);
+  const stale = computeAlerts(sources({ backups: { db: [run(40 * H)], files: [run(5 * H)] } }), catalog());
+  assert.deepEqual(stale.map((a) => a.id), ['bk-db-stale']);
+});
+
+test('stoppedDetail drops the time Docker repeats', () => {
+  assert.equal(stoppedDetail('Exited (1) 2 hours ago', 'golift/unpackerr:latest'), 'Exited with code 1. golift/unpackerr:latest');
+  assert.equal(stoppedDetail('Exited (0) 9 hours ago', 'x:1'), 'Exited cleanly. x:1');
+});
+
+test('checkUrl: private and tailnet addresses are checked, public sites are not', () => {
+  const url = (href: string, check?: boolean | string) => checkUrl({ name: 'x', href, check })?.host ?? null;
+  assert.equal(url('http://192.168.1.10:30113'), '192.168.1.10:30113');
+  assert.equal(url('http://192.168.4.136'), '192.168.4.136');
+  assert.equal(url('http://nas.tail1234.ts.net:8080'), 'nas.tail1234.ts.net:8080');
+  assert.equal(url('https://github.com'), null);
+  assert.equal(url('https://app.example.org/x'), 'app.example.org'); // CHECK_DOMAINS=example.org in the test env
+  assert.equal(url('http://192.168.1.10:1', false), null);
+  assert.equal(url('https://github.com', true), 'github.com');
+  assert.equal(url('https://public.example.com', 'http://10.0.0.5:9000/health'), '10.0.0.5:9000');
+});
+
+test('normalizeImage treats registry spellings of one image as equal', () => {
+  assert.equal(normalizeImage('docker.io/library/postgres:16'), 'postgres:16');
+  assert.equal(normalizeImage('postgres'), 'postgres:latest');
+  assert.equal(normalizeImage('lscr.io/linuxserver/sonarr:latest'), 'lscr.io/linuxserver/sonarr:latest');
+  assert.equal(normalizeImage('ghcr.io/x/y:1@sha256:abcd'), 'ghcr.io/x/y:1');
+});
+
+test('Diun notices flag matching containers and clear once the image changes', () => {
+  const sonarr = ctr('sonarr', { image: 'lscr.io/linuxserver/sonarr:latest', imageId: 'aaa' });
+  const radarr = ctr('radarr', { image: 'lscr.io/linuxserver/radarr:latest', imageId: 'bbb' });
+  assert.deepEqual(recordDiunNotice({ status: 'new', image: 'lscr.io/linuxserver/sonarr:latest' }, [sonarr, radarr]), []);
+  assert.deepEqual(recordDiunNotice({ status: 'update', image: 'lscr.io/linuxserver/sonarr:latest', hub_link: 'https://x' }, [sonarr, radarr]), ['sonarr']);
+  assert.ok(pendingUpdates().sonarr);
+  assert.equal(settleUpdates([sonarr, radarr]), false);
+  assert.equal(settleUpdates([{ ...sonarr, imageId: 'ccc' }, radarr]), true);
+  assert.equal(pendingUpdates().sonarr, undefined);
+});

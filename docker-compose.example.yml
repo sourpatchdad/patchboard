@@ -1,0 +1,36 @@
+# Copy to docker-compose.yml and env.example to .env, then fill in .env.
+# Bound to the Tailscale address only: Patchboard has no login of its own and
+# relies on the tailnet for access control. Put Caddy in front for HTTPS (see
+# deploy/Caddyfile.example); the PWA needs HTTPS to install.
+
+services:
+  patchboard:
+    build: .
+    container_name: patchboard
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - POOL_PATH=/host/pool
+      - DOCS_PATH=/host/docs
+      - LOGS_PATH=/host/logs
+    ports:
+      - "${TAILSCALE_IP:-192.168.1.10}:3200:3200"
+    volumes:
+      # Read-only: Patchboard lists, inspects and reads stats and logs. It never
+      # starts, stops or changes a container.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config:/config:ro
+      - /mnt/HomeNAS/appdata/patchboard:/data
+      # Fallback free-space number (statfs) when TrueNAS isn't connected.
+      # Non-recursive, so child datasets are not visible inside the container.
+      - type: bind
+        source: /mnt/HomeNAS
+        target: /host/pool
+        read_only: true
+        bind:
+          recursive: disabled
+      # The server's own notes, read-only: RUNBOOK.md for container pages, and
+      # the audit reports to seed storage history. Nothing else is read.
+      - /mnt/HomeNAS/system-docs:/host/docs:ro
+      - /mnt/HomeNAS/logs:/host/logs:ro
