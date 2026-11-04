@@ -3379,6 +3379,125 @@ a.vitals:hover .vital-label {
   font-size: 14px;
 }
 
+/* ---------- Updates from the UI ---------- */
+
+.ctr-actions-wrap {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ctr-actions-wrap .ctr-actions {
+  margin-left: 0;
+}
+
+.update-panel {
+  border-left: 2px solid var(--accent);
+  padding-left: 18px;
+}
+
+.update-panel.is-failed {
+  border-left-color: var(--crit);
+}
+
+.update-panel.is-done {
+  border-left-color: var(--line);
+}
+
+.update-summary {
+  margin: 12px 0 6px;
+  color: var(--ink);
+}
+
+.update-steps {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.update-steps li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--ink-3);
+  font-size: 14.5px;
+}
+
+.update-steps li[data-status='running'],
+.update-steps li[data-status='done'] {
+  color: var(--ink);
+}
+
+.update-mark {
+  font: 500 13px/1 var(--f-mono);
+  text-align: center;
+}
+
+.update-steps li[data-status='done'] .update-mark {
+  color: var(--ink-2);
+}
+
+.update-steps li[data-status='failed'] .update-mark,
+.update-steps li[data-status='failed'] {
+  color: var(--crit);
+}
+
+/* Running: a dot that breathes; waiting: an empty ring. */
+.update-steps li[data-status='running'] .update-mark::before,
+.update-steps li[data-status='waiting'] .update-mark::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.update-steps li[data-status='running'] .update-mark::before {
+  background: var(--accent);
+  animation: led-pulse 1.2s ease-in-out infinite;
+}
+
+.update-steps li[data-status='waiting'] .update-mark::before {
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.update-note-text {
+  font: 400 12.5px/1.4 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.update-log summary {
+  cursor: pointer;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  padding: 6px 0;
+}
+
+.update-log .logs-out {
+  max-height: 220px;
+}
+
+.update-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.update-error {
+  margin: 12px 0 0;
+}
+
+@media (max-width: 760px) {
+  .ctr-actions-wrap {
+    margin-left: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

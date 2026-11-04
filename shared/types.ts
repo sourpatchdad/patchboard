@@ -130,6 +130,34 @@ export interface TruenasData {
   net: { iface: string; rx: number; tx: number }[] | null;
 }
 
+export interface UpdateEligibility {
+  ok: boolean;
+  reason?: string;
+}
+
+export interface UpdateStep {
+  key: string;
+  label: string;
+  status: 'waiting' | 'running' | 'done' | 'failed' | 'skipped';
+  note?: string;
+}
+
+/** A pull-and-recreate (or rollback) run, streamed to the container page. */
+export interface UpdateJob {
+  id: string;
+  container: string;
+  kind: 'update' | 'rollback';
+  status: 'running' | 'done' | 'failed';
+  steps: UpdateStep[];
+  log: string[];
+  startedAt: number;
+  finishedAt?: number;
+  /** Short image ids before and after. */
+  from?: string;
+  to?: string;
+  error?: string;
+}
+
 /** Detail for one container, from `docker inspect`. Never includes env. */
 export interface ContainerDetail {
   name: string;
@@ -154,6 +182,8 @@ export interface ContainerDetail {
   networks: string[];
   dependsOn: string[];
   usedBy: string[];
+  /** Whether Patchboard can update it, filled in by the route. */
+  update?: UpdateEligibility;
 }
 
 export interface RunbookSection {

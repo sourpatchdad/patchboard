@@ -14,6 +14,7 @@ services:
       - POOL_PATH=/host/pool
       - DOCS_PATH=/host/docs
       - LOGS_PATH=/host/logs
+      - COMPOSE_ROOT=/mnt/SourPatchNAS/compose
     ports:
       - "${TAILSCALE_IP:-100.112.9.9}:3200:3200"
     volumes:
@@ -34,3 +35,7 @@ services:
       # the audit reports to seed storage history. Nothing else is read.
       - /mnt/SourPatchNAS/system-docs:/host/docs:ro
       - /mnt/SourPatchNAS/logs:/host/logs:ro
+      # For updates from the UI: the compose stacks, read-only, at the same
+      # path as on the host so compose files resolve identically. Compose reads
+      # each stack's own .env when it runs; Patchboard never opens them.
+      - /mnt/SourPatchNAS/compose:/mnt/SourPatchNAS/compose:ro

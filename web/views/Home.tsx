@@ -448,6 +448,8 @@ const actionText: Record<string, string> = {
   restart: 'restarted from Patchboard',
   stop: 'stopped from Patchboard',
   start: 'started from Patchboard',
+  update: 'updated from Patchboard',
+  rollback: 'rolled back from Patchboard',
 };
 
 function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {

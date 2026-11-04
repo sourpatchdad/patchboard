@@ -38,6 +38,8 @@ in progress, and the release calendar.
   a one-line overnight summary on Home.
 - **Actions.** Restart, stop or start a container from its page, with a
   two-step confirm, recorded in its history.
+- **Updates.** Pull and recreate one service from its page, watch each step,
+  and roll back to the previous image if it doesn't come back healthy.
 - **Image updates.** Diun's webhook marks containers with a newer image; the
   mark clears once the container runs it.
 - **Logs.** Live container logs from the Docker socket, with a hand-off to Dozzle.
