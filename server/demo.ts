@@ -92,6 +92,12 @@ export const demoCatalog: Catalog = {
     { name: 'Home Assistant', href: '#', icon: 'home-assistant.png' },
     { name: 'Trakt', href: '#', icon: 'trakt.png' },
     { name: 'YouTube', href: '#', icon: 'youtube.png' },
+    { name: 'Letterboxd', href: '#', icon: 'letterboxd.png' },
+    { name: 'Hardcover', href: '#', icon: 'hardcover.png' },
+    { name: 'Cloudflare', href: '#', icon: 'cloudflare.png' },
+    { name: 'Tailscale', href: '#', icon: 'tailscale.png' },
+    { name: 'Backblaze', href: '#', icon: 'backblaze.png' },
+    { name: 'Router', href: '#', icon: 'ubiquiti-unifi.png' },
   ],
 };
 

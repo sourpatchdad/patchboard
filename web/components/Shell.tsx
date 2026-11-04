@@ -63,6 +63,12 @@ export function Shell() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    const locked = palette || help;
+    document.documentElement.classList.toggle('is-locked', locked);
+    return () => document.documentElement.classList.remove('is-locked');
+  }, [palette, help]);
+
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
 
   return (
@@ -89,6 +95,12 @@ export function Shell() {
           <span className={`live ${live ? 'live-on' : ''}`} title={live ? 'Receiving live updates' : 'Reconnecting'}>
             {live ? 'Live' : failed ? 'Offline' : 'Connecting'}
           </span>
+          <button type="button" className="topbar-icon topbar-search" aria-label="Jump to" onClick={() => setPalette(true)}>
+            <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4 4" />
+            </svg>
+          </button>
           <NavLink to="/settings" className="topbar-icon" aria-label="Settings" title="Settings">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
