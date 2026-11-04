@@ -25,3 +25,8 @@ behavior; it records why things are the way they are.
   `env.example`.
 - Error messages from adapters reach the browser. Never include a URL in them,
   because some integrations (Tautulli) carry keys in the query string.
+- Git: every commit, tag, merge and push is authored as Nathan
+  (`Nathan Nicholas <github@nbnstack.com>`, the configured identity). No
+  `Co-Authored-By` lines or any other AI attribution in commit messages, tag
+  messages or PR descriptions. When merging PRs, use a merge or rebase that
+  keeps Nathan as the committer.
