@@ -1,6 +1,6 @@
 # Patchboard v2: your dashboard, our judgment
 
-Proposal, 2026-11-04. Status: for decision.
+Proposal, 2026-11-04. Status: in progress. Shipped: label discovery (1.8.0), the board with edit mode and the Server and Container widgets (1.9.0). Next: JSON stat widget, board export and import, presets, catalog editor, weather.
 
 ## The problem
 

@@ -7,6 +7,7 @@ import type { Catalog, Container, SourceId, SourceState } from '../../shared/typ
 import { checkUrl } from '../adapters/checks.ts';
 import { auditCatalog, guessFromImage } from '../catalog-audit.ts';
 import { mergeCatalog, pickLabels } from '../labels.ts';
+import { DEFAULT_BOARD, validateBoard } from '../../shared/board.ts';
 import { computeAlerts, stoppedDetail } from '../alerts.ts';
 import { normalizeImage, pendingUpdates, recordDiunNotice, settleUpdates } from '../updates.ts';
 
@@ -187,4 +188,24 @@ test('labels: join a YAML group by name, start new groups after, never shadow YA
     ],
   );
   assert.equal(m.groups[1].services[0].check, false);
+});
+
+test('board: the default is valid, and Needs attention can never be removed', () => {
+  const ok = validateBoard(DEFAULT_BOARD);
+  assert.ok('board' in ok);
+  const v = validateBoard({ widgets: [{ id: 'feeds', type: 'feeds', size: 'l' }] });
+  assert.ok('board' in v);
+  if ('board' in v) assert.deepEqual(v.board.widgets.map((w) => w.type), ['attention', 'feeds']);
+});
+
+test('board: rejects unknown types, duplicates, bad container names; fixes bad sizes', () => {
+  assert.ok('error' in validateBoard({ widgets: [{ id: 'x', type: 'nope', size: 'm' }] }));
+  assert.ok('error' in validateBoard({ widgets: [{ id: 'a', type: 'feeds', size: 'm' }, { id: 'b', type: 'feeds', size: 'm' }] }));
+  assert.ok('error' in validateBoard({ widgets: [{ id: 'c', type: 'container', size: 's', config: { container: '../etc' } }] }));
+  const v = validateBoard({ widgets: [{ id: 'apps', type: 'apps', size: 's' }, { id: 'c1', type: 'container', size: 's', config: { container: 'plex', extra: 'dropped' } }] });
+  assert.ok('board' in v);
+  if ('board' in v) {
+    assert.equal(v.board.widgets.find((w) => w.id === 'apps')?.size, 'xl');
+    assert.deepEqual(v.board.widgets.find((w) => w.id === 'c1')?.config, { container: 'plex' });
+  }
 });

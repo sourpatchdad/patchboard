@@ -17,9 +17,8 @@ import type {
   TruenasData,
   WeatherData,
 } from '../../shared/types.ts';
-import { AppTiles } from '../components/AppTiles.tsx';
-import { PatchRow } from '../components/PatchRow.tsx';
-import { type HomeSection, useAppearance } from '../lib/appearance.ts';
+import { Board } from '../board/Board.tsx';
+import { useAppearance } from '../lib/appearance.ts';
 import { Empty, Episode, Icon, Ident, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   ago,
@@ -42,27 +41,11 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 export function Home() {
   const { snap } = useStore();
   const now = useNow(15_000);
-  const { homeApps, hidden } = useAppearance();
-  const show = (id: HomeSection) => !hidden.includes(id);
   if (!snap) return <HomeSkeleton />;
-
   return (
     <div className="home">
       <Masthead now={now} />
-      {homeApps === 'patchbay' ? <PatchRow /> : <AppTiles legend />}
-      <div className="home-grid">
-        <div className="home-col">
-          <Attention alerts={snap.alerts} now={now} />
-          {show('inbox') && <Inbox now={now} />}
-          {show('feeds') && <FeedsBrief now={now} />}
-        </div>
-        <div className="home-col">
-          {show('now') && <NowPlaying />}
-          {show('upcoming') && <UpcomingBrief now={now} />}
-          {show('changes') && <Changes changes={snap.changes} now={now} />}
-        </div>
-      </div>
-      {show('recent') && <RecentlyAdded now={now} />}
+      <Board now={now} />
     </div>
   );
 }
@@ -160,7 +143,7 @@ function Overnight({ now }: { now: number }) {
   );
 }
 
-function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
+export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   if (!alerts.length) return null;
   const serious = alerts.filter((a) => a.level !== 'info').length;
   return (
@@ -195,7 +178,7 @@ function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   );
 }
 
-function Inbox({ now }: { now: number }) {
+export function Inbox({ now }: { now: number }) {
   const { state, data } = useSource<FastmailData>('fastmail');
   if (!state) return null;
   return (
@@ -225,7 +208,7 @@ function Inbox({ now }: { now: number }) {
   );
 }
 
-function FeedsBrief({ now }: { now: number }) {
+export function FeedsBrief({ now }: { now: number }) {
   const { state, data } = useSource<MinifluxData>('miniflux');
   if (!state) return null;
   return (
@@ -257,15 +240,11 @@ function FeedsBrief({ now }: { now: number }) {
   );
 }
 
-function NowPlaying() {
+export function NowPlaying() {
   const { data: plex, state: plexState } = useSource<TautulliData>('tautulli');
   const { data: qbit, state: qbitState } = useSource<QbitData>('qbit');
-  const { data: sys } = useSource<SystemData>('system');
-  const { data: nas } = useSource<TruenasData>('truenas');
   const streams = plex?.streams ?? [];
-  // The TrueNAS pool is the real number; statfs sees only one dataset.
-  const mainPool = nas?.pools.slice().sort((a, b) => b.sizeBytes - a.sizeBytes)[0];
-  const storagePct = mainPool?.usedPct ?? sys?.pool?.usedPct ?? null;
+  if (!plexState && !qbitState) return null;
 
   return (
     <Section title="Right now" className="now">
@@ -317,31 +296,6 @@ function NowPlaying() {
         </div>
       )}
 
-      {sys && (
-        <Link to="/server" className="now-block vitals" aria-label="Server details">
-          <div className="vital">
-            <span className="vital-num">{Math.round(sys.cpuPct)}%</span>
-            <span className="vital-label">CPU</span>
-          </div>
-          {sys.mem && (
-            <div className="vital">
-              <span className="vital-num">{size(Math.max(0, sys.mem.total - sys.mem.available - sys.mem.arc))}</span>
-              <span className="vital-label">Memory in use</span>
-            </div>
-          )}
-          {storagePct != null && (
-            <div className="vital vital-wide">
-              <span className="vital-num">{Math.round(storagePct)}%</span>
-              <span className="vital-label">Storage used</span>
-              <Meter value={storagePct} level={storagePct >= 95 ? 'crit' : storagePct >= 85 ? 'warn' : 'ok'} />
-            </div>
-          )}
-          <div className="vital">
-            <span className="vital-num">{uptime(sys.uptimeSec)}</span>
-            <span className="vital-label">Uptime</span>
-          </div>
-        </Link>
-      )}
     </Section>
   );
 }
@@ -364,7 +318,7 @@ export function useReleases(): { items: ReleaseItem[]; any: boolean } {
   return { items, any: !!(sonarr.state || radarr.state || trakt.state) };
 }
 
-function UpcomingBrief({ now }: { now: number }) {
+export function UpcomingBrief({ now }: { now: number }) {
   const { items, any } = useReleases();
   if (!any) return null;
   const week = items.filter((i) => {
@@ -443,7 +397,7 @@ const actionText: Record<string, string> = {
   rollback: 'rolled back from Patchboard',
 };
 
-function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
+export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
   if (!changes.length) return null;
   return (
     <Section title="Changes" className="changes-sec" count="last 48 hours">
@@ -463,7 +417,7 @@ function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
   );
 }
 
-function RecentlyAdded({ now }: { now: number }) {
+export function RecentlyAdded({ now }: { now: number }) {
   const { state, data } = useSource<TautulliData>('tautulli');
   if (!state || !data?.recent.length) return null;
   return (

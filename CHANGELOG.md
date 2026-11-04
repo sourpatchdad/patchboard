@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.9.0 — 2026-11-04
+
+Home is a board you arrange.
+
+- **Widgets:** every Home section is a widget (Apps, Needs attention, Right
+  now, This week, Inbox, Feeds, Changes, Recently added) with a width of a
+  quarter, a third, a half or the full row. They pack like masonry on a
+  12-column grid (6 on laptops, 1 on phones), so tall and short widgets
+  leave no gaps.
+- **New widgets:** Server (CPU, memory, storage, uptime, with the last 24
+  hours) and Container (any container's CPU, memory, response time, a
+  24-hour CPU line and 14 days of health). Add as many containers as you like.
+- **Customize** on Home: drag by the handle or use the arrows, pick a width,
+  remove, add from a drawer; Save, Cancel or Reset to default. View mode has
+  no handles at all. Needs attention can move but never leave.
+- The board is stored on the server, so every device shows the same one;
+  phones show it as one column in the same order. Saving needs the action
+  header, like every other change.
+- Settings no longer lists Home sections; Customize replaces it.
+- Tests for board validation (22 total).
+
 ## 1.8.0 — 2026-11-04
 
 First piece of v2 (docs/DESIGN-v2.md).

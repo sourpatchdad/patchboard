@@ -26,6 +26,8 @@ import { demoAdapters, demoFeeds, demoInspect, demoLogs, demoReadIds, demoRunboo
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
+import { DEFAULT_BOARD, validateBoard } from '../shared/board.ts';
+import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { recordEvent } from './db.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
@@ -257,6 +259,27 @@ app.post('/api/hooks/diun', async (c) => {
   const flagged = recordDiunNotice(body, hub.containers());
   if (flagged.length) hub.emitUpdates();
   return c.json({ ok: true, flagged });
+});
+
+// The Home board. Stored on the server so every device shows the same one.
+app.get('/api/board', (c) => {
+  const saved = kvGet<unknown>('board');
+  const v = saved ? validateBoard(saved) : null;
+  return c.json(v && 'board' in v ? { board: v.board, custom: true } : { board: DEFAULT_BOARD, custom: false });
+});
+
+app.put('/api/board', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const v = validateBoard(await c.req.json().catch(() => null));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  kvSet('board', v.board);
+  return c.json({ board: v.board, custom: true });
+});
+
+app.delete('/api/board', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  kvSet('board', null);
+  return c.json({ board: DEFAULT_BOARD, custom: false });
 });
 
 // Catalog audit: entries pointing at nothing, and running apps not listed.

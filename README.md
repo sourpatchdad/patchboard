@@ -128,6 +128,13 @@ views (`g s` Server, `g k` Stacks), `?` for the full list.
 
 ## Make it yours
 
+Home is a board: press **Customize** to drag widgets into place, size them
+(a quarter, a third, a half or the full row), remove them, or add new ones,
+including a Container widget for any container's CPU, memory, response time
+and health. The board is saved on the server, so every device shows the same
+one.
+
+
 Settings (the sliders icon, or `g ,`) is per device: six themes (Graphite,
 Midnight, Forest, Dusk, Paper, and Custom from any three colors),
 dark, light or system, any accent color, four type pairings, three

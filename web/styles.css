@@ -4228,6 +4228,373 @@ a.vitals:hover .vital-label {
   }
 }
 
+/* ---------- The Home board ---------- */
+
+.board-wrap {
+  margin-top: 8px;
+}
+
+.board-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  min-height: 32px;
+  margin-bottom: 6px;
+}
+
+.board-customize {
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.board-customize:hover {
+  color: var(--head);
+}
+
+.is-editing .board-bar {
+  justify-content: flex-start;
+  position: sticky;
+  top: calc(var(--topbar-h) + 8px);
+  z-index: 15;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--raised) 94%, transparent);
+  backdrop-filter: blur(8px);
+  margin-bottom: 16px;
+}
+
+.board-bar-title {
+  font-weight: 600;
+  color: var(--head);
+}
+
+.board-bar-hint {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-right: auto;
+}
+
+.board-save {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.board-save:hover {
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
+/* 12 columns, 4px rows: each cell spans as many rows as its content needs,
+   so widgets of different heights pack without gaps. */
+.board {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: 4px;
+  grid-auto-flow: dense;
+  column-gap: 44px;
+  align-items: start;
+}
+
+.board-loading {
+  min-height: 400px;
+}
+
+.cell[data-size='s'] {
+  grid-column: span 3;
+}
+
+.cell[data-size='m'] {
+  grid-column: span 4;
+}
+
+.cell[data-size='l'] {
+  grid-column: span 6;
+}
+
+.cell[data-size='xl'] {
+  grid-column: span 12;
+}
+
+.cell-inner {
+  padding-bottom: 36px;
+}
+
+.cell-inner > .cell-body > .section {
+  margin-bottom: 0;
+}
+
+.cell-inner > .cell-body > .tiles {
+  padding-bottom: 0;
+}
+
+/* Edit mode: every widget becomes a card with its tools on top. */
+.is-editing .cell-inner {
+  padding: 0 0 22px;
+}
+
+.is-editing .cell-body {
+  opacity: 0.55;
+  max-height: 340px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 75%, transparent);
+}
+
+.is-editing .cell {
+  outline: 1px dashed var(--line);
+  outline-offset: 6px;
+  border-radius: var(--radius);
+}
+
+.is-editing .cell.is-over {
+  outline: 2px solid var(--accent);
+}
+
+.cell-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.cell-handle {
+  cursor: grab;
+  color: var(--ink-3);
+  font-size: 15px;
+  padding: 0 4px;
+  user-select: none;
+}
+
+.cell-name {
+  font-weight: 600;
+  color: var(--head);
+  margin-right: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cell-sizes {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.cell-sizes button,
+.cell-btn {
+  min-width: 28px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--raised);
+  color: var(--ink-2);
+  font: 400 12px/1.2 var(--f-mono);
+  cursor: pointer;
+}
+
+.cell-sizes button[aria-pressed='true'] {
+  color: var(--head);
+  border-color: var(--accent);
+}
+
+.cell-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cell-remove:hover {
+  color: var(--crit);
+  border-color: var(--crit);
+}
+
+/* Add-widget drawer reuses the palette's sheet. */
+.drawer {
+  padding: 16px 18px 12px;
+  max-height: min(70vh, 640px);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.drawer-head h2 {
+  font: var(--display-weight) 20px/1.1 var(--f-display);
+  color: var(--head);
+}
+
+.drawer-list {
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.drawer-list button {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+}
+
+.drawer-list button:hover,
+.drawer-list button:focus-visible {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.drawer-list strong {
+  color: var(--head);
+  font-weight: 600;
+}
+
+.drawer-list span {
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+/* Server widget */
+.vw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 18px 22px;
+  padding-top: 14px;
+}
+
+.vw {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.vw-num {
+  font: 400 24px/1 var(--f-mono);
+  letter-spacing: -0.03em;
+  color: var(--head);
+}
+
+.vw-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.vw .split,
+.vw .meter {
+  margin-top: 4px;
+}
+
+/* Container widget */
+.cw {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+.cw.is-down {
+  box-shadow: inset 2px 0 0 var(--crit), inset 0 0 0 1px var(--line-soft);
+}
+
+.cw-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.cw-head .icon-img,
+.cw-head .icon-mono {
+  grid-row: 1 / span 2;
+}
+
+.cw-name {
+  font-weight: 600;
+  color: var(--head);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cw-state {
+  font: 400 12px/1.3 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.cw.is-down .cw-state {
+  color: var(--crit);
+}
+
+.cw-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.cw-nums b {
+  font: 500 14px/1 var(--f-mono);
+  color: var(--head);
+  margin-right: 3px;
+}
+
+@media (max-width: 1280px) {
+  .board {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 36px;
+  }
+
+  .cell[data-size='s'],
+  .cell[data-size='m'] {
+    grid-column: span 3;
+  }
+
+  .cell[data-size='l'],
+  .cell[data-size='xl'] {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 760px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .cell[data-size] {
+    grid-column: 1 / -1;
+  }
+
+  .board-bar-hint {
+    flex-basis: 100%;
+    order: 9;
+  }
+
+  .cell-sizes {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

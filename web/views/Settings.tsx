@@ -9,7 +9,6 @@ import {
   ACCENTS,
   type Appearance,
   exportAppearance,
-  HOME_SECTIONS,
   importAppearance,
   resetAppearance,
   setAppearance,
@@ -106,23 +105,9 @@ export function Settings() {
             ['patchbay', 'Patch bay'],
           ])}
         </div>
-        <p className="settings-note">Sections to show. Needs attention always shows when something does.</p>
-        <div className="choice-row">
-          {HOME_SECTIONS.map((sct) => {
-            const on = !a.hidden.includes(sct.id);
-            return (
-              <button
-                key={sct.id}
-                type="button"
-                className="chip"
-                aria-pressed={on}
-                onClick={() => setAppearance({ hidden: on ? [...a.hidden, sct.id] : a.hidden.filter((x) => x !== sct.id) })}
-              >
-                {sct.label}
-              </button>
-            );
-          })}
-        </div>
+        <p className="settings-note">
+          To choose which widgets Home shows, their order and their width, use <strong>Customize</strong> on Home. The board is the same on every device.
+        </p>
       </Section>
 
       <Section title="Units and time">
