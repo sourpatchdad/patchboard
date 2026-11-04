@@ -29,7 +29,7 @@ jobs:
         with:
           fetch-depth: 0
       # Scans the full history, so a key committed and later deleted still fails the build.
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
