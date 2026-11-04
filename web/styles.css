@@ -639,7 +639,7 @@ time,
 .jack {
   position: relative;
   z-index: 1;
-  width: 66px;
+  min-width: 66px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -679,9 +679,9 @@ time,
   background: transparent;
 }
 
-/* A healthy jack is quiet: a dim neutral dot. Only trouble gets color and light. */
+/* A healthy jack is quiet: no dot at all. Only trouble gets color and light. */
 .jack[data-state='up'] .jack-led {
-  background: var(--quiet);
+  display: none;
 }
 
 .jack[data-state='warn'] .jack-led {
@@ -707,15 +707,14 @@ time,
   display: none;
 }
 
+/* Jacks grow to fit their label, so no name is ever cut short. */
 .jack-label {
-  max-width: 64px;
   height: 20px;
+  padding: 0 4px;
   font: 400 11px/20px var(--f-mono);
   letter-spacing: -0.02em;
   color: var(--tape-ink);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 a.jack:hover .jack-socket,
@@ -4345,6 +4344,10 @@ a.vitals:hover .vital-label {
   grid-column: span 6;
 }
 
+.cell[data-size='w'] {
+  grid-column: span 8;
+}
+
 .cell[data-size='xl'] {
   grid-column: span 12;
 }
@@ -4604,6 +4607,10 @@ a.vitals:hover .vital-label {
     grid-column: span 3;
   }
 
+  .cell[data-size='w'] {
+    grid-column: span 4;
+  }
+
   .cell[data-size='xl'] {
     grid-column: span 6;
   }
@@ -4615,7 +4622,8 @@ a.vitals:hover .vital-label {
   }
 
   .cell[data-size='m'],
-  .cell[data-size='l'] {
+  .cell[data-size='l'],
+  .cell[data-size='w'] {
     grid-column: span 6;
   }
 }
@@ -5118,6 +5126,112 @@ a.jw-title:hover {
     white-space: normal;
     font-size: 13px;
     color: var(--ink-3);
+  }
+}
+
+/* ---------- Widget settings drawer ---------- */
+
+.widget-settings {
+  width: min(560px, calc(100vw - 24px));
+}
+
+.ws-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.ws-form label,
+.ws-row {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ws-form .field {
+  width: 100%;
+  margin: 0;
+}
+
+.ws-row .seg {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Wide list widgets flow into columns instead of stretching one list. */
+.cell[data-size='w'] .feedlist,
+.cell[data-size='xl'] .feedlist,
+.cell[data-size='w'] .mail,
+.cell[data-size='xl'] .mail,
+.cell[data-size='xl'] .changes-sec ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  column-gap: 40px;
+}
+
+/* ---------- Arranging: group names, moves between groups ---------- */
+
+.arrange-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.arrange-head .grip {
+  cursor: grab;
+  padding: 4px 2px;
+}
+
+.field.group-name {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 8px;
+  font: 400 12.5px/1.3 var(--f-mono);
+}
+
+.field.group-name.is-bad {
+  border-color: var(--crit);
+}
+
+.tiles-arranging .tile-group-head {
+  gap: 8px;
+}
+
+.tile-drop {
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+/* A native select laid over the dots: the phone's own picker opens. */
+.move-to {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.move-to select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.add-group {
+  justify-self: start;
+}
+
+/* Phones: one app per row while arranging, so the buttons have room. */
+@media (max-width: 760px) {
+  .tiles-arranging .tile-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

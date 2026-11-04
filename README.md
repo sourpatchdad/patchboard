@@ -104,9 +104,10 @@ Coming from [Homepage](https://gethomepage.dev)? `npm run import-homepage --
 /path/to/homepage/config` turns its `services.yaml` and `bookmarks.yaml` into
 a catalog, leaving widget credentials behind.
 
-Patchboard has no login: publish it only on a private address (Tailscale, a
-firewalled LAN, or behind an authenticating proxy). Read [SECURITY.md](SECURITY.md)
-before exposing it anywhere. For HTTPS, which installing it as a phone app
+Sign-in is off by default, for a private address (Tailscale or a firewalled
+LAN). Turn it on with `AUTH=password`, or `AUTH=forward` behind Authelia,
+Authentik or Cloudflare Access; `READ_ONLY=1` and a Docker socket proxy narrow
+what it can do. Read [SECURITY.md](SECURITY.md) before exposing it anywhere. For HTTPS, which installing it as a phone app
 needs, see [deploy/Caddyfile.example](deploy/Caddyfile.example).
 
 ## Configuration
@@ -128,11 +129,23 @@ views (`g s` Server, `g k` Stacks), `?` for the full list.
 
 ## Make it yours
 
-Home is a board: press **Customize** to drag widgets into place, size them
-(a quarter, a third, a half or the full row), remove them, or add new ones,
-including a Container widget for any container's CPU, memory, response time
-and health. The board is saved on the server, so every device shows the same
-one.
+Home is a board. Press **Customize**, then:
+
+- **Move** a widget by dragging its handle, or with the arrows.
+- **Size** it: a quarter, a third, a half, two thirds or the full row. Wide
+  lists (feeds, mail, changes) flow into columns instead of stretching.
+- **⚙ Settings** on any widget: rename its header, choose how many items it
+  shows, one week or two for releases, icons or tiles for apps.
+- **Add** widgets, including any number of Container widgets (one container's
+  CPU, memory, response time and 14 days of health) and API numbers widgets
+  (up to four values from any JSON API, with amber and red thresholds).
+
+Apps has its own **Rearrange**: drag apps into any order or into another
+group, rename groups by typing over them, make new ones. Sorting by problems
+or A to Z is a click away and stays in the URL.
+
+All of this is saved on the server, so every device shows the same board and
+the same order, and each change is recorded in Settings, Activity.
 
 
 Settings (the sliders icon, or `g ,`) is per device: six themes (Graphite,

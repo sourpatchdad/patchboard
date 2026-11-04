@@ -15,7 +15,8 @@ import { Icon } from './ui.tsx';
 export type TileSort = 'catalog' | 'name' | 'status';
 export const TILE_SORTS = ['catalog', 'status', 'name'] as const;
 
-type Groups = Catalog['groups'];
+/** Groups while arranging; from is the name a group had when arranging began. */
+export type Groups = (Catalog['groups'][number] & { from?: string })[];
 
 /** Rearranging: the working order, and where to send a change. */
 export interface Arrange {
@@ -83,42 +84,76 @@ export function AppTiles({
 }
 
 /**
- * Rearranging: drag a tile within its group or a group by its name. The
- * arrow buttons do the same for touch and keyboard. Links are off meanwhile,
- * so a drag never opens an app.
+ * Rearranging. Drag an app within its group or into another; drag a group by
+ * its handle. Group names are editable in place. The arrows and the "Move to"
+ * menu do the same on a phone or keyboard. Links are off meanwhile, so a drag
+ * never opens an app.
  */
 function ArrangeTiles({ groups, onChange, size }: Arrange & { size: string }) {
   const drag = useRef<{ g: number; i?: number } | null>(null);
   const moveGroup = (from: number, to: number) => to >= 0 && to < groups.length && onChange(moved(groups, from, to));
-  const moveApp = (g: number, from: number, to: number) => {
-    const list = groups[g].services;
-    if (to < 0 || to >= list.length) return;
-    onChange(groups.map((x, j) => (j === g ? { ...x, services: moved(list, from, to) } : x)));
+  /** Move app i of group g to group tg at index ti (end when omitted). */
+  const moveApp = (g: number, i: number, tg: number, ti?: number) => {
+    if (tg < 0 || tg >= groups.length) return;
+    if (g === tg) {
+      const list = groups[g].services;
+      const to = ti ?? list.length - 1;
+      if (to < 0 || to >= list.length || to === i) return;
+      onChange(groups.map((x, j) => (j === g ? { ...x, services: moved(list, i, to) } : x)));
+      return;
+    }
+    const app = groups[g].services[i];
+    onChange(
+      groups.map((x, j) => {
+        if (j === g) return { ...x, services: x.services.filter((_, k) => k !== i) };
+        if (j === tg) {
+          const next = [...x.services];
+          next.splice(ti ?? next.length, 0, app);
+          return { ...x, services: next };
+        }
+        return x;
+      }),
+    );
   };
+  const rename = (g: number, name: string) => onChange(groups.map((x, j) => (j === g ? { ...x, name } : x)));
+  const addGroup = () => {
+    let n = 1;
+    while (groups.some((x) => x.name === (n === 1 ? 'New group' : `New group ${n}`))) n++;
+    onChange([...groups, { name: n === 1 ? 'New group' : `New group ${n}`, services: [] }]);
+  };
+  const dupes = new Set(groups.map((g) => g.name.trim()).filter((n, i, all) => all.indexOf(n) !== i));
+
   return (
     <div className={`tiles tiles-${size} tiles-arranging`}>
       {groups.map((g, gi) => (
         <section
           className="tile-group"
-          key={g.name}
+          key={gi}
           aria-label={g.name}
-          onDragOver={(e) => drag.current?.i === undefined && drag.current && e.preventDefault()}
+          onDragOver={(e) => drag.current && (drag.current.i === undefined ? drag.current.g !== gi : true) && e.preventDefault()}
           onDrop={(e) => {
             const d = drag.current;
-            if (d && d.i === undefined && d.g !== gi) {
-              e.preventDefault();
-              moveGroup(d.g, gi);
-            }
             drag.current = null;
+            if (!d) return;
+            e.preventDefault();
+            if (d.i === undefined) {
+              if (d.g !== gi) moveGroup(d.g, gi);
+            } else if (d.g !== gi) moveApp(d.g, d.i, gi);
           }}
         >
-          <header className="tile-group-head arrange-head" draggable onDragStart={() => (drag.current = { g: gi })} onDragEnd={() => (drag.current = null)}>
-            <h3>
-              <span className="grip" aria-hidden>
+          <header className="tile-group-head arrange-head">
+            <span className="arrange-name">
+              <span className="grip" draggable onDragStart={() => (drag.current = { g: gi })} onDragEnd={() => (drag.current = null)} title="Drag to move this group" aria-hidden>
                 ⠿
               </span>
-              {g.name}
-            </h3>
+              <input
+                className={`field group-name ${dupes.has(g.name.trim()) || !g.name.trim() ? 'is-bad' : ''}`}
+                value={g.name}
+                maxLength={60}
+                aria-label="Group name"
+                onChange={(e) => rename(gi, e.target.value)}
+              />
+            </span>
             <span className="arrange-btns">
               <button type="button" className="cell-btn" disabled={gi === 0} onClick={() => moveGroup(gi, gi - 1)} aria-label={`Move ${g.name} up`}>
                 ↑
@@ -129,6 +164,7 @@ function ArrangeTiles({ groups, onChange, size }: Arrange & { size: string }) {
             </span>
           </header>
           <ul className="tile-grid">
+            {g.services.length === 0 && <li className="tile-drop">Drag apps here, or use an app's Move to menu. Empty groups are dropped on save.</li>}
             {g.services.map((s, i) => (
               <li
                 key={s.name}
@@ -141,16 +177,15 @@ function ArrangeTiles({ groups, onChange, size }: Arrange & { size: string }) {
                 }}
                 onDragEnd={() => (drag.current = null)}
                 onDragOver={(e) => {
-                  if (drag.current?.g === gi && drag.current.i !== undefined) e.preventDefault();
+                  if (drag.current?.i !== undefined) e.preventDefault();
                 }}
                 onDrop={(e) => {
                   const d = drag.current;
-                  if (d?.g === gi && d.i !== undefined) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    moveApp(gi, d.i, i);
-                    drag.current = null;
-                  }
+                  if (d?.i === undefined) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  drag.current = null;
+                  moveApp(d.g, d.i, gi, i);
                 }}
               >
                 <span className="tile-main">
@@ -163,18 +198,48 @@ function ArrangeTiles({ groups, onChange, size }: Arrange & { size: string }) {
                   </span>
                 </span>
                 <span className="arrange-btns tile-arrange-btns">
-                  <button type="button" className="cell-btn" disabled={i === 0} onClick={() => moveApp(gi, i, i - 1)} aria-label={`Move ${s.name} earlier`}>
+                  <button type="button" className="cell-btn" disabled={i === 0} onClick={() => moveApp(gi, i, gi, i - 1)} aria-label={`Move ${s.name} earlier`}>
                     ←
                   </button>
-                  <button type="button" className="cell-btn" disabled={i === g.services.length - 1} onClick={() => moveApp(gi, i, i + 1)} aria-label={`Move ${s.name} later`}>
+                  <button type="button" className="cell-btn" disabled={i === g.services.length - 1} onClick={() => moveApp(gi, i, gi, i + 1)} aria-label={`Move ${s.name} later`}>
                     →
                   </button>
+                  {groups.length > 1 && (
+                    <span className="cell-btn move-to" title="Move to another group">
+                      ⋯
+                      <select
+                        aria-label={`Move ${s.name} to group`}
+                        value=""
+                        onChange={(e) => {
+                          const tg = Number(e.target.value);
+                          if (!Number.isNaN(tg)) moveApp(gi, i, tg);
+                        }}
+                      >
+                        <option value="" disabled>
+                          Move to
+                        </option>
+                        {groups.map((x, j) =>
+                          j === gi ? null : (
+                            <option key={j} value={j}>
+                              {x.name || 'Unnamed group'}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </span>
+                  )}
                 </span>
               </li>
             ))}
           </ul>
         </section>
       ))}
+      <div className="tile-group">
+        <span />
+        <button type="button" className="button button-quiet add-group" onClick={addGroup}>
+          New group
+        </button>
+      </div>
     </div>
   );
 }

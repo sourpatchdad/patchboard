@@ -1,11 +1,12 @@
 // Every app in the catalog as a live tile, then what's running on the box
 // that the catalog doesn't mention yet, and the bookmarks.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { orderOf } from '../../shared/order.ts';
 import { Link } from 'react-router-dom';
 import type { Catalog, CatalogAudit } from '../../shared/types.ts';
-import { AppTiles, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
+import { AppTiles, type Groups, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { Icon, Section } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
@@ -16,16 +17,34 @@ export function Apps() {
   const [q, setQ] = useState('');
   const [sort, setSort] = useUrlChoice<TileSort>('sort', TILE_SORTS, 'catalog');
   /** The working order while rearranging; null otherwise. */
-  const [arranging, setArranging] = useState<Catalog['groups'] | null>(null);
+  const [arranging, setArranging] = useState<Groups | null>(null);
+  const [params, setParams] = useSearchParams();
+  const startArranging = (groups: Catalog['groups']) => {
+    setQ('');
+    setArranging(groups.map((g) => ({ ...g, from: g.name })));
+  };
+  // Home's Apps widget links here with ?arrange=1.
+  useEffect(() => {
+    if (params.get('arrange') !== '1' || !snap || snap.readOnly) return;
+    startArranging(snap.catalog.groups);
+    const next = new URLSearchParams(params);
+    next.delete('arrange');
+    setParams(next, { replace: true });
+  }, [params, !!snap]);
   const [error, setError] = useState('');
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000).data;
   if (!snap) return null;
   const saveOrder = async (reset: boolean) => {
     setError('');
+    if (!reset && arranging) {
+      const names = arranging.map((g) => g.name.trim());
+      if (names.some((n) => !n)) return setError('Every group needs a name.');
+      if (new Set(names).size !== names.length) return setError('Two groups have the same name.');
+    }
     const res = await fetch('/api/app-order', {
       method: reset ? 'DELETE' : 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
-      body: reset || !arranging ? undefined : JSON.stringify(orderOf(arranging)),
+      body: reset || !arranging ? undefined : JSON.stringify(orderOf(arranging.map((g) => ({ ...g, name: g.name.trim() })), snap.catalog.renamed)),
     });
     if (!res.ok) {
       setError(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
@@ -46,7 +65,7 @@ export function Apps() {
       </div>
       {arranging ? (
         <div className="arrange-bar" role="toolbar" aria-label="Rearrange apps">
-          <p>Drag apps within a group, or a group by its name. The arrows do the same.</p>
+          <p>Drag apps to reorder them or into another group; drag a group by its handle. Rename a group by typing over its name.</p>
           <span className="arrange-actions">
             {error && <span className="crit-text">{error}</span>}
             {snap.catalog.ordered && (
@@ -81,10 +100,7 @@ export function Apps() {
             <button
               type="button"
               className="text-button"
-              onClick={() => {
-                setQ('');
-                setArranging(snap.catalog.groups);
-              }}
+              onClick={() => startArranging(snap.catalog.groups)}
             >
               Rearrange
             </button>

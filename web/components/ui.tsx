@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { WidgetCtx } from '../board/widget-context.ts';
 import { type ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SourceState } from '../../shared/types.ts';
@@ -12,7 +14,9 @@ export function Section(props: {
   className?: string;
   children: ReactNode;
 }) {
-  const { title, count, action, source, className, children } = props;
+  const { count, action, source, className, children } = props;
+  // Inside a Home widget, the widget's own name (if someone renamed it) wins.
+  const title = useContext(WidgetCtx)?.title || props.title;
   return (
     <section className={`section ${className ?? ''}`}>
       <header className="section-head">

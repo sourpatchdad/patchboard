@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
 import type {
   Alert,
@@ -180,6 +181,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
 
 export function Inbox({ now }: { now: number }) {
   const { state, data } = useSource<FastmailData>('fastmail');
+  const { limit = 6 } = useWidget();
   if (!state) return null;
   return (
     <Section
@@ -191,7 +193,7 @@ export function Inbox({ now }: { now: number }) {
     >
       {data?.messages.length ? (
         <ul className="mail">
-          {data.messages.slice(0, 6).map((m) => (
+          {data.messages.slice(0, limit).map((m) => (
             <li key={m.id} className={m.unread ? 'is-unread' : undefined}>
               <a href={data.webUrl} target="_blank" rel="noreferrer" title={m.preview}>
                 <span className="mail-from">{m.from}</span>
@@ -210,6 +212,7 @@ export function Inbox({ now }: { now: number }) {
 
 export function FeedsBrief({ now }: { now: number }) {
   const { state, data } = useSource<MinifluxData>('miniflux');
+  const { limit = 6 } = useWidget();
   if (!state) return null;
   return (
     <Section
@@ -221,7 +224,7 @@ export function FeedsBrief({ now }: { now: number }) {
     >
       {data?.entries.length ? (
         <ul className="feedlist">
-          {data.entries.slice(0, 6).map((e) => (
+          {data.entries.slice(0, limit).map((e) => (
             <li key={e.id}>
               <Link to={`/feeds?e=${e.id}`}>
                 <span className="feed-title">{e.title}</span>
@@ -320,18 +323,19 @@ export function useReleases(): { items: ReleaseItem[]; any: boolean } {
 
 export function UpcomingBrief({ now }: { now: number }) {
   const { items, any } = useReleases();
+  const { limit = 9, days = 7 } = useWidget();
   if (!any) return null;
   const week = items.filter((i) => {
     const off = dayOffset(i.when, now);
-    return off >= 0 && off < 7;
+    return off >= 0 && off < days;
   });
   const byDay = new Map<string, ReleaseItem[]>();
-  for (const it of week.slice(0, 9)) {
+  for (const it of week.slice(0, limit)) {
     const label = dayLabel(it.when, now);
     byDay.set(label, [...(byDay.get(label) ?? []), it]);
   }
   return (
-    <Section title="This week" className="upcoming-brief" count={week.length ? plural(week.length, 'release') : undefined} action={{ label: 'Two weeks', to: '/upcoming' }}>
+    <Section title={days > 7 ? 'Next two weeks' : 'This week'} className="upcoming-brief" count={week.length ? plural(week.length, 'release') : undefined} action={{ label: 'Two weeks', to: '/upcoming' }}>
       {byDay.size ? (
         <div className="agenda agenda-compact">
           {[...byDay].map(([day, list]) => (
@@ -398,11 +402,12 @@ const actionText: Record<string, string> = {
 };
 
 export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
+  const { limit = 6 } = useWidget();
   if (!changes.length) return null;
   return (
     <Section title="Changes" className="changes-sec" count="last 48 hours">
       <ul className="changes">
-        {changes.slice(0, 6).map((c) => (
+        {changes.slice(0, limit).map((c) => (
           <li key={c.id} className={`change change-${c.kind.split('.')[1]}`}>
             <Link to={`/c/${c.subject}`}>
               <span className="change-text">
@@ -419,11 +424,12 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
 
 export function RecentlyAdded({ now }: { now: number }) {
   const { state, data } = useSource<TautulliData>('tautulli');
+  const { limit = 12 } = useWidget();
   if (!state || !data?.recent.length) return null;
   return (
     <Section title="Recently added to Plex" className="recent">
       <ul className="posters">
-        {data.recent.map((r) => (
+        {data.recent.slice(0, limit).map((r) => (
           <li key={r.id}>
             <Poster title={r.title} thumb={r.thumb} />
             <span className="poster-title">{r.title}</span>

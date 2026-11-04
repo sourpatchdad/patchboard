@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.13.0 — 2026-11-04
+
+Make every widget yours.
+
+- **Widget settings:** ⚙ on any widget in Customize. Rename its header
+  ("Feeds" to "Reading"), choose how many items it shows, one week or two of
+  releases, icons or tiles for Apps (overriding the Settings default).
+- **Two-thirds width**, so a row can be 2/3 + 1/3. Every widget now offers
+  every width that suits it; wide feed, mail and change lists flow into
+  columns.
+- **Apps, Rearrange, grown up:** rename groups in place, move apps between
+  groups (drag, or the ⋯ Move to menu on a phone), make new groups. Apps
+  added to services.yaml later land in their catalog group, under its new
+  name. Home's Apps widget settings link straight into it.
+- **Patch bay:** jacks widen to fit their names, so nothing is cut off
+  ("Audioboo..." is Audiobookshelf again), and healthy apps no longer show a
+  grey dot; only trouble lights up.
+- README: sign-in and customizing brought up to date. 32 tests.
+
 ## 1.12.0 — 2026-11-04
 
 Every page uses the screen it's on.

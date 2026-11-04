@@ -18,14 +18,20 @@ export type WidgetType =
   | 'container'
   | 'json';
 
-/** Width on a 12-column grid: a quarter, a third, a half, the full row. */
-export type WidgetSize = 's' | 'm' | 'l' | 'xl';
+/** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
+export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
+
+/** Widths from narrowest to widest, for pickers. */
+export const SIZES: WidgetSize[] = ['s', 'm', 'l', 'w', 'xl'];
 
 export interface Widget {
   id: string;
   type: WidgetType;
   size: WidgetSize;
-  /** Per-type settings, e.g. { container: 'plex' } for a container widget. */
+  /**
+   * Settings. Per type (container, json) plus the common ones: title (the
+   * header), limit (items shown), style, days. All strings.
+   */
   config?: Record<string, string>;
 }
 
@@ -34,20 +40,51 @@ export interface Board {
   widgets: Widget[];
 }
 
-export const SPAN: Record<WidgetSize, number> = { s: 3, m: 4, l: 6, xl: 12 };
+export const SPAN: Record<WidgetSize, number> = { s: 3, m: 4, l: 6, w: 8, xl: 12 };
 
-export const WIDGET_INFO: Record<WidgetType, { name: string; about: string; size: WidgetSize; sizes: WidgetSize[]; removable: boolean; multiple: boolean }> = {
-  attention: { name: 'Needs attention', about: 'Everything broken or about to be. Always on the board.', size: 'm', sizes: ['m', 'l', 'xl'], removable: false, multiple: false },
-  apps: { name: 'Apps', about: 'Every app in your catalog with one live number each.', size: 'xl', sizes: ['l', 'xl'], removable: true, multiple: false },
-  vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ['s', 'm', 'l'], removable: true, multiple: false },
-  now: { name: 'Right now', about: 'Who is watching Plex and what is downloading.', size: 'm', sizes: ['m', 'l'], removable: true, multiple: false },
-  upcoming: { name: 'This week', about: 'Episodes and movies due in the next seven days.', size: 'm', sizes: ['m', 'l'], removable: true, multiple: false },
-  inbox: { name: 'Inbox', about: 'Newest mail and the unread count.', size: 'm', sizes: ['m', 'l'], removable: true, multiple: false },
-  feeds: { name: 'Feeds', about: 'Newest unread articles.', size: 'm', sizes: ['m', 'l'], removable: true, multiple: false },
-  changes: { name: 'Changes', about: 'Containers that stopped, started or recovered in the last two days.', size: 'm', sizes: ['s', 'm', 'l'], removable: true, multiple: false },
-  recent: { name: 'Recently added', about: 'New arrivals on Plex, as posters.', size: 'xl', sizes: ['l', 'xl'], removable: true, multiple: false },
-  container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm'], removable: true, multiple: true },
-  json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true },
+/** What each widget lets you change beyond its width. */
+export interface WidgetOptions {
+  /** Items shown: default, min, max. */
+  limit?: [number, number, number];
+  /** Looks to choose from: value and label. */
+  styles?: [string, string][];
+  /** Upcoming: one week or two. */
+  days?: boolean;
+  /** False for widgets whose header lives in their own settings (json). */
+  title?: boolean;
+}
+
+type Info = { name: string; about: string; size: WidgetSize; sizes: WidgetSize[]; removable: boolean; multiple: boolean; options: WidgetOptions };
+
+const ANY: WidgetSize[] = ['s', 'm', 'l', 'w', 'xl'];
+const WIDE: WidgetSize[] = ['m', 'l', 'w', 'xl'];
+
+export const WIDGET_INFO: Record<WidgetType, Info> = {
+  attention: { name: 'Needs attention', about: 'Everything broken or about to be. Always on the board.', size: 'm', sizes: ANY, removable: false, multiple: false, options: {} },
+  apps: {
+    name: 'Apps',
+    about: 'Every app in your catalog, as a patch bay of icons or as tiles with one live number each.',
+    size: 'xl',
+    sizes: WIDE,
+    removable: true,
+    multiple: false,
+    options: {
+      styles: [
+        ['', 'Your Settings default'],
+        ['patchbay', 'Icons'],
+        ['tiles', 'Tiles with a live number'],
+      ],
+    },
+  },
+  vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  now: { name: 'Right now', about: 'Who is watching Plex and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  upcoming: { name: 'This week', about: 'Episodes and movies due in the next week or two.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [9, 3, 40], days: true } },
+  inbox: { name: 'Inbox', about: 'Newest mail and the unread count.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
+  feeds: { name: 'Feeds', about: 'Newest unread articles.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
+  changes: { name: 'Changes', about: 'Containers that stopped, started or recovered in the last two days.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
+  recent: { name: 'Recently added', about: 'New arrivals on Plex, as posters.', size: 'xl', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [12, 2, 24] } },
+  container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
+  json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };
 
 export const DEFAULT_BOARD: Board = {
@@ -100,9 +137,27 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
       if ('error' in v) return { error: v.error };
       config = { json: JSON.stringify(v.config) };
     }
+    const common = commonOptions(info, w.config);
+    if (Object.keys(common).length) config = { ...(config ?? {}), ...common };
     widgets.push({ id: w.id, type: w.type as WidgetType, size, ...(config ? { config } : {}) });
   }
   // Needs attention is part of what Patchboard is; it can move but not leave.
   if (!widgets.some((w) => w.type === 'attention')) widgets.unshift({ id: 'attention', type: 'attention', size: 'm' });
   return { board: { version: 1, widgets } };
+}
+
+/** The shared settings, kept only when they make sense for this widget. */
+function commonOptions(info: Info, raw: unknown): Record<string, string> {
+  const c = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  if (info.options.title !== false && typeof c.title === 'string' && c.title.trim()) out.title = c.title.trim().slice(0, 40);
+  const lim = info.options.limit;
+  if (lim && c.limit != null && c.limit !== '') {
+    const n = Number(c.limit);
+    if (Number.isInteger(n) && n >= lim[1] && n <= lim[2]) out.limit = String(n);
+  }
+  const st = info.options.styles;
+  if (st && typeof c.style === 'string' && c.style && st.some(([v]) => v === c.style)) out.style = c.style;
+  if (info.options.days && (c.days === '7' || c.days === '14')) out.days = c.days;
+  return out;
 }

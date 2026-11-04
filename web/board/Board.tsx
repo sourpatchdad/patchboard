@@ -8,6 +8,7 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { type Board as BoardData, DEFAULT_BOARD, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
+import { WidgetCtx } from './widget-context.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
@@ -23,7 +24,8 @@ import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
-const SIZE_LABEL: Record<WidgetSize, string> = { s: 'Quarter', m: 'Third', l: 'Half', xl: 'Full' };
+const SIZE_LABEL: Record<WidgetSize, string> = { s: 'A quarter of the row', m: 'A third', l: 'Half', w: 'Two thirds', xl: 'The full row' };
+const SIZE_SHORT: Record<WidgetSize, string> = { s: '1/4', m: '1/3', l: '1/2', w: '2/3', xl: 'Full' };
 
 function useBoard() {
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -57,6 +59,8 @@ export function Board({ now }: { now: number }) {
   const [adding, setAdding] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */
   const [jsonEdit, setJsonEdit] = useState<string | null>(null);
+  /** The widget whose settings drawer is open. */
+  const [setting, setSetting] = useState<string | null>(null);
   const [error, setError] = useState('');
   const dragFrom = useRef<number | null>(null);
   const editing = draft !== null;
@@ -128,7 +132,7 @@ export function Board({ now }: { now: number }) {
             onMove={move}
             onSize={(s) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, size: s } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
-            onConfigure={w.type === 'json' ? () => setJsonEdit(w.id) : undefined}
+            onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
             onDragStart={() => (dragFrom.current = i)}
             onDrop={() => {
               if (dragFrom.current != null) move(dragFrom.current, i);
@@ -149,6 +153,15 @@ export function Board({ now }: { now: number }) {
             if (w.type === 'json') setJsonEdit('new');
             else update((ws) => [...ws, w]);
           }}
+        />
+      )}
+
+      {setting && draft && draft.widgets.some((x) => x.id === setting) && (
+        <SettingsDrawer
+          w={draft.widgets.find((x) => x.id === setting)!}
+          onClose={() => setSetting(null)}
+          onChange={(cfg) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, config: cfg } : x)))}
+          onSize={(s) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, size: s } : x)))}
         />
       )}
 
@@ -237,12 +250,18 @@ function Cell(props: {
             </span>
             <span className="cell-name">
               {info.name}
-              {w.config?.container ? `: ${w.config.container}` : w.config?.json ? `: ${parseConfig(w.config.json)?.title ?? ''}` : ''}
+              {w.config?.title
+                ? `: ${w.config.title}`
+                : w.config?.container
+                  ? `: ${w.config.container}`
+                  : w.config?.json
+                    ? `: ${parseConfig(w.config.json)?.title ?? ''}`
+                    : ''}
             </span>
             <span className="cell-sizes" role="group" aria-label="Width">
               {info.sizes.map((s) => (
                 <button key={s} type="button" aria-pressed={w.size === s} title={SIZE_LABEL[s]} onClick={() => props.onSize(s)}>
-                  {s === 'xl' ? 'Full' : s === 'l' ? '1/2' : s === 'm' ? '1/3' : '1/4'}
+                  {SIZE_SHORT[s]}
                 </button>
               ))}
             </span>
@@ -253,7 +272,7 @@ function Cell(props: {
               →
             </button>
             {props.onConfigure && (
-              <button type="button" className="cell-btn" onClick={props.onConfigure} aria-label={`Edit ${info.name}`} title="Edit">
+              <button type="button" className="cell-btn" onClick={props.onConfigure} aria-label={`${info.name} settings`} title="Name, items, style">
                 ⚙
               </button>
             )}
@@ -265,7 +284,16 @@ function Cell(props: {
           </div>
         )}
         <div className="cell-body" inert={editing || undefined}>
-          {props.children}
+          <WidgetCtx.Provider
+            value={{
+              title: w.config?.title,
+              limit: w.config?.limit ? Number(w.config.limit) : undefined,
+              style: w.config?.style,
+              days: w.config?.days ? Number(w.config.days) : undefined,
+            }}
+          >
+            {props.children}
+          </WidgetCtx.Provider>
         </div>
       </div>
     </div>
@@ -278,7 +306,7 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
   if (!snap) return null;
   switch (w.type) {
     case 'apps':
-      return homeApps === 'patchbay' ? <PatchRow /> : <AppTiles legend />;
+      return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow /> : <AppTiles legend />;
     case 'attention':
       return <Attention alerts={snap.alerts} now={now} />;
     case 'vitals':
@@ -444,6 +472,98 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
             </ul>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One widget's settings: its name, width, how many items, its look. Changes
+ * go into the draft board; Save on the board bar keeps them.
+ */
+function SettingsDrawer({ w, onClose, onChange, onSize }: { w: Widget; onClose: () => void; onChange: (cfg: Record<string, string> | undefined) => void; onSize: (s: WidgetSize) => void }) {
+  const info = WIDGET_INFO[w.type];
+  const o = info.options;
+  const cfg = w.config ?? {};
+  const set = (k: string, v: string) => {
+    const next = { ...cfg, [k]: v };
+    if (!v) delete next[k];
+    onChange(Object.keys(next).length ? next : undefined);
+  };
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="palette drawer widget-settings" role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
+        <header className="drawer-head">
+          <h2>{cfg.title || info.name}</h2>
+          <button type="button" className="text-button" onClick={onClose}>
+            Done
+          </button>
+        </header>
+        <p className="settings-note">{info.about}</p>
+        <div className="ws-form">
+          {o.title !== false && (
+            <label>
+              <span>Name</span>
+              <input className="field" value={cfg.title ?? ''} maxLength={40} placeholder={info.name} onChange={(e) => set('title', e.target.value)} />
+            </label>
+          )}
+          <div className="ws-row">
+            <span>Width</span>
+            <span className="seg" role="group" aria-label="Width">
+              {info.sizes.map((s) => (
+                <button key={s} type="button" aria-pressed={w.size === s} title={SIZE_LABEL[s]} onClick={() => onSize(s)}>
+                  {SIZE_SHORT[s]}
+                </button>
+              ))}
+            </span>
+          </div>
+          {o.limit && (
+            <label>
+              <span>Items to show, {o.limit[1]} to {o.limit[2]}</span>
+              <input
+                className="field"
+                type="number"
+                min={o.limit[1]}
+                max={o.limit[2]}
+                value={cfg.limit ?? ''}
+                placeholder={String(o.limit[0])}
+                onChange={(e) => set('limit', e.target.value)}
+              />
+            </label>
+          )}
+          {o.days && (
+            <div className="ws-row">
+              <span>Look ahead</span>
+              <span className="seg" role="group" aria-label="Look ahead">
+                {[
+                  ['', 'One week'],
+                  ['14', 'Two weeks'],
+                ].map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={(cfg.days ?? '') === v || (v === '' && cfg.days === '7')} onClick={() => set('days', v)}>
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
+          {o.styles && (
+            <div className="ws-row">
+              <span>Look</span>
+              <span className="seg" role="group" aria-label="Look">
+                {o.styles.map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={(cfg.style ?? '') === v} onClick={() => set('style', v)}>
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
+          {w.type === 'apps' && (
+            <p className="settings-note">
+              Groups, their names and which app sits where: <Link to="/apps?arrange=1">rearrange apps</Link>. Save this board first; that page saves on its own.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

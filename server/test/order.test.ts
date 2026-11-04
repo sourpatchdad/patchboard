@@ -52,3 +52,28 @@ test('validateOrder rejects junk and dedupes', () => {
     assert.deepEqual(v.order.apps.A, ['x', 'y']);
   }
 });
+
+test('apps move between groups, groups rename, new apps follow the rename', () => {
+  const out = applyOrder(cat, {
+    groups: ['Media', 'Family'],
+    apps: { Media: ['Plex', 'Immich'], Family: ['Mealie'] },
+    renamed: { Home: 'Family', 'Watch': 'x' },
+  });
+  assert.deepEqual(
+    out.groups.map((g) => [g.name, g.services.map((s) => s.name)]),
+    [
+      ['Media', ['Plex', 'Immich', 'Sonarr', 'Radarr']],
+      ['Family', ['Mealie']],
+      ['Infra', ['Dozzle']],
+    ],
+  );
+});
+
+test('a group emptied by moves disappears; orderOf records renames', () => {
+  const out = applyOrder(cat, { groups: ['Infra'], apps: { Infra: ['Dozzle', 'Mealie', 'Immich'] } });
+  assert.ok(!out.groups.some((g) => g.name === 'Home'));
+  const o = orderOf([{ name: 'Family', from: 'Home', services: [] }], { Media: 'Home' });
+  assert.deepEqual(o.renamed, { Media: 'Family' });
+  const o2 = orderOf([{ name: 'Family', from: 'Home', services: [] }]);
+  assert.deepEqual(o2.renamed, { Home: 'Family' });
+});

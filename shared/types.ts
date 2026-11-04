@@ -434,6 +434,8 @@ export interface Catalog {
   dock: Bookmark[];
   /** True when someone rearranged the apps in the UI (see shared/order.ts). */
   ordered?: boolean;
+  /** Catalog group name -> the name it was given in the UI. */
+  renamed?: Record<string, string>;
 }
 
 export interface Links {

@@ -1,25 +1,29 @@
-// The order apps appear in, when someone rearranges them in the UI. Stored on
-// the server and applied to the catalog there, so the Apps page, Home and the
-// command palette all agree. Names that aren't in the order keep their catalog
-// position after the ordered ones, so new apps never disappear.
+// How apps are arranged when someone rearranges them in the UI: group order,
+// group names, and which app sits in which group. Stored on the server and
+// applied to the catalog there, so the Apps page, Home and the command palette
+// all agree. Anything the arrangement doesn't mention (an app added to
+// services.yaml later) lands in its catalog group, after the arranged ones,
+// so nothing ever disappears.
 
 import type { Catalog } from './types.ts';
 
 export interface AppOrder {
+  /** Group names, in order. May include groups the catalog doesn't have. */
   groups: string[];
-  /** Group name -> app names in that group, in order. */
+  /** Group name -> app names in it, in order. An app listed here moves here. */
   apps: Record<string, string[]>;
+  /** Catalog group name -> the name it was given, for apps not listed above. */
+  renamed?: Record<string, string>;
 }
 
 const NAME_MAX = 120;
-const isName = (s: unknown): s is string => typeof s === 'string' && s.length > 0 && s.length <= NAME_MAX;
+const isName = (s: unknown): s is string => typeof s === 'string' && s.trim().length > 0 && s.length <= NAME_MAX;
 
 /** A clean order from untrusted input, or an error message. */
 export function validateOrder(input: unknown): { order: AppOrder } | { error: string } {
-  const raw = input as { groups?: unknown; apps?: unknown } | null;
-  if (!raw || !Array.isArray(raw.groups) || typeof raw.apps !== 'object' || raw.apps === null || Array.isArray(raw.apps)) {
-    return { error: 'Expected { groups: [...], apps: { group: [...] } }' };
-  }
+  const raw = input as { groups?: unknown; apps?: unknown; renamed?: unknown } | null;
+  const isMap = (x: unknown) => typeof x === 'object' && x !== null && !Array.isArray(x);
+  if (!raw || !Array.isArray(raw.groups) || !isMap(raw.apps)) return { error: 'Expected { groups: [...], apps: { group: [...] } }' };
   if (raw.groups.length > 100 || !raw.groups.every(isName)) return { error: 'Bad group list' };
   const entries = Object.entries(raw.apps as Record<string, unknown>);
   if (entries.length > 100) return { error: 'Too many groups' };
@@ -28,34 +32,61 @@ export function validateOrder(input: unknown): { order: AppOrder } | { error: st
     if (!isName(g) || !Array.isArray(list) || list.length > 300 || !list.every(isName)) return { error: `Bad app list for ${g.slice(0, 40)}` };
     apps[g] = [...new Set(list)];
   }
-  return { order: { groups: [...new Set(raw.groups)], apps } };
+  let renamed: Record<string, string> | undefined;
+  if (raw.renamed !== undefined) {
+    if (!isMap(raw.renamed)) return { error: 'Bad renamed map' };
+    const r = Object.entries(raw.renamed as Record<string, unknown>);
+    if (r.length > 100 || !r.every(([k, v]) => isName(k) && isName(v))) return { error: 'Bad renamed map' };
+    if (r.length) renamed = Object.fromEntries(r as [string, string][]);
+  }
+  return { order: { groups: [...new Set(raw.groups.map((g) => g.trim()))], apps, ...(renamed ? { renamed } : {}) } };
 }
 
-const LAST = 1e9;
-const rankIn = (list: string[] | undefined, name: string) => {
-  const i = list ? list.indexOf(name) : -1;
-  return i < 0 ? LAST : i;
-};
-
-/** The catalog with groups and apps in the saved order. Stable for anything unlisted. */
+/** The catalog arranged: groups in order, renamed, apps placed where they were put. */
 export function applyOrder(cat: Catalog, order: AppOrder | null | undefined): Catalog {
   if (!order) return cat;
-  const groups = cat.groups
-    .map((g, i) => ({ g, i }))
-    .sort((a, b) => rankIn(order.groups, a.g.name) - rankIn(order.groups, b.g.name) || a.i - b.i)
-    .map(({ g }) => {
-      const o = order.apps[g.name];
-      if (!o) return g;
-      const services = g.services
-        .map((s, i) => ({ s, i }))
-        .sort((a, b) => rankIn(o, a.s.name) - rankIn(o, b.s.name) || a.i - b.i)
-        .map(({ s }) => s);
-      return { ...g, services };
-    });
-  return { ...cat, groups, ordered: true };
+  const byName = new Map(cat.groups.flatMap((g) => g.services.map((s) => [s.name, s] as const)));
+  const placed = new Set<string>();
+  const out = new Map<string, Catalog['groups'][number]['services']>();
+  // Listed groups first, then any group that only has an app list.
+  const named = [...order.groups, ...Object.keys(order.apps).filter((g) => !order.groups.includes(g))];
+  for (const g of named) {
+    const list = (order.apps[g] ?? []).filter((n) => byName.has(n) && !placed.has(n));
+    list.forEach((n) => placed.add(n));
+    out.set(
+      g,
+      list.map((n) => byName.get(n)!),
+    );
+  }
+  // Everything not placed stays in its catalog group (under its new name).
+  for (const g of cat.groups) {
+    const target = order.renamed?.[g.name] ?? g.name;
+    for (const s of g.services) {
+      if (placed.has(s.name)) continue;
+      placed.add(s.name);
+      if (!out.has(target)) out.set(target, []);
+      out.get(target)!.push(s);
+    }
+  }
+  const groups = [...out].filter(([, services]) => services.length > 0).map(([name, services]) => ({ name, services }));
+  return { ...cat, groups, ordered: true, renamed: order.renamed };
 }
 
-/** The order a catalog is currently in, for saving after a rearrange. */
-export function orderOf(groups: Catalog['groups']): AppOrder {
-  return { groups: groups.map((g) => g.name), apps: Object.fromEntries(groups.map((g) => [g.name, g.services.map((s) => s.name)])) };
+/**
+ * The order to save after a rearrange. Groups carry the name they had when
+ * arranging began (from); a changed name is recorded so apps added to that
+ * catalog group later follow it. Earlier renames carry forward.
+ */
+export function orderOf(groups: (Catalog['groups'][number] & { from?: string })[], prev?: Record<string, string>): AppOrder {
+  const renamed: Record<string, string> = {};
+  const now = new Map(groups.filter((g) => g.from && g.from !== g.name).map((g) => [g.from!, g.name]));
+  // Earlier renames: catalog name -> what it was called when arranging began -> maybe renamed again.
+  for (const [orig, was] of Object.entries(prev ?? {})) renamed[orig] = now.get(was) ?? was;
+  for (const [from, to] of now) if (!Object.values(prev ?? {}).includes(from)) renamed[from] = to;
+  for (const [k, v] of Object.entries(renamed)) if (k === v) delete renamed[k];
+  return {
+    groups: groups.map((g) => g.name),
+    apps: Object.fromEntries(groups.map((g) => [g.name, g.services.map((s) => s.name)])),
+    ...(Object.keys(renamed).length ? { renamed } : {}),
+  };
 }
