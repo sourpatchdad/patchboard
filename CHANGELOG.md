@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.12.0 — 2026-11-04
+
+Every page uses the screen it's on.
+
+- **Fix: Home on phones.** The board's single column could be stretched by
+  a wide widget (the poster strip) to about 1,090px, cutting every widget
+  off on the right. Widgets now match the screen at every phone width.
+- **Upcoming is a grid of days:** five or six days across on a wide screen
+  instead of one stretched list, a single column on a phone. Filter to
+  episodes or films (counts on each), with this week's total at the top.
+- **Feeds overview:** with no article open, the reading pane shows unread
+  articles as cards with an excerpt instead of empty space. Sort by
+  newest, oldest or quick reads; the sort and category stay in the URL, and
+  opening an article no longer resets them.
+- **Server balanced:** Disks moved to the side column with the model on its
+  own line, so the two columns end close together and no model name is
+  cut off.
+
 ## 1.11.0 — 2026-11-04
 
 Arrange it your way.

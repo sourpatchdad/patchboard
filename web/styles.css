@@ -4621,8 +4621,9 @@ a.vitals:hover .vital-label {
 }
 
 @media (max-width: 760px) {
+  /* minmax(0, ...) so a wide child (a poster strip) can't stretch the column. */
   .board {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .cell[data-size] {
@@ -4961,6 +4962,162 @@ a.jw-title:hover {
   .arrange-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* ---------- Upcoming as a grid of days ---------- */
+
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+.agenda-grid .agenda-day {
+  padding: 4px 14px 6px;
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+.agenda-grid .agenda-day.is-today {
+  box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px var(--line-soft);
+}
+
+.agenda-grid .agenda-day h3 {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0 4px;
+}
+
+.agenda-grid .agenda-day h3 span {
+  color: var(--ink-3);
+}
+
+.agenda-grid .rel > a,
+.agenda-grid .rel > div {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  column-gap: 10px;
+}
+
+.agenda-grid .rel:last-child > a,
+.agenda-grid .rel:last-child > div {
+  border-bottom: 0;
+}
+
+/* ---------- Feeds overview, when no article is open ---------- */
+
+/* The overview fills the pane; the article's reading margins would waste it. */
+.reader:has(> .reader-overview) {
+  padding: 28px 32px 64px;
+}
+
+.reader-list .seg-small {
+  margin: 0 20px 8px;
+}
+
+.reader-hint {
+  margin: 0 0 18px;
+  color: var(--ink-3);
+}
+
+.feed-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feed-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  width: 100%;
+  height: 100%;
+  padding: 14px 16px 16px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.feed-card:hover {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.feed-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 400 12px/1.3 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.feed-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--head);
+}
+
+.feed-card-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-card-time {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+
+/* Disks in Server's side column: the essentials on top, the model in full
+   underneath, so nothing is cut off at any width. */
+@media (min-width: 761px) {
+  .detail-side .disks li {
+    grid-template-columns: 4.5em minmax(0, 1fr) auto auto;
+    row-gap: 2px;
+  }
+
+  .detail-side .disks .ident {
+    grid-area: 1 / 1;
+  }
+
+  .detail-side .disk-pool {
+    display: block;
+    grid-area: 1 / 2;
+  }
+
+  .detail-side .disk-size {
+    display: block;
+    grid-area: 1 / 3;
+  }
+
+  .detail-side .disk-temp {
+    grid-area: 1 / 4;
+    min-width: 4.5em;
+  }
+
+  .detail-side .disk-model {
+    grid-area: 2 / 1 / 3 / -1;
+    white-space: normal;
+    font-size: 13px;
+    color: var(--ink-3);
   }
 }
 

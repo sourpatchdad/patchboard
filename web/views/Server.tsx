@@ -47,12 +47,12 @@ export function Server() {
           )}
           {nas && nas.datasets.length > 0 && <Datasets nas={nas} />}
           <Backups now={now} />
-          {nas && nas.disks.length > 0 && <Disks nas={nas} />}
         </div>
         <aside className="detail-side">
           <Resources sys={sys} nas={nas} />
           <CpuWeek />
           <Busiest />
+          {nas && nas.disks.length > 0 && <Disks nas={nas} />}
           {nas && <NasAlerts nas={nas} now={now} />}
           {nas && nas.cloudSync.length > 0 && <CloudSync nas={nas} now={now} />}
         </aside>

@@ -8,6 +8,16 @@ import type { FeedEntry } from '../../shared/types.ts';
 import { Empty } from '../components/ui.tsx';
 import { ago } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
+import { useUrlChoice } from '../lib/url.ts';
+
+type FeedSort = 'newest' | 'oldest' | 'quick';
+
+/** Plain text from article HTML, for a card excerpt. DOMParser never runs scripts. */
+function excerpt(html: string | undefined, max = 220): string {
+  if (!html) return '';
+  const text = (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '').replace(/\s+/g, ' ').trim();
+  return text.length > max ? `${text.slice(0, max).replace(/\s\S*$/, '')}...` : text;
+}
 
 // Links inside articles always leave the dashboard in a new tab.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -24,7 +34,14 @@ export function Feeds() {
   const [entries, setEntries] = useState<FeedEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [read, setRead] = useState<Set<number>>(new Set());
-  const [category, setCategory] = useState<string>('All');
+  const [sort, setSort] = useUrlChoice<FeedSort>('sort', ['newest', 'oldest', 'quick'], 'newest');
+  const category = params.get('cat') ?? 'All';
+  const setCategory = (c: string) => {
+    const next = new URLSearchParams(params);
+    if (c === 'All') next.delete('cat');
+    else next.set('cat', c);
+    setParams(next, { replace: true });
+  };
   const readerRef = useRef<HTMLElement>(null);
 
   const selectedId = Number(params.get('e')) || null;
@@ -50,10 +67,14 @@ export function Feeds() {
     return ['All', ...[...set].sort()];
   }, [entries]);
 
-  const visible = useMemo(
-    () => (entries ?? []).filter((e) => category === 'All' || e.category === category),
-    [entries, category],
-  );
+  const visible = useMemo(() => {
+    const list = (entries ?? []).filter((e) => category === 'All' || e.category === category);
+    const t = (e: FeedEntry) => Date.parse(e.publishedAt);
+    if (sort === 'oldest') list.sort((a, b) => t(a) - t(b));
+    else if (sort === 'quick') list.sort((a, b) => (a.readingTime || 99) - (b.readingTime || 99) || t(b) - t(a));
+    else list.sort((a, b) => t(b) - t(a));
+    return list;
+  }, [entries, category, sort]);
 
   const selected = visible.find((e) => e.id === selectedId) ?? entries?.find((e) => e.id === selectedId) ?? null;
 
@@ -69,11 +90,14 @@ export function Feeds() {
 
   const select = useCallback(
     (id: number | null) => {
-      setParams(id ? { e: String(id) } : {}, { replace: !!selectedId });
+      const next = new URLSearchParams(params);
+      if (id) next.set('e', String(id));
+      else next.delete('e');
+      setParams(next, { replace: !!selectedId });
       if (id) markRead([id]);
       readerRef.current?.scrollTo({ top: 0 });
     },
-    [setParams, markRead, selectedId],
+    [params, setParams, markRead, selectedId],
   );
 
   // Mark read when arriving from Home with ?e= already set.
@@ -135,6 +159,19 @@ export function Feeds() {
             ))}
           </div>
         )}
+        <div className="seg seg-small" role="group" aria-label="Sort articles">
+          {(
+            [
+              ['newest', 'Newest'],
+              ['oldest', 'Oldest'],
+              ['quick', 'Quick reads'],
+            ] as [FeedSort, string][]
+          ).map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+              {label}
+            </button>
+          ))}
+        </div>
         {error && <Empty>Couldn't load feeds: {error}</Empty>}
         {!entries && !error && <Empty>Loading feeds.</Empty>}
         {entries && visible.length === 0 && <Empty>You're caught up. New articles show up here as Miniflux fetches them.</Empty>}
@@ -176,8 +213,28 @@ export function Feeds() {
             <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />
           </>
         ) : (
-          <div className="reader-empty">
-            <p>Pick an article, or press <kbd>j</kbd> to start at the top.</p>
+          <div className="reader-overview">
+            <p className="reader-hint">
+              Pick an article, or press <kbd>j</kbd> to start at the top.
+            </p>
+            <ul className="feed-cards">
+              {visible
+                .filter((e) => !read.has(e.id))
+                .slice(0, 24)
+                .map((e) => (
+                  <li key={e.id}>
+                    <button type="button" className="feed-card" onClick={() => select(e.id)}>
+                      <span className="feed-card-meta">
+                        <span>{e.feed}</span>
+                        <time>{ago(e.publishedAt, now)}</time>
+                      </span>
+                      <span className="feed-card-title">{e.title}</span>
+                      <span className="feed-card-text">{excerpt(e.content)}</span>
+                      {e.readingTime > 0 && <span className="feed-card-time">{e.readingTime} min read</span>}
+                    </button>
+                  </li>
+                ))}
+            </ul>
           </div>
         )}
       </article>
