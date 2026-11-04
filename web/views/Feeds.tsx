@@ -9,6 +9,7 @@ import { Empty } from '../components/ui.tsx';
 import { ago } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { CustomizePage } from '../components/PageCustomize.tsx';
 
 type FeedSort = 'newest' | 'oldest' | 'quick';
 
@@ -62,19 +63,26 @@ export function Feeds() {
     void load();
   }, [load]);
 
+  const fp = snap?.pages?.feeds;
+  const shownEntries = useMemo(
+    () => (entries ?? []).filter((e) => !fp?.hideFeeds?.includes(e.feed) && !fp?.hideCategories?.includes(e.category)),
+    [entries, fp],
+  );
   const categories = useMemo(() => {
-    const set = new Set((entries ?? []).map((e) => e.category));
+    const set = new Set(shownEntries.map((e) => e.category));
     return ['All', ...[...set].sort()];
-  }, [entries]);
+  }, [shownEntries]);
+  const allFeeds = [...new Set([...(entries ?? []).map((e) => e.feed), ...(fp?.hideFeeds ?? [])])].sort();
+  const allCats = [...new Set([...(entries ?? []).map((e) => e.category), ...(fp?.hideCategories ?? [])])].sort();
 
   const visible = useMemo(() => {
-    const list = (entries ?? []).filter((e) => category === 'All' || e.category === category);
+    const list = shownEntries.filter((e) => category === 'All' || e.category === category);
     const t = (e: FeedEntry) => Date.parse(e.publishedAt);
     if (sort === 'oldest') list.sort((a, b) => t(a) - t(b));
     else if (sort === 'quick') list.sort((a, b) => (a.readingTime || 99) - (b.readingTime || 99) || t(b) - t(a));
     else list.sort((a, b) => t(b) - t(a));
     return list;
-  }, [entries, category, sort]);
+  }, [shownEntries, category, sort]);
 
   const selected = visible.find((e) => e.id === selectedId) ?? entries?.find((e) => e.id === selectedId) ?? null;
 
@@ -149,6 +157,16 @@ export function Feeds() {
               Mark these read
             </button>
           )}
+        </div>
+        <div className="reader-tools">
+          <CustomizePage
+            page="feeds"
+            title="Feeds"
+            lists={[
+              { key: 'hideCategories', title: 'Categories', note: 'Tap a category to hide it, here and on Home.', items: allCats },
+              { key: 'hideFeeds', title: 'Feeds', note: 'Tap a feed to hide it. Feeds show up here once they have unread articles.', items: allFeeds },
+            ]}
+          />
         </div>
         {categories.length > 2 && (
           <div className="chips" role="tablist" aria-label="Categories">

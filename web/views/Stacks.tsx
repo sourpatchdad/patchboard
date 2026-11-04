@@ -12,6 +12,7 @@ import { pct, plural, size } from '../lib/format.ts';
 import { containerMap, ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { CustomizePage } from '../components/PageCustomize.tsx';
 
 const LOOSE = 'Standalone';
 type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
@@ -42,8 +43,11 @@ export function Stacks() {
   };
 
   const groups = new Map<string, Container[]>();
+  const hiddenStacks = new Set(snap.pages?.stacks?.hideStacks ?? []);
+  const stackNames = [...new Set([...all.map((c) => c.project ?? LOOSE), ...hiddenStacks])].sort();
   for (const c of all.filter(match)) {
     const key = c.project ?? LOOSE;
+    if (hiddenStacks.has(key)) continue;
     groups.set(key, [...(groups.get(key) ?? []), c]);
   }
   const s = stats?.containers ?? {};
@@ -76,6 +80,11 @@ export function Stacks() {
       <div className="page-head">
         <h1 className="page-title">Stacks</h1>
         <input className="field" type="search" placeholder="Filter by name, stack or image" value={q} onChange={(e) => setQ(e.target.value)} />
+        <CustomizePage
+          page="stacks"
+          title="Stacks"
+          lists={[{ key: 'hideStacks', title: 'Stacks', note: 'Tap a stack to hide it from this page. Its containers still raise alerts.', items: stackNames }]}
+        />
       </div>
       {Object.keys(snap.updates).length > 0 && (
         <div className="stack-filters">

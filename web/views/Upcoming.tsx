@@ -4,17 +4,21 @@
 import type { ReleaseItem } from '../../shared/types.ts';
 import { Empty } from '../components/ui.tsx';
 import { dayLabel, dayOffset, plural } from '../lib/format.ts';
-import { useNow } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { CustomizePage } from '../components/PageCustomize.tsx';
+import { useNow, useStore } from '../lib/store.tsx';
 import { ReleaseRow, useReleases } from './Home.tsx';
 
 type Kind = 'all' | 'episode' | 'movie';
 
 export function Upcoming() {
   const now = useNow();
-  const { items, any } = useReleases();
+  const { items, any, all } = useReleases();
   const [kind, setKind] = useUrlChoice<Kind>('show', ['all', 'episode', 'movie'], 'all');
 
+  const { snap } = useStore();
+  const sources = (['sonarr', 'radarr', 'trakt'] as const).filter((s) => snap?.sources[s]).map((s) => s[0].toUpperCase() + s.slice(1));
+  const hiddenShows = snap?.pages?.upcoming?.hideShows ?? [];
   const ahead = items.filter((it) => dayOffset(it.when, now) >= 0);
   const shown = ahead.filter((it) => kind === 'all' || it.kind === kind);
   const byDay = new Map<string, { off: number; list: ReleaseItem[] }>();
@@ -38,7 +42,17 @@ export function Upcoming() {
           </span>
         )}
       </div>
-      <p className="page-lede">Episodes and films from Sonarr, Radarr and your Trakt calendar.</p>
+      <div className="lede-row">
+        <p className="page-lede">Episodes and films from Sonarr, Radarr and your Trakt calendar.</p>
+        <CustomizePage
+          page="upcoming"
+          title="Upcoming"
+          lists={[
+            { key: 'hideSources', title: 'Sources', note: 'Tap a source to hide its releases, here and on Home.', items: sources },
+            { key: 'hideShows', title: 'Shows and films', note: 'Tap anything you track but don\'t want on the calendar.', items: [...new Set([...all.map((i) => i.title), ...hiddenShows])].sort() },
+          ]}
+        />
+      </div>
       {ahead.length > 0 && (
         <div className="seg sort-seg" role="group" aria-label="Show">
           {(

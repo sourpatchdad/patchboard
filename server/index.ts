@@ -33,6 +33,7 @@ import { type JsonField, validateJsonConfig } from '../shared/jsonwidget.ts';
 import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
 import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts';
 import { PRESETS } from '../shared/presets.ts';
+import { type Pages, validatePages } from '../shared/pages.ts';
 import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
@@ -403,6 +404,20 @@ app.delete('/api/app-order', (c) => {
   recordAudit(who(c), 'apps.order.reset', 'apps');
   return c.json({ ok: true });
 })
+
+// What each page shows. One page at a time, so two tabs editing different
+// pages don't overwrite each other.
+app.put('/api/pages/:id', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const id = c.req.param('id');
+  const v = validatePages({ [id]: await c.req.json().catch(() => null) });
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  const pages = { ...(kvGet<Pages>('pages') ?? {}), ...v.pages };
+  kvSet('pages', pages);
+  hub.emitPages(pages);
+  recordAudit(who(c), 'pages.save', id);
+  return c.json({ ok: true });
+});
 
 // Keys pasted in the UI. Names and dates go out; values never do.
 app.get('/api/secrets', (c) => c.json(listSecrets()));

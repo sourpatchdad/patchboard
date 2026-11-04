@@ -166,6 +166,12 @@ Apps has **Edit apps**, so services.yaml is optional:
 Apps in services.yaml and Docker labels keep working alongside; edits made in
 the UI sit on top and never rewrite your files. "Start over" drops them.
 
+Every other page has one **Customize** button with the same panel: Server's
+sections can be hidden and reordered within each column; Feeds can hide
+categories or single feeds; Upcoming can hide a source or a show; Stacks can
+hide stacks. Home's widgets follow the same choices, and alerts still fire for
+anything hidden.
+
 All of this is saved on the server, so every device shows the same board and
 the same order, and each change is recorded in Settings, Activity.
 

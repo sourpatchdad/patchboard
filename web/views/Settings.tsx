@@ -415,6 +415,7 @@ const ACTION_TEXT: Record<string, string> = {
   'secret.set': 'saved the key',
   'secret.delete': 'removed the key',
   'icon.upload': 'uploaded an icon',
+  'pages.save': 'customized a page',
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',

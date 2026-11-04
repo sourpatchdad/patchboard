@@ -465,6 +465,8 @@ export interface Snapshot {
   updates: Record<string, ImageUpdate>;
   /** READ_ONLY=1: the UI hides every control that changes something. */
   readOnly: boolean;
+  /** What each page shows (its Customize button). */
+  pages?: import('./pages.ts').Pages;
 }
 
 export type ServerEvent =
@@ -472,4 +474,5 @@ export type ServerEvent =
   | { type: 'alerts'; alerts: Alert[] }
   | { type: 'changes'; changes: ChangeEvent[] }
   | { type: 'updates'; updates: Record<string, ImageUpdate> }
-  | { type: 'catalog'; catalog: Catalog };
+  | { type: 'catalog'; catalog: Catalog }
+  | { type: 'pages'; pages: import('./pages.ts').Pages };

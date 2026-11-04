@@ -213,6 +213,8 @@ export function Inbox({ now }: { now: number }) {
 export function FeedsBrief({ now }: { now: number }) {
   const { state, data } = useSource<MinifluxData>('miniflux');
   const { limit = 6 } = useWidget();
+  const fp = useStore().snap?.pages?.feeds;
+  const feedHidden = (e: { feed: string; category: string }) => !!fp?.hideFeeds?.includes(e.feed) || !!fp?.hideCategories?.includes(e.category);
   if (!state) return null;
   return (
     <Section
@@ -224,7 +226,10 @@ export function FeedsBrief({ now }: { now: number }) {
     >
       {data?.entries.length ? (
         <ul className="feedlist">
-          {data.entries.slice(0, limit).map((e) => (
+          {data.entries
+            .filter((e) => !feedHidden(e))
+            .slice(0, limit)
+            .map((e) => (
             <li key={e.id}>
               <Link to={`/feeds?e=${e.id}`}>
                 <span className="feed-title">{e.title}</span>
@@ -304,7 +309,8 @@ export function NowPlaying() {
 }
 
 /** Merge Sonarr, Radarr and Trakt, preferring the *arr entry for duplicates. */
-export function useReleases(): { items: ReleaseItem[]; any: boolean } {
+export function useReleases(): { items: ReleaseItem[]; any: boolean; all: ReleaseItem[] } {
+  const page = useStore().snap?.pages?.upcoming;
   const sonarr = useSource<ArrData>('sonarr');
   const radarr = useSource<ArrData>('radarr');
   const trakt = useSource<TraktData>('trakt');
@@ -318,7 +324,10 @@ export function useReleases(): { items: ReleaseItem[]; any: boolean } {
     }
   }
   items.sort((a, b) => Date.parse(a.when) - Date.parse(b.when));
-  return { items, any: !!(sonarr.state || radarr.state || trakt.state) };
+  const hideSrc = new Set((page?.hideSources ?? []).map((x) => x.toLowerCase()));
+  const hideShow = new Set(page?.hideShows ?? []);
+  const shown = items.filter((it) => !hideSrc.has(it.source) && !hideShow.has(it.title));
+  return { items: shown, all: items, any: !!(sonarr.state || radarr.state || trakt.state) };
 }
 
 export function UpcomingBrief({ now }: { now: number }) {

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.16.0 — 2026-11-04
+
+Every page, your way.
+
+- **Customize on every page**, one consistent panel: tick sections on or
+  off and drag them into order (Server, grouped by column); tap feeds,
+  categories, sources, shows or stacks to hide them (Feeds, Upcoming,
+  Stacks).
+- Home follows: the Feeds widget leaves out hidden feeds and categories, This
+  week leaves out hidden sources and shows.
+- Saved on the server and pushed live to every open tab. Hiding never
+  silences an alert.
+- 41 tests.
+
 ## 1.15.0 — 2026-11-04
 
 A live number on any app, set up by clicking.

@@ -2,6 +2,9 @@
 // say. Pool health and capacity come from the TrueNAS API; CPU and memory
 // from the host; history from Patchboard's own samples.
 
+import { Fragment } from 'react';
+import { arrange } from '../../shared/pages.ts';
+import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
 import { Link } from 'react-router-dom';
 import type { BackupRun, BackupsData, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -14,12 +17,55 @@ import { useAppearance } from '../lib/appearance.ts';
 
 const DAY = 86_400_000;
 
+const MAIN = ['storage', 'datasets', 'backups'];
+const SIDE = ['resources', 'cpu', 'busiest', 'disks', 'alerts', 'cloudsync'];
+const SERVER_SECTIONS: SectionDef[] = [
+  { id: 'storage', label: 'Storage', group: 'Left column' },
+  { id: 'datasets', label: 'Datasets', group: 'Left column' },
+  { id: 'backups', label: 'Backups', group: 'Left column' },
+  { id: 'resources', label: 'Resources', group: 'Right column' },
+  { id: 'cpu', label: 'CPU by hour', group: 'Right column' },
+  { id: 'busiest', label: 'Busiest containers', group: 'Right column' },
+  { id: 'disks', label: 'Disks', group: 'Right column' },
+  { id: 'alerts', label: 'TrueNAS alerts', group: 'Right column' },
+  { id: 'cloudsync', label: 'Cloud sync', group: 'Right column' },
+];
+
 export function Server() {
   const { snap } = useStore();
   const now = useNow(30_000);
   const { state: nasState, data: nas } = useSource<TruenasData>('truenas');
   const { data: sys } = useSource<SystemData>('system');
+  const page = usePage('server');
   if (!snap) return null;
+
+  const part = (id: string) => {
+    switch (id) {
+      case 'storage':
+        return nas ? (
+          nas.pools.map((p) => <PoolSection key={p.name} pool={p} snapshots={nas.snapshots} now={now} />)
+        ) : (
+          <FallbackStorage sys={sys} configured={!!nasState} error={nasState?.error} />
+        );
+      case 'datasets':
+        return nas && nas.datasets.length > 0 ? <Datasets nas={nas} /> : null;
+      case 'backups':
+        return <Backups now={now} />;
+      case 'resources':
+        return <Resources sys={sys} nas={nas} />;
+      case 'cpu':
+        return <CpuWeek />;
+      case 'busiest':
+        return <Busiest />;
+      case 'disks':
+        return nas && nas.disks.length > 0 ? <Disks nas={nas} /> : null;
+      case 'alerts':
+        return nas ? <NasAlerts nas={nas} now={now} /> : null;
+      case 'cloudsync':
+        return nas && nas.cloudSync.length > 0 ? <CloudSync nas={nas} now={now} /> : null;
+    }
+    return null;
+  };
 
   const title = nas?.hostname ?? 'Server';
   const facts = [
@@ -36,26 +82,12 @@ export function Server() {
           <h1 className="page-title">{title}</h1>
           <p className="detail-ident">{facts.join(', ')}</p>
         </div>
+        <CustomizePage page="server" title="Server" sections={SERVER_SECTIONS} />
       </header>
 
       <div className="detail-grid">
-        <div className="detail-main">
-          {nas ? (
-            nas.pools.map((p) => <PoolSection key={p.name} pool={p} snapshots={nas.snapshots} now={now} />)
-          ) : (
-            <FallbackStorage sys={sys} configured={!!nasState} error={nasState?.error} />
-          )}
-          {nas && nas.datasets.length > 0 && <Datasets nas={nas} />}
-          <Backups now={now} />
-        </div>
-        <aside className="detail-side">
-          <Resources sys={sys} nas={nas} />
-          <CpuWeek />
-          <Busiest />
-          {nas && nas.disks.length > 0 && <Disks nas={nas} />}
-          {nas && <NasAlerts nas={nas} now={now} />}
-          {nas && nas.cloudSync.length > 0 && <CloudSync nas={nas} now={now} />}
-        </aside>
+        <div className="detail-main">{arrange(MAIN, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</div>
+        <aside className="detail-side">{arrange(SIDE, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</aside>
       </div>
     </div>
   );

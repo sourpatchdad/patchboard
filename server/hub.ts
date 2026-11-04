@@ -179,6 +179,11 @@ export class Hub {
   }
 
   /** Diun reported something, or an update was applied: tell every tab. */
+  /** Page settings changed: tell every tab. */
+  emitPages(pages: import('../shared/pages.ts').Pages): void {
+    this.emit({ type: 'pages', pages });
+  }
+
   /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */
   emitCatalog(): void {
     const cat = getCatalog();
@@ -209,6 +214,7 @@ export class Hub {
       catalog: getCatalog(),
       updates: pendingUpdates(),
       readOnly: config.readOnly,
+      pages: kvGet('pages') ?? {},
       links: config.demo
         ? { dozzle: '#', fastmail: '#', miniflux: '#', sonarr: '#', radarr: '#' }
         : {
