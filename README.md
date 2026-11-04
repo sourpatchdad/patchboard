@@ -131,18 +131,32 @@ views (`g s` Server, `g k` Stacks), `?` for the full list.
 
 Home is a board. Press **Customize**, then:
 
-- **Move** a widget by dragging its handle, or with the arrows.
-- **Size** it: a quarter, a third, a half, two thirds or the full row. Wide
-  lists (feeds, mail, changes) flow into columns instead of stretching.
-- **⚙ Settings** on any widget: rename its header, choose how many items it
-  shows, one week or two for releases, icons or tiles for apps.
+- **Move** a widget by dragging it (on a phone, by its ⠿ grip), or with the
+  arrows. Everything moves live under your finger.
+- **Size** it by dragging its right edge, or pick a quarter, a third, a half,
+  two thirds or the full row. Wide lists flow into columns.
+- **Settings** on any widget: rename its header, choose how many items it
+  shows, one week or two for releases, icons or tiles for apps, names under
+  icons or only on hover.
 - **Add** widgets, including any number of Container widgets (one container's
   CPU, memory, response time and 14 days of health) and API numbers widgets
   (up to four values from any JSON API, with amber and red thresholds).
 
-Apps has its own **Rearrange**: drag apps into any order or into another
-group, rename groups by typing over them, make new ones. Sorting by problems
-or A to Z is a click away and stays in the URL.
+Apps has **Edit apps**, so services.yaml is optional:
+
+- Drag apps into any order or into another group; drag groups by their grip;
+  type over a group's name to rename it; make new groups.
+- **Add an app** with a name, a link, a container and a group, or add a
+  running container in one click from "Running, not listed yet".
+- **Hide** any app or bookmark (Elsewhere included), and show it again from
+  the Hidden tray.
+- **Icons:** about 2,000 self-hosted apps get one automatically by name from
+  [dashboard icons](https://dashboardicons.com). Type another name, paste an
+  image URL, or upload your own (PNG, SVG, WebP, JPEG, GIF or ICO, up to
+  512 KB; stored in `DATA_DIR/icons`).
+
+Apps in services.yaml and Docker labels keep working alongside; edits made in
+the UI sit on top and never rewrite your files. "Start over" drops them.
 
 All of this is saved on the server, so every device shows the same board and
 the same order, and each change is recorded in Settings, Activity.

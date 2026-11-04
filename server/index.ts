@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
@@ -384,7 +385,7 @@ app.put('/api/app-order', async (c) => {
   kvSet('app-order', v.order);
   setCatalogOrder(v.order);
   hub.emitCatalog();
-  recordAudit(who(c), 'apps.order', 'apps');
+  recordAudit(who(c), 'apps.order', 'apps', `${v.order.added?.length ?? 0} added, ${v.order.hidden?.length ?? 0} hidden`);
   return c.json({ ok: true });
 });
 
@@ -397,10 +398,48 @@ app.delete('/api/app-order', (c) => {
   return c.json({ ok: true });
 })
 
+// Uploaded icons. Named by content hash, so the same file uploads once and
+// can be cached forever. Served with a sandboxing CSP: an SVG opened directly
+// can't run script.
+const ICON_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif', 'image/x-icon': 'ico', 'image/vnd.microsoft.icon': 'ico' };
+const ICON_MIME: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml', gif: 'image/gif', ico: 'image/x-icon' };
+const iconDir = join(config.dataDir, 'icons');
+
+app.post('/api/icons', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const ext = ICON_TYPES[(c.req.header('content-type') ?? '').split(';')[0].trim().toLowerCase()];
+  if (!ext) return c.json({ error: 'Use a PNG, JPEG, WebP, SVG, GIF or ICO image' }, 415);
+  if (Number(c.req.header('content-length') ?? 0) > 512 * 1024) return c.json({ error: 'Icons can be up to 512 KB' }, 413);
+  const body = Buffer.from(await c.req.arrayBuffer());
+  if (!body.length || body.length > 512 * 1024) return c.json({ error: 'Icons can be up to 512 KB' }, 413);
+  const name = `${createHash('sha256').update(body).digest('hex').slice(0, 16)}.${ext}`;
+  mkdirSync(iconDir, { recursive: true });
+  writeFileSync(join(iconDir, name), body);
+  recordAudit(who(c), 'icon.upload', name);
+  return c.json({ icon: `/api/icons/${name}` });
+});
+
+app.get('/api/icons/:file', (c) => {
+  const m = /^([a-f0-9]{16})\.(png|jpg|webp|svg|gif|ico)$/.exec(c.req.param('file'));
+  if (!m) return c.json({ error: 'No such icon' }, 404);
+  try {
+    const data = readFileSync(join(iconDir, m[0]));
+    return c.body(data, 200, {
+      'Content-Type': ICON_MIME[m[2]],
+      'Cache-Control': 'private, max-age=31536000, immutable',
+      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+    });
+  } catch {
+    return c.json({ error: 'No such icon' }, 404);
+  }
+});
+
 // Catalog audit: entries pointing at nothing, and running apps not listed.
 app.get('/api/catalog/audit', async (c) => {
   const containers = hub.containers();
-  const catalog = getCatalog();
+  // Hidden apps still count as listed: hiding one shouldn't make it "new".
+  const full = getCatalog();
+  const catalog = { ...full, groups: [...full.groups, { name: 'Hidden', services: (full.hiddenApps ?? []).map((h) => h.service) }] };
   const hrefHost = catalog.groups
     .flatMap((g) => g.services)
     .map((s) => (s.href ? /^https?:\/\/(\d+\.\d+\.\d+\.\d+)/.exec(s.href)?.[1] : undefined))

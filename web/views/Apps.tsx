@@ -1,83 +1,95 @@
-// Every app in the catalog as a live tile, then what's running on the box
-// that the catalog doesn't mention yet, and the bookmarks.
+// Every app as a live tile, then what's running that no app points at, and
+// the bookmarks. Edit apps changes all of it in place: order, groups, names,
+// what's hidden, icons, and apps added without touching services.yaml.
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { orderOf } from '../../shared/order.ts';
-import { Link } from 'react-router-dom';
-import type { Catalog, CatalogAudit } from '../../shared/types.ts';
-import { AppTiles, type Groups, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
-import { useUrlChoice } from '../lib/url.ts';
+import { Link, useSearchParams } from 'react-router-dom';
+import type { CatalogAudit } from '../../shared/types.ts';
+import { type Draft, draftFrom, draftProblem, EditApps, layoutOf } from '../components/AppEditor.tsx';
+import { AppTiles, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
 import { Icon, Section } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
+import { containerMap } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
+import { useUrlChoice } from '../lib/url.ts';
 
 export function Apps() {
   const { snap } = useStore();
   const [q, setQ] = useState('');
   const [sort, setSort] = useUrlChoice<TileSort>('sort', TILE_SORTS, 'catalog');
-  /** The working order while rearranging; null otherwise. */
-  const [arranging, setArranging] = useState<Groups | null>(null);
+  /** The working layout while editing; null otherwise. */
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [params, setParams] = useSearchParams();
-  const startArranging = (groups: Catalog['groups']) => {
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000);
+  const startEditing = () => {
+    if (!snap) return;
     setQ('');
-    setArranging(groups.map((g) => ({ ...g, from: g.name })));
+    setError('');
+    setDraft(draftFrom(snap.catalog));
   };
   // Home's Apps widget links here with ?arrange=1.
   useEffect(() => {
     if (params.get('arrange') !== '1' || !snap || snap.readOnly) return;
-    startArranging(snap.catalog.groups);
+    startEditing();
     const next = new URLSearchParams(params);
     next.delete('arrange');
     setParams(next, { replace: true });
   }, [params, !!snap]);
-  const [error, setError] = useState('');
-  const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000).data;
   if (!snap) return null;
-  const saveOrder = async (reset: boolean) => {
+
+  const save = async (reset: boolean) => {
     setError('');
-    if (!reset && arranging) {
-      const names = arranging.map((g) => g.name.trim());
-      if (names.some((n) => !n)) return setError('Every group needs a name.');
-      if (new Set(names).size !== names.length) return setError('Two groups have the same name.');
+    if (!reset && draft) {
+      const problem = draftProblem(draft);
+      if (problem) return setError(problem);
     }
+    setSaving(true);
     const res = await fetch('/api/app-order', {
       method: reset ? 'DELETE' : 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
-      body: reset || !arranging ? undefined : JSON.stringify(orderOf(arranging.map((g) => ({ ...g, name: g.name.trim() })), snap.catalog.renamed)),
+      body: reset || !draft ? undefined : JSON.stringify(layoutOf(draft, snap.catalog.renamed)),
     });
+    setSaving(false);
     if (!res.ok) {
       setError(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
       return;
     }
-    setArranging(null);
+    setDraft(null);
     setSort('catalog');
   };
   const match = (name: string) => name.toLowerCase().includes(q.toLowerCase());
-  const extra = (audit?.discovered ?? []).filter((d) => match(d.name) || match(d.container));
+  const extra = (audit.data?.discovered ?? []).filter((d) => match(d.name) || match(d.container));
   const dock = snap.catalog.dock.filter((b) => match(b.name));
 
   return (
     <div className="page apps-page">
       <div className="page-head">
         <h1 className="page-title">Apps</h1>
-        {!arranging && <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />}
+        {!draft && <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />}
       </div>
-      {arranging ? (
-        <div className="arrange-bar" role="toolbar" aria-label="Rearrange apps">
-          <p>Drag apps to reorder them or into another group; drag a group by its handle. Rename a group by typing over its name.</p>
+      {draft ? (
+        <div className="arrange-bar" role="toolbar" aria-label="Edit apps">
+          <p>Drag apps to reorder them or into another group, and groups by their grip. Type over a group's name to rename it. Each app's ⋯ menu edits, hides or moves it.</p>
           <span className="arrange-actions">
             {error && <span className="crit-text">{error}</span>}
             {snap.catalog.ordered && (
-              <button type="button" className="text-button" onClick={() => void saveOrder(true)}>
-                Use catalog order
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  if (confirm('Go back to services.yaml as written? Your order, renamed groups, hidden apps, icons and apps added here are all removed.')) void save(true);
+                }}
+              >
+                Start over
               </button>
             )}
-            <button type="button" className="button button-quiet" onClick={() => setArranging(null)}>
+            <button type="button" className="button button-quiet" onClick={() => setDraft(null)}>
               Cancel
             </button>
-            <button type="button" className="button board-save" onClick={() => void saveOrder(false)}>
-              Save order
+            <button type="button" className="button board-save" disabled={saving} onClick={() => void save(false)}>
+              {saving ? 'Saving...' : 'Save'}
             </button>
           </span>
         </div>
@@ -97,20 +109,28 @@ export function Apps() {
             ))}
           </div>
           {!snap.readOnly && (
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => startArranging(snap.catalog.groups)}
-            >
-              Rearrange
+            <button type="button" className="button button-quiet" onClick={startEditing}>
+              Edit apps
             </button>
           )}
         </div>
       )}
-      <AppTiles filter={q} size="large" sort={sort} legend={!arranging} arrange={arranging ? { groups: arranging, onChange: setArranging } : undefined} />
+      {draft ? (
+        <EditApps draft={draft} onChange={setDraft} discovered={audit.data?.discovered ?? []} containers={[...containerMap(snap).keys()].sort()} />
+      ) : (
+        <AppTiles filter={q} size="large" sort={sort} legend />
+      )}
 
-      {!arranging && extra.length > 0 && (
-        <Section title="Running, not in the catalog" count={String(extra.length)} action={{ label: 'Add them', to: '/settings#catalog' }}>
+      {!draft && extra.length > 0 && (
+        <Section title="Running, not listed yet" count={String(extra.length)}>
+          {!snap.readOnly && (
+            <p className="settings-note">
+              <button type="button" className="text-button" onClick={startEditing}>
+                Edit apps
+              </button>{' '}
+              to add any of these in one click.
+            </p>
+          )}
           <ul className="tile-grid discovered">
             {extra.map((d) => (
               <li className="tile" data-tone="none" key={d.container}>
@@ -127,7 +147,7 @@ export function Apps() {
         </Section>
       )}
 
-      {!arranging && dock.length > 0 && (
+      {!draft && dock.length > 0 && (
         <Section title="Elsewhere">
           <ul className="tile-grid">
             {dock.map((b) => (

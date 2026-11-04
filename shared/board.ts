@@ -52,6 +52,8 @@ export interface WidgetOptions {
   days?: boolean;
   /** False for widgets whose header lives in their own settings (json). */
   title?: boolean;
+  /** Apps: show names under icons, or only on hover. */
+  names?: boolean;
 }
 
 type Info = { name: string; about: string; size: WidgetSize; sizes: WidgetSize[]; removable: boolean; multiple: boolean; options: WidgetOptions };
@@ -74,6 +76,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
         ['patchbay', 'Icons'],
         ['tiles', 'Tiles with a live number'],
       ],
+      names: true,
     },
   },
   vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
@@ -159,5 +162,6 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
   const st = info.options.styles;
   if (st && typeof c.style === 'string' && c.style && st.some(([v]) => v === c.style)) out.style = c.style;
   if (info.options.days && (c.days === '7' || c.days === '14')) out.days = c.days;
+  if (info.options.names && c.names === 'show') out.names = 'show';
   return out;
 }

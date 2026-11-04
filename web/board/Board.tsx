@@ -7,8 +7,9 @@
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { type Board as BoardData, DEFAULT_BOARD, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
+import { type Board as BoardData, DEFAULT_BOARD, SPAN, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
 import { WidgetCtx } from './widget-context.ts';
+import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
@@ -62,9 +63,15 @@ export function Board({ now }: { now: number }) {
   /** The widget whose settings drawer is open. */
   const [setting, setSetting] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const dragFrom = useRef<number | null>(null);
   const editing = draft !== null;
   const shown = draft ?? board;
+  const sort = useDragSort('cell', (drag, over) => {
+    const ws = draft?.widgets ?? [];
+    move(
+      ws.findIndex((w) => w.id === drag),
+      ws.findIndex((w) => w.id === over),
+    );
+  });
   if (!shown) return <div className="board board-loading" aria-busy="true" />;
 
   const update = (fn: (w: Widget[]) => Widget[]) => setDraft((d) => (d ? { ...d, widgets: fn(d.widgets) } : d));
@@ -83,7 +90,7 @@ export function Board({ now }: { now: number }) {
         {editing ? (
           <>
             <span className="board-bar-title">Arrange your board</span>
-            <span className="board-bar-hint">Drag a widget by its handle, or use the arrows. Changes apply to every device.</span>
+            <span className="board-bar-hint">Drag a widget to move it, drag its right edge to resize it, Settings to rename it or choose what it shows.</span>
             <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
               Add widget
             </button>
@@ -133,11 +140,8 @@ export function Board({ now }: { now: number }) {
             onSize={(s) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, size: s } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
-            onDragStart={() => (dragFrom.current = i)}
-            onDrop={() => {
-              if (dragFrom.current != null) move(dragFrom.current, i);
-              dragFrom.current = null;
-            }}
+            bind={editing ? sort.bind(w.id) : undefined}
+            dragging={sort.dragging === w.id}
           >
             <WidgetBody w={w} now={now} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
           </Cell>
@@ -199,13 +203,14 @@ function Cell(props: {
   onSize: (s: WidgetSize) => void;
   onRemove: () => void;
   onConfigure?: () => void;
-  onDragStart: () => void;
-  onDrop: () => void;
+  /** Drag-sort props while editing. */
+  bind?: Record<string, unknown>;
+  dragging: boolean;
 }) {
   const { w, editing, index, count } = props;
   const inner = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState(1);
-  const [over, setOver] = useState(false);
+  const [resizing, setResizing] = useState(false);
   const info = WIDGET_INFO[w.type];
 
   useLayoutEffect(() => {
@@ -226,26 +231,16 @@ function Cell(props: {
 
   return (
     <div
-      className={`cell ${over ? 'is-over' : ''}`}
+      {...(props.bind ?? {})}
+      className={`cell ${props.dragging ? 'is-dragging' : ''} ${resizing ? 'is-resizing' : ''}`}
       data-size={w.size}
       data-type={w.type}
       style={{ gridRowEnd: `span ${rows}` }}
-      onDragOver={(e) => {
-        if (!editing) return;
-        e.preventDefault();
-        setOver(true);
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setOver(false);
-        props.onDrop();
-      }}
     >
       <div ref={inner} className="cell-inner">
         {editing && (
           <div className="cell-tools" role="toolbar" aria-label={`${info.name} widget`}>
-            <span className="cell-handle" draggable onDragStart={props.onDragStart} title="Drag to move" aria-hidden>
+            <span className="cell-handle" data-grip="cell" title="Drag to move" aria-hidden>
               ⠿
             </span>
             <span className="cell-name">
@@ -272,8 +267,8 @@ function Cell(props: {
               →
             </button>
             {props.onConfigure && (
-              <button type="button" className="cell-btn" onClick={props.onConfigure} aria-label={`${info.name} settings`} title="Name, items, style">
-                ⚙
+              <button type="button" className="cell-btn cell-settings" onClick={props.onConfigure} aria-label={`${info.name} settings`} title="Name, width, items, look">
+                Settings
               </button>
             )}
             {info.removable && (
@@ -282,6 +277,48 @@ function Cell(props: {
               </button>
             )}
           </div>
+        )}
+        {editing && info.sizes.length > 1 && (
+          <span
+            className="cell-resize"
+            role="presentation"
+            title="Drag to resize"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const handle = e.currentTarget;
+              const cell = handle.closest('.cell') as HTMLElement;
+              const left = cell.getBoundingClientRect().left;
+              const width = (cell.parentElement as HTMLElement).getBoundingClientRect().width;
+              let current = w.size;
+              handle.setPointerCapture(e.pointerId);
+              setResizing(true);
+              const onMove = (ev: PointerEvent) => {
+                const frac = (ev.clientX - left) / width;
+                let best = current;
+                let gap = Infinity;
+                for (const s of info.sizes) {
+                  const d = Math.abs(SPAN[s] / 12 - frac);
+                  if (d < gap) [gap, best] = [d, s];
+                }
+                if (best !== current) {
+                  current = best;
+                  props.onSize(best);
+                }
+              };
+              const done = () => {
+                handle.removeEventListener('pointermove', onMove);
+                handle.removeEventListener('pointerup', done);
+                handle.removeEventListener('pointercancel', done);
+                setResizing(false);
+              };
+              handle.addEventListener('pointermove', onMove);
+              handle.addEventListener('pointerup', done);
+              handle.addEventListener('pointercancel', done);
+            }}
+          >
+            <span className="cell-resize-size">{SIZE_SHORT[w.size]}</span>
+          </span>
         )}
         <div className="cell-body" inert={editing || undefined}>
           <WidgetCtx.Provider
@@ -306,7 +343,7 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
   if (!snap) return null;
   switch (w.type) {
     case 'apps':
-      return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow /> : <AppTiles legend />;
+      return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} /> : <AppTiles legend />;
     case 'attention':
       return <Attention alerts={snap.alerts} now={now} />;
     case 'vitals':
@@ -558,9 +595,24 @@ function SettingsDrawer({ w, onClose, onChange, onSize }: { w: Widget; onClose: 
               </span>
             </div>
           )}
+          {o.names && (cfg.style || 'patchbay') !== 'tiles' && (
+            <div className="ws-row">
+              <span>Names under icons</span>
+              <span className="seg" role="group" aria-label="Names under icons">
+                {[
+                  ['', 'On hover'],
+                  ['show', 'Always'],
+                ].map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={(cfg.names ?? '') === v} onClick={() => set('names', v)}>
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
           {w.type === 'apps' && (
             <p className="settings-note">
-              Groups, their names and which app sits where: <Link to="/apps?arrange=1">rearrange apps</Link>. Save this board first; that page saves on its own.
+              To reorder apps, move them between groups, rename groups, hide apps or add new ones, <Link to="/apps?arrange=1">edit apps</Link>. Save this board first; that page saves on its own.
             </p>
           )}
         </div>

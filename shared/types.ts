@@ -419,8 +419,8 @@ export interface Service {
    * forces it on, a URL checks that address instead of href.
    */
   check?: boolean | string;
-  /** Where the entry came from: the YAML catalog (default) or Docker labels. */
-  source?: 'yaml' | 'labels';
+  /** Where the entry came from: the YAML catalog (default), Docker labels, or added in the UI. */
+  source?: 'yaml' | 'labels' | 'ui';
 }
 
 export interface Bookmark {
@@ -436,6 +436,11 @@ export interface Catalog {
   ordered?: boolean;
   /** Catalog group name -> the name it was given in the UI. */
   renamed?: Record<string, string>;
+  /** Hidden in the UI, with the group each would return to. */
+  hiddenApps?: { group: string; service: Service }[];
+  hiddenDock?: Bookmark[];
+  /** App or bookmark name -> icon chosen in the UI. */
+  iconOverrides?: Record<string, string>;
 }
 
 export interface Links {

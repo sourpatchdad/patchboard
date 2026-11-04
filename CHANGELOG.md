@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.14.0 — 2026-11-04
+
+Customizing for anyone, no YAML required.
+
+- **Drag that feels direct**, everywhere: widgets on Home, apps and groups on
+  Apps. Items move live under the pointer; works with a mouse anywhere on the
+  item and with touch by its grip; the page scrolls at the edges.
+- **Resize a widget by dragging its right edge**; it snaps to the widths that
+  widget allows and shows the size while you drag.
+- **Edit apps** (was Rearrange): add apps with a name, link, container and
+  group; add a running container in one click; hide any app or bookmark and
+  show it again; change any app's icon by name, URL or upload. Catalog apps
+  are labeled with where they come from.
+- **Icon uploads:** stored in `DATA_DIR/icons` under a content hash, served
+  with a sandboxing Content-Security-Policy so an SVG can't run script.
+- **Patch bay without labels** by default: even spacing, the name in a bubble
+  on hover or focus. Widget setting: names Always.
+- **Bookmarks (Elsewhere)** can be hidden from Edit apps.
+- 34 tests.
+
 ## 1.13.0 — 2026-11-04
 
 Make every widget yours.

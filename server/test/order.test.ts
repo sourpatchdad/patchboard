@@ -77,3 +77,32 @@ test('a group emptied by moves disappears; orderOf records renames', () => {
   const o2 = orderOf([{ name: 'Family', from: 'Home', services: [] }]);
   assert.deepEqual(o2.renamed, { Home: 'Family' });
 });
+
+test('hidden apps and bookmarks are set aside; icons override; added apps join their group', () => {
+  const withDock = { ...cat, dock: [{ name: 'GitHub', href: 'https://github.com' }, { name: 'Mail', href: 'https://mail.example' }] } as Catalog;
+  const out = applyOrder(withDock, {
+    groups: [],
+    apps: {},
+    hidden: ['Sonarr', 'Mail'],
+    icons: { Plex: '/api/icons/0123456789abcdef.png', GitHub: 'github' },
+    added: [{ name: 'Wiki', group: 'Projects', href: 'https://wiki.example' }, { name: 'Plex', group: 'Infra' }],
+  });
+  const media = out.groups.find((g) => g.name === 'Media')!;
+  assert.deepEqual(media.services.map((s) => s.name), ['Plex', 'Radarr']);
+  assert.equal(media.services[0].icon, '/api/icons/0123456789abcdef.png');
+  assert.deepEqual(out.hiddenApps?.map((h) => [h.group, h.service.name]), [['Media', 'Sonarr']]);
+  assert.deepEqual(out.dock.map((b) => [b.name, b.icon]), [['GitHub', 'github']]);
+  assert.deepEqual(out.hiddenDock?.map((b) => b.name), ['Mail']);
+  const projects = out.groups.find((g) => g.name === 'Projects')!;
+  assert.deepEqual(projects.services, [{ name: 'Wiki', href: 'https://wiki.example', source: 'ui' }]);
+  // A name already in the catalog wins over an added app with the same name.
+  assert.equal(out.groups.flatMap((g) => g.services).filter((s) => s.name === 'Plex').length, 1);
+});
+
+test('validateOrder refuses unsafe icons and links', () => {
+  assert.ok('error' in validateOrder({ groups: [], apps: {}, icons: { Plex: 'javascript:alert(1)' } }));
+  assert.ok('error' in validateOrder({ groups: [], apps: {}, icons: { Plex: '/api/icons/../../etc/passwd' } }));
+  assert.ok('error' in validateOrder({ groups: [], apps: {}, added: [{ name: 'x', group: 'g', href: 'javascript:alert(1)' }] }));
+  assert.ok('error' in validateOrder({ groups: [], apps: {}, added: [{ name: 'x', group: 'g' }, { name: 'x', group: 'g' }] }));
+  assert.ok('order' in validateOrder({ groups: [], apps: {}, icons: { Plex: 'plex.png', Wiki: 'https://example.com/i.svg' } }));
+});

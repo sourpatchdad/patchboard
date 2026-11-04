@@ -4382,8 +4382,10 @@ a.vitals:hover .vital-label {
   border-radius: var(--radius);
 }
 
-.is-editing .cell.is-over {
-  outline: 2px solid var(--accent);
+.is-editing .cell {
+  position: relative;
+  cursor: grab;
+  touch-action: pan-y;
 }
 
 .cell-tools {
@@ -4948,17 +4950,6 @@ a.jw-title:hover {
   cursor: inherit;
 }
 
-/* Arrows sit on the second line, beside "3 of 7", so names keep the width. */
-.tile-arrange-btns {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
-}
-
-.tile-arrange-btns .cell-btn {
-  min-width: 26px;
-  padding: 1px 5px;
-}
 
 @media (max-width: 760px) {
   .arrange-head {
@@ -5233,6 +5224,206 @@ a.jw-title:hover {
   .tiles-arranging .tile-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ---------- Drag to sort, everywhere ---------- */
+
+body.is-sorting,
+body.is-sorting * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* The item being dragged stays in the flow, lifted and see-through, and lets
+   the pointer through so whatever is under it becomes the target. */
+.is-dragging {
+  pointer-events: none;
+  opacity: 0.55;
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+[data-grip] {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.cell-handle {
+  padding: 6px 6px;
+  font-size: 17px;
+}
+
+/* Resize: the right edge of a widget while editing. */
+.cell-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -14px;
+  width: 16px;
+  display: grid;
+  place-items: center;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 3;
+}
+
+.cell-resize::before {
+  content: '';
+  width: 4px;
+  height: 44px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background-color 150ms ease, height 150ms ease;
+}
+
+.cell-resize:hover::before,
+.is-resizing .cell-resize::before {
+  background: var(--accent);
+  height: 72px;
+}
+
+.cell-resize-size {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font: 500 12px/1 var(--f-mono);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.is-resizing .cell-resize-size {
+  opacity: 1;
+}
+
+.is-resizing {
+  outline: 2px solid var(--accent) !important;
+}
+
+.cell-settings {
+  font-family: inherit;
+  font-size: 12.5px;
+}
+
+/* ---------- Editing apps ---------- */
+
+.tiles-arranging .tile-arrange {
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.tile-grip {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  padding: 0 2px 0 8px;
+  font-size: 15px;
+}
+
+.tile-arrange .tile-main {
+  padding-left: 6px;
+}
+
+.tile-menu,
+.tile-add {
+  flex: none;
+  margin-right: 8px;
+}
+
+.tile-menu {
+  min-width: 30px;
+  font-size: 15px;
+  line-height: 1;
+  padding: 5px 6px;
+}
+
+.tile-add {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 5px 10px;
+}
+
+.tile-arrange.is-hidden .tile-icon,
+.tile-arrange.is-hidden .tile-name {
+  opacity: 0.55;
+}
+
+.edit-extras .edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.edit-section {
+  margin-top: 18px;
+}
+
+.edit-note {
+  margin: 0 0 10px;
+}
+
+.icon-pick {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-preview {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+/* ---------- Patch bay: icons only, names on hover ---------- */
+
+.patchrow.icons-only .jack {
+  min-width: 52px;
+}
+
+.patchrow.icons-only .jack-label,
+.patchrow.icons-only .bay-jacks::after {
+  display: none;
+}
+
+.patchrow.icons-only .bay-jacks {
+  gap: 4px;
+}
+
+.patchrow.icons-only .jack::after {
+  content: attr(data-name);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translate(-50%, -2px);
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--head);
+  color: var(--bg);
+  font: 500 12px/1.2 var(--f-body);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 20;
+}
+
+.patchrow.icons-only .jack:hover::after,
+.patchrow.icons-only .jack:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 @media (prefers-reduced-motion: reduce) {

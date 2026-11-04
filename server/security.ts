@@ -54,7 +54,8 @@ export function securityHeaders(indexHtml: string | null): MiddlewareHandler {
   ].join('; ');
   return async (c, next) => {
     await next();
-    c.header('Content-Security-Policy', csp);
+    // A route may set a stricter policy of its own (uploaded icons do).
+    if (!c.res.headers.has('Content-Security-Policy')) c.header('Content-Security-Policy', csp);
     c.header('X-Content-Type-Options', 'nosniff');
     c.header('X-Frame-Options', 'DENY');
     // Links out to your apps shouldn't carry Patchboard's address with them.

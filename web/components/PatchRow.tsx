@@ -7,13 +7,13 @@ import { useStore } from '../lib/store.tsx';
 import { checkFor, checkText, containerMap, isExternal, jackState, jackStateText, tapeLabel } from '../lib/services.ts';
 import { Icon } from './ui.tsx';
 
-export function PatchRow() {
+export function PatchRow({ names = false }: { names?: boolean }) {
   const { snap } = useStore();
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
   const containers = containerMap(snap);
 
   return (
-    <nav className="patchrow" aria-label="Services">
+    <nav className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
       {snap.catalog.groups.map((g) => (
         <div className="bay" key={g.name}>
           <span className="bay-name">{g.name}</span>
@@ -33,20 +33,20 @@ export function PatchRow() {
               );
               if (s.href && isExternal(s.href)) {
                 return (
-                  <a key={s.name} className="jack" data-state={state} href={s.href} target="_blank" rel="noreferrer" title={label} aria-label={label}>
+                  <a key={s.name} className="jack" data-state={state} data-name={s.name} href={s.href} target="_blank" rel="noreferrer" title={label} aria-label={label}>
                     {inner}
                   </a>
                 );
               }
               if (s.container) {
                 return (
-                  <Link key={s.name} className="jack" data-state={state} to={`/c/${s.container}`} title={`${label}. Open details`} aria-label={`${label}. Open details`}>
+                  <Link key={s.name} className="jack" data-state={state} data-name={s.name} to={`/c/${s.container}`} title={`${label}. Open details`} aria-label={`${label}. Open details`}>
                     {inner}
                   </Link>
                 );
               }
               return (
-                <span key={s.name} className="jack" data-state={state} title={label}>
+                <span key={s.name} className="jack" data-state={state} data-name={s.name} title={label}>
                   {inner}
                 </span>
               );
