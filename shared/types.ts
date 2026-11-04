@@ -452,6 +452,8 @@ export interface Snapshot {
   links: Links;
   /** Container name -> pending image update. */
   updates: Record<string, ImageUpdate>;
+  /** READ_ONLY=1: the UI hides every control that changes something. */
+  readOnly: boolean;
 }
 
 export type ServerEvent =

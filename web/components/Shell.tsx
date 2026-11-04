@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store.tsx';
 import { Palette } from './Palette.tsx';
+import { SignIn } from '../views/SignIn.tsx';
 
 // On a phone the tab bar holds the first five; Logs and Apps stay one search away.
 const NAV = [
@@ -30,7 +31,7 @@ const isTyping = (el: EventTarget | null) =>
   el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
 
 export function Shell() {
-  const { snap, live, failed } = useStore();
+  const { snap, live, failed, auth } = useStore();
   const [palette, setPalette] = useState(false);
   const [help, setHelp] = useState(false);
   const navigate = useNavigate();
@@ -92,6 +93,11 @@ export function Shell() {
         </nav>
         <div className="topbar-end">
           {snap?.demo && <span className="pill">Demo data</span>}
+          {snap?.readOnly && (
+            <span className="pill" title="READ_ONLY=1: nothing on this server can be changed from here">
+              Read-only
+            </span>
+          )}
           <span className={`live ${live ? 'live-on' : ''}`} title={live ? 'Receiving live updates' : 'Reconnecting'}>
             {live ? 'Live' : failed ? 'Offline' : 'Connecting'}
           </span>
@@ -116,7 +122,9 @@ export function Shell() {
       </header>
 
       <main className="main">
-        {failed && !snap ? (
+        {auth && !snap ? (
+          <SignIn mode={auth} />
+        ) : failed && !snap ? (
           <div className="fatal">
             <h1>Can't reach the Patchboard server</h1>
             <p>The page loaded, but /api/snapshot didn't answer. Check that the container is running, then reload.</p>

@@ -5,9 +5,11 @@ interface Store {
   snap: Snapshot | null;
   live: boolean;
   failed: boolean;
+  /** The server answered 401: sign-in needed, and how. */
+  auth: 'password' | 'forward' | null;
 }
 
-const Ctx = createContext<Store>({ snap: null, live: false, failed: false });
+const Ctx = createContext<Store>({ snap: null, live: false, failed: false, auth: null });
 
 function apply(prev: Snapshot, e: ServerEvent): Snapshot {
   switch (e.type) {
@@ -28,12 +30,18 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [live, setLive] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [auth, setAuth] = useState<Store['auth']>(null);
 
   useEffect(() => {
     let closed = false;
     const load = async () => {
       try {
         const res = await fetch('/api/snapshot');
+        if (res.status === 401) {
+          const body = (await res.json().catch(() => ({}))) as { auth?: 'password' | 'forward' };
+          if (!closed) setAuth(body.auth ?? 'password');
+          return;
+        }
         if (!res.ok) throw new Error(String(res.status));
         const s = (await res.json()) as Snapshot;
         if (!closed) {
@@ -64,7 +72,7 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <Ctx.Provider value={{ snap, live, failed }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ snap, live, failed, auth }}>{children}</Ctx.Provider>;
 }
 
 export function useStore(): Store {

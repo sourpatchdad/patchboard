@@ -40,6 +40,18 @@ export const config = {
   staticDir: str('STATIC_DIR') ?? './dist/web',
 
   dockerSocket: str('DOCKER_SOCKET') ?? '/var/run/docker.sock',
+  /** tcp://host:port of a Docker socket proxy, used instead of the socket when set. */
+  dockerHost: str('DOCKER_HOST'),
+
+  /** Refuse every change to the server: actions, updates, board edits. */
+  readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
+
+  auth: {
+    mode: (['forward', 'password'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password',
+    userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
+    password: str('PATCHBOARD_PASSWORD'),
+    hookToken: str('HOOK_TOKEN'),
+  },
   dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
 
   poolPath: str('POOL_PATH'),
@@ -113,3 +125,13 @@ export const config = {
 };
 
 export type Config = typeof config;
+
+/** Where Docker API requests go: the unix socket, or a socket proxy over TCP. */
+export function dockerTarget(): { socketPath: string } | { host: string; port: number } {
+  const h = config.dockerHost;
+  if (h && /^tcp:\/\//.test(h)) {
+    const u = new URL(h.replace(/^tcp:/, 'http:'));
+    return { host: u.hostname, port: Number(u.port || 2375) };
+  }
+  return { socketPath: config.dockerSocket };
+}

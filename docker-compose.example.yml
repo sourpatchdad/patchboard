@@ -48,3 +48,21 @@ services:
       # Updates from the UI: your compose projects, read-only, at the SAME path
       # as on the host. Set COMPOSE_ROOT to that path above.
       # - /opt/stacks:/opt/stacks:ro
+
+  # ---- Optional: a Docker socket proxy instead of the socket ----------------
+  # Remove the docker.sock mount above, set DOCKER_HOST=tcp://socket-proxy:2375
+  # in .env, and uncomment. As written it allows reading only; see SECURITY.md
+  # for what actions and updates need.
+  # socket-proxy:
+  #   image: tecnativa/docker-socket-proxy:latest
+  #   container_name: patchboard-socket-proxy
+  #   restart: unless-stopped
+  #   environment:
+  #     - CONTAINERS=1
+  #     - IMAGES=1
+  #     - EVENTS=1
+  #     - INFO=1
+  #     - NETWORKS=1
+  #     - POST=0
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro

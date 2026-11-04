@@ -13,6 +13,7 @@ import { containerMap, ctrState, type JackState, serviceFor, shortStatus } from 
 import { useSource, useStore } from '../lib/store.tsx';
 
 const LOOSE = 'Standalone';
+type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
 const rank: Record<JackState, number> = { down: 0, warn: 1, up: 2, idle: 3, none: 4 };
 
 export function Stacks() {
@@ -21,6 +22,14 @@ export function Stacks() {
   const [q, setQ] = useState('');
   const [params, setParams] = useSearchParams();
   const onlyUpdates = params.get('updates') === '1';
+  // The sort lives in the URL, so it survives a reload and can be shared.
+  const sort = (['problems', 'name', 'cpu', 'memory'].includes(params.get('sort') ?? '') ? params.get('sort') : 'problems') as SortKey;
+  const setSort = (v: SortKey) => {
+    const next = new URLSearchParams(params);
+    if (v === 'problems') next.delete('sort');
+    else next.set('sort', v);
+    setParams(next, { replace: true });
+  };
   const { hash } = useLocation();
   const uptime = useJson<UptimeData>('/api/uptime?days=14', 5 * 60_000).data;
 
@@ -43,13 +52,27 @@ export function Stacks() {
     const key = c.project ?? LOOSE;
     groups.set(key, [...(groups.get(key) ?? []), c]);
   }
+  const s = stats?.containers ?? {};
   const worst = (list: Container[]) => Math.min(...list.map((c) => rank[ctrState(c, serviceFor(snap, c.name))]));
+  const cpuOf = (list: Container[]) => list.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
+  const memOf = (list: Container[]) => list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
   const ordered = [...groups].sort(([a, la], [b, lb]) => {
     if (a === LOOSE || b === LOOSE) return a === LOOSE ? 1 : -1;
+    if (sort === 'name') return a.localeCompare(b);
+    if (sort === 'cpu') return cpuOf(lb) - cpuOf(la) || a.localeCompare(b);
+    if (sort === 'memory') return memOf(lb) - memOf(la) || a.localeCompare(b);
     return worst(la) - worst(lb) || a.localeCompare(b);
   });
+  // Rows inside a stack follow the same order.
+  for (const [, list] of ordered) {
+    list.sort((x, y) => {
+      if (sort === 'cpu') return (s[y.name]?.cpu ?? -1) - (s[x.name]?.cpu ?? -1);
+      if (sort === 'memory') return (s[y.name]?.memBytes ?? -1) - (s[x.name]?.memBytes ?? -1);
+      if (sort === 'problems') return rank[ctrState(x, serviceFor(snap, x.name))] - rank[ctrState(y, serviceFor(snap, y.name))] || x.name.localeCompare(y.name);
+      return x.name.localeCompare(y.name);
+    });
+  }
 
-  const s = stats?.containers ?? {};
   const totalCpu = Object.values(s).reduce((n, x) => n + x.cpu, 0);
   const totalMem = Object.values(s).reduce((n, x) => n + x.memBytes, 0);
   const running = all.filter((c) => c.state === 'running').length;
@@ -67,6 +90,20 @@ export function Stacks() {
           </button>
         </div>
       )}
+      <div className="seg sort-seg" role="group" aria-label="Sort stacks">
+        {(
+          [
+            ['problems', 'Problems first'],
+            ['name', 'A to Z'],
+            ['cpu', 'Busiest CPU'],
+            ['memory', 'Most memory'],
+          ] as [SortKey, string][]
+        ).map(([v, label]) => (
+          <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+            {label}
+          </button>
+        ))}
+      </div>
       <p className="page-lede">
         {plural(groups.size, 'stack')}, {running} of {all.length} containers running
         {stats ? `, using ${pct(totalCpu)} of the CPU and ${size(totalMem)} of memory.` : '.'}

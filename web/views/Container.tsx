@@ -115,8 +115,8 @@ export function ContainerPage() {
           <span>{stateSentence(ctr.state, ctr.health, d, now, svc?.expectStopped)}</span>
         </p>
         <div className="ctr-actions-wrap">
-          {detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
-          <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === 'patchboard'} />
+          {!snap.readOnly && detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
+          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === 'patchboard'} />}
         </div>
       </div>
 

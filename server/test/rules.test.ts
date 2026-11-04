@@ -209,3 +209,43 @@ test('board: rejects unknown types, duplicates, bad container names; fixes bad s
     assert.deepEqual(v.board.widgets.find((w) => w.id === 'c1')?.config, { container: 'plex' });
   }
 });
+
+test('json widget: secrets only from WIDGET_* variables', async () => {
+  const { validateJsonConfig } = await import('../../shared/jsonwidget.ts');
+  const base = { title: 'x', fields: [{ label: 'n', path: 'a', format: 'number' }] };
+  assert.ok('error' in validateJsonConfig({ ...base, url: 'http://h/?k=${env:TRUENAS_API_KEY}' }));
+  assert.ok('error' in validateJsonConfig({ ...base, url: 'http://h/', headers: { Authorization: 'Bearer ${env:FASTMAIL_TOKEN}' } }));
+  assert.ok('config' in validateJsonConfig({ ...base, url: 'http://h/', headers: { 'X-Api-Key': '${env:WIDGET_PIHOLE}' } }));
+  assert.ok('error' in validateJsonConfig({ ...base, url: 'file:///etc/passwd' }));
+  assert.ok('error' in validateJsonConfig({ ...base, url: 'http://h/', fields: [] }));
+});
+
+test('json widget: reads paths and applies thresholds in either direction', async () => {
+  const { readPath, toneFor } = await import('../../shared/jsonwidget.ts');
+  const data = { a: { list: [{ n: 5 }, { n: 9 }] } };
+  assert.equal(readPath(data, 'a.list[1].n'), 9);
+  assert.equal(readPath(data, 'a.list.0.n'), 5);
+  assert.equal(readPath(data, 'a.missing.x'), undefined);
+  const hot = { label: 't', path: 'x', format: 'number' as const, warn: 70, crit: 90 };
+  assert.deepEqual([toneFor(hot, 50), toneFor(hot, 75), toneFor(hot, 95)], ['ok', 'warn', 'crit']);
+  const low = { label: 'f', path: 'x', format: 'number' as const, warn: 20, crit: 5 };
+  assert.deepEqual([toneFor(low, 50), toneFor(low, 10), toneFor(low, 3)], ['ok', 'warn', 'crit']);
+});
+
+test('json widget: refuses cloud metadata and link-local addresses', async () => {
+  const { fetchJsonWidget } = await import('../jsonwidget.ts');
+  const r = await fetchJsonWidget({ title: 't', url: 'http://169.254.169.254/latest/meta-data/', headers: {}, interval: 60, fields: [{ label: 'x', path: 'x', format: 'text' }] });
+  assert.equal(r.error, 'That address is blocked');
+});
+
+test('board: an API numbers widget keeps only validated settings', () => {
+  const json = JSON.stringify({ title: 'Pi-hole', url: 'http://10.0.0.2/api/stats', fields: [{ label: 'Blocked', path: 'blocked', format: 'percent', warn: 'x' }] });
+  const v = validateBoard({ widgets: [{ id: 'j1', type: 'json', size: 's', config: { json } }] });
+  assert.ok('board' in v);
+  if ('board' in v) {
+    const cfg = JSON.parse(v.board.widgets.find((w) => w.id === 'j1')!.config!.json);
+    assert.equal(cfg.fields[0].warn, undefined);
+    assert.equal(cfg.interval, 60);
+  }
+  assert.ok('error' in validateBoard({ widgets: [{ id: 'j2', type: 'json', size: 's', config: { json: '{"url":"ftp://x"}' } }] }));
+});

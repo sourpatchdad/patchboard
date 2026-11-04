@@ -20,7 +20,7 @@ import type {
 import { computeAlerts } from './alerts.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
-import { firstEventAt, kvGet, kvSet, latestSample, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
+import { firstEventAt, kvGet, kvSet, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
 import { demoContainers, demoSampleHistory } from './demo.ts';
 import { seedPoolHistoryFromAudits } from './notes.ts';
 import { pendingUpdates, settleUpdates } from './updates.ts';
@@ -60,6 +60,7 @@ export class Hub {
     const H = 3_600_000;
     const housekeeping = () => {
       prune(30 * 24 * H);
+      pruneAudit();
       pruneSamples('ctr.', 2 * 24 * H);
       pruneSamples('svc.', 8 * 24 * H);
       pruneSamples('cpu', 8 * 24 * H);
@@ -200,6 +201,7 @@ export class Hub {
       changes: this.changes,
       catalog: getCatalog(),
       updates: pendingUpdates(),
+      readOnly: config.readOnly,
       links: config.demo
         ? { dozzle: '#', fastmail: '#', miniflux: '#', sonarr: '#', radarr: '#' }
         : {

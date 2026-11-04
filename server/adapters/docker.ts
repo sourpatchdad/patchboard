@@ -4,13 +4,13 @@
 
 import http from 'node:http';
 import type { Container, ContainerDetail, ContainerStats, DockerData, StatsData } from '../../shared/types.ts';
-import { config } from '../config.ts';
+import { config, dockerTarget } from '../config.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 import { pickLabels } from '../labels.ts';
 
 function dockerGet(path: string, signal?: AbortSignal): Promise<http.IncomingMessage> {
   return new Promise((resolve, reject) => {
-    const req = http.get({ socketPath: config.dockerSocket, path, signal }, (res) => {
+    const req = http.get({ ...dockerTarget(), path, signal }, (res) => {
       if ((res.statusCode ?? 500) >= 400) {
         res.resume();
         reject(new Error(`Docker API ${res.statusCode}`));
@@ -19,7 +19,7 @@ function dockerGet(path: string, signal?: AbortSignal): Promise<http.IncomingMes
       resolve(res);
     });
     req.on('error', (err: NodeJS.ErrnoException) => {
-      reject(new Error(err.code === 'ENOENT' ? 'Docker socket not mounted' : `Docker: ${err.code ?? err.message}`));
+      reject(new Error(err.code === 'ENOENT' ? 'Docker socket not mounted' : err.code === 'ECONNREFUSED' ? 'Docker socket proxy refused the connection' : `Docker: ${err.code ?? err.message}`));
     });
     req.setTimeout(8000, () => req.destroy(new Error('Docker API timed out')));
   });
@@ -230,7 +230,7 @@ export type ContainerAction = 'start' | 'stop' | 'restart';
 export function containerAction(name: string, action: ContainerAction): Promise<void> {
   return new Promise((resolve, reject) => {
     const req = http.request(
-      { socketPath: config.dockerSocket, path: `/containers/${encodeURIComponent(name)}/${action}${action === 'start' ? '' : '?t=10'}`, method: 'POST' },
+      { ...dockerTarget(), path: `/containers/${encodeURIComponent(name)}/${action}${action === 'start' ? '' : '?t=10'}`, method: 'POST' },
       (res) => {
         res.resume();
         // 304: already in that state, which is fine.
@@ -253,7 +253,7 @@ export function watchContainerEvents(onEvent: (e: { action: string; name: string
   const filters = encodeURIComponent(JSON.stringify({ type: ['container'], event: ['start', 'stop', 'die', 'kill', 'restart', 'health_status', 'destroy', 'create', 'pause', 'unpause', 'oom'] }));
   let delay = 2000;
   const connect = () => {
-    const req = http.get({ socketPath: config.dockerSocket, path: `/events?filters=${filters}` }, (res) => {
+    const req = http.get({ ...dockerTarget(), path: `/events?filters=${filters}` }, (res) => {
       delay = 2000;
       let buf = '';
       res.setEncoding('utf8');

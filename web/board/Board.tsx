@@ -19,6 +19,7 @@ import { useAppearance } from '../lib/appearance.ts';
 import { pct, size, uptime } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
+import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
@@ -50,9 +51,12 @@ function useBoard() {
 }
 
 export function Board({ now }: { now: number }) {
+  const { snap } = useStore();
   const { board, custom, save } = useBoard();
   const [draft, setDraft] = useState<BoardData | null>(null);
   const [adding, setAdding] = useState(false);
+  /** The JSON widget being edited: an existing id, or 'new' while adding one. */
+  const [jsonEdit, setJsonEdit] = useState<string | null>(null);
   const [error, setError] = useState('');
   const dragFrom = useRef<number | null>(null);
   const editing = draft !== null;
@@ -106,7 +110,7 @@ export function Board({ now }: { now: number }) {
             </button>
             {error && <span className="crit-text">{error}</span>}
           </>
-        ) : (
+        ) : snap?.readOnly ? null : (
           <button type="button" className="text-button board-customize" onClick={() => (setError(''), setDraft(structuredClone(board!)))}>
             {custom ? 'Customize' : 'Customize this board'}
           </button>
@@ -124,13 +128,14 @@ export function Board({ now }: { now: number }) {
             onMove={move}
             onSize={(s) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, size: s } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
+            onConfigure={w.type === 'json' ? () => setJsonEdit(w.id) : undefined}
             onDragStart={() => (dragFrom.current = i)}
             onDrop={() => {
               if (dragFrom.current != null) move(dragFrom.current, i);
               dragFrom.current = null;
             }}
           >
-            <WidgetBody w={w} now={now} />
+            <WidgetBody w={w} now={now} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
           </Cell>
         ))}
       </div>
@@ -140,8 +145,26 @@ export function Board({ now }: { now: number }) {
           board={draft}
           onClose={() => setAdding(false)}
           onAdd={(w) => {
-            update((ws) => [...ws, w]);
             setAdding(false);
+            if (w.type === 'json') setJsonEdit('new');
+            else update((ws) => [...ws, w]);
+          }}
+        />
+      )}
+
+      {jsonEdit && draft && (
+        <JsonEditor
+          initial={jsonEdit === 'new' ? null : parseConfig(draft.widgets.find((x) => x.id === jsonEdit)?.config?.json)}
+          onClose={() => setJsonEdit(null)}
+          onSave={(json) => {
+            if (jsonEdit === 'new') {
+              let n = 1;
+              while (draft.widgets.some((x) => x.id === `api-${n}`)) n++;
+              update((ws) => [...ws, { id: `api-${n}`, type: 'json', size: 's', config: { json } }]);
+            } else {
+              update((ws) => ws.map((x) => (x.id === jsonEdit ? { ...x, config: { json } } : x)));
+            }
+            setJsonEdit(null);
           }}
         />
       )}
@@ -162,6 +185,7 @@ function Cell(props: {
   onMove: (from: number, to: number) => void;
   onSize: (s: WidgetSize) => void;
   onRemove: () => void;
+  onConfigure?: () => void;
   onDragStart: () => void;
   onDrop: () => void;
 }) {
@@ -213,7 +237,7 @@ function Cell(props: {
             </span>
             <span className="cell-name">
               {info.name}
-              {w.config?.container ? `: ${w.config.container}` : ''}
+              {w.config?.container ? `: ${w.config.container}` : w.config?.json ? `: ${parseConfig(w.config.json)?.title ?? ''}` : ''}
             </span>
             <span className="cell-sizes" role="group" aria-label="Width">
               {info.sizes.map((s) => (
@@ -228,6 +252,11 @@ function Cell(props: {
             <button type="button" className="cell-btn" disabled={index === count - 1} onClick={() => props.onMove(index, index + 1)} aria-label="Move later">
               →
             </button>
+            {props.onConfigure && (
+              <button type="button" className="cell-btn" onClick={props.onConfigure} aria-label={`Edit ${info.name}`} title="Edit">
+                ⚙
+              </button>
+            )}
             {info.removable && (
               <button type="button" className="cell-btn cell-remove" onClick={props.onRemove} aria-label={`Remove ${info.name}`}>
                 ×
@@ -243,7 +272,7 @@ function Cell(props: {
   );
 }
 
-function WidgetBody({ w, now }: { w: Widget; now: number }) {
+function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean }) {
   const { snap } = useStore();
   const { homeApps } = useAppearance();
   if (!snap) return null;
@@ -268,6 +297,8 @@ function WidgetBody({ w, now }: { w: Widget; now: number }) {
       return <RecentlyAdded now={now} />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
+    case 'json':
+      return <JsonWidgetView id={w.id} json={w.config?.json} saved={saved} />;
   }
 }
 

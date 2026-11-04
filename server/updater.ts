@@ -18,7 +18,7 @@ import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import { isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../shared/types.ts';
-import { config } from './config.ts';
+import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
 
 interface Inspect {
@@ -30,7 +30,7 @@ interface Inspect {
 function dockerJson<T>(path: string): Promise<T> {
   return new Promise((ok, fail) => {
     http
-      .get({ socketPath: config.dockerSocket, path }, (res) => {
+      .get({ ...dockerTarget(), path }, (res) => {
         let body = '';
         res.setEncoding('utf8');
         res.on('data', (c: string) => (body += c));
@@ -118,7 +118,9 @@ function step(j: UpdateJob & { listeners: Set<(j: UpdateJob) => void> }, key: st
 function run(j: UpdateJob & { listeners: Set<(j: UpdateJob) => void> }, args: string[], cwd: string): Promise<void> {
   return new Promise((ok, fail) => {
     // Minimal environment on purpose: see the note at the top of the file.
-    const child = spawn('docker', args, { cwd, env: { PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin', HOME: '/tmp' } });
+    const env: Record<string, string> = { PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin', HOME: '/tmp' };
+    if (config.dockerHost) env.DOCKER_HOST = config.dockerHost;
+    const child = spawn('docker', args, { cwd, env });
     const onData = (buf: Buffer) => {
       for (const line of buf.toString('utf8').split(/\r?\n|\r/)) {
         const t = line.trim();
@@ -261,7 +263,7 @@ export async function startRollback(fromJobId: string, onDone: () => void): Prom
     try {
       await new Promise<void>((ok, fail) => {
         const req = http.request(
-          { socketPath: config.dockerSocket, method: 'POST', path: `/images/${encodeURIComponent(prev.oldImageId!)}/tag?repo=${encodeURIComponent(repo)}&tag=${encodeURIComponent(tag)}` },
+          { ...dockerTarget(), method: 'POST', path: `/images/${encodeURIComponent(prev.oldImageId!)}/tag?repo=${encodeURIComponent(repo)}&tag=${encodeURIComponent(tag)}` },
           (res) => {
             res.resume();
             (res.statusCode ?? 500) < 400 ? ok() : fail(new Error(res.statusCode === 404 ? 'The previous image was already removed' : `Docker API ${res.statusCode}`));

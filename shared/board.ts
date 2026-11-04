@@ -1,7 +1,9 @@
 // The Home board: an ordered list of widgets, each with a size. Shared by the
 // server (which stores and validates it) and the browser (which draws and
 // edits it), so a saved board can never hold something the UI can't render.
-// Runtime code is fine here: this file has no imports and no Node or DOM use.
+// Runtime code is fine here: no Node or DOM use.
+
+import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
   | 'apps'
@@ -13,7 +15,8 @@ export type WidgetType =
   | 'feeds'
   | 'changes'
   | 'recent'
-  | 'container';
+  | 'container'
+  | 'json';
 
 /** Width on a 12-column grid: a quarter, a third, a half, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'xl';
@@ -44,6 +47,7 @@ export const WIDGET_INFO: Record<WidgetType, { name: string; about: string; size
   changes: { name: 'Changes', about: 'Containers that stopped, started or recovered in the last two days.', size: 'm', sizes: ['s', 'm', 'l'], removable: true, multiple: false },
   recent: { name: 'Recently added', about: 'New arrivals on Plex, as posters.', size: 'xl', sizes: ['l', 'xl'], removable: true, multiple: false },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm'], removable: true, multiple: true },
+  json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true },
 };
 
 export const DEFAULT_BOARD: Board = {
@@ -84,6 +88,17 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
       const name = (w.config as Record<string, unknown> | undefined)?.container;
       if (typeof name !== 'string' || !CONTAINER.test(name)) return { error: 'A container widget needs a container name' };
       config = { container: name };
+    }
+    if (w.type === 'json') {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse((w.config as Record<string, string> | undefined)?.json ?? '');
+      } catch {
+        return { error: 'An API numbers widget needs its settings' };
+      }
+      const v = validateJsonConfig(parsed);
+      if ('error' in v) return { error: v.error };
+      config = { json: JSON.stringify(v.config) };
     }
     widgets.push({ id: w.id, type: w.type as WidgetType, size, ...(config ? { config } : {}) });
   }

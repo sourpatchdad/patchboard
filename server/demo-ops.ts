@@ -2,6 +2,7 @@
 // stats, TrueNAS, inspect detail, runbook sections and chart history. Kept apart
 // from demo.ts (media, mail, feeds) so each file stays readable.
 
+import { readPath, type JsonWidgetConfig } from '../shared/jsonwidget.ts';
 import type { BackupRun, BackupsData, Catalog, ChecksData, Container, ContainerDetail, RunbookSection, StatsData, TruenasData } from '../shared/types.ts';
 
 const H = 3_600_000;
@@ -301,4 +302,22 @@ export function demoBackups(): BackupsData {
     return out;
   };
   return { db: runs(DB_LABELS, 0, { 6: 'Nextcloud', 7: 'Nextcloud' }), files: runs(FILE_LABELS, 30, { 11: 'Home Assistant' }) };
+}
+
+/** Demo: an invented JSON document, so the API numbers widget has something to map. */
+const DEMO_JSON = {
+  status: 'ok',
+  queries: { today: 48213, blocked: 6120, blockedPercent: 12.7 },
+  clients: { active: 23 },
+  gravity: { domains: 1284033, updated: Math.floor(Date.now() / 1000) - 26 * 3600 },
+  uptimeSeconds: 864000 + 3600 * 7,
+  memory: { usedBytes: 412_000_000 },
+};
+
+export function demoJson(cfg: JsonWidgetConfig, withSample = false) {
+  return {
+    values: cfg.fields.map((f) => ({ label: f.label, value: readPath(DEMO_JSON, f.path) ?? null })),
+    at: Date.now(),
+    sample: withSample ? JSON.stringify(DEMO_JSON, null, 2) : undefined,
+  };
 }

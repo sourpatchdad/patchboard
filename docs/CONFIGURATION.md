@@ -25,6 +25,19 @@ are set. Leave a block empty and that part of the page simply doesn't appear.
 | `DATA_DIR` | `/data` | SQLite database location (mount it). |
 | `CATALOG_PATH` | `/config/services.yaml` | The catalog file. |
 
+### Sign-in and safety
+
+See [SECURITY.md](../SECURITY.md) for when to use which.
+
+| Variable | Default | |
+|---|---|---|
+| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header) or `password`. |
+| `TRUSTED_USER_HEADER` | `Remote-User` | The header a forward-auth proxy sets. |
+| `PATCHBOARD_PASSWORD` | empty | The shared password for `AUTH=password`. |
+| `HOOK_TOKEN` | empty | What webhooks send when sign-in is on. |
+| `READ_ONLY` | `0` | `1` refuses every change and hides the controls. |
+| `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
+
 ### Checks and thresholds
 
 | Variable | Default | |
@@ -48,7 +61,8 @@ are set. Leave a block empty and that part of the page simply doesn't appear.
 | Frigate | `FRIGATE_URL` | Camera status. |
 | TrueNAS | `TRUENAS_URL`, `TRUENAS_API_KEY`, `TRUENAS_VERIFY_TLS` | 25.04 or later. `wss://` only. A read-only key is enough. |
 | Dozzle | `DOZZLE_URL` | Links out for heavier log work. |
-| Diun | none on this side | Point Diun's webhook notifier at `http://<patchboard>/api/hooks/diun`. |
+| Diun | none on this side | Point Diun's webhook notifier at `http://<patchboard>/api/hooks/diun` (add `HOOK_TOKEN` when sign-in is on). |
+| Any JSON API | `WIDGET_*` | Add an **API numbers** widget on Home. Keep its keys in `WIDGET_` variables and reference them as `${env:WIDGET_NAME}`. |
 
 ### Optional mounts
 

@@ -22,6 +22,15 @@ db.exec(`
   );
   create index if not exists events_at on events(at);
   create table if not exists kv (k text primary key, v text not null);
+  create table if not exists audit (
+    id integer primary key,
+    at integer not null,
+    who text not null,
+    action text not null,
+    target text not null,
+    detail text
+  );
+  create index if not exists audit_at on audit(at);
   create table if not exists samples (
     key text not null,
     at integer not null,
@@ -131,4 +140,28 @@ export function kvGet<T>(key: string): T | undefined {
 
 export function kvSet(key: string, value: unknown): void {
   setKv.run(key, JSON.stringify(value));
+}
+
+// Who did what: actions, updates, board changes, sign-ins. Kept 180 days.
+const insertAudit = db.prepare('insert into audit (at, who, action, target, detail) values (?, ?, ?, ?, ?)');
+const selectAudit = db.prepare('select id, at, who, action, target, detail from audit order by at desc limit ?');
+const pruneAuditStmt = db.prepare('delete from audit where at < ?');
+
+export function recordAudit(who: string, action: string, target: string, detail?: string): void {
+  insertAudit.run(Date.now(), who.slice(0, 200), action, target.slice(0, 200), detail?.slice(0, 500) ?? null);
+}
+
+export function listAudit(limit = 200): { id: number; at: number; who: string; action: string; target: string; detail?: string }[] {
+  return selectAudit.all(limit).map((r) => ({
+    id: Number(r.id),
+    at: Number(r.at),
+    who: String(r.who),
+    action: String(r.action),
+    target: String(r.target),
+    detail: r.detail == null ? undefined : String(r.detail),
+  }));
+}
+
+export function pruneAudit(): void {
+  pruneAuditStmt.run(Date.now() - 180 * 86_400_000);
 }

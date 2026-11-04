@@ -50,17 +50,17 @@ Done items are marked with the version they shipped in.
 - [x] DNS-rebinding host check, cross-origin refusal (1.9.1)
 - [x] Actions behind a custom header, every action recorded (1.4.0)
 - [x] Secrets only in the environment; inspect output never includes env (1.1.0)
-- [ ] **Read-only mode** (`READ_ONLY=1`): no actions, no updates, no board edits
-- [ ] **Docker socket proxy support** (`DOCKER_HOST=tcp://socket-proxy:2375`), documented with writes off for read-only installs
-- [ ] **Authentication:** trusted forward-auth header, OIDC, or a built-in password with rate limiting; actions can require it even when viewing doesn't
-- [ ] **Audit log page:** every action, update, sign-in and board change, with who and when
-- [ ] **Content-Security-Policy** and other security headers
+- [x] **Read-only mode** (1.10.0) (`READ_ONLY=1`): no actions, no updates, no board edits
+- [x] **Docker socket proxy support** (1.10.0) (`DOCKER_HOST=tcp://socket-proxy:2375`), documented with writes off for read-only installs
+- [x] **Authentication** (1.10.0): trusted forward-auth header, OIDC, or a built-in password with rate limiting; actions can require it even when viewing doesn't
+- [x] **Audit log** (1.10.0, Settings, Activity): every action, update, sign-in and board change, with who and when
+- [x] **Content-Security-Policy** and other security headers (1.10.0)
 - [ ] Non-root image variant (works with a socket proxy)
 
 ### Making it yours (the top capability asks)
 - [x] Docker-label discovery, Homepage labels included (1.8.0)
 - [x] Drag-and-drop board, widths, live refresh (1.9.0)
-- [ ] **JSON widget:** any API, up to four values, thresholds, test before saving (in progress)
+- [x] **JSON widget** (1.10.0, "API numbers"): any API, up to four values, thresholds, test before saving (in progress)
 - [ ] **Board export and import** as one file, plus starter presets
 - [ ] **Catalog editor in the UI** that writes clean, diffable YAML (fixes reason 1 without giving up git)
 - [ ] **Homepage importer in the UI** (the CLI exists)

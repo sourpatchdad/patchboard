@@ -27,10 +27,14 @@ import { demoAdapters, demoFeeds, demoInspect, demoLogs, demoReadIds, demoRunboo
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
-import { DEFAULT_BOARD, validateBoard } from '../shared/board.ts';
+import { type Board, DEFAULT_BOARD, validateBoard } from '../shared/board.ts';
+import { validateJsonConfig } from '../shared/jsonwidget.ts';
+import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
+import { demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
-import { recordEvent } from './db.ts';
+import { listAudit, recordAudit, recordEvent } from './db.ts';
+import { currentUser, login, logout, readOnlyGuard, requireAuth, securityHeaders } from './security.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
@@ -66,6 +70,8 @@ whenTraktConnects(() => void hub.pollNow('trakt'));
 console.log(`patchboard: ${config.demo ? 'DEMO mode, ' : ''}${adapters.map((a) => a.id).join(', ')}`);
 
 const app = new Hono();
+const indexPathForCsp = join(config.staticDir, 'index.html');
+app.use('*', securityHeaders(existsSync(indexPathForCsp) ? readFileSync(indexPathForCsp, 'utf8') : null));
 
 // DNS rebinding: a hostile page can point its own hostname at this server's
 // address and then call the API from a visitor's browser as same-origin. The
@@ -97,6 +103,47 @@ app.use('/api/*', async (c, next) => {
     }
   }
   await next();
+});
+
+app.use('/api/*', requireAuth());
+app.use('/api/*', readOnlyGuard());
+const who = (c: Parameters<typeof currentUser>[0]) => currentUser(c) ?? '?';
+
+// Who's here, how sign-in works, and whether changes are allowed.
+app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly }));
+
+app.post('/api/login', async (c) => {
+  if (config.auth.mode !== 'password') return c.json({ error: 'Password sign-in is not enabled' }, 400);
+  const body = await c.req.json<{ password?: string }>().catch(() => ({ password: undefined }));
+  const r = login(c, typeof body.password === 'string' ? body.password.slice(0, 500) : '');
+  return r.ok ? c.json({ ok: true }) : c.json({ error: r.error }, r.status);
+});
+
+app.post('/api/logout', (c) => {
+  logout(c);
+  return c.json({ ok: true });
+});
+
+app.get('/api/audit', (c) => c.json(listAudit(200)));
+
+// API numbers widgets. The server only ever fetches URLs saved in the board:
+// the browser asks for a widget by id, never for a URL.
+app.get('/api/widgets/:id', async (c) => {
+  const saved = kvGet<Board>('board');
+  const w = saved?.widgets.find((x) => x.id === c.req.param('id') && x.type === 'json');
+  if (!w?.config?.json) return c.json({ error: 'No such widget' }, 404);
+  const v = validateJsonConfig(JSON.parse(w.config.json));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  return c.json(config.demo ? demoJson(v.config) : await cachedJsonWidget(w.id, v.config));
+});
+
+// Try a configuration before saving it. A change-level request: it needs the
+// action header and is refused in read-only mode, like saving the board.
+app.post('/api/widgets/preview', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const v = validateJsonConfig(await c.req.json().catch(() => null));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  return c.json(config.demo ? demoJson(v.config, true) : await fetchJsonWidget(v.config, true));
 });
 
 app.get('/api/snapshot', (c) => c.json(hub.snapshot()));
@@ -183,6 +230,7 @@ app.post('/api/containers/:name/action', async (c) => {
   if (action !== 'start' && action !== 'stop' && action !== 'restart') return c.json({ error: 'Unknown action' }, 400);
   if (!hub.containers().some((x) => x.name === name)) return c.json({ error: 'No such container' }, 404);
   recordEvent('container.action', name, action);
+  recordAudit(who(c), `container.${action}`, name);
   if (!config.demo) {
     try {
       await containerAction(name, action as ContainerAction);
@@ -202,6 +250,7 @@ app.get('/api/trakt', (c) =>
 app.post('/api/trakt/connect', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (config.demo) return c.json({ error: 'Not available in the demo' }, 400);
+  recordAudit(who(c), 'trakt.connect', 'trakt');
   try {
     return c.json(await startDeviceFlow());
   } catch (err) {
@@ -211,6 +260,7 @@ app.post('/api/trakt/connect', async (c) => {
 app.post('/api/trakt/disconnect', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (!config.demo) traktDisconnect();
+  recordAudit(who(c), 'trakt.disconnect', 'trakt');
   return c.json({ ok: true });
 });
 
@@ -240,6 +290,7 @@ app.post('/api/containers/:name/update', async (c) => {
       return false;
     }
   };
+  recordAudit(who(c), 'container.update', name);
   try {
     return c.json(await startUpdate(ctr, answering, done));
   } catch (err) {
@@ -250,6 +301,7 @@ app.post('/api/containers/:name/update', async (c) => {
 app.post('/api/jobs/:id/rollback', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (config.demo) return c.json({ error: 'Not available in the demo' }, 400);
+  recordAudit(who(c), 'container.rollback', c.req.param('id'));
   try {
     return c.json(
       await startRollback(c.req.param('id'), () => {
@@ -306,12 +358,14 @@ app.put('/api/board', async (c) => {
   const v = validateBoard(await c.req.json().catch(() => null));
   if ('error' in v) return c.json({ error: v.error }, 400);
   kvSet('board', v.board);
+  recordAudit(who(c), 'board.save', 'home', `${v.board.widgets.length} widgets`);
   return c.json({ board: v.board, custom: true });
 });
 
 app.delete('/api/board', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   kvSet('board', null);
+  recordAudit(who(c), 'board.reset', 'home');
   return c.json({ board: DEFAULT_BOARD, custom: false });
 });
 

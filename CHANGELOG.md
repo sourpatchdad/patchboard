@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.10.0 — 2026-11-04
+
+Safe to hand to someone else.
+
+- **Sign-in** (`AUTH`): `forward` trusts a reverse proxy's user header
+  (Authelia, Authentik, Cloudflare Access); `password` adds a sign-in page
+  with hashed session tokens in an HttpOnly, SameSite=Strict cookie and
+  per-address lockout after five wrong tries. Webhooks use `HOOK_TOKEN`.
+- **Read-only mode** (`READ_ONLY=1`): every change refused and every change
+  control hidden; a Read-only marker in the top bar.
+- **Docker socket proxy** support (`DOCKER_HOST=tcp://...`), with a commented
+  tecnativa/docker-socket-proxy service in the example compose file.
+- **Activity log** in Settings: who restarted, stopped, updated or rolled
+  back what, board changes, Trakt sign-ins, sign-ins and failed attempts.
+  Kept 180 days.
+- **Security headers:** a strict Content-Security-Policy that allows the one
+  inline script by its hash, plus nosniff, frame denial and no referrer.
+  Every view checked in a browser with no violations.
+- **API numbers widget:** up to four values from any JSON API with dot paths
+  (`queries.blocked`, `items[0].count`), formats (number, percent, bytes,
+  duration, relative time, text) and amber/red thresholds in either
+  direction. Test it before saving; the preview shows the response to map
+  from. The server fetches only URLs saved in the board; secrets come only
+  from `WIDGET_*` variables; redirects, link-local and cloud-metadata
+  addresses are refused.
+- **Stacks sorting:** problems first, A to Z, busiest CPU, most memory. Kept
+  in the URL.
+- SECURITY.md rewritten as a deployment guide. 26 tests.
+
 ## 1.9.1 — 2026-11-04
 
 - **Fixed: Trakt said "Can't reach" while Settings said connected.** Trakt's

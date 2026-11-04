@@ -17,6 +17,8 @@ import {
   useAppearance,
 } from '../lib/appearance.ts';
 import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
+import { useStore } from '../lib/store.tsx';
+import { agoLong } from '../lib/format.ts';
 
 export function Settings() {
   const a = useAppearance();
@@ -136,6 +138,7 @@ export function Settings() {
       <Portability />
       <Connections />
       <CatalogCheck />
+      <Activity />
       </div>
     </div>
   );
@@ -256,6 +259,7 @@ const ACTION = { 'X-Patchboard': 'action' };
 
 /** Trakt sign-in: shows the code to type at trakt.tv/activate and waits. */
 function Connections() {
+  const readOnly = !!useStore().snap?.readOnly;
   const [s, setS] = useState<TraktStatus | null>(null);
   const [err, setErr] = useState('');
   const load = async () => setS((await (await fetch('/api/trakt')).json()) as TraktStatus);
@@ -305,7 +309,7 @@ function Connections() {
               <>
                 <span>Connected{s.user ? <> as <span className="mono">{s.user}</span></> : ''}</span>
                 {s.expiresAt && <span className="ledger-aside">renews on its own, next by {new Date(s.expiresAt).toLocaleDateString()}</span>}
-                {s.canConnect && (
+                {s.canConnect && !readOnly && (
                   <button type="button" className="text-button" onClick={() => void disconnect()}>
                     Disconnect
                   </button>
@@ -314,7 +318,7 @@ function Connections() {
             ) : (
               <>
                 <span className="ledger-aside">Not connected.</span>
-                {s.canConnect && (
+                {s.canConnect && !readOnly && (
                   <button type="button" className="button button-quiet" onClick={() => void connect()}>
                     Connect Trakt
                   </button>
@@ -385,5 +389,62 @@ function CatalogCheck() {
         </>
       )}
     </section>
+  );
+}
+
+interface AuditRow {
+  id: number;
+  at: number;
+  who: string;
+  action: string;
+  target: string;
+  detail?: string;
+}
+
+const ACTION_TEXT: Record<string, string> = {
+  'container.restart': 'restarted',
+  'container.stop': 'stopped',
+  'container.start': 'started',
+  'container.update': 'updated',
+  'container.rollback': 'rolled back an update',
+  'board.save': 'saved the Home board',
+  'board.reset': 'reset the Home board',
+  'trakt.connect': 'started a Trakt sign-in',
+  'trakt.disconnect': 'disconnected Trakt',
+  'auth.signin': 'signed in',
+  'auth.failed': 'failed to sign in',
+};
+
+/** Who changed what, newest first: every action, update, board edit and sign-in. */
+function Activity() {
+  const [rows, setRows] = useState<AuditRow[] | null>(null);
+  useEffect(() => {
+    void (async () => setRows(await (await fetch('/api/audit')).json()))();
+  }, []);
+  return (
+    <Section title="Activity" count={rows ? `${rows.length} recent` : undefined} className="span-all">
+      {!rows?.length ? (
+        <p className="settings-note">Nothing yet. Every container action, update, board change and sign-in will be listed here, with who did it.</p>
+      ) : (
+        <ul className="audit">
+          {rows.slice(0, 60).map((r) => (
+            <li key={r.id}>
+              <span className="mono audit-who">{r.who}</span>
+              <span>
+                {ACTION_TEXT[r.action] ?? r.action}
+                {r.target && r.action.startsWith('container.') && (
+                  <>
+                    {' '}
+                    <span className="ident">{r.target}</span>
+                  </>
+                )}
+                {r.detail && r.action.startsWith('auth.') ? <span className="ledger-aside"> from {r.detail}</span> : null}
+              </span>
+              <time>{agoLong(r.at)}</time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
   );
 }
