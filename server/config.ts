@@ -52,6 +52,13 @@ export const config = {
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean),
 
+  /**
+   * Compose stacks under this folder can be updated from the UI. It must be
+   * mounted read-only at the same path as on the host, so compose files and
+   * relative paths resolve the same way inside the container.
+   */
+  composeRoot: str('COMPOSE_ROOT'),
+
   /** Read-only mounts of the server's own notes and logs (see docker-compose). */
   docsPath: str('DOCS_PATH'),
   logsPath: str('LOGS_PATH'),

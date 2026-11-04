@@ -9,8 +9,9 @@ exposing it anywhere else.
 - **Read:** container state, stats, logs and inspect data through the Docker
   socket; host CPU and memory; read-only mounts of the server's docs and logs;
   the APIs of configured integrations.
-- **Act:** start, stop and restart containers, and sign in to Trakt. Nothing
-  else changes state.
+- **Act:** start, stop, restart and update containers (pull and recreate one
+  compose service, or roll it back), and sign in to Trakt. Nothing else
+  changes state.
 
 The Docker socket is equivalent to root on the host, mounted read-only or
 not (`:ro` protects the socket file, not the API behind it). Treat access to
@@ -25,6 +26,13 @@ Patchboard as access to the server.
   preflight, which Patchboard never grants, so another site can't trigger an
   action through your browser.
 - **Every action is recorded** as an event with the container and the verb.
+- **Updates are fenced:** only compose projects whose folder and compose files
+  sit under `COMPOSE_ROOT` (mounted read-only). TrueNAS-managed apps, locally
+  built images and Patchboard itself are refused. One update runs at a time.
+- **Child processes get a minimal environment** (`PATH`, `HOME`). Patchboard's
+  own variables hold API keys; compose would otherwise let them override a
+  stack's `.env` values of the same name. Compose reads each stack's `.env`
+  itself; Patchboard never opens those files.
 - **Secrets stay server-side.** Keys live in the environment. The browser
   never receives them; images (Plex posters) are proxied. Container inspect
   output deliberately omits environment variables. Error messages from

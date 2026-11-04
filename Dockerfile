@@ -16,6 +16,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
 FROM node:24-alpine
+# The docker CLI and compose plugin run updates (pull, recreate one service).
+RUN apk add --no-cache docker-cli docker-cli-compose
 ENV NODE_ENV=production \
     PORT=3200 \
     DATA_DIR=/data \

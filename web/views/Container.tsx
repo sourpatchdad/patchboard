@@ -19,6 +19,7 @@ import type {
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
 import { ContainerActions } from '../components/Actions.tsx';
+import { UpdateButton, UpdatePanel, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
@@ -35,7 +36,13 @@ const changeText = {
   'container.action': 'Command sent',
 } as const;
 
-const actionWord: Record<string, string> = { restart: 'Restarted from Patchboard', stop: 'Stopped from Patchboard', start: 'Started from Patchboard' };
+const actionWord: Record<string, string> = {
+  restart: 'Restarted from Patchboard',
+  stop: 'Stopped from Patchboard',
+  start: 'Started from Patchboard',
+  update: 'Updated from Patchboard',
+  rollback: 'Rolled back from Patchboard',
+};
 
 export function ContainerPage() {
   const { name = '' } = useParams();
@@ -47,6 +54,7 @@ export function ContainerPage() {
   const runbook = useJson<{ available: boolean; sections: RunbookSection[] }>(`/api/runbook/${encodeURIComponent(name)}`);
   const { data: stats } = useSource<StatsData>('stats');
   const uptime = useJson<UptimeData>('/api/uptime?days=30', 5 * 60_000).data;
+  const upd = useUpdateJob(name);
 
   if (!snap) return null;
   if (!ctr) {
@@ -106,7 +114,10 @@ export function ContainerPage() {
           <span className="status-led" aria-hidden />
           <span>{stateSentence(ctr.state, ctr.health, d, now, svc?.expectStopped)}</span>
         </p>
-        <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === 'patchboard'} />
+        <div className="ctr-actions-wrap">
+          {detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
+          <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === 'patchboard'} />
+        </div>
       </div>
 
       <div className="health-row">
@@ -116,6 +127,7 @@ export function ContainerPage() {
 
       <div className="detail-grid">
         <div className="detail-main">
+          <UpdatePanel job={upd.job} error={upd.error} onRollback={(id) => void upd.rollback(id)} onDismiss={upd.dismiss} />
           {problem && sections.length > 0 && <Runbook sections={sections} open />}
           {d?.health === 'unhealthy' && d.healthLog.length > 0 && <HealthLog log={d.healthLog} now={now} />}
           {ctr.state === 'running' && <Resources name={name} cpu={live?.cpu} mem={live?.memBytes} />}
@@ -164,6 +176,11 @@ export function ContainerPage() {
                       {d.project}
                     </Link>
                     {d.service && <span className="ledger-aside">service {d.service}</span>}
+                  </Row>
+                )}
+                {d.update && !d.update.ok && (
+                  <Row k="Updates">
+                    <span className="ledger-aside">{d.update.reason}</span>
                   </Row>
                 )}
                 {d.workingDir && (

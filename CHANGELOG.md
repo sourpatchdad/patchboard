@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.5.0 — 2026-11-04
+
+Update containers from the UI.
+
+- **Update** on container pages (two-step confirm): pulls the image, recreates
+  only that service with `docker compose up -d --no-deps`, then waits until it
+  is running, healthy, and answering its service check, live-tested rather
+  than taken from the last minute's result. Each step streams to the page with
+  the old and new image ids and the raw output.
+- **Roll back:** a failed update offers the previous image; Patchboard points
+  the tag back at it and recreates on it without pulling.
+- **Guard rails:** only compose stacks under `COMPOSE_ROOT`; TrueNAS apps,
+  locally built images and Patchboard itself are refused with the reason on
+  the page. One job at a time. Compose runs with only `PATH` and `HOME`, so
+  Patchboard's own keys can never leak into, or override, a stack's variables.
+- The runtime image now includes the docker CLI and compose plugin.
+- Repository: CI (typecheck, tests, build, Docker image), gitleaks over the
+  full history, Dependabot, SECURITY.md.
+
 ## 1.4.0 — 2026-11-04
 
 Acting on what it sees.

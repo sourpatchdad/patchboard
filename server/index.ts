@@ -28,6 +28,9 @@ import { uptimeDays } from './uptime.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { recordEvent } from './db.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus } from './trakt-auth.ts';
+import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
+import { checkUrl } from './adapters/checks.ts';
+import { getCatalog } from './catalog.ts';
 
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter()];
@@ -118,10 +121,14 @@ app.get('/api/containers/:name', async (c) => {
   if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
   if (config.demo) {
     const d = demoInspect(name, hub.containers());
+    if (d) d.update = name === 'patchboard' ? { ok: false, reason: "Patchboard can't replace itself mid-update." } : { ok: true };
     return d ? c.json(d) : c.json({ error: 'No such container' }, 404);
   }
   try {
-    return c.json(await inspectContainer(name, hub.containers()));
+    const ctr = hub.containers().find((x) => x.name === name);
+    const detail = await inspectContainer(name, hub.containers());
+    detail.update = ctr ? await eligibility(ctr) : { ok: false, reason: 'Not in the container list.' };
+    return c.json(detail);
   } catch (err) {
     const msg = (err as Error).message;
     return c.json({ error: msg.includes('404') ? 'No such container' : msg }, msg.includes('404') ? 404 : 502);
@@ -167,6 +174,76 @@ app.post('/api/trakt/disconnect', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (!config.demo) traktDisconnect();
   return c.json({ ok: true });
+});
+
+// Updates: pull and recreate one service, streamed as a job.
+app.post('/api/containers/:name/update', async (c) => {
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const ctr = hub.containers().find((x) => x.name === name);
+  if (!ctr) return c.json({ error: 'No such container' }, 404);
+  const done = () => {
+    void hub.pollNow('docker');
+    void hub.pollNow('checks');
+    hub.refreshChanges();
+  };
+  if (config.demo) return c.json(startDemoUpdate(name, done));
+  // "Answering" is checked live during the wait, not from the last minute's result.
+  const svc = getCatalog().groups.flatMap((g) => g.services).find((s) => s.container === name);
+  const url = svc ? checkUrl(svc) : null;
+  const answering = async () => {
+    if (!url) return null;
+    try {
+      const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000) });
+      void res.body?.cancel();
+      return res.status < 500;
+    } catch {
+      return false;
+    }
+  };
+  try {
+    return c.json(await startUpdate(ctr, answering, done));
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 409);
+  }
+});
+
+app.post('/api/jobs/:id/rollback', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.demo) return c.json({ error: 'Not available in the demo' }, 400);
+  try {
+    return c.json(
+      await startRollback(c.req.param('id'), () => {
+        void hub.pollNow('docker');
+        hub.refreshChanges();
+      }),
+    );
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 409);
+  }
+});
+
+app.get('/api/containers/:name/job', (c) => c.json(latestJobFor(c.req.param('name')) ?? null));
+
+app.get('/api/jobs/:id', (c) => {
+  const id = c.req.param('id');
+  if (!getJob(id)) return c.json({ error: 'No such job' }, 404);
+  return streamSSE(c, async (stream) => {
+    let finished = false;
+    const stop = watchJob(id, (j) => {
+      void stream.writeSSE({ data: JSON.stringify(j) });
+      if (j.status !== 'running') finished = true;
+    });
+    await new Promise<void>((resolve) => {
+      const t = setInterval(() => finished && resolve(), 500);
+      stream.onAbort(() => {
+        clearInterval(t);
+        resolve();
+      });
+    });
+    stop();
+  });
 });
 
 // Diun's webhook notifier posts here (see compose/diun). Tailnet-only, like
