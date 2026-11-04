@@ -1,7 +1,7 @@
 # Node 24 runs the TypeScript server directly (type stripping), so the image
 # only builds the web client. node:sqlite is built in: no native modules.
 
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -10,12 +10,12 @@ RUN npm run build
 
 # Runtime dependencies installed fresh instead of pruning the build tree;
 # npm prune can stall for minutes on some hosts.
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
-FROM node:24-alpine
+FROM node:26-alpine
 # The docker CLI and compose plugin run updates (pull, recreate one service).
 RUN apk add --no-cache docker-cli docker-cli-compose
 ENV NODE_ENV=production \
