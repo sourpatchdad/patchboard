@@ -1,0 +1,41 @@
+# Patchboard service catalog. Copy to services.yaml (or generate one from a
+# Homepage config with `npm run import-homepage -- <dir>`). No secrets here.
+#
+# Per service:
+#   name           shown in Apps and the palette
+#   label          short name for the patch-row tape (default: name, or its first word)
+#   href           where clicking it goes
+#   icon           URL or a dashboard-icons name such as plex.png
+#   container      Docker container name; lights the jack and links logs
+#   expectStopped  true for one-shot jobs, so their exit isn't an alert
+
+groups:
+  - name: Watch & listen
+    services:
+      - name: Plex
+        href: http://plex.example.lan
+        icon: plex.png
+        container: plex
+      - name: Audiobookshelf
+        href: http://audiobooks.example.lan
+        icon: audiobookshelf.png
+        container: audiobookshelf
+
+  - name: Acquire
+    services:
+      - name: Sonarr
+        href: http://100.64.0.1:8989
+        icon: sonarr.png
+        container: sonarr
+      - name: Recyclarr
+        icon: recyclarr.png
+        container: recyclarr
+        expectStopped: true
+
+dock:
+  - name: Mail
+    href: https://app.fastmail.com/
+    icon: fastmail.png
+  - name: GitHub
+    href: https://github.com/
+    icon: github.png

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Patchboard</title>
+    <meta name="description" content="Control center for SourPatchNAS" />
+    <meta name="theme-color" content="#0b0c0e" />
+    <script>
+      // Apply the saved appearance before first paint (mirrors web/lib/appearance.ts).
+      (function () {
+        var a = {};
+        try { a = JSON.parse(localStorage.getItem('pb-appearance') || '{}'); } catch (e) {}
+        var r = document.documentElement;
+        r.dataset.theme = a.theme || 'graphite';
+        r.dataset.icons = a.icons || 'mono';
+        if (a.accent && a.accent !== 'default') r.dataset.accent = a.accent;
+        var s = a.scheme || 'auto';
+        r.dataset.scheme = s === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : s;
+      })();
+    </script>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

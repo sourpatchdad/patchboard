@@ -1,0 +1,23 @@
+# HTTPS for Patchboard on the tailnet, with a real certificate.
+#
+# dash.nbnstack.com has an A record pointing at 100.112.9.9 (DNS only, not
+# proxied). That address only routes inside the tailnet, so the name resolves
+# publicly but the site is reachable only from your devices. The certificate
+# comes from Let's Encrypt via the DNS-01 challenge, so nothing needs to be
+# open to the internet.
+#
+# Needs a Caddy build with the Cloudflare DNS module, for example the
+# ghcr.io/caddybuilds/caddy-cloudflare image, and CLOUDFLARE_API_TOKEN set
+# (Zone:DNS:Edit on nbnstack.com) in Caddy's own .env.
+
+dash.nbnstack.com {
+	bind 100.112.9.9
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	encode zstd gzip
+	reverse_proxy 100.112.9.9:3200 {
+		# Server-sent events must not be buffered.
+		flush_interval -1
+	}
+}

@@ -1,0 +1,40 @@
+# Security model
+
+Patchboard is built to run on a private network (a Tailscale tailnet) and has
+no login of its own. The network is the access control. Read this before
+exposing it anywhere else.
+
+## What it can do
+
+- **Read:** container state, stats, logs and inspect data through the Docker
+  socket; host CPU and memory; read-only mounts of the server's docs and logs;
+  the APIs of configured integrations.
+- **Act:** start, stop and restart containers, and sign in to Trakt. Nothing
+  else changes state.
+
+The Docker socket is equivalent to root on the host, mounted read-only or
+not (`:ro` protects the socket file, not the API behind it). Treat access to
+Patchboard as access to the server.
+
+## Protections
+
+- **Bound to the tailnet address only** in the example compose file, never
+  `0.0.0.0`.
+- **State-changing requests** are POSTs that require an `X-Patchboard: action`
+  header. Browsers won't send a custom header cross-origin without a CORS
+  preflight, which Patchboard never grants, so another site can't trigger an
+  action through your browser.
+- **Every action is recorded** as an event with the container and the verb.
+- **Secrets stay server-side.** Keys live in the environment. The browser
+  never receives them; images (Plex posters) are proxied. Container inspect
+  output deliberately omits environment variables. Error messages from
+  integrations never include URLs, since some APIs carry keys in the query
+  string.
+- **Notes are read-only.** Runbook and log folders are mounted `:ro`, and
+  only named files are read.
+- **Service checks** follow no redirects and read no response bodies.
+- **CI** scans the full git history for secrets with gitleaks.
+
+## Reporting
+
+Open a private security advisory on the GitHub repository.
