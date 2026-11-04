@@ -92,11 +92,11 @@ export const config = {
         webUrl: str('FASTMAIL_WEB_URL') ?? 'https://app.fastmail.com/mail/Inbox/',
       }
     : undefined,
-  // Client ID plus either a secret (sign in from Settings) or a pasted token.
-  trakt:
-    traktId && (traktSecret || traktToken)
-      ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
-      : undefined,
+  // A Client ID is enough: sign in from Settings with a code. Trakt no longer
+  // issues secrets to new apps; one is still sent if you have it.
+  trakt: traktId
+    ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
+    : undefined,
   frigate: str('FRIGATE_URL') ? { url: trimSlash(str('FRIGATE_URL')!) } : undefined,
 
   /** Days of releases to show in Upcoming. */

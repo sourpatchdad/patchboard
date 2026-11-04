@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.2 — 2026-11-04
+
+- **Trakt works with only a Client ID.** Trakt stopped issuing client
+  secrets to new apps in 2026; the code sign-in now needs none (one is still
+  sent if configured). OAuth calls moved to auth.trakt.tv, as Trakt requires
+  from February 2027. Tokens last 7 days and refresh a day early; refreshes
+  never overlap, because Trakt's refresh tokens are single-use.
+
 ## 1.7.1 — 2026-11-04
 
 A clean-up pass, checked by a script that finds clipped text on every page at

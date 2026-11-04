@@ -303,7 +303,7 @@ function Connections() {
           <dd>
             {!s.configured ? (
               <span className="ledger-aside">
-                Patchboard can't see TRAKT_CLIENT_ID and TRAKT_CLIENT_SECRET. Add both to the environment, then recreate the container (a restart doesn't reload it).
+                Patchboard can't see TRAKT_CLIENT_ID. Add it to the environment, then recreate the container (a restart doesn't reload it).
               </span>
             ) : s.pending ? (
               <span className="trakt-code">

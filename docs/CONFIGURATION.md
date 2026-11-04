@@ -41,7 +41,7 @@ are set. Leave a block empty and that part of the page simply doesn't appear.
 | Sonarr, Radarr | `SONARR_URL`, `SONARR_KEY`, `RADARR_URL`, `RADARR_KEY` | v3 API. Calendar, queue, health. |
 | Tautulli | `TAUTULLI_URL`, `TAUTULLI_KEY` | Plex streams and recently added. Posters are proxied, so the key stays server-side. |
 | qBittorrent | `QBIT_URL`, `QBIT_USERNAME`, `QBIT_PASSWORD` | One login attempt at a time, and a 30-minute pause after a failure so it can't trip the ban. |
-| Trakt | `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET` | Connect from Settings with a code. `TRAKT_ACCESS_TOKEN` works instead of the secret. |
+| Trakt | `TRAKT_CLIENT_ID` | Connect from Settings with a code; no secret needed. Tokens last 7 days and renew themselves. `TRAKT_REDIRECT_URI` only if your app's isn't `http://localhost`. |
 | Miniflux | `MINIFLUX_URL`, `MINIFLUX_TOKEN` | Feeds reader with read state synced back. |
 | Fastmail | `FASTMAIL_TOKEN`, `FASTMAIL_WEB_URL` | JMAP, read-only scope. |
 | Frigate | `FRIGATE_URL` | Camera status. |

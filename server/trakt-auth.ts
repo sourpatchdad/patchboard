@@ -1,14 +1,23 @@
 // Trakt sign-in with the OAuth device flow: Patchboard asks Trakt for a short
 // code, you type it at trakt.tv/activate, and Patchboard polls until Trakt
-// hands over tokens. They're kept in SQLite (the data volume, never the
-// browser) and refreshed before they expire, so nothing has to be pasted or
-// renewed by hand. A TRAKT_ACCESS_TOKEN in the environment still works as a
-// fallback for setups without a client secret.
+// hands over tokens. Only a Client ID is needed: Trakt deprecated client
+// secrets in 2026 and no longer issues them to new apps (it's still sent if
+// configured). Tokens live 7 days and are kept in SQLite (the data volume,
+// never the browser); Patchboard refreshes them a day early.
+//
+// Trakt's rules this follows (developer.trakt.tv, trakt/trakt-api contracts):
+// - Every OAuth call goes to auth.trakt.tv, never the API host (required
+//   from February 2027).
+// - Refresh tokens are single-use. A refresh is never run twice at once, and
+//   the new pair is saved before anything else uses it.
+//
+// TRAKT_ACCESS_TOKEN in the environment still works as a manual fallback.
 
 import { config } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
 
 const API = 'https://api.trakt.tv';
+const AUTH = 'https://auth.trakt.tv';
 
 interface Tokens {
   access: string;
@@ -44,12 +53,14 @@ function headers(token?: string): Record<string, string> {
     'Content-Type': 'application/json',
     'trakt-api-version': '2',
     'trakt-api-key': config.trakt!.clientId,
+    'User-Agent': 'Patchboard/1 (self-hosted)',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
 async function post<T>(path: string, body: unknown): Promise<{ status: number; data: T | null }> {
-  const res = await fetch(`${API}${path}`, { method: 'POST', headers: headers(), body: JSON.stringify(body), signal: AbortSignal.timeout(15_000) });
+  // OAuth requests belong on the auth host.
+  const res = await fetch(`${AUTH}${path}`, { method: 'POST', headers: headers(), body: JSON.stringify(body), signal: AbortSignal.timeout(15_000) });
   const text = await res.text();
   let data: T | null = null;
   try {
@@ -89,7 +100,7 @@ async function whoAmI(token: string): Promise<string | undefined> {
 /** Start the device flow. Returns the code to show the user. */
 export async function startDeviceFlow(): Promise<Pending> {
   const t = config.trakt;
-  if (!t?.clientSecret) throw new Error('Set TRAKT_CLIENT_SECRET to connect from here');
+  if (!t) throw new Error('Set TRAKT_CLIENT_ID to connect');
   const { status, data } = await post<{ device_code: string; user_code: string; verification_url: string; expires_in: number; interval: number }>(
     '/oauth/device/code',
     { client_id: t.clientId },
@@ -116,7 +127,7 @@ async function pollDevice(deviceCode: string): Promise<void> {
       const { status, data } = await post<TokenResponse>('/oauth/device/token', {
         code: deviceCode,
         client_id: t.clientId,
-        client_secret: t.clientSecret,
+        ...(t.clientSecret ? { client_secret: t.clientSecret } : {}),
       });
       if (status === 200 && data) {
         save(data, await whoAmI(data.access_token));
@@ -140,6 +151,8 @@ async function pollDevice(deviceCode: string): Promise<void> {
   }
 }
 
+let refreshing: Promise<string> | null = null;
+
 /** A valid access token, refreshed first if it expires within a day. */
 export async function traktToken(): Promise<string> {
   const t = config.trakt!;
@@ -148,21 +161,31 @@ export async function traktToken(): Promise<string> {
     if (t.staticToken) return t.staticToken;
     throw new Error('Not connected. Connect Trakt in Settings.');
   }
-  if (saved.expiresAt - Date.now() > 24 * 3_600_000 || !t.clientSecret) return saved.access;
-  const { status, data } = await post<TokenResponse>('/oauth/token', {
-    refresh_token: saved.refresh,
-    client_id: t.clientId,
-    client_secret: t.clientSecret,
-    redirect_uri: t.redirectUri,
-    grant_type: 'refresh_token',
-  });
-  if (status === 200 && data) {
-    save(data, saved.user);
-    return data.access_token;
-  }
-  // Refresh refused (revoked, or the app changed): the old token may still work for a while.
-  if (saved.expiresAt > Date.now()) return saved.access;
-  throw new Error(`Trakt sign-in expired and couldn't be renewed (HTTP ${status}). Reconnect in Settings.`);
+  if (saved.expiresAt - Date.now() > 24 * 3_600_000) return saved.access;
+  // Single-use refresh tokens: a second concurrent refresh would invalidate
+  // the first one's result, so everyone waits on the same request.
+  refreshing ??= (async () => {
+    try {
+      const { status, data } = await post<TokenResponse>('/oauth/token', {
+        refresh_token: saved.refresh,
+        client_id: t.clientId,
+        redirect_uri: t.redirectUri,
+        grant_type: 'refresh_token',
+        ...(t.clientSecret ? { client_secret: t.clientSecret } : {}),
+      });
+      if (status === 200 && data) {
+        save(data, saved.user);
+        return data.access_token;
+      }
+      // Refused (revoked, or a token from before Trakt's auth migration).
+      // The old access token may still have a little life left.
+      if (saved.expiresAt > Date.now()) return saved.access;
+      throw new Error(`Trakt sign-in expired and couldn't be renewed (HTTP ${status}). Reconnect in Settings.`);
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
 }
 
 export function traktStatus(): TraktStatus {
@@ -171,7 +194,7 @@ export function traktStatus(): TraktStatus {
   const saved = kvGet<Tokens>(KEY);
   return {
     configured: true,
-    canConnect: !!t.clientSecret,
+    canConnect: true,
     connected: !!saved || !!t.staticToken,
     user: saved?.user,
     expiresAt: saved?.expiresAt,
