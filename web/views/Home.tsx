@@ -124,7 +124,6 @@ function Masthead({ now }: { now: number }) {
           <span>{status.text}</span>
         </span>
         <Overnight now={now} />
-        <Dock />
       </div>
     </header>
   );
@@ -150,22 +149,6 @@ function Overnight({ now }: { now: number }) {
       {anyBad ? 'Overnight: ' : 'Backed up overnight: '}
       {parts.join(', ')}.
     </Link>
-  );
-}
-
-function Dock() {
-  const { snap } = useStore();
-  if (!snap?.catalog.dock.length) return null;
-  return (
-    <ul className="dock" aria-label="Bookmarks">
-      {snap.catalog.dock.map((b) => (
-        <li key={b.name}>
-          <a href={b.href} target="_blank" rel="noreferrer" title={b.name} aria-label={b.name}>
-            <Icon name={b.name} icon={b.icon} size={20} />
-          </a>
-        </li>
-      ))}
-    </ul>
   );
 }
 

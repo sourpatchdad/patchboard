@@ -574,32 +574,6 @@ time,
   animation: led-pulse 1.6s ease-in-out infinite;
 }
 
-.dock {
-  display: flex;
-  gap: 6px;
-}
-
-/* A warm-white key behind each icon keeps dark brand marks (GitHub) visible. */
-.dock a {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: var(--ink);
-  border: 1px solid transparent;
-  transition: transform 200ms var(--ease-out);
-}
-
-.dock a:hover {
-  transform: translateY(-2px);
-}
-
-:root[data-scheme='light'] .dock a {
-  background: #fff;
-  border-color: var(--line);
-}
-
 /* ---------- Patch row ---------- */
 
 .patchrow {
@@ -1287,8 +1261,8 @@ a.jack:focus-visible {
 /* Service icons rest in grayscale (data-icons="mono", the default) so the
    page reads as one instrument, and get their color back when pointed at.
    In dark schemes a hairline of light keeps dark brand marks (GitHub,
-   Vaultwarden) visible. The dock has its own key. */
-:root:not([data-icons='color']) :is(.jack-socket, .app, .dock, .srow-icon, .detail-icon) .icon-img {
+   Vaultwarden) visible. */
+:root:not([data-icons='color']) :is(.jack-socket, .app, .srow-icon, .detail-icon) .icon-img {
   filter: grayscale(1) contrast(1.05);
   opacity: 0.85;
   transition: filter 220ms ease, opacity 220ms ease;
@@ -1305,8 +1279,7 @@ a.jack:focus-visible {
   opacity: 1;
 }
 
-:root[data-scheme='light'] :is(a.jack, a.app, .srow, .dock a):is(:hover, :focus-visible) .icon-img,
-:root:not([data-scheme='light']) .dock a:is(:hover, :focus-visible) .icon-img {
+:root[data-scheme='light'] :is(a.jack, a.app, .srow):is(:hover, :focus-visible) .icon-img {
   filter: none;
   opacity: 1;
 }
@@ -1974,9 +1947,6 @@ a.app:hover {
     font-size: 23px;
   }
 
-  .dock {
-    flex-wrap: wrap;
-  }
 
   .masthead > * {
     min-width: 0;
@@ -3205,6 +3175,10 @@ a.vitals:hover .vital-label {
 .topbar-icon {
   display: grid;
   place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   width: 34px;
   height: 34px;
   border-radius: var(--radius);

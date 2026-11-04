@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.3 — 2026-11-04
+
+- Removed the bookmark dock from Home. It was start-page furniture with a
+  white key behind every logo; Home is about the server now. Bookmarks are
+  still in Jump to and under Elsewhere on Apps.
+- Fixed: the phone top bar's search button showed a default button box.
+
 ## 1.5.2 — 2026-11-04
 
 Dependencies, all majors tested together.
