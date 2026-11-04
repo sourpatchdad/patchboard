@@ -10,6 +10,7 @@ import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useHistory } from '../lib/api.ts';
 import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
+import { useAppearance } from '../lib/appearance.ts';
 
 const DAY = 86_400_000;
 
@@ -267,6 +268,7 @@ function dayWord(t: number, now: number): string {
 }
 
 function Disks({ nas }: { nas: TruenasData }) {
+  const { temp: unit } = useAppearance();
   return (
     <Section title="Disks" count={plural(nas.disks.length, 'disk')}>
       <ul className="disks">
@@ -277,7 +279,7 @@ function Disks({ nas }: { nas: TruenasData }) {
               <span className="ident">{d.name}</span>
               <span className="disk-model">{d.model}</span>
               <span className="mono disk-size">{d.sizeBytes ? size(d.sizeBytes) : ''}</span>
-              <span className={`mono disk-temp ${hot ? 'warn-text' : ''}`}>{d.tempC != null ? temp(d.tempC) : ''}</span>
+              <span className={`mono disk-temp ${hot ? 'warn-text' : ''}`}>{d.tempC != null ? temp(d.tempC, unit) : ''}</span>
               <span className="disk-pool">{d.pool ?? 'Not in a pool'}</span>
             </li>
           );

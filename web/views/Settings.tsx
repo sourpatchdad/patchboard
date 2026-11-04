@@ -1,16 +1,30 @@
-// Appearance, per device. Themes are token sets in styles.css; adding one
-// means a block of variables there and an entry in THEMES.
+// Settings. Connections and the catalog live on the server and are shared by
+// every device; everything else is a per-device preference (appearance.ts).
+// Themes are data in themes.ts, so this page renders whatever is there.
 
 import { useEffect, useState } from 'react';
+import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
-import { ACCENTS, type Appearance, setAppearance, THEMES, useAppearance } from '../lib/appearance.ts';
+import {
+  ACCENTS,
+  type Appearance,
+  exportAppearance,
+  HOME_SECTIONS,
+  importAppearance,
+  resetAppearance,
+  setAppearance,
+  THEMES,
+  tokensFor,
+  useAppearance,
+} from '../lib/appearance.ts';
+import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
 
 export function Settings() {
   const a = useAppearance();
-  const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][]) => (
+  const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
     <div className="seg" role="group">
       {options.map(([v, label]) => (
-        <button key={String(v)} type="button" aria-pressed={a[key] === v} onClick={() => setAppearance({ [key]: v } as Partial<Appearance>)}>
+        <button key={String(v)} type="button" disabled={disabled} aria-pressed={a[key] === v} onClick={() => setAppearance({ [key]: v } as Partial<Appearance>)}>
           {label}
         </button>
       ))}
@@ -22,65 +36,108 @@ export function Settings() {
       <div className="page-head">
         <h1 className="page-title">Settings</h1>
       </div>
-      <p className="page-lede">Connections are shared by every device. Appearance is saved on this device, so the phone and the desktop can differ.</p>
+      <p className="page-lede">Connections and the catalog are shared by every device. Everything else is saved on this device, so the phone and the desktop can differ.</p>
 
       <Connections />
+      <CatalogCheck />
 
-      <Section title="Theme">
-        <div className="choice-row">
+      <Section title="Theme" count={`${THEMES.length + 1} themes`}>
+        <div className="theme-grid">
           {THEMES.map((t) => (
-            <button key={t.id} type="button" className="theme-card" aria-pressed={a.theme === t.id} onClick={() => setAppearance({ theme: t.id })}>
-              <span className="theme-preview" style={{ background: t.swatch[0] }} aria-hidden>
-                {t.swatch.slice(1).map((c) => (
-                  <i key={c} style={{ background: c }} />
-                ))}
-              </span>
-              <strong>{t.name}</strong>
-              <span>{t.note}</span>
-            </button>
+            <ThemeCard key={t.id} id={t.id} name={t.name} note={t.note} active={a.theme === t.id} />
           ))}
+          <ThemeCard id="custom" name="Custom" note="Your background, text and accent." active={a.theme === 'custom'} />
         </div>
+        {a.theme === 'custom' && <CustomBuilder />}
       </Section>
 
       <Section title="Mode">
         <div className="choice-row">
-          {seg('scheme', [
-            ['auto', 'Match the system'],
-            ['dark', 'Dark'],
-            ['light', 'Light'],
-          ])}
+          {seg(
+            'scheme',
+            [
+              ['auto', 'Match the system'],
+              ['dark', 'Dark'],
+              ['light', 'Light'],
+            ],
+            a.theme === 'custom',
+          )}
         </div>
+        {a.theme === 'custom' && <p className="settings-note">A custom theme is dark or light by its own background.</p>}
       </Section>
 
       <Section title="Accent">
-        <div className="choice-row">
+        <div className="choice-row swatches">
+          <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title="The theme's own" aria-label="The theme's own accent" onClick={() => setAppearance({ accent: 'default' })} />
           {ACCENTS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="swatch"
-              style={{ background: c.color }}
-              aria-pressed={a.accent === c.id}
-              aria-label={c.name}
-              title={c.name}
-              onClick={() => setAppearance({ accent: c.id })}
-            />
+            <button key={c.id} type="button" className="swatch" style={{ background: c.dark }} aria-pressed={a.accent === c.id} aria-label={c.name} title={c.name} onClick={() => setAppearance({ accent: c.id })} />
           ))}
+          <label className={`swatch swatch-pick ${a.accent === 'custom' ? 'is-on' : ''}`} title="Any color" style={a.accent === 'custom' ? { background: a.accentHex } : undefined}>
+            <input type="color" value={a.accentHex} onChange={(e) => setAppearance({ accent: 'custom', accentHex: e.target.value })} aria-label="Pick any accent color" />
+            <span aria-hidden>+</span>
+          </label>
         </div>
-        <p className="settings-note">Used for links, the current page, focus and the heat squares. Problems keep their own amber and red.</p>
+        <p className="settings-note">For links, the current page, focus, charts and the health squares. Problems keep their own amber and red in every theme.</p>
       </Section>
 
-      <Section title="Apps on Home">
+      <Section title="Type">
+        <div className="choice-row">
+          {seg('font', [
+            ['theme', "Theme's own"],
+            ...(Object.entries(FONTS) as [FontSet, (typeof FONTS)[FontSet]][]).map(([k, f]) => [k, f.label] as [Appearance['font'], string]),
+          ])}
+        </div>
+      </Section>
+
+      <Section title="Density">
+        <div className="choice-row">
+          {seg('density', [
+            ['compact', 'Compact'],
+            ['comfortable', 'Comfortable'],
+            ['large', 'Large'],
+          ])}
+        </div>
+      </Section>
+
+      <Section title="Home">
         <div className="choice-row">
           {seg('homeApps', [
-            ['tiles', 'Tiles with live stats'],
+            ['tiles', 'App tiles with live stats'],
             ['patchbay', 'Patch bay'],
           ])}
         </div>
-        <p className="settings-note">Tiles show each app's most useful number. The patch bay is denser: icons and status lights only.</p>
+        <p className="settings-note">Sections to show. Needs attention always shows when something does.</p>
+        <div className="choice-row">
+          {HOME_SECTIONS.map((sct) => {
+            const on = !a.hidden.includes(sct.id);
+            return (
+              <button
+                key={sct.id}
+                type="button"
+                className="chip"
+                aria-pressed={on}
+                onClick={() => setAppearance({ hidden: on ? [...a.hidden, sct.id] : a.hidden.filter((x) => x !== sct.id) })}
+              >
+                {sct.label}
+              </button>
+            );
+          })}
+        </div>
       </Section>
 
-      <CatalogCheck />
+      <Section title="Units and time">
+        <div className="choice-row">
+          {seg('clock24', [
+            [false, '12-hour'],
+            [true, '24-hour'],
+          ])}
+          {seg('temp', [
+            ['f', '°F'],
+            ['c', '°C'],
+            ['both', 'Both'],
+          ])}
+        </div>
+      </Section>
 
       <Section title="Service icons">
         <div className="choice-row">
@@ -91,7 +148,110 @@ export function Settings() {
         </div>
         <p className="settings-note">Grayscale icons get their color back when you point at them.</p>
       </Section>
+
+      <Portability />
     </div>
+  );
+}
+
+function ThemeCard({ id, name, note, active }: { id: string; name: string; note: string; active: boolean }) {
+  const a = useAppearance();
+  const light = a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches);
+  const t = tokensFor({ ...a, theme: id, accent: 'default' }, id !== 'custom' && light ? 'light' : 'dark');
+  return (
+    <button type="button" className="theme-card" aria-pressed={active} onClick={() => setAppearance({ theme: id })}>
+      {/* A miniature of the theme: a title bar, two tiles, a health strip. */}
+      <span className="theme-mini" style={{ background: t.bg, borderColor: t.line }} aria-hidden>
+        <i style={{ background: t.head, width: '38%' }} />
+        <span className="theme-mini-row">
+          <b style={{ background: t.raised, borderColor: t.lineSoft }}>
+            <i style={{ background: t.ink2 }} />
+          </b>
+          <b style={{ background: t.raised, borderColor: t.lineSoft }}>
+            <i style={{ background: t.ink3 }} />
+          </b>
+        </span>
+        <span className="theme-mini-sq">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+            <u key={n} style={{ background: n === 5 ? t.crit : t.accent }} />
+          ))}
+        </span>
+      </span>
+      <strong>{name}</strong>
+      <span>{note}</span>
+    </button>
+  );
+}
+
+function CustomBuilder() {
+  const a = useAppearance();
+  const t = tokensFor({ ...a, theme: 'custom', accent: 'default' }, 'dark');
+  const ratio = contrast(t.ink3, t.bg);
+  const pick = (key: 'bg' | 'ink' | 'accent', label: string) => (
+    <label className="color-field" style={{ ['--swatch' as string]: a.custom[key] }}>
+      <input type="color" value={a.custom[key]} onChange={(e) => setAppearance({ theme: 'custom', custom: { ...a.custom, [key]: e.target.value } })} />
+      <span>{label}</span>
+      <code>{a.custom[key]}</code>
+    </label>
+  );
+  return (
+    <div className="custom-builder">
+      {pick('bg', 'Background')}
+      {pick('ink', 'Text')}
+      {pick('accent', 'Accent')}
+      <p className={`settings-note ${ratio < 4.5 ? 'warn-text' : ''}`}>
+        Quiet text contrast {ratio.toFixed(1)}:1
+        {ratio < 4.5 ? '. Below 4.5:1, small labels get hard to read; move the text and background further apart.' : ', readable.'}
+      </p>
+    </div>
+  );
+}
+
+/** Copy settings to another device, or start over. */
+function Portability() {
+  const [text, setText] = useState('');
+  const [msg, setMsg] = useState('');
+  return (
+    <Section title="Carry these settings">
+      <div className="choice-row">
+        <button
+          type="button"
+          className="button button-quiet"
+          onClick={async () => {
+            await navigator.clipboard.writeText(exportAppearance());
+            setMsg('Copied. Paste it into Settings on the other device.');
+          }}
+        >
+          Copy settings
+        </button>
+        <button
+          type="button"
+          className="button button-quiet"
+          onClick={() => {
+            resetAppearance();
+            setMsg('Back to the defaults.');
+          }}
+        >
+          Reset to defaults
+        </button>
+      </div>
+      <div className="import-row">
+        <input className="field" placeholder="Paste settings from another device" value={text} onChange={(e) => setText(e.target.value)} />
+        <button
+          type="button"
+          className="button button-quiet"
+          disabled={!text.trim()}
+          onClick={() => {
+            const ok = importAppearance(text);
+            setMsg(ok ? 'Applied.' : "That isn't a settings string from Patchboard.");
+            if (ok) setText('');
+          }}
+        >
+          Apply
+        </button>
+      </div>
+      {msg && <p className="settings-note">{msg}</p>}
+    </Section>
   );
 }
 
@@ -116,7 +276,6 @@ function Connections() {
   useEffect(() => {
     void load();
   }, []);
-  // While a code is waiting, check every few seconds for the hand-off.
   useEffect(() => {
     if (!s?.pending) return;
     const t = setInterval(() => void load(), 3000);
@@ -143,7 +302,9 @@ function Connections() {
           <dt>Trakt</dt>
           <dd>
             {!s.configured ? (
-              <span className="ledger-aside">Add TRAKT_CLIENT_ID and TRAKT_CLIENT_SECRET to the environment to connect.</span>
+              <span className="ledger-aside">
+                Patchboard can't see TRAKT_CLIENT_ID and TRAKT_CLIENT_SECRET. Add both to the environment, then recreate the container (a restart doesn't reload it).
+              </span>
             ) : s.pending ? (
               <span className="trakt-code">
                 Go to{' '}
@@ -181,12 +342,10 @@ function Connections() {
   );
 }
 
-
-
 /** Catalog vs. Docker: entries pointing at nothing, and apps not listed yet. */
 function CatalogCheck() {
   const [copied, setCopied] = useState(false);
-  const [audit, setAudit] = useState<import('../../shared/types.ts').CatalogAudit | null>(null);
+  const [audit, setAudit] = useState<CatalogAudit | null>(null);
   useEffect(() => {
     void (async () => setAudit(await (await fetch('/api/catalog/audit')).json()))();
   }, []);
@@ -216,9 +375,9 @@ function CatalogCheck() {
       {audit.discovered.length > 0 && (
         <>
           <p className="settings-note">
-            {audit.discovered.length} running {audit.discovered.length === 1 ? 'app isn\'t' : 'apps aren\'t'} in the catalog. Here are drafted entries, with names
-            and icons guessed from their images and links from their published ports. Paste them under a group's <code>services:</code> and
-            adjust; the page picks up the change on save.
+            {audit.discovered.length} running {audit.discovered.length === 1 ? "app isn't" : "apps aren't"} in the catalog. Drafted entries below, with names and
+            icons guessed from their images and links from their published ports. Paste them under a group's <code>services:</code> and adjust; the page picks up the
+            change on save.
           </p>
           <div className="rb-body">
             <pre>

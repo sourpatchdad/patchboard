@@ -19,12 +19,13 @@ import type {
 } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
-import { useAppearance } from '../lib/appearance.ts';
+import { type HomeSection, useAppearance } from '../lib/appearance.ts';
 import { Empty, Episode, Icon, Ident, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   ago,
   agoLong,
   clock,
+  deg,
   dayLabel,
   dayOffset,
   eta,
@@ -41,7 +42,8 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 export function Home() {
   const { snap } = useStore();
   const now = useNow(15_000);
-  const { homeApps } = useAppearance();
+  const { homeApps, hidden } = useAppearance();
+  const show = (id: HomeSection) => !hidden.includes(id);
   if (!snap) return <HomeSkeleton />;
 
   return (
@@ -51,16 +53,16 @@ export function Home() {
       <div className="home-grid">
         <div className="home-col">
           <Attention alerts={snap.alerts} now={now} />
-          <Inbox now={now} />
-          <FeedsBrief now={now} />
+          {show('inbox') && <Inbox now={now} />}
+          {show('feeds') && <FeedsBrief now={now} />}
         </div>
         <div className="home-col">
-          <NowPlaying />
-          <UpcomingBrief now={now} />
-          <Changes changes={snap.changes} now={now} />
+          {show('now') && <NowPlaying />}
+          {show('upcoming') && <UpcomingBrief now={now} />}
+          {show('changes') && <Changes changes={snap.changes} now={now} />}
         </div>
       </div>
-      <RecentlyAdded now={now} />
+      {show('recent') && <RecentlyAdded now={now} />}
     </div>
   );
 }
@@ -77,9 +79,12 @@ function HomeSkeleton() {
 function Masthead({ now }: { now: number }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
+  const { clock24, temp: unit } = useAppearance();
   const d = new Date(now);
-  const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
-  const meridiem = d.toLocaleTimeString(undefined, { hour: 'numeric' }).match(/[AP]M/i)?.[0];
+  const time = d
+    .toLocaleTimeString(undefined, { hour: clock24 ? '2-digit' : 'numeric', minute: '2-digit', hour12: !clock24 })
+    .replace(/\s?[AP]M$/i, '');
+  const meridiem = clock24 ? undefined : d.toLocaleTimeString(undefined, { hour: 'numeric', hour12: true }).match(/[AP]M/i)?.[0];
   const date = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   const alerts = snap!.alerts.filter((a) => a.level !== 'info');
@@ -103,18 +108,18 @@ function Masthead({ now }: { now: number }) {
       </div>
       {weather && (
         <div className="masthead-weather">
-          <span className="temp">{weather.tempNow}°</span>
+          <span className="temp">{deg(weather.tempNow, unit)}°</span>
           <span className="weather-text">
             {weatherText(weather.codeNow)} in {weather.label}.
             <br />
-            High {weather.days[0]?.high}°, low {weather.days[0]?.low}°
+            High {deg(weather.days[0]?.high ?? 0, unit)}°, low {deg(weather.days[0]?.low ?? 0, unit)}°
             {(weather.days[0]?.precipPct ?? 0) >= 30 && `, ${weather.days[0].precipPct}% chance of rain`}.
           </span>
           <ol className="forecast" aria-label="Next three days">
             {weather.days.slice(1, 4).map((w) => (
               <li key={w.date}>
                 <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
-                <strong>{w.high}°</strong>
+                <strong>{deg(w.high, unit)}°</strong>
                 <span className="forecast-cond">{weatherText(w.code)}</span>
               </li>
             ))}

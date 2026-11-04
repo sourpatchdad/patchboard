@@ -6,4 +6,3 @@ data-*/
 .env.*
 docker-compose.yml
 config/services.yaml
-config/*.bak*

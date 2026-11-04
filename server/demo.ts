@@ -269,12 +269,12 @@ export function demoAdapters(): Adapter[] {
     demo<BackupsData>('backups', 'Backups', 5 * MINUTE, demoBackups),
     demo<WeatherData>('weather', 'Weather', 15 * MINUTE, () => ({
       label: 'Riverside',
-      tempNow: 62,
+      tempNow: 17,
       codeNow: 1,
       days: [0, 1, 2, 3].map((i) => ({
         date: dayAt(i, 12).slice(0, 10),
-        high: [74, 71, 66, 69][i],
-        low: [52, 55, 49, 47][i],
+        high: [23, 22, 19, 21][i],
+        low: [11, 13, 9, 8][i],
         code: [1, 3, 61, 0][i],
         precipPct: [0, 10, 70, 0][i],
       })),

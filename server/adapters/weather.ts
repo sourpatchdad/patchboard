@@ -23,7 +23,7 @@ export function weatherAdapter(): Adapter<WeatherData> {
     `?latitude=${w.lat}&longitude=${w.lon}` +
     '&current=temperature_2m,weather_code' +
     '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max' +
-    '&temperature_unit=fahrenheit&timezone=auto&forecast_days=4';
+    '&temperature_unit=celsius&timezone=auto&forecast_days=4';
   return {
     id: 'weather',
     label: 'Weather',

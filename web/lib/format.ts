@@ -150,7 +150,14 @@ export function greeting(now = new Date()): string {
   return 'Good evening';
 }
 
-/** "38°C 100°F": both scales, Celsius first as TrueNAS reports it. */
-export function temp(c: number): string {
-  return `${Math.round(c)}°C ${Math.round(c * 1.8 + 32)}°F`;
+/** A Celsius reading in the unit chosen in Settings: "38°C", "100°F" or "38°C 100°F". */
+export function temp(c: number, unit: 'f' | 'c' | 'both' = 'both'): string {
+  const f = `${Math.round(c * 1.8 + 32)}°F`;
+  const cc = `${Math.round(c)}°C`;
+  return unit === 'f' ? f : unit === 'c' ? cc : `${cc} ${f}`;
+}
+
+/** Weather degrees without a letter, in the chosen unit (both shows Fahrenheit first). */
+export function deg(c: number, unit: 'f' | 'c' | 'both'): number {
+  return Math.round(unit === 'c' ? c : c * 1.8 + 32);
 }

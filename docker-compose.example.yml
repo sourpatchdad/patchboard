@@ -1,41 +1,50 @@
-# Copy to docker-compose.yml and env.example to .env, then fill in .env.
-# Bound to the Tailscale address only: Patchboard has no login of its own and
-# relies on the tailnet for access control. Put Caddy in front for HTTPS (see
-# deploy/Caddyfile.example); the PWA needs HTTPS to install.
+# Patchboard. Copy to docker-compose.yml, copy env.example to .env, then:
+#   docker compose up -d
+#
+# Patchboard has no login of its own. Publish it only on a private address
+# (BIND_ADDRESS in .env): a Tailscale IP, a firewalled LAN IP, or 127.0.0.1
+# behind a reverse proxy that adds authentication. See SECURITY.md.
 
 services:
   patchboard:
-    build: .
+    image: ghcr.io/sourpatchdad/patchboard:latest
+    # Or build from a clone of the repository instead:
+    # build: .
     container_name: patchboard
     restart: unless-stopped
     env_file: .env
     environment:
-      - TZ=${TZ:-America/Chicago}
-      - POOL_PATH=/host/pool
-      - DOCS_PATH=/host/docs
-      - LOGS_PATH=/host/logs
-      - COMPOSE_ROOT=/mnt/HomeNAS/compose
+      - TZ=${TZ:-UTC}
+      # Uncomment alongside the optional mounts below:
+      # - POOL_PATH=/host/pool
+      # - DOCS_PATH=/host/docs
+      # - LOGS_PATH=/host/logs
+      # - COMPOSE_ROOT=/opt/stacks
     ports:
-      - "${TAILSCALE_IP:-192.168.1.10}:3200:3200"
+      - "${BIND_ADDRESS:-127.0.0.1}:3200:3200"
     volumes:
-      # Read-only: Patchboard lists, inspects and reads stats and logs. It never
-      # starts, stops or changes a container.
+      # Required: containers, stats and logs. The socket is root-equivalent on
+      # the host, mounted read-only or not; see SECURITY.md.
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Your service catalog (copy config/services.example.yaml to start).
       - ./config:/config:ro
-      - /mnt/HomeNAS/appdata/patchboard:/data
-      # Fallback free-space number (statfs) when TrueNAS isn't connected.
-      # Non-recursive, so child datasets are not visible inside the container.
-      - type: bind
-        source: /mnt/HomeNAS
-        target: /host/pool
-        read_only: true
-        bind:
-          recursive: disabled
-      # The server's own notes, read-only: RUNBOOK.md for container pages, and
-      # the audit reports to seed storage history. Nothing else is read.
-      - /mnt/HomeNAS/system-docs:/host/docs:ro
-      - /mnt/HomeNAS/logs:/host/logs:ro
-      # For updates from the UI: the compose stacks, read-only, at the same
-      # path as on the host so compose files resolve identically. Compose reads
-      # each stack's own .env when it runs; Patchboard never opens them.
-      - /mnt/HomeNAS/compose:/mnt/HomeNAS/compose:ro
+      # Patchboard's own database: history, samples, sign-ins.
+      - ./data:/data
+
+      # ---- Optional ----------------------------------------------------------
+
+      # Fallback disk-usage figure when TrueNAS isn't connected. Point it at
+      # the filesystem you care about and set POOL_PATH=/host/pool above.
+      # - /mnt/tank:/host/pool:ro
+
+      # A folder holding RUNBOOK.md: its "## " sections appear on matching
+      # container pages. Set DOCS_PATH above.
+      # - /path/to/notes:/host/docs:ro
+
+      # A folder with ops/db-backup.log, ops/file-backup.log and audit/*.txt in
+      # the formats described in docs/CONFIGURATION.md. Set LOGS_PATH above.
+      # - /path/to/logs:/host/logs:ro
+
+      # Updates from the UI: your compose projects, read-only, at the SAME path
+      # as on the host. Set COMPOSE_ROOT to that path above.
+      # - /opt/stacks:/opt/stacks:ro

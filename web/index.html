@@ -4,19 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Patchboard</title>
-    <meta name="description" content="Control center for HomeNAS" />
+    <meta name="description" content="A control center for your home server" />
     <meta name="theme-color" content="#0b0c0e" />
     <script>
-      // Apply the saved appearance before first paint (mirrors web/lib/appearance.ts).
+      // Paint the saved theme before any bundle loads (mirrors web/lib/appearance.ts).
       (function () {
-        var a = {};
-        try { a = JSON.parse(localStorage.getItem('pb-appearance') || '{}'); } catch (e) {}
-        var r = document.documentElement;
-        r.dataset.theme = a.theme || 'graphite';
-        r.dataset.icons = a.icons || 'mono';
-        if (a.accent && a.accent !== 'default') r.dataset.accent = a.accent;
-        var s = a.scheme || 'auto';
-        r.dataset.scheme = s === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : s;
+        var r = document.documentElement, v = null;
+        try { v = JSON.parse(localStorage.getItem('pb-vars') || 'null'); } catch (e) {}
+        var light = matchMedia('(prefers-color-scheme: light)').matches;
+        if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; return; }
+        var scheme = v.scheme === 'auto' ? (light ? 'light' : 'dark') : v.scheme;
+        var vars = v[scheme] || {};
+        for (var k in vars) r.style.setProperty(k, vars[k]);
+        r.dataset.scheme = scheme;
+        for (var a in v.attrs || {}) r.dataset[a] = v.attrs[a];
       })();
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />

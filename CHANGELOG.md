@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.7.0 — 2026-11-04
+
+Make it yours, and run it anywhere.
+
+- **Themes are data** (web/lib/themes.ts): Graphite, Midnight, Forest, Dusk,
+  Paper and nbnstack, each dark and light, plus **Custom** from any
+  background, text and accent, with a live contrast check. Theme cards show a
+  miniature of each theme.
+- **Settings:** any accent color, four type pairings (Geist, DM, system,
+  mono everywhere), three densities, 12/24-hour clock, °F/°C/both for weather
+  and disks, which Home sections show, tiles or patch bay. Copy settings to
+  another device as a string; reset to defaults.
+- The saved theme paints before any script loads, for dark and light alike.
+- **Contrast:** Graphite surfaces, lines and quiet text spread further apart;
+  healthy days in the health squares are solid accent, unwatched days are
+  outlines; meters are thicker with a visible track; charts use the accent;
+  app tiles sit on their own surface.
+- **Self-hosting:** generic env.example, docker-compose.example.yml and
+  Caddyfile.example; docs/CONFIGURATION.md covers every variable, mount and
+  file format; a release workflow publishes amd64 and arm64 images to
+  ghcr.io on version tags; the README starts with a one-line demo run.
+- Weather is fetched in Celsius and shown in the unit you choose.
+
 ## 1.6.0 — 2026-11-04
 
 Apps that say something.

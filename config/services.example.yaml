@@ -3,11 +3,12 @@
 #
 # Per service:
 #   name           shown in Apps and the palette
-#   label          short name for the patch-row tape (default: name, or its first word)
+#   label          short name for the patch-bay tape (default: name, or its first word)
 #   href           where clicking it goes
 #   icon           URL or a dashboard-icons name such as plex.png
-#   container      Docker container name; lights the jack and links logs
+#   container      Docker container name: status, stats, logs and its own page
 #   expectStopped  true for one-shot jobs, so their exit isn't an alert
+#   check          false to skip the reachability check, or a URL to check instead
 
 groups:
   - name: Watch & listen

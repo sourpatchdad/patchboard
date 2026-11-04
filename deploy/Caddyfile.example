@@ -1,22 +1,23 @@
-# HTTPS for Patchboard on the tailnet, with a real certificate.
+# HTTPS for Patchboard on a private network, with a real certificate, which
+# the PWA (installing it on a phone) needs.
 #
-# dash.example.com has an A record pointing at 192.168.1.10 (DNS only, not
-# proxied). That address only routes inside the tailnet, so the name resolves
-# publicly but the site is reachable only from your devices. The certificate
-# comes from Let's Encrypt via the DNS-01 challenge, so nothing needs to be
-# open to the internet.
+# Give a name such as dash.example.com an A record pointing at your server's
+# private address (a Tailscale IP works well; DNS only, not proxied). The name
+# resolves publicly but the site is reachable only from your own devices. The
+# certificate comes from Let's Encrypt over the DNS-01 challenge, so nothing
+# needs to be open to the internet.
 #
-# Needs a Caddy build with the Cloudflare DNS module, for example the
-# ghcr.io/caddybuilds/caddy-cloudflare image, and CLOUDFLARE_API_TOKEN set
-# (Zone:DNS:Edit on nbnstack.com) in Caddy's own .env.
+# Needs a Caddy build with your DNS provider's module; for Cloudflare, the
+# ghcr.io/caddybuilds/caddy-cloudflare image and a CLOUDFLARE_API_TOKEN with
+# Zone:DNS:Edit on the zone.
 
 dash.example.com {
-	bind 192.168.1.10
+	bind 100.64.0.10
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 	}
 	encode zstd gzip
-	reverse_proxy 192.168.1.10:3200 {
+	reverse_proxy 127.0.0.1:3200 {
 		# Server-sent events must not be buffered.
 		flush_interval -1
 	}

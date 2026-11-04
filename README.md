@@ -75,42 +75,43 @@ on the nbnstack.com design system (DM Serif Display, DM Sans, DM Mono, self-host
 
 ## Run it
 
-```sh
-npm install
-npm run dev:demo        # invented data, http://localhost:5173
-```
-
-Against real services:
+Try it on invented data first. Nothing to configure, nothing leaves the box:
 
 ```sh
-cp env.example .env     # fill in what you use; everything is optional
-npm run import-homepage -- /path/to/homepage/config   # or write config/services.yaml
-npm run dev
+docker run --rm -p 127.0.0.1:3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
+# then open http://localhost:3200
 ```
 
-In Docker:
+On your own server:
 
 ```sh
-cp docker-compose.example.yml docker-compose.yml
-docker compose up -d --build
+mkdir patchboard && cd patchboard
+base=https://raw.githubusercontent.com/sourpatchdad/patchboard/main
+curl -fsSL $base/docker-compose.example.yml -o docker-compose.yml
+curl -fsSL $base/env.example -o .env
+mkdir config && curl -fsSL $base/config/services.example.yaml -o config/services.yaml
+# edit .env (BIND_ADDRESS first) and config/services.yaml, then:
+docker compose up -d
 ```
 
-The container binds to the Tailscale address only and has no login; the
-tailnet is the access control. For HTTPS (needed to install it as an app), see
-[deploy/Caddyfile.example](deploy/Caddyfile.example).
+Start with nothing but the Docker socket: containers, stacks, logs, stats and
+health work with no other configuration. Add integrations one block of `.env`
+at a time. Settings → Catalog drafts entries for every app it finds running.
+
+Coming from [Homepage](https://gethomepage.dev)? `npm run import-homepage --
+/path/to/homepage/config` turns its `services.yaml` and `bookmarks.yaml` into
+a catalog, leaving widget credentials behind.
+
+Patchboard has no login: publish it only on a private address (Tailscale, a
+firewalled LAN, or behind an authenticating proxy). Read [SECURITY.md](SECURITY.md)
+before exposing it anywhere. For HTTPS, which installing it as a phone app
+needs, see [deploy/Caddyfile.example](deploy/Caddyfile.example).
 
 ## Configuration
 
-- `.env` holds URLs and credentials (see [env.example](env.example)).
-- `DOCS_PATH` points at a folder holding `RUNBOOK.md`. Its `## ` sections are
-  matched to containers by app name ("Immich Unresponsive" for `immich-server`).
-- `LOGS_PATH` points at a folder whose `audit/` reports seed storage history.
-- `config/services.yaml` holds the catalog: groups of services with `name`,
-  `href`, `icon`, `container` and optional `expectStopped`, plus a `dock` of
-  bookmarks. It holds no secrets and reloads on save.
-- Icons accept the same forms as Homepage: a URL, or a
-  [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) name such as
-  `plex.png`.
+Everything is in [docs/CONFIGURATION.md](docs/CONFIGURATION.md): every
+environment variable, the catalog fields, the optional mounts (runbook,
+backup logs, compose stacks for updates), and how to add a theme.
 
 ## Development
 
@@ -123,11 +124,14 @@ npm run typecheck
 Keyboard: `Ctrl/Cmd+K` or `/` to jump anywhere, `g` then a letter to switch
 views (`g s` Server, `g k` Stacks), `?` for the full list.
 
-## Themes
+## Make it yours
 
-Settings (the sliders icon, or "Settings" in Jump to) picks a theme, dark or
-light, an accent color and grayscale or color icons, per device. Two themes
-ship: Graphite (default) and nbnstack. A theme is one block of CSS variables
-at the top of `web/styles.css` plus an entry in `web/lib/appearance.ts`.
+Settings (the sliders icon, or `g ,`) is per device: seven themes (Graphite,
+Midnight, Forest, Dusk, Paper, nbnstack, and Custom from any three colors),
+dark, light or system, any accent color, four type pairings, three
+densities, 12- or 24-hour time, °F or °C, which Home sections show, and app
+tiles or a patch bay. Settings copy between devices as a short string.
+
+A theme is one entry in [web/lib/themes.ts](web/lib/themes.ts); no CSS needed.
 
 See [DESIGN.md](DESIGN.md) for why it's built this way.
