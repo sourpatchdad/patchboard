@@ -458,6 +458,34 @@ app.get('/api/appstats', async (c) => {
   return c.json(out);
 });
 
+// Posters for the calendar, from Sonarr's and Radarr's own cached covers
+// (the 250px versions). Fetched by the server so the API keys stay here;
+// cached in memory for a day.
+const artCache = new Map<string, { at: number; type: string; body: Uint8Array<ArrayBuffer> }>();
+app.get('/api/art/:src/:id', async (c) => {
+  const src = c.req.param('src');
+  const id = c.req.param('id');
+  const svc = src === 'sonarr' ? config.sonarr : src === 'radarr' ? config.radarr : undefined;
+  if (!svc || !/^\d{1,9}$/.test(id) || config.demo) return c.body(null, 404);
+  const k = `${src}:${id}`;
+  let hit = artCache.get(k);
+  if (!hit || Date.now() - hit.at > 86_400_000) {
+    try {
+      const res = await fetch(`${svc.url}/MediaCover/${id}/poster-250.jpg`, { headers: { 'X-Api-Key': svc.key }, redirect: 'manual', signal: AbortSignal.timeout(8000) });
+      const type = res.headers.get('content-type') ?? '';
+      if (!res.ok || !type.startsWith('image/')) return c.body(null, 404);
+      const body = new Uint8Array(await res.arrayBuffer());
+      if (body.length > 1_000_000) return c.body(null, 404);
+      hit = { at: Date.now(), type, body };
+      if (artCache.size > 400) artCache.delete(artCache.keys().next().value!);
+      artCache.set(k, hit);
+    } catch {
+      return c.body(null, 404);
+    }
+  }
+  return c.body(hit.body, 200, { 'Content-Type': hit.type, 'Cache-Control': 'private, max-age=86400' });
+});
+
 // Uploaded icons. Named by content hash, so the same file uploads once and
 // can be cached forever. Served with a sandboxing CSP: an SVG opened directly
 // can't run script.

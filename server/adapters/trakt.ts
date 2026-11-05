@@ -6,13 +6,13 @@ import type { ReleaseItem, TraktData } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
-import { episodeKey } from './arr.ts';
+import { episodeKey, tvdbKey } from './arr.ts';
 import { traktToken } from '../trakt-auth.ts';
 
 interface ShowEntry {
   first_aired: string;
   episode: { season: number; number: number; title?: string };
-  show: { title: string; ids: { slug: string } };
+  show: { title: string; ids: { slug: string; tvdb?: number } };
 }
 
 interface MovieEntry {
@@ -50,7 +50,8 @@ export function traktAdapter(): Adapter<TraktData> {
           subtitle: `S${String(s.episode.season).padStart(2, '0')}E${String(s.episode.number).padStart(2, '0')} ${s.episode.title ?? ''}`.trim(),
           when: s.first_aired,
           url: `https://trakt.tv/shows/${s.show.ids.slug}`,
-          key: episodeKey(s.show.title, s.episode.season, s.episode.number),
+          key: tvdbKey(s.show.ids.tvdb, s.episode.season, s.episode.number) ?? episodeKey(s.show.title, s.episode.season, s.episode.number),
+          alt: [episodeKey(s.show.title, s.episode.season, s.episode.number)],
         })),
         ...movies.map((m): ReleaseItem => ({
           id: `trakt-${m.movie.ids.slug}`,
@@ -61,7 +62,8 @@ export function traktAdapter(): Adapter<TraktData> {
           // Date-only; pin to local noon so it lands on the right day.
           when: `${m.released}T12:00:00`,
           url: `https://trakt.tv/movies/${m.movie.ids.slug}`,
-          key: `mv:${m.movie.ids.tmdb ?? m.movie.ids.slug}:Digital release`,
+          key: `mv:${m.movie.ids.tmdb ?? m.movie.ids.slug}:Release`,
+          alt: [`mv:${m.movie.ids.tmdb ?? m.movie.ids.slug}`],
         })),
       ];
       return { upcoming };

@@ -5894,6 +5894,199 @@ a.status-line {
   }
 }
 
+/* ---------- Calendar with artwork ---------- */
+
+.rel.with-art > a,
+.rel.with-art > div {
+  grid-template-columns: 40px auto minmax(0, 1fr);
+  grid-template-areas:
+    'art main main'
+    'art time src';
+  column-gap: 12px;
+  row-gap: 3px;
+  align-items: start;
+}
+
+.rel.with-art .rel-art {
+  grid-area: art;
+}
+
+.rel.with-art .rel-main {
+  grid-area: main;
+}
+
+.rel.with-art .rel-time {
+  grid-area: time;
+  line-height: 1.4;
+}
+
+.rel.with-art .rel-src {
+  grid-area: src;
+  line-height: 1.4;
+}
+
+.rel.with-art .rel-time:empty + .rel-main + .rel-src,
+.rel.with-art .rel-time:empty {
+  grid-column: 2;
+}
+
+.poster-small {
+  display: grid;
+  place-items: center;
+}
+
+.poster-small span {
+  font: 600 13px/1 var(--f-body) !important;
+  padding: 0 !important;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rel-art .poster {
+  width: 40px;
+  margin: 0;
+  border-radius: 3px;
+}
+
+.rel-art .poster-type span {
+  font-size: 7px;
+  line-height: 1.1;
+  padding: 3px;
+}
+
+.agenda-grid .rel.with-art > a,
+.agenda-grid .rel.with-art > div {
+  padding: 8px 0;
+}
+
+/* ---------- Settings tabs ---------- */
+
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 4px 0 6px;
+}
+
+.settings-tabs button {
+  font-size: 14px;
+  padding: 7px 14px;
+}
+
+/* ---------- Weather widget ---------- */
+
+.ww-now {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.ww-temp {
+  font: var(--display-weight) 44px/0.9 var(--f-display);
+  color: var(--head);
+}
+
+.ww-text {
+  display: grid;
+  gap: 2px;
+  font-size: 16px;
+  color: var(--head);
+}
+
+.ww-text small {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ww-alert {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warn);
+}
+
+.ww-hours {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 16px;
+}
+
+.ww-hour {
+  display: grid;
+  grid-template-rows: auto 30px auto;
+  justify-items: center;
+  align-items: end;
+  gap: 4px;
+}
+
+.ww-hour b {
+  font: 400 12px/1 var(--f-mono);
+  color: var(--head);
+}
+
+.ww-hour i {
+  width: 6px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.ww-hour i[data-rain] {
+  background: var(--accent);
+}
+
+.ww-hour small {
+  font: 400 10.5px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.ww-days {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.ww-days li {
+  display: grid;
+  grid-template-columns: 3.5em minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 13.5px;
+}
+
+.ww-cond {
+  color: var(--ink-2);
+}
+
+.ww-days small {
+  color: var(--ink-3);
+}
+
+/* A narrow card shows six hours, not twelve. */
+@container (max-width: 380px) {
+  .ww-hours {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .ww-hour:nth-child(even) {
+    display: none;
+  }
+}
+
+a.date {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+a.date:hover {
+  color: var(--head);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

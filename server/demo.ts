@@ -2,6 +2,7 @@
 // network access. This is what the public portfolio build and screenshots run
 // on, so it should look like a believable, slightly imperfect homelab.
 
+import { episodeKey } from './adapters/arr.ts';
 import type {
   ArrData,
   Catalog,
@@ -138,6 +139,8 @@ const sonarrUpcoming = (): ReleaseItem[] => [
   ep('The Long Meridian', 2, 7, 'Doldrums', dayAt(7, 21), false),
   ep('Field Notes', 5, 9, 'Lichen', dayAt(9, 19), false),
   ep('Salt & Cinder', 1, 5, 'Annealing', dayAt(8, 20), false),
+  // A whole season dropped at once: one row on the calendar.
+  ...[1, 2, 3, 4, 5, 6].map((e) => ep('Harbor Lights', 1, e, `Chapter ${e}`, dayAt(4, 3), false)),
 ];
 
 function ep(show: string, s: number, e: number, title: string, when: string, hasFile: boolean): ReleaseItem {
@@ -151,12 +154,13 @@ function ep(show: string, s: number, e: number, title: string, when: string, has
     when,
     hasFile,
     url: '#',
-    key: `ep:${show.toLowerCase().replace(/[^a-z0-9]/g, '')}:${s}:${e}`,
+    key: episodeKey(show, s, e),
+    alt: [episodeKey(show, s, e)],
   };
 }
 
 const radarrUpcoming = (): ReleaseItem[] => [
-  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Quiet Harbor', subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d' },
+  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Quiet Harbor', subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
   { id: 'r2', source: 'radarr', kind: 'movie', title: 'The Glass Orchard', subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
   { id: 'r3', source: 'radarr', kind: 'movie', title: 'Low Tide Hotel', subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
 ];
@@ -164,6 +168,10 @@ const radarrUpcoming = (): ReleaseItem[] => [
 const traktUpcoming = (): ReleaseItem[] => [
   // Duplicate of a Sonarr item; the client dedupes by key.
   { ...sonarrUpcoming()[0], id: 'trakt-dup', source: 'trakt' },
+  // The same show under Trakt's name for it ("(US)", no "The"): matched by title.
+  { id: 'trakt-us', source: 'trakt', kind: 'episode', title: 'Night Ferry (US)', subtitle: 'S03E01 Crossing', when: dayAt(3, 21, 30), url: '#', key: 'tv:0:3:1', alt: [episodeKey('Night Ferry (US)', 3, 1)] },
+  // A film Radarr has as a digital release, which Trakt calls just "Release".
+  { id: 'trakt-mv', source: 'trakt', kind: 'movie', title: 'Quiet Harbor', subtitle: 'Release', when: dayAt(2, 12), url: '#', key: 'mv:1:Release', alt: ['mv:1'] },
   { id: 't1', source: 'trakt', kind: 'episode', title: 'Copper Valley', subtitle: 'S04E02 Assay', when: dayAt(2, 20), url: '#', key: 'ep:coppervalley:4:2' },
   { id: 't2', source: 'trakt', kind: 'episode', title: 'Wren & Pike', subtitle: 'S01E01 Pilot', when: dayAt(5, 21), url: '#', key: 'ep:wrenpike:1:1' },
 ];

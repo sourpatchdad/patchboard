@@ -7,7 +7,7 @@ import { dayLabel, dayOffset, plural } from '../lib/format.ts';
 import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { useNow, useStore } from '../lib/store.tsx';
-import { ReleaseRow, useReleases } from './Home.tsx';
+import { groupDrops, ReleaseRow, useReleases } from './Home.tsx';
 
 type Kind = 'all' | 'episode' | 'movie';
 
@@ -28,9 +28,11 @@ export function Upcoming() {
     entry.list.push(it);
     byDay.set(label, entry);
   }
-  const episodes = ahead.filter((i) => i.kind === 'episode').length;
-  const films = ahead.length - episodes;
-  const thisWeek = shown.filter((i) => dayOffset(i.when, now) < 7).length;
+  // Count a season dropped at once as one release, as the calendar shows it.
+  const releases = groupDrops(ahead);
+  const episodes = releases.filter((i) => i.kind === 'episode').length;
+  const films = releases.length - episodes;
+  const thisWeek = groupDrops(shown.filter((i) => dayOffset(i.when, now) < 7)).length;
 
   return (
     <div className="page upcoming-page">
@@ -38,7 +40,7 @@ export function Upcoming() {
         <h1 className="page-title">Upcoming</h1>
         {ahead.length > 0 && (
           <span className="section-count">
-            {plural(thisWeek, 'release')} this week, {shown.length} in two weeks
+            {plural(thisWeek, 'release')} this week, {groupDrops(shown).length} in two weeks
           </span>
         )}
       </div>
@@ -57,7 +59,7 @@ export function Upcoming() {
         <div className="seg sort-seg" role="group" aria-label="Show">
           {(
             [
-              ['all', `Everything ${ahead.length}`],
+              ['all', `Everything ${releases.length}`],
               ['episode', `Episodes ${episodes}`],
               ['movie', `Films ${films}`],
             ] as [Kind, string][]
@@ -75,11 +77,11 @@ export function Upcoming() {
           <section className={`agenda-day ${off === 0 ? 'is-today' : ''}`} key={day} aria-label={day}>
             <h3>
               {day}
-              <span>{list.length}</span>
+              <span>{groupDrops(list).length}</span>
             </h3>
             <ul>
-              {list.map((it) => (
-                <ReleaseRow key={it.id} it={it} />
+              {groupDrops(list).map((it) => (
+                <ReleaseRow key={it.id} it={it} art />
               ))}
             </ul>
           </section>

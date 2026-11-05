@@ -317,6 +317,10 @@ export interface ReleaseItem {
   url?: string;
   /** Dedupe key so the same episode from Sonarr and Trakt shows once. */
   key: string;
+  /** Other keys the same release may go by in another source (a title-based one, the film regardless of release type). */
+  alt?: string[];
+  /** Poster, through Patchboard's art proxy. */
+  art?: string;
 }
 
 export interface ArrProblem {

@@ -16,7 +16,8 @@ export type WidgetType =
   | 'changes'
   | 'recent'
   | 'container'
-  | 'json';
+  | 'json'
+  | 'weather';
 
 /** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
@@ -93,6 +94,15 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
       ],
       names: true,
     },
+  },
+  weather: {
+    name: 'Weather',
+    about: 'Now, the next 12 hours and three days. With this on the board, the weather leaves the header.',
+    size: 'm',
+    sizes: ANY,
+    removable: true,
+    multiple: false,
+    options: {},
   },
   vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   now: { name: 'Right now', about: 'Who is watching Plex and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },

@@ -58,12 +58,24 @@ interface SonarrEpisode {
   title: string;
   airDateUtc?: string;
   hasFile: boolean;
+  seriesId: number;
   series: { title: string; titleSlug: string; tvdbId?: number };
 }
 
-export function episodeKey(show: string, season: number, episode: number): string {
-  return `ep:${show.toLowerCase().replace(/[^a-z0-9]/g, '')}:${season}:${episode}`;
+/** "The Traitors (US)" and "Traitors" are the same show: drop articles, a trailing (US) or (2012), punctuation. */
+export function showSlug(show: string): string {
+  return show
+    .toLowerCase()
+    .replace(/\s*\((?:us|uk|au|ca|nz|\d{4})\)\s*$/i, '')
+    .replace(/^(the|a|an)\s+/, '')
+    .replace(/[^a-z0-9]/g, '');
 }
+
+export function episodeKey(show: string, season: number, episode: number): string {
+  return `ep:${showSlug(show)}:${season}:${episode}`;
+}
+
+export const tvdbKey = (tvdb: number | undefined, season: number, episode: number) => (tvdb ? `tv:${tvdb}:${season}:${episode}` : undefined);
 
 export function sonarrAdapter(): Adapter<ArrData> {
   const { url, key } = config.sonarr!;
@@ -91,7 +103,9 @@ export function sonarrAdapter(): Adapter<ArrData> {
           when: e.airDateUtc!,
           hasFile: e.hasFile,
           url: `${url}/series/${e.series.titleSlug}`,
-          key: episodeKey(e.series.title, e.seasonNumber, e.episodeNumber),
+          key: tvdbKey(e.series.tvdbId, e.seasonNumber, e.episodeNumber) ?? episodeKey(e.series.title, e.seasonNumber, e.episodeNumber),
+          alt: [episodeKey(e.series.title, e.seasonNumber, e.episodeNumber)],
+          art: `/api/art/sonarr/${e.seriesId}`,
         }));
       return { upcoming, ...rest };
     },
@@ -144,6 +158,8 @@ export function radarrAdapter(): Adapter<ArrData> {
             hasFile: m.hasFile,
             url: `${url}/movie/${m.tmdbId}`,
             key: `mv:${m.tmdbId}:${label}`,
+            alt: [`mv:${m.tmdbId}`],
+            art: `/api/art/radarr/${m.id}`,
           });
         }
       }

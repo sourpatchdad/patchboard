@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { StatsData, SystemData, TruenasData, UptimeData } from '../../shared/types.ts';
+import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -18,7 +18,7 @@ import { HealthStrip } from '../components/Squares.tsx';
 import { Icon, Meter, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
-import { pct, size, uptime } from '../lib/format.ts';
+import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
@@ -53,9 +53,13 @@ function useBoard() {
   return { board, custom, save };
 }
 
-export function Board({ now }: { now: number }) {
+export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: string[]) => void }) {
   const { snap } = useStore();
   const { board, custom, save } = useBoard();
+  const types = board?.widgets.map((w) => w.type).join(',') ?? '';
+  useEffect(() => {
+    if (board) onWidgets?.(types.split(','));
+  }, [types]);
   const [draft, setDraft] = useState<BoardData | null>(null);
   const [adding, setAdding] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */
@@ -393,6 +397,8 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':
       return <JsonWidgetView id={w.id} json={w.config?.json} saved={saved} />;
+    case 'weather':
+      return <WeatherWidget />;
   }
 }
 
@@ -659,5 +665,52 @@ function SettingsDrawer({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Weather as a card: now, the next 12 hours, three days. Opens the Weather page. */
+function WeatherWidget() {
+  const { state, data: w } = useSource<WeatherData>('weather');
+  const { temp: unit, clock24 } = useAppearance();
+  if (!state || !w) return null;
+  const hours = (w.hours ?? []).slice(0, 12);
+  const today = w.days[0];
+  return (
+    <Section title="Weather" count={w.label} action={{ label: 'Forecast', to: '/weather' }} className="weather-widget">
+      <Link to="/weather" className="ww-now">
+        <span className="ww-temp">{deg(w.tempNow, unit)}°</span>
+        <span className="ww-text">
+          {weatherText(w.codeNow)}
+          {today && (
+            <small>
+              High {deg(today.high, unit)}°, low {deg(today.low, unit)}°{today.precipPct >= 30 ? `, ${today.precipPct}% rain` : ''}
+            </small>
+          )}
+        </span>
+      </Link>
+      {(w.alerts ?? []).length > 0 && <Link to="/weather" className="ww-alert">{w.alerts![0].event}</Link>}
+      {hours.length > 0 && (
+        <div className="ww-hours">
+          {hours.map((h, i) => (
+            <span key={h.time} className="ww-hour" title={`${weatherText(h.code)}, ${h.precipPct}% rain`}>
+              <b>{deg(h.temp, unit)}°</b>
+              <i style={{ height: `${Math.max(2, h.precipPct * 0.28)}px` }} data-rain={h.precipPct >= 20 || undefined} />
+              <small>{i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
+            </span>
+          ))}
+        </div>
+      )}
+      <ol className="ww-days">
+        {w.days.slice(1, 4).map((d) => (
+          <li key={d.date}>
+            <span>{new Date(`${d.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+            <span className="ww-cond">{weatherText(d.code)}</span>
+            <span className="mono">
+              {deg(d.high, unit)}° <small>{deg(d.low, unit)}°</small>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </Section>
   );
 }

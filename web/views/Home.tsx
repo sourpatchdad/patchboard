@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
 import type {
@@ -42,11 +43,12 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 export function Home() {
   const { snap } = useStore();
   const now = useNow(15_000);
+  const [widgets, setWidgets] = useState<string[]>([]);
   if (!snap) return <HomeSkeleton />;
   return (
     <div className="home">
-      <Masthead now={now} />
-      <Board now={now} />
+      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} />
+      <Board now={now} onWidgets={setWidgets} />
     </div>
   );
 }
@@ -60,7 +62,7 @@ function HomeSkeleton() {
   );
 }
 
-function Masthead({ now }: { now: number }) {
+function Masthead({ now, weatherOnBoard }: { now: number; weatherOnBoard: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
   const { clock24, temp: unit } = useAppearance();
@@ -88,9 +90,11 @@ function Masthead({ now }: { now: number }) {
           {time}
           {meridiem && <small>{meridiem}</small>}
         </span>
-        <span className="date">{date}</span>
+        <Link to="/upcoming" className="date" title="What's coming this week">
+          {date}
+        </Link>
       </div>
-      {weather && (
+      {weather && !weatherOnBoard && (
         <Link to="/weather" className="masthead-weather" title="Hourly, the week, sunrise and alerts">
           <span className="temp">{deg(weather.tempNow, unit)}°</span>
           <span className="weather-text">
@@ -321,12 +325,15 @@ export function useReleases(): { items: ReleaseItem[]; any: boolean; all: Releas
   const sonarr = useSource<ArrData>('sonarr');
   const radarr = useSource<ArrData>('radarr');
   const trakt = useSource<TraktData>('trakt');
+  // Sonarr and Radarr first: they know what's downloaded and have artwork.
+  // Trakt fills in what they don't track, matched by TVDB/TMDB id or by title.
   const seen = new Set<string>();
   const items: ReleaseItem[] = [];
   for (const list of [sonarr.data?.upcoming, radarr.data?.upcoming, trakt.data?.upcoming]) {
     for (const it of list ?? []) {
-      if (seen.has(it.key)) continue;
-      seen.add(it.key);
+      const keys = [it.key, ...(it.alt ?? [])];
+      if (seen.has(it.key) || (it.source === 'trakt' && keys.some((k) => seen.has(k)))) continue;
+      keys.forEach((k) => seen.add(k));
       items.push(it);
     }
   }
@@ -346,7 +353,7 @@ export function UpcomingBrief({ now }: { now: number }) {
     return off >= 0 && off < days;
   });
   const byDay = new Map<string, ReleaseItem[]>();
-  for (const it of week.slice(0, limit)) {
+  for (const it of groupDrops(week).slice(0, limit)) {
     const label = dayLabel(it.when, now);
     byDay.set(label, [...(byDay.get(label) ?? []), it]);
   }
@@ -372,10 +379,15 @@ export function UpcomingBrief({ now }: { now: number }) {
   );
 }
 
-export function ReleaseRow({ it }: { it: ReleaseItem }) {
+export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean }) {
   const time = it.kind === 'movie' || isDateOnly(it.when) ? '' : clock(it.when);
   const content = (
     <>
+      {art && (
+        <span className="rel-art">
+          <Poster title={it.title} thumb={it.art} small />
+        </span>
+      )}
       <span className="rel-time">{time}</span>
       <span className="rel-main">
         <span className="rel-title">{it.title}</span>
@@ -389,7 +401,7 @@ export function ReleaseRow({ it }: { it: ReleaseItem }) {
     </>
   );
   return (
-    <li className={`rel ${it.hasFile ? 'has-file' : ''}`}>
+    <li className={`rel ${it.hasFile ? 'has-file' : ''} ${art ? 'with-art' : ''}`}>
       {it.url && it.url !== '#' ? (
         <a href={it.url} target="_blank" rel="noreferrer">{content}</a>
       ) : (
@@ -463,4 +475,26 @@ export function RecentlyAdded({ now }: { now: number }) {
       </ul>
     </Section>
   );
+}
+
+/**
+ * A season dropped at once becomes one row: "S02E01 to E08, 8 episodes".
+ * Only consecutive episodes of one show, on one day, from one source.
+ */
+export function groupDrops(list: ReleaseItem[]): ReleaseItem[] {
+  const out: ReleaseItem[] = [];
+  const ep = (it: ReleaseItem) => /^S(\d+)E(\d+)/.exec(it.subtitle ?? '');
+  for (const it of list) {
+    const prev = out[out.length - 1];
+    const a = prev && ep(prev);
+    const b = ep(it);
+    if (prev && a && b && it.kind === 'episode' && prev.title === it.title && prev.source === it.source && a[1] === b[1] && new Date(prev.when).toDateString() === new Date(it.when).toDateString()) {
+      const first = (prev as ReleaseItem & { _first?: string })._first ?? `S${a[1]}E${a[2]}`;
+      const count = ((prev as ReleaseItem & { _count?: number })._count ?? 1) + 1;
+      out[out.length - 1] = { ...prev, subtitle: `${first} to E${b[2]}, ${count} episodes`, _first: first, _count: count } as ReleaseItem;
+      continue;
+    }
+    out.push(it);
+  }
+  return out;
 }

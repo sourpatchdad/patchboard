@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.18.0 — 2026-11-04
+
+A calendar you can trust, and Settings you can find your way around.
+
+- **No more doubles:** Trakt entries are matched to Sonarr's and Radarr's by
+  TVDB and TMDB id, and by title when ids are missing ("The Traitors (US)"
+  is "The Traitors"); a Trakt film matches any of Radarr's release dates.
+  Sonarr and Radarr win, since they know what's downloaded.
+- **Season drops are one row:** "S01E01 to E06, 6 episodes", counted as one
+  release.
+- **Posters on Upcoming**, from Sonarr's and Radarr's own cached 250px
+  covers, fetched by the server so keys stay there. Anything without art
+  gets a quiet initials tile. Each row: title, episode, then time and source.
+- **Weather widget** for the board: now, the next 12 hours, three days, any
+  alert. With it on the board, the header leaves the weather to it.
+- **The date opens Upcoming.**
+- **Settings in four tabs:** Look, Home and units, Connections, Activity.
+  Old #catalog links land on Connections.
+- 42 tests.
+
 ## 1.17.0 — 2026-11-04
 
 A board that holds its shape, and weather worth clicking.

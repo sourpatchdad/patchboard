@@ -58,3 +58,11 @@ test('audit reports seed pool history in binary units', async () => {
   assert.equal(used[0][1], 4 * 2 ** 40);
   assert.equal(size[0][1], (4 + 3.14) * 2 ** 40);
 });
+
+test('show titles match across Sonarr and Trakt naming', async () => {
+  const { showSlug, episodeKey } = await import('../adapters/arr.ts');
+  assert.equal(showSlug('The Traitors (US)'), showSlug('The Traitors'));
+  assert.equal(showSlug('99 to Beat (US)'), showSlug('99 to Beat'));
+  assert.equal(showSlug("JoJo's Bizarre Adventure (2012)"), showSlug('JoJo’s Bizarre Adventure'));
+  assert.equal(episodeKey('The Traitors (US)', 5, 9), episodeKey('Traitors', 5, 9));
+});

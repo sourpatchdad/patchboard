@@ -103,7 +103,7 @@ export function Icon({ name, icon, size = 22 }: { name: string; icon?: string; s
 const POSTER_TONES = ['#304251', '#3c3846', '#2d453f', '#4a3e31', '#283a48', '#45373b', '#384132'];
 
 /** Plex poster, or a typographic stand-in built from the title. */
-export function Poster({ title, thumb }: { title: string; thumb?: string }) {
+export function Poster({ title, thumb, small = false }: { title: string; thumb?: string; small?: boolean }) {
   const [broken, setBroken] = useState(false);
   if (thumb && !broken) {
     return <img className="poster" src={thumb} alt="" loading="lazy" onError={() => setBroken(true)} />;
@@ -111,8 +111,18 @@ export function Poster({ title, thumb }: { title: string; thumb?: string }) {
   let h = 0;
   for (const c of title) h = (h * 31 + c.charCodeAt(0)) | 0;
   return (
-    <div className="poster poster-type" style={{ background: POSTER_TONES[Math.abs(h) % POSTER_TONES.length] }} aria-hidden>
-      <span>{title}</span>
+    <div className={`poster poster-type ${small ? 'poster-small' : ''}`} style={{ background: POSTER_TONES[Math.abs(h) % POSTER_TONES.length] }} aria-hidden>
+      <span>
+        {small
+          ? title
+              .replace(/^(the|a|an)\s+/i, '')
+              .split(/\s+/)
+              .filter((w) => /^[\p{L}\p{N}]/u.test(w))
+              .slice(0, 2)
+              .map((w) => w[0].toUpperCase())
+              .join('')
+          : title}
+      </span>
     </div>
   );
 }

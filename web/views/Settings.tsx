@@ -3,6 +3,8 @@
 // Themes are data in themes.ts, so this page renders whatever is there.
 
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useUrlChoice } from '../lib/url.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import {
@@ -20,8 +22,22 @@ import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
 import { useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 
+type Tab = 'look' | 'home' | 'connections' | 'activity';
+const TABS: [Tab, string, string][] = [
+  ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ.'],
+  ['home', 'Home and units', 'Saved on this device. The Home board itself is the same everywhere: change it with Customize on Home.'],
+  ['connections', 'Connections', 'Shared by every device.'],
+  ['activity', 'Activity', 'Who changed what, newest first.'],
+];
+
 export function Settings() {
   const a = useAppearance();
+  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'connections', 'activity'], 'look');
+  const { hash } = useLocation();
+  // Older links point at #catalog.
+  useEffect(() => {
+    if (hash === '#catalog' && tab !== 'connections') setTab('connections');
+  }, [hash]);
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
     <div className="seg" role="group">
       {options.map(([v, label]) => (
@@ -37,9 +53,18 @@ export function Settings() {
       <div className="page-head">
         <h1 className="page-title">Settings</h1>
       </div>
-      <p className="page-lede">Connections and the catalog are shared by every device. Everything else is saved on this device, so the phone and the desktop can differ.</p>
+      <div className="seg settings-tabs" role="tablist" aria-label="Settings">
+        {TABS.map(([v, label]) => (
+          <button key={v} type="button" role="tab" aria-selected={tab === v} aria-pressed={tab === v} onClick={() => setTab(v)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="page-lede">{TABS.find((t) => t[0] === tab)![2]}</p>
 
       <div className="settings-grid">
+      {tab === 'look' && (
+      <>
 
       <Section title="Theme" count={`${THEMES.length + 1} themes`} className="span-all">
         <div className="theme-grid">
@@ -99,6 +124,10 @@ export function Settings() {
         </div>
       </Section>
 
+      </>
+      )}
+      {tab === 'home' && (
+      <>
       <Section title="Home">
         <div className="choice-row">
           {seg('homeApps', [
@@ -125,6 +154,10 @@ export function Settings() {
         </div>
       </Section>
 
+      <Portability />
+      </>
+      )}
+      {tab === 'look' && (
       <Section title="Service icons">
         <div className="choice-row">
           {seg('icons', [
@@ -134,12 +167,15 @@ export function Settings() {
         </div>
         <p className="settings-note">Grayscale icons get their color back when you point at them.</p>
       </Section>
-
-      <Portability />
-      <Connections />
-      <Keys />
-      <CatalogCheck />
-      <Activity />
+      )}
+      {tab === 'connections' && (
+        <>
+          <Connections />
+          <Keys />
+          <CatalogCheck />
+        </>
+      )}
+      {tab === 'activity' && <Activity />}
       </div>
     </div>
   );
