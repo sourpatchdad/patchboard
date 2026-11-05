@@ -501,6 +501,8 @@ export interface Snapshot {
   readOnly: boolean;
   /** What each page shows (its Customize button). */
   pages?: import('./pages.ts').Pages;
+  /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */
+  features?: string[];
 }
 
 export type ServerEvent =

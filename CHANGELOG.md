@@ -1,6 +1,35 @@
 # Changelog
 
-## 1.19.0 — 2026-11-04
+## 1.20.0 (2026-11-04)
+
+Docs you can trust, because the code writes part of them.
+
+- **Settings, Connections, Integrations** lists all 18 built-in integrations:
+  the ones running with their status, then the rest with the variables to set
+  and where to find each key.
+- **docs/INTEGRATIONS.md** covers the four ways to add apps and the three ways
+  to add numbers. `npm run docs` writes its integration and preset tables
+  from `shared/integrations.ts` and `shared/presets.ts`; CI fails if they go
+  stale.
+- **Screenshots** in `docs/screenshots`, made by `npm run screenshots` from
+  demo mode: Home dark and light, the first run, a container page, Edit apps,
+  a live number, Server, Upcoming, Weather, integrations, and two phone views.
+- **Examples:** the compose example now holds only what a first install needs.
+  `examples/everything`, `examples/hardened` (read-only socket proxy,
+  `READ_ONLY=1`, localhost only) and `examples/labels` replace the
+  commented-out blocks.
+- **README, CONFIGURATION, SECURITY** rewritten short. SECURITY drops two
+  stale claims: the JSON widget takes `${secret:NAME}` too, and the proxy
+  example lives in its own file.
+- **House rules in CI:** code without a CHANGELOG entry fails, and so does an
+  em dash in the docs or the UI. A pull request template carries the
+  checklist.
+- A test checks that every integration variable exists in `server/config.ts`
+  and in the env template or an example. It found `DOCKER_SOCKET` missing.
+- Demo posters with long words set them smaller instead of breaking them
+  mid-word.
+
+## 1.19.0 (2026-11-04)
 
 From a fresh install to a full board in one click; each container page the
 place to fix that app.
@@ -15,7 +44,7 @@ place to fix that app.
   container that isn't an app yet, Add as an app with its details filled in.
 - 43 tests, including one that caught Add all re-adding apps on a second run.
 
-## 1.18.0 — 2026-11-04
+## 1.18.0 (2026-11-04)
 
 A calendar you can trust, and Settings you can find your way around.
 
@@ -35,7 +64,7 @@ A calendar you can trust, and Settings you can find your way around.
   Old #catalog links land on Connections.
 - 42 tests.
 
-## 1.17.0 — 2026-11-04
+## 1.17.0 (2026-11-04)
 
 A board that holds its shape, and weather worth clicking.
 
@@ -59,7 +88,7 @@ A board that holds its shape, and weather worth clicking.
   Right now's headings open Plex and qBittorrent; posters open Plex; "N
   things need you" jumps to Needs attention.
 
-## 1.16.0 — 2026-11-04
+## 1.16.0 (2026-11-04)
 
 Every page, your way.
 
@@ -73,7 +102,7 @@ Every page, your way.
   silences an alert.
 - 41 tests.
 
-## 1.15.0 — 2026-11-04
+## 1.15.0 (2026-11-04)
 
 A live number on any app, set up by clicking.
 
@@ -92,7 +121,7 @@ A live number on any app, set up by clicking.
   512 KB limits, errors never echo the URL.
 - 39 tests.
 
-## 1.14.0 — 2026-11-04
+## 1.14.0 (2026-11-04)
 
 Customizing for anyone, no YAML required.
 
@@ -112,7 +141,7 @@ Customizing for anyone, no YAML required.
 - **Bookmarks (Elsewhere)** can be hidden from Edit apps.
 - 34 tests.
 
-## 1.13.0 — 2026-11-04
+## 1.13.0 (2026-11-04)
 
 Make every widget yours.
 
@@ -131,7 +160,7 @@ Make every widget yours.
   grey dot; only trouble lights up.
 - README: sign-in and customizing brought up to date. 32 tests.
 
-## 1.12.0 — 2026-11-04
+## 1.12.0 (2026-11-04)
 
 Every page uses the screen it's on.
 
@@ -149,7 +178,7 @@ Every page uses the screen it's on.
   own line, so the two columns end close together and no model name is
   cut off.
 
-## 1.11.0 — 2026-11-04
+## 1.11.0 (2026-11-04)
 
 Arrange it your way.
 
@@ -165,7 +194,7 @@ Arrange it your way.
   matches compose project names; statuses shortened to match Stacks.
 - 30 tests.
 
-## 1.10.0 — 2026-11-04
+## 1.10.0 (2026-11-04)
 
 Safe to hand to someone else.
 
@@ -194,7 +223,7 @@ Safe to hand to someone else.
   in the URL.
 - SECURITY.md rewritten as a deployment guide. 26 tests.
 
-## 1.9.1 — 2026-11-04
+## 1.9.1 (2026-11-04)
 
 - **Fixed: Trakt said "Can't reach" while Settings said connected.** Trakt's
   API refuses requests without a proper User-Agent (HTTP 403); its sign-in
@@ -212,7 +241,7 @@ Safe to hand to someone else.
 - **Settings** is a responsive grid of panels; the theme picker and catalog
   span the full width, the rest sit two or three across.
 
-## 1.9.0 — 2026-11-04
+## 1.9.0 (2026-11-04)
 
 Home is a board you arrange.
 
@@ -233,7 +262,7 @@ Home is a board you arrange.
 - Settings no longer lists Home sections; Customize replaces it.
 - Tests for board validation (22 total).
 
-## 1.8.0 — 2026-11-04
+## 1.8.0 (2026-11-04)
 
 First piece of v2 (docs/DESIGN-v2.md).
 
@@ -247,7 +276,7 @@ First piece of v2 (docs/DESIGN-v2.md).
   30-minute poll.
 - Phones: ledger labels and tile lines wrap instead of clipping.
 
-## 1.7.2 — 2026-11-04
+## 1.7.2 (2026-11-04)
 
 - **Trakt works with only a Client ID.** Trakt stopped issuing client
   secrets to new apps in 2026; the code sign-in now needs none (one is still
@@ -255,7 +284,7 @@ First piece of v2 (docs/DESIGN-v2.md).
   from February 2027. Tokens last 7 days and refresh a day early; refreshes
   never overlap, because Trakt's refresh tokens are single-use.
 
-## 1.7.1 — 2026-11-04
+## 1.7.1 (2026-11-04)
 
 A clean-up pass, checked by a script that finds clipped text on every page at
 three widths, against real data.
@@ -274,7 +303,7 @@ three widths, against real data.
 - Wide screens (1600px and up): pages widen to 1720px and Home flows into
   three columns.
 
-## 1.7.0 — 2026-11-04
+## 1.7.0 (2026-11-04)
 
 Make it yours, and run it anywhere.
 
@@ -297,7 +326,7 @@ Make it yours, and run it anywhere.
   ghcr.io on version tags; the README starts with a one-line demo run.
 - Weather is fetched in Celsius and shown in the unit you choose.
 
-## 1.6.0 — 2026-11-04
+## 1.6.0 (2026-11-04)
 
 Apps that say something.
 
@@ -317,14 +346,14 @@ Apps that say something.
 - Settings: Apps on Home (tiles or patch bay).
 - Tests for the audit and name guessing (18 total).
 
-## 1.5.3 — 2026-11-04
+## 1.5.3 (2026-11-04)
 
 - Removed the bookmark dock from Home. It was start-page furniture with a
   white key behind every logo; Home is about the server now. Bookmarks are
   still in Jump to and under Elsewhere on Apps.
 - Fixed: the phone top bar's search button showed a default button box.
 
-## 1.5.2 — 2026-11-04
+## 1.5.2 (2026-11-04)
 
 Dependencies, all majors tested together.
 
@@ -334,7 +363,7 @@ Dependencies, all majors tested together.
 - GitHub Actions: checkout 7, setup-node 7, setup-buildx 4, build-push 7,
   which also clears the Node 20 deprecation warnings
 
-## 1.5.1 — 2026-11-04
+## 1.5.1 (2026-11-04)
 
 Phones.
 
@@ -352,7 +381,7 @@ Phones.
 - CI: secret scan uses the gitleaks CLI over the full history (the GitHub
   action crashed on a range starting at the first commit).
 
-## 1.5.0 — 2026-11-04
+## 1.5.0 (2026-11-04)
 
 Update containers from the UI.
 
@@ -371,7 +400,7 @@ Update containers from the UI.
 - Repository: CI (typecheck, tests, build, Docker image), gitleaks over the
   full history, Dependabot, SECURITY.md.
 
-## 1.4.0 — 2026-11-04
+## 1.4.0 (2026-11-04)
 
 Acting on what it sees.
 
@@ -396,7 +425,7 @@ Acting on what it sees.
   audit and runbook parsers and the alert, check and update rules (16 tests,
   no test framework).
 
-## 1.3.0 — 2026-11-04
+## 1.3.0 (2026-11-04)
 
 Does it answer, and did the backups run.
 
@@ -414,7 +443,7 @@ Does it answer, and did the backups run.
 - **Overnight line** under the status on Home: "Backed up overnight: 12
   databases, 7 file sets." It turns amber when something failed.
 
-## 1.2.0 — 2026-11-04
+## 1.2.0 (2026-11-04)
 
 Themes and square grids.
 
@@ -431,7 +460,7 @@ Themes and square grids.
 - Temperatures in °C and °F
 - Fixed: datasets listed twice; memory values wrapping in Busiest containers
 
-## 1.1.0 — 2026-11-04
+## 1.1.0 (2026-11-04)
 
 Phase 1 of the roadmap: see the server.
 
@@ -460,7 +489,7 @@ Phase 1 of the roadmap: see the server.
 - Minute-by-minute samples in SQLite (containers kept 2 days, host 8 days)
 - New read-only mounts: `system-docs` and `logs`
 
-## 1.0.1 — 2026-11-04
+## 1.0.1 (2026-11-04)
 
 First deploy fixes.
 
@@ -470,7 +499,7 @@ First deploy fixes.
 - Dockerfile: runtime dependencies come from their own `npm ci --omit=dev`
   stage instead of `npm prune`, which stalled the build on TrueNAS
 
-## 1.0.0 — 2026-11-03
+## 1.0.0 (2026-11-03)
 
 The nbnstack.com design system, ahead of first deploy.
 
@@ -487,7 +516,7 @@ The nbnstack.com design system, ahead of first deploy.
 - Fallback posters set as serif title pages on muted slates
 - Icons and PWA colors updated (the patch cable is now blue)
 
-## 0.1.0 — 2026-11-03
+## 0.1.0 (2026-11-03)
 
 First version.
 

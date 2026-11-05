@@ -1,68 +1,17 @@
-# Patchboard. Copy to docker-compose.yml, copy env.example to .env, then:
-#   docker compose up -d
-#
-# Patchboard has no login of its own. Publish it only on a private address
-# (BIND_ADDRESS in .env): a Tailscale IP, a firewalled LAN IP, or 127.0.0.1
-# behind a reverse proxy that adds authentication. See SECURITY.md.
+# Copy to docker-compose.yml and env.example to .env, then run: docker compose up -d
+# Other setups (every optional mount, a hardened install, labels): examples/
 
 services:
   patchboard:
     image: ghcr.io/sourpatchdad/patchboard:latest
-    # Or build from a clone of the repository instead:
-    # build: .
     container_name: patchboard
     restart: unless-stopped
     env_file: .env
     environment:
       - TZ=${TZ:-UTC}
-      # Uncomment alongside the optional mounts below:
-      # - POOL_PATH=/host/pool
-      # - DOCS_PATH=/host/docs
-      # - LOGS_PATH=/host/logs
-      # - COMPOSE_ROOT=/opt/stacks
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:3200:3200"
     volumes:
-      # Required: containers, stats and logs. The socket is root-equivalent on
-      # the host, mounted read-only or not; see SECURITY.md.
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Your service catalog (copy config/services.example.yaml to start).
       - ./config:/config:ro
-      # Patchboard's own database: history, samples, sign-ins.
       - ./data:/data
-
-      # ---- Optional ----------------------------------------------------------
-
-      # Fallback disk-usage figure when TrueNAS isn't connected. Point it at
-      # the filesystem you care about and set POOL_PATH=/host/pool above.
-      # - /mnt/tank:/host/pool:ro
-
-      # A folder holding RUNBOOK.md: its "## " sections appear on matching
-      # container pages. Set DOCS_PATH above.
-      # - /path/to/notes:/host/docs:ro
-
-      # A folder with ops/db-backup.log, ops/file-backup.log and audit/*.txt in
-      # the formats described in docs/CONFIGURATION.md. Set LOGS_PATH above.
-      # - /path/to/logs:/host/logs:ro
-
-      # Updates from the UI: your compose projects, read-only, at the SAME path
-      # as on the host. Set COMPOSE_ROOT to that path above.
-      # - /opt/stacks:/opt/stacks:ro
-
-  # ---- Optional: a Docker socket proxy instead of the socket ----------------
-  # Remove the docker.sock mount above, set DOCKER_HOST=tcp://socket-proxy:2375
-  # in .env, and uncomment. As written it allows reading only; see SECURITY.md
-  # for what actions and updates need.
-  # socket-proxy:
-  #   image: tecnativa/docker-socket-proxy:latest
-  #   container_name: patchboard-socket-proxy
-  #   restart: unless-stopped
-  #   environment:
-  #     - CONTAINERS=1
-  #     - IMAGES=1
-  #     - EVENTS=1
-  #     - INFO=1
-  #     - NETWORKS=1
-  #     - POST=0
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro

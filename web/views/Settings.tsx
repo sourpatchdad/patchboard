@@ -2,6 +2,7 @@
 // every device; everything else is a per-device preference (appearance.ts).
 // Themes are data in themes.ts, so this page renders whatever is there.
 
+import { INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
@@ -170,6 +171,7 @@ export function Settings() {
       )}
       {tab === 'connections' && (
         <>
+          <Integrations />
           <Connections />
           <Keys />
           <CatalogCheck />
@@ -552,6 +554,67 @@ function Keys() {
           {err && <span className="crit-text">{err}</span>}
         </div>
       )}
+    </Section>
+  );
+}
+
+/**
+ * Every built-in integration: what's on (and whether it's answering), then
+ * what you could turn on and exactly how. The list lives in
+ * shared/integrations.ts, the same one docs/INTEGRATIONS.md is built from.
+ */
+function Integrations() {
+  const { snap } = useStore();
+  if (!snap) return null;
+  const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off' } => {
+    if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: 'On', tone: 'ok' } : { on: false, text: 'Off', tone: 'off' };
+    const s = snap.sources[i.id as keyof typeof snap.sources];
+    if (!s) return { on: false, text: 'Off', tone: 'off' };
+    if (!s.ok) return { on: true, text: s.error ? `Can't reach it: ${s.error}` : "Can't reach it", tone: 'warn' };
+    return { on: true, text: s.updatedAt ? `On, updated ${agoLong(s.updatedAt)}` : 'On', tone: 'ok' };
+  };
+  const rows = INTEGRATIONS.map((i) => ({ i, st: status(i) }));
+  const on = rows.filter((r) => r.st.on);
+  const off = rows.filter((r) => !r.st.on);
+  return (
+    <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all">
+      <ul className="integrations">
+        {on.map(({ i, st }) => (
+          <li key={i.id} className={`integration tone-${st.tone}`}>
+            <span className="integration-name">{i.name}</span>
+            <span className="integration-adds">{i.adds}</span>
+            <span className={`integration-status tone-${st.tone}`}>{st.text}</span>
+          </li>
+        ))}
+      </ul>
+      {off.length > 0 && (
+        <>
+          <h3 className="jw-sub">Available to turn on</h3>
+          <p className="settings-note">
+            Add the variables to your <code>.env</code>, then recreate the container (<code>docker compose up -d</code>; a restart doesn't reload them). App
+            numbers on tiles need no variables: set them up in Apps, Edit apps.
+          </p>
+          <ul className="integrations">
+            {off.map(({ i }) => (
+              <li key={i.id} className="integration tone-off">
+                <span className="integration-name">{i.name}</span>
+                <span className="integration-adds">
+                  {i.adds}
+                  {i.where && <small>{i.where}</small>}
+                </span>
+                <span className="integration-env">
+                  {[...i.env, ...(i.optional ?? []).map((v) => `${v} (optional)`)].map((v) => (
+                    <code key={v}>{v}</code>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p className="settings-note">
+        More on each: <a href="https://github.com/sourpatchdad/patchboard/blob/main/docs/INTEGRATIONS.md" target="_blank" rel="noreferrer">docs/INTEGRATIONS.md</a>.
+      </p>
     </Section>
   );
 }

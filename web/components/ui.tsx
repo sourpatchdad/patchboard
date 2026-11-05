@@ -110,9 +110,11 @@ export function Poster({ title, thumb, small = false }: { title: string; thumb?:
   }
   let h = 0;
   for (const c of title) h = (h * 31 + c.charCodeAt(0)) | 0;
+  const longest = Math.max(...title.split(/\s+/).map((w) => w.length));
   return (
     <div className={`poster poster-type ${small ? 'poster-small' : ''}`} style={{ background: POSTER_TONES[Math.abs(h) % POSTER_TONES.length] }} aria-hidden>
-      <span>
+      {/* Long words get a smaller size so they fit whole instead of breaking mid-word. */}
+      <span style={small ? undefined : { fontSize: longest > 10 ? 14 : longest > 8 ? 16 : undefined }}>
         {small
           ? title
               .replace(/^(the|a|an)\s+/i, '')

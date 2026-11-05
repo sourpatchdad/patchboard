@@ -1,14 +1,6 @@
-# Patchboard service catalog. Copy to services.yaml (or generate one from a
-# Homepage config with `npm run import-homepage -- <dir>`). No secrets here.
-#
-# Per service:
-#   name           shown in Apps and the palette
-#   label          short name for the patch-bay tape (default: name, or its first word)
-#   href           where clicking it goes
-#   icon           URL or a dashboard-icons name such as plex.png
-#   container      Docker container name: status, stats, logs and its own page
-#   expectStopped  true for one-shot jobs, so their exit isn't an alert
-#   check          false to skip the reachability check, or a URL to check instead
+# Optional. Copy to config/services.yaml to list apps in a file instead of, or
+# as well as, the UI. Keys belong in .env, never here.
+# docs/CONFIGURATION.md describes each field.
 
 groups:
   - name: Watch & listen

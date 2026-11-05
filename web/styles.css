@@ -1234,8 +1234,6 @@ a.jack:focus-visible {
 
 .poster-type span {
   font: var(--display-weight) 19px/1.1 var(--f-display);
-  hyphens: auto;
-  overflow-wrap: break-word;
 }
 
 .poster-type + .poster-title {
@@ -6142,6 +6140,75 @@ a.date:hover {
 
 .welcome-steps .button {
   margin: 4px 0;
+}
+
+/* ---------- Settings: integrations ---------- */
+
+.integrations {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.integration {
+  display: grid;
+  grid-template-columns: minmax(8em, 11em) minmax(0, 1fr) minmax(0, auto);
+  gap: 4px 20px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.integration-name {
+  font-weight: 600;
+  color: var(--head);
+}
+
+.integration-adds {
+  display: grid;
+  gap: 3px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.integration-adds small {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.integration-status {
+  font: 400 12.5px/1.3 var(--f-mono);
+  text-align: right;
+  color: var(--ink-3);
+}
+
+.integration-status.tone-warn {
+  color: var(--warn);
+}
+
+.integration-env {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 22em;
+}
+
+.integration-env code {
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .integration {
+    grid-template-columns: 1fr;
+  }
+
+  .integration-status,
+  .integration-env {
+    text-align: left;
+    justify-content: flex-start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

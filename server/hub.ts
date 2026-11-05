@@ -215,6 +215,12 @@ export class Hub {
       updates: pendingUpdates(),
       readOnly: config.readOnly,
       pages: kvGet('pages') ?? {},
+      features: [
+        'diun',
+        ...(config.composeRoot || config.demo ? ['updates'] : []),
+        ...(config.docsPath || config.demo ? ['runbook'] : []),
+        ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
+      ],
       links: config.demo
         ? { dozzle: '#', fastmail: '#', miniflux: '#', sonarr: '#', radarr: '#' }
         : {

@@ -1,142 +1,99 @@
 # Configuration
 
-Patchboard is configured in three places:
+You configure Patchboard in three places:
 
-| Where | What | Shared by |
+| Where | What | Applies to |
 |---|---|---|
-| `.env` (from `env.example`) | Addresses and keys for integrations, thresholds | The server |
-| `config/services.yaml` | The catalog: your apps, groups and bookmarks | The server; reloads on save |
-| Settings page | Theme, colors, type, density, units, Home layout | Each device separately |
+| `.env` (from `env.example`) | Addresses and keys for built-in integrations, sign-in, thresholds | The server |
+| The UI | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
+| Settings, Look and Home | Theme, colors, type, density, units | This device only |
 
-Every integration is optional and turns itself on when all of its variables
-are set. Leave a block empty and that part of the page simply doesn't appear.
+`config/services.yaml` and Docker labels are optional ways to list apps. See
+[INTEGRATIONS.md](INTEGRATIONS.md) for those and for every integration's
+variables.
 
-## Environment variables
+After you change `.env`, recreate the container with `docker compose up -d`.
+A restart keeps the old values.
 
-### Basics
+## Server
 
 | Variable | Default | |
 |---|---|---|
-| `BIND_ADDRESS` | `127.0.0.1` | Address the compose file publishes port 3200 on. Use a private one. |
-| `TZ` | `UTC` | Time zone for times and the "today" in calendars. |
-| `DEMO` | `0` | `1` runs on invented data with no network access. |
-| `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install (no catalog) so you can try the first-run welcome. |
-| `ALLOWED_HOSTS` | empty | Hostnames Patchboard is reached by (e.g. `dash.example.com`). IP addresses and `localhost` always work; any other name is refused, which blocks DNS rebinding. |
+| `BIND_ADDRESS` | `127.0.0.1` | The address the compose file publishes port 3200 on. Use a private one. |
+| `TZ` | `UTC` | Time zone for clocks and calendars. |
+| `ALLOWED_HOSTS` | empty | Hostnames you reach Patchboard by, such as `dash.example.com`. IP addresses and `localhost` always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
-| `DATA_DIR` | `/data` | SQLite database location (mount it). |
-| `CATALOG_PATH` | `/config/services.yaml` | The catalog file. |
+| `DATA_DIR` | `/data` | The SQLite database. Mount it. |
+| `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
+| `DEMO` | `0` | `1` runs on invented data with no network access. |
+| `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |
 
-### Sign-in and safety
+## Sign-in and safety
 
-See [SECURITY.md](../SECURITY.md) for when to use which.
+[SECURITY.md](../SECURITY.md) explains when to use each.
 
 | Variable | Default | |
 |---|---|---|
 | `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header) or `password`. |
-| `TRUSTED_USER_HEADER` | `Remote-User` | The header a forward-auth proxy sets. |
-| `PATCHBOARD_PASSWORD` | empty | The shared password for `AUTH=password`. |
+| `TRUSTED_USER_HEADER` | `Remote-User` | The header your forward-auth proxy sets. |
+| `PATCHBOARD_PASSWORD` | empty | The password for `AUTH=password`. |
 | `HOOK_TOKEN` | empty | What webhooks send when sign-in is on. |
-| `READ_ONLY` | `0` | `1` refuses every change and hides the controls. |
+| `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
 
-### Checks and thresholds
+## Thresholds
 
 | Variable | Default | |
 |---|---|---|
-| `CHECK_DOMAINS` | empty | Domains whose service links are checked, besides private and tailnet addresses. Comma-separated. |
-| `POOL_WARN_PCT` | `85` | Storage alert threshold. |
-| `DISK_WARN_C` | `50` | Disk temperature alert, in Celsius. |
-| `UPCOMING_DAYS` | `14` | How far ahead the release calendar looks. |
+| `CHECK_DOMAINS` | empty | Your own domains, comma-separated. Patchboard checks app links on them, as well as private and Tailscale addresses. |
+| `POOL_WARN_PCT` | `85` | Storage use that raises an alert. |
+| `DISK_WARN_C` | `50` | Disk temperature, in Celsius, that raises an alert. |
+| `UPCOMING_DAYS` | `14` | How far ahead the calendar looks. |
 
-### Integrations
+## Mounts
 
-| Integration | Variables | Notes |
+Each needs a read-only mount and its variable.
+[examples/everything](../examples/everything/docker-compose.yml) sets all four.
+
+| Variable | Mount | Adds |
 |---|---|---|
-| Weather | `WEATHER_LAT`, `WEATHER_LON`, `WEATHER_LABEL` | Open-Meteo, no key. |
-| Sonarr, Radarr | `SONARR_URL`, `SONARR_KEY`, `RADARR_URL`, `RADARR_KEY` | v3 API. Calendar, queue, health. |
-| Tautulli | `TAUTULLI_URL`, `TAUTULLI_KEY` | Plex streams and recently added. Posters are proxied, so the key stays server-side. |
-| qBittorrent | `QBIT_URL`, `QBIT_USERNAME`, `QBIT_PASSWORD` | One login attempt at a time, and a 30-minute pause after a failure so it can't trip the ban. |
-| Trakt | `TRAKT_CLIENT_ID` | Connect from Settings with a code; no secret needed. Tokens last 7 days and renew themselves. `TRAKT_REDIRECT_URI` only if your app's isn't `http://localhost`. |
-| Miniflux | `MINIFLUX_URL`, `MINIFLUX_TOKEN` | Feeds reader with read state synced back. |
-| Fastmail | `FASTMAIL_TOKEN`, `FASTMAIL_WEB_URL` | JMAP, read-only scope. |
-| Frigate | `FRIGATE_URL` | Camera status. |
-| TrueNAS | `TRUENAS_URL`, `TRUENAS_API_KEY`, `TRUENAS_VERIFY_TLS` | 25.04 or later. `wss://` only. A read-only key is enough. |
-| Dozzle | `DOZZLE_URL` | Links out for heavier log work. |
-| Diun | none on this side | Point Diun's webhook notifier at `http://<patchboard>/api/hooks/diun` (add `HOOK_TOKEN` when sign-in is on). |
-| Any JSON API | `WIDGET_*` | Add an **API numbers** widget on Home. Keep its keys in `WIDGET_` variables and reference them as `${env:WIDGET_NAME}`. |
+| `POOL_PATH` | a filesystem | Its usage, when TrueNAS isn't connected. |
+| `DOCS_PATH` | a folder with `RUNBOOK.md` | Runbook sections on container pages. |
+| `LOGS_PATH` | a folder with backup logs | The Backups grid and the overnight line on Home. |
+| `COMPOSE_ROOT` | your compose projects, at the same path as on the host | Update and roll back from container pages. |
 
-### Optional mounts
+## The catalog file
 
-| Variable | Mount | Unlocks |
-|---|---|---|
-| `POOL_PATH` | a filesystem, read-only | A disk-usage figure when TrueNAS isn't connected. |
-| `DOCS_PATH` | a folder with `RUNBOOK.md`, read-only | Runbook sections on matching container pages. |
-| `LOGS_PATH` | a folder with backup logs and audits, read-only | The Backups grid, the overnight line, storage history. |
-| `COMPOSE_ROOT` | your compose projects, read-only, at the same path as on the host | Update and roll back from the UI. |
-
-## The catalog
-
-`config/services.yaml` lists your apps in groups, plus bookmarks. Start from
-`config/services.example.yaml`. Per service:
+`config/services.yaml` lists apps in groups, plus bookmarks. Copy
+[config/services.example.yaml](../config/services.example.yaml) to start.
 
 | Field | |
 |---|---|
 | `name` | Shown on the tile, in Apps and in Jump to. |
+| `label` | A short name for under the icon, when the Apps widget shows names. |
 | `href` | Where the tile goes. |
-| `icon` | A URL, a site path, or a [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) name such as `plex.png`. |
-| `container` | The Docker container name. Links the tile to its container page, status, stats and logs. |
-| `expectStopped` | `true` for one-shot jobs, so their exit isn't an alert. |
-| `check` | `false` to skip the reachability check, `true` to force it, or a URL to check instead of `href`. |
+| `icon` | A [dashboard icons](https://dashboardicons.com) name such as `plex.png`, a URL, or a site path. |
+| `container` | The Docker container. Gives the tile its status and a container page. |
+| `expectStopped` | `true` for one-shot jobs, so their exit raises no alert. |
+| `check` | `false` skips the reachability check; a URL checks that address instead of `href`. |
 
-### Registering apps with Docker labels
-
-Instead of (or as well as) editing the catalog, a container can register
-itself with labels in its own compose file, so the entry travels with the app:
-
-```yaml
-services:
-  sonarr:
-    image: lscr.io/linuxserver/sonarr
-    labels:
-      patchboard.name: Sonarr
-      patchboard.group: Media
-      patchboard.href: http://192.168.1.10:8989
-      patchboard.icon: sonarr.png
-```
-
-| Label | |
-|---|---|
-| `patchboard.name` | Required; without it the container isn't listed. |
-| `patchboard.group` | Joins a catalog group of the same name, or starts a new one. Default `Discovered`. |
-| `patchboard.href`, `patchboard.icon`, `patchboard.description` | As in the catalog. |
-| `patchboard.expect-stopped` | `true` for one-shot jobs. |
-| `patchboard.check` | `false`, `true`, or a URL. |
-| `patchboard.order` | Sort position within label-registered services (lower first). |
-
-Homepage's `homepage.name`, `homepage.group`, `homepage.href`,
-`homepage.icon` and `homepage.description` work too, so stacks already set
-up for Homepage appear without changes. `homepage.widget.*` labels, which
-carry API keys, are never read. When the catalog file and labels both
-describe a container, the file wins.
-
-Settings → Catalog compares the file with Docker: entries naming a container
-that doesn't exist, and running apps the catalog doesn't list, with drafted
-entries to paste.
+Patchboard reloads the file when you save it. Settings, Connections, Catalog
+lists entries that name a missing container and running apps the file doesn't
+list.
 
 ## Runbook format
 
-Any Markdown file with level-two headings. A section shows on a container's
-page when its heading names the container's app or compose project:
-`## Immich Unresponsive` matches `immich-server`; `## Game Night` matches
-`game-night`. Generic suffixes (`server`, `db`, `api`, `web`, `worker`) are
-ignored when matching.
+A Markdown file with level-two headings. A section shows on a container page
+when its heading names the app or its compose project: `## Immich Unresponsive`
+matches `immich-server`. Patchboard ignores the suffixes `server`, `db`,
+`api`, `web` and `worker` when it matches.
 
 ## Backup log format
 
 `LOGS_PATH/ops/db-backup.log` and `LOGS_PATH/ops/file-backup.log`, one run
 after another:
 
-```
+```text
 [11-04-2026 01:00 AM CST] Starting database backups...
 Immich backup complete
 Joplin backup failed
@@ -145,15 +102,13 @@ Total backup size: 16G
 [11-04-2026 01:01 AM CST] Database backup finished
 ```
 
-Each `<label> backup complete` or `<label> backup failed` line becomes one
-square for that night. Audit reports in `LOGS_PATH/audit/` seed storage
-history when their `ZFS DATASET USAGE` table starts with the pool's root
-dataset.
+Each `<name> backup complete` or `<name> backup failed` line becomes that
+night's square for that job. Audit reports in `LOGS_PATH/audit/` with a
+`ZFS DATASET USAGE` table seed storage history.
 
 ## Themes
 
-A theme is one entry in `web/lib/themes.ts`: a dark and a light set of color
-tokens and a type pairing. Rules in `web/styles.css` only use tokens, so a
-new theme needs no CSS. Keep the status colors (`ok`, `warn`, `crit`) clearly
-apart from the accent, and quiet text (`ink3`) at 4.5:1 or better on `bg`.
-Anyone can also build a Custom theme from three colors in Settings.
+Settings has six themes and a Custom one built from three colors. To add a
+theme to the code, add one entry to `web/lib/themes.ts`: dark and light color
+tokens and a type pairing. Keep `ok`, `warn` and `crit` distinct from the
+accent, and quiet text (`ink3`) at 4.5:1 or better on `bg`.

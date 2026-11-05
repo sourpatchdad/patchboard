@@ -1,190 +1,110 @@
 # Patchboard
 
-A start page and control center for a home server. It opens as the browser's
-home page and as an installed app on a phone, and answers three questions at a
-glance: is anything broken, what's new, and what's coming up.
+A start page and control center for a home server. Open it and you know in
+five seconds whether anything is broken, what's new, and what's coming. Click
+anything and you land where you can fix it.
 
-It's the successor to a [Homepage](https://gethomepage.dev) dashboard. Homepage
-shows a tile for every service whether anything is happening or not.
-Patchboard shows exceptions and changes instead. Healthy services shrink to one
-line, and the page's space goes to failures, new mail and articles, downloads
-in progress, and the release calendar.
+![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, feeds and recently added](docs/screenshots/home.png)
 
-## What's on it
+Homepage and Glance show a tile for every service, broken or not. Patchboard
+keeps healthy apps quiet and gives the space to what needs you: a stopped
+container, a full pool, a stuck import, tonight's episodes.
 
-- **Patch row.** Every service is a jack on a patch bay, grouped into bays with
-  tape labels. The LED shows the container's state, and clicking a jack opens
-  the app. It's a status board and a launcher in one.
-- **Needs attention.** Stopped or unhealthy containers, a nearly full pool,
-  Sonarr/Radarr import failures and health errors, errored torrents, offline
-  cameras. Nothing shows when nothing is wrong.
-- **Inbox.** Unread count and newest messages from Fastmail over JMAP (read-only).
-- **Feeds.** A full reader on top of Miniflux, with keyboard navigation (`j`/`k`/`o`)
-  and read state synced back.
-- **Upcoming.** Sonarr, Radarr and Trakt merged into one calendar, deduplicated.
-- **Right now.** Plex streams (via Tautulli), active downloads, CPU, storage, uptime.
-- **Changes.** Container state transitions over the last 48 hours, recorded by
-  Patchboard itself, so a crash at 3 AM is still visible at breakfast.
-- **Server.** Pool capacity and health from TrueNAS, scrubs, datasets, disks
-  and temperatures, TrueNAS alerts, cloud sync, CPU and memory with history,
-  and a plain-sentence forecast of when the pool fills.
-- **Stacks.** Every container grouped by compose project, with CPU and memory.
-- **Container pages.** One page per container: state, resources, live logs,
-  wiring, history, and the matching section of the server's runbook, which
-  moves to the top when the container is in trouble.
-- **Service checks.** Each app is requested once a minute; an app that stops
-  answering is flagged even when its container looks healthy.
-- **Backups.** Nightly backup logs become a grid of nights per database, and
-  a one-line overnight summary on Home.
-- **Actions.** Restart, stop or start a container from its page, with a
-  two-step confirm, recorded in its history.
-- **Updates.** Pull and recreate one service from its page, watch each step,
-  and roll back to the previous image if it doesn't come back healthy.
-- **Image updates.** Diun's webhook marks containers with a newer image; the
-  mark clears once the container runs it.
-- **Logs.** Live container logs from the Docker socket, with a hand-off to Dozzle.
-- **Jump to (Ctrl/Cmd+K or `/`).** One input that reaches every app, view,
-  container, unread article and message, with web search as the fallback.
+## Try it
 
-## How it works
-
-```
-browser ──SSE──▶ Hono server ──▶ adapters (one per integration, own poll interval)
-   ▲                 │              docker socket · truenas · sonarr · radarr
-   └── snapshot ─────┘              tautulli · qbittorrent · miniflux · fastmail
-                     │              trakt · frigate · open-meteo · host stats
-                     ├──▶ SQLite (container history, minute samples)
-                     └──▶ read-only notes (RUNBOOK.md, audit reports)
-```
-
-- **The browser never talks to an integration.** Keys live in the server's
-  environment. Even Plex posters go through the server, so the Tautulli key
-  stays private.
-- **Each adapter polls on its own schedule** (5 s for downloads, 30 min for
-  Trakt) and pushes changes to every open tab over server-sent events.
-- **A failing integration degrades instead of blanking.** The last good data
-  stays on screen, marked stale, and a quiet "Can't reach X" note appears.
-- **Demo mode** (`DEMO=1`) swaps every adapter for a fixture with the same
-  shape. The public demo and all screenshots run on invented data with no
-  network access.
-- **Node 24 runs the TypeScript server directly** (type stripping) and uses the
-  built-in `node:sqlite`. There's no server build step and no native modules.
-
-Stack: TypeScript, Hono, React 19, Vite, SQLite. No UI kit; the CSS is hand-written
-on a small token system; themes are data and fonts are self-hosted.
-
-## Run it
-
-Try it on invented data first. Nothing to configure, nothing leaves the box:
+Invented data, nothing to configure, nothing leaves your machine:
 
 ```sh
 docker run --rm -p 127.0.0.1:3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
-# then open http://localhost:3200
 ```
 
-On your own server:
+Open <http://localhost:3200>.
+
+## Install
 
 ```sh
 mkdir patchboard && cd patchboard
 base=https://raw.githubusercontent.com/sourpatchdad/patchboard/main
 curl -fsSL $base/docker-compose.example.yml -o docker-compose.yml
 curl -fsSL $base/env.example -o .env
-mkdir config && curl -fsSL $base/config/services.example.yaml -o config/services.yaml
-# edit .env (BIND_ADDRESS first) and config/services.yaml, then:
 docker compose up -d
 ```
 
-On a fresh install, Home offers every running container as an app in one click, grouped by compose stack. Or start with nothing but the Docker socket: containers, stacks, logs, stats and
-health work with no other configuration. Apps can register themselves with
-`patchboard.*` labels in their own compose files, and Homepage's
-`homepage.*` labels work unchanged. Add integrations one block of `.env`
-at a time. Settings → Catalog drafts entries for every app it finds running.
+Open Patchboard and press **Add all**. It turns every running container into
+an app, grouped by compose stack.
 
-Coming from [Homepage](https://gethomepage.dev)? `npm run import-homepage --
-/path/to/homepage/config` turns its `services.yaml` and `bookmarks.yaml` into
-a catalog, leaving widget credentials behind.
+![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.png)
 
-Sign-in is off by default, for a private address (Tailscale or a firewalled
-LAN). Turn it on with `AUTH=password`, or `AUTH=forward` behind Authelia,
-Authentik or Cloudflare Access; `READ_ONLY=1` and a Docker socket proxy narrow
-what it can do. Read [SECURITY.md](SECURITY.md) before exposing it anywhere. For HTTPS, which installing it as a phone app
-needs, see [deploy/Caddyfile.example](deploy/Caddyfile.example).
+Then add what you use, one block of `.env` at a time: Sonarr, Radarr,
+Tautulli, qBittorrent, TrueNAS, weather and more. Settings, Connections lists
+each integration, whether it's on, and the variables that turn it on.
+[docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
-## Configuration
+Before you expose it anywhere, read [SECURITY.md](SECURITY.md). Sign-in is off
+by default, for a private address. Turn it on with `AUTH=password`, or
+`AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
-Everything is in [docs/CONFIGURATION.md](docs/CONFIGURATION.md): every
-environment variable, the catalog fields, the optional mounts (runbook,
-backup logs, compose stacks for updates), and how to add a theme.
+## What you get
+
+**It answers before you ask.** Needs attention lists only what's wrong. The
+header says "All quiet" or "4 things need you". A container that crashed at
+3 AM still shows under Changes at breakfast.
+
+**Everything leads somewhere.** Each container has a page with its alerts, its
+runbook section, live logs, a 30-day health strip, and buttons to restart,
+update or roll back.
+
+![A container page: the alert, the runbook section with the fix, logs, update and start buttons](docs/screenshots/container.png)
+
+**It's yours without config files.** Drag apps between groups, rename groups,
+hide what you don't use, upload icons. Paste an API key and a tile shows
+"42,506 photos" or "3 queued". Fifteen apps have presets; any JSON API works.
+
+![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.png)
+
+Home is a board of widgets on 2 to 6 columns. Drag to move, drag an edge to
+resize, rename any widget, choose how many items it shows. Every other page
+has a Customize button too.
+
+**It's safe to run.** Keys stay on the server. Read-only mode, a Docker socket
+proxy, forward auth and an activity log let you decide how much it can do and
+see who did what.
+
+## Pages
+
+| | |
+|---|---|
+| **Home** | The board: apps, Needs attention, Right now, This week, inbox, feeds, server, weather, changes, any container or JSON API. |
+| **Server** | TrueNAS pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate. |
+| **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
+| **Feeds** | A Miniflux reader with keyboard navigation. |
+| **Upcoming** | Sonarr, Radarr and Trakt in one calendar, without doubles, with posters. |
+| **Weather** | The next 24 hours, the week, sunrise and sunset, US weather alerts. |
+| **Logs** | Live container logs, with a hand-off to Dozzle. |
+
+Press `Ctrl K` or `/` to jump to any app, page, container or article.
+
+| Server | Upcoming | Phone |
+|---|---|---|
+| ![Server page](docs/screenshots/server.png) | ![Upcoming calendar](docs/screenshots/upcoming.png) | ![Home on a phone](docs/screenshots/phone-home.png) |
+
+## Docs
+
+- [INTEGRATIONS.md](docs/INTEGRATIONS.md): getting apps and numbers onto Patchboard.
+- [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
+- [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
+- [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
+- [CHANGELOG.md](CHANGELOG.md)
 
 ## Development
 
 ```sh
-npm run dev:demo     # invented data, hot reload
-npm test             # parsers and alert rules, Node's built-in test runner
+npm run dev:demo      # invented data, hot reload
+npm test              # node:test
 npm run typecheck
+npm run docs          # regenerate the tables in docs/INTEGRATIONS.md
+npm run screenshots   # regenerate docs/screenshots from demo mode
 ```
 
-Keyboard: `Ctrl/Cmd+K` or `/` to jump anywhere, `g` then a letter to switch
-views (`g s` Server, `g k` Stacks), `?` for the full list.
-
-## Make it yours
-
-Home is a board. Press **Customize**, then:
-
-- **Move** a widget by dragging it (on a phone, by its ⠿ grip), or with the
-  arrows. Everything moves live under your finger.
-- **Columns:** choose how many the board has (2 to 6); a narrower window
-  drops columns on its own so nothing is squeezed, and a phone shows one.
-- **Size** a widget by dragging its right edge, or pick how many columns it
-  spans. Every widget lays itself out for the width it gets: wide lists flow
-  into columns, narrow ones stack.
-- **Settings** on any widget: rename its header, choose how many items it
-  shows, one week or two for releases, icons or tiles for apps, names under
-  icons or only on hover.
-- **Add** widgets, including any number of Container widgets (one container's
-  CPU, memory, response time and 14 days of health) and API numbers widgets
-  (up to four values from any JSON API, with amber and red thresholds).
-
-Apps has **Edit apps**, so services.yaml is optional:
-
-- Drag apps into any order or into another group; drag groups by their grip;
-  type over a group's name to rename it; make new groups.
-- **Add an app** with a name, a link, a container and a group, or add a
-  running container in one click from "Running, not listed yet".
-- **Hide** any app or bookmark (Elsewhere included), and show it again from
-  the Hidden tray.
-- **Icons:** about 2,000 self-hosted apps get one automatically by name from
-  [dashboard icons](https://dashboardicons.com). Type another name, paste an
-  image URL, or upload your own (PNG, SVG, WebP, JPEG, GIF or ICO, up to
-  512 KB; stored in `DATA_DIR/icons`).
-
-- **Live numbers:** any app's ⋯, Icon and live number. Pick the app
-  (Jellyfin, Immich, Paperless-ngx, Overseerr/Jellyseerr, Tautulli,
-  Sonarr/Radarr, Lidarr/Readarr/Prowlarr, Bazarr, Audiobookshelf, Linkding,
-  Nextcloud, Home Assistant, AdGuard Home, Pi-hole 5, Glances) or any JSON
-  API, paste its key once, choose the value, Test. The number shows on the
-  app's tile and in its icon's bubble. Keys are kept on the server, listed by
-  name in Settings, Keys, and never sent back to the browser.
-
-Apps in services.yaml and Docker labels keep working alongside; edits made in
-the UI sit on top and never rewrite your files. "Start over" drops them.
-
-Every other page has one **Customize** button with the same panel: Server's
-sections can be hidden and reordered within each column; Feeds can hide
-categories or single feeds; Upcoming can hide a source or a show; Stacks can
-hide stacks. Home's widgets follow the same choices, and alerts still fire for
-anything hidden.
-
-All of this is saved on the server, so every device shows the same board and
-the same order, and each change is recorded in Settings, Activity.
-
-
-Settings (the sliders icon, or `g ,`) is per device: six themes (Graphite,
-Midnight, Forest, Dusk, Paper, and Custom from any three colors),
-dark, light or system, any accent color, four type pairings, three
-densities, 12- or 24-hour time, °F or °C, which Home sections show, and app
-tiles or a patch bay. Settings copy between devices as a short string.
-
-A theme is one entry in [web/lib/themes.ts](web/lib/themes.ts); no CSS needed.
-
-See [DESIGN.md](DESIGN.md) for why it's built this way.
+TypeScript on Node 24 without a build step for the server, Hono, React 19,
+Vite and SQLite. [DESIGN.md](DESIGN.md) records why.

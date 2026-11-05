@@ -20,7 +20,28 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run docs:check
       - run: npm run build
+
+  # Code that changes without a CHANGELOG entry fails: the docs move with it.
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: CHANGELOG updated with code
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then BASE=$(git rev-parse HEAD~1); fi
+          changed=$(git diff --name-only "$BASE" HEAD)
+          code=$(echo "$changed" | grep -E '^(server|shared|web|scripts)/' | grep -v '^server/test/' || true)
+          if [ -n "$code" ] && ! echo "$changed" | grep -qx 'CHANGELOG.md'; then
+            echo "Code changed without a CHANGELOG.md entry:"
+            echo "$code"
+            exit 1
+          fi
 
   secrets:
     runs-on: ubuntu-latest
