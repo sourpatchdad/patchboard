@@ -6223,3 +6223,7 @@ a.date:hover {
     transition: none !important;
   }
 }
+
+.file-button {
+  cursor: pointer;
+}

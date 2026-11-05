@@ -503,7 +503,7 @@ function AppForm({
             Cancel
           </button>
         </header>
-        {!ours && <p className="settings-note">This app comes from {app.source === 'labels' ? 'a Docker label' : 'services.yaml'}. Its name and link are set there; its icon and live number you can change here.</p>}
+        {!ours && <p className="settings-note">This app comes from {app.source === 'labels' ? 'a Docker label' : 'services.yaml'}. Change its name and link there, and its icon and live number here.</p>}
         <div className="ws-form">
           {ours && (
             <>

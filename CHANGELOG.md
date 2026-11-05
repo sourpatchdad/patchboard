@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.22.0 (2026-11-04)
+
+- **Setup file:** Settings, Home and units downloads your board, apps
+  (groups, hidden apps, icons, live-number setups) and page settings as one
+  JSON file, and imports one. Use it for a backup or a move to a new server.
+  Keys and uploaded icons stay out of the file. Patchboard checks the whole
+  file before it changes anything, and Activity records each import.
+- **Settings, Connections, Catalog** now points to Edit apps for adding
+  running apps in one click, before the services.yaml entries.
+- Tighter wording in the app form for catalog apps.
+
 ## 1.21.1 (2026-11-04)
 
 - **Real titles and posters in demo mode.** The demo library now holds

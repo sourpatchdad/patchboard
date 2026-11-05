@@ -31,7 +31,7 @@ files, and a non-root image.
 
 ### Making it yours
 
-- [ ] Board export and import as one file, plus starter boards
+- [ ] Starter boards to import (the setup file shipped in 1.22.0)
 - [ ] Write UI changes back to services.yaml, for people who keep it in git
 - [ ] Homepage config import in the UI (the CLI exists)
 - [ ] A search box with `!` shortcuts

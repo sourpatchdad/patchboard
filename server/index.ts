@@ -419,6 +419,44 @@ app.put('/api/pages/:id', async (c) => {
   return c.json({ ok: true });
 });
 
+// The whole setup as one file: board, app layout, page settings. Keys stay
+// out; setups refer to them by name, so you paste them again after a move.
+app.get('/api/setup', (c) => {
+  const body = {
+    patchboard: 'setup',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    board: kvGet('board') ?? null,
+    apps: kvGet('app-order') ?? null,
+    pages: kvGet('pages') ?? {},
+  };
+  return c.body(JSON.stringify(body, null, 2), 200, {
+    'Content-Type': 'application/json',
+    'Content-Disposition': `attachment; filename="patchboard-setup-${new Date().toISOString().slice(0, 10)}.json"`,
+  });
+});
+
+app.put('/api/setup', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; apps?: unknown; pages?: unknown } | null;
+  if (!raw || raw.patchboard !== 'setup') return c.json({ error: "That isn't a Patchboard setup file." }, 400);
+  // Check everything before changing anything.
+  const board = raw.board ? validateBoard(raw.board) : null;
+  if (board && 'error' in board) return c.json({ error: `Board: ${board.error}` }, 400);
+  const apps = raw.apps ? validateOrder(raw.apps) : null;
+  if (apps && 'error' in apps) return c.json({ error: `Apps: ${apps.error}` }, 400);
+  const pages = raw.pages ? validatePages(raw.pages) : null;
+  if (pages && 'error' in pages) return c.json({ error: `Pages: ${pages.error}` }, 400);
+  kvSet('board', board ? board.board : null);
+  kvSet('app-order', apps ? apps.order : null);
+  setCatalogOrder(apps ? apps.order : null);
+  kvSet('pages', pages ? pages.pages : {});
+  hub.emitCatalog();
+  hub.emitPages(pages ? pages.pages : {});
+  recordAudit(who(c), 'setup.import', 'setup');
+  return c.json({ ok: true });
+});
+
 // Keys pasted in the UI. Names and dates go out; values never do.
 app.get('/api/secrets', (c) => c.json(listSecrets()));
 

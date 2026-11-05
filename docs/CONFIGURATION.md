@@ -15,6 +15,10 @@ variables.
 After you change `.env`, recreate the container with `docker compose up -d`.
 A restart keeps the old values.
 
+Settings, Home and units, Setup file downloads the UI part (board, apps, page
+settings) as one JSON file and imports it on another server. Keys and
+uploaded icons stay behind.
+
 ## Server
 
 | Variable | Default | |

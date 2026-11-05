@@ -4,7 +4,7 @@
 
 import { INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
@@ -156,6 +156,7 @@ export function Settings() {
       </Section>
 
       <Portability />
+      <SetupFile />
       </>
       )}
       {tab === 'look' && (
@@ -405,9 +406,8 @@ function CatalogCheck() {
       {audit.discovered.length > 0 && (
         <>
           <p className="settings-note">
-            {audit.discovered.length} running {audit.discovered.length === 1 ? "app isn't" : "apps aren't"} in the catalog. Drafted entries below, with names and
-            icons guessed from their images and links from their published ports. Paste them under a group's <code>services:</code> and adjust; the page picks up the
-            change on save.
+            {audit.discovered.length} running {audit.discovered.length === 1 ? "app isn't" : "apps aren't"} listed. Add {audit.discovered.length === 1 ? 'it' : 'them'} in
+            one click from <Link to="/apps?arrange=1">Apps, Edit apps</Link>, or paste these entries under a group's <code>services:</code> in services.yaml.
           </p>
           <div className="rb-body">
             <pre>
@@ -454,6 +454,7 @@ const ACTION_TEXT: Record<string, string> = {
   'secret.delete': 'removed the key',
   'icon.upload': 'uploaded an icon',
   'pages.save': 'customized a page',
+  'setup.import': 'imported a setup file',
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',
@@ -615,6 +616,51 @@ function Integrations() {
       <p className="settings-note">
         More on each: <a href="https://github.com/sourpatchdad/patchboard/blob/main/docs/INTEGRATIONS.md" target="_blank" rel="noreferrer">docs/INTEGRATIONS.md</a>.
       </p>
+    </Section>
+  );
+}
+
+/**
+ * The whole setup as a file: the board, apps (groups, hidden, icons, live
+ * numbers) and what each page shows. For a backup, a move to a new server,
+ * or sharing a layout. Keys aren't in it.
+ */
+function SetupFile() {
+  const readOnly = !!useStore().snap?.readOnly;
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+  const load = async (f: File) => {
+    setMsg('');
+    setErr('');
+    let body: unknown;
+    try {
+      body = JSON.parse(await f.text());
+    } catch {
+      return setErr("That file isn't JSON.");
+    }
+    if (!confirm('Replace your board, apps and page settings with this file? Your keys stay as they are.')) return;
+    const res = await fetch('/api/setup', { method: 'PUT', headers: ACTION, body: JSON.stringify(body) });
+    if (!res.ok) return setErr(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
+    setMsg('Imported. Reload Home to see the board.');
+  };
+  return (
+    <Section title="Setup file">
+      <p className="settings-note">
+        Your board, apps and page settings in one file, for a backup or a new server. Keys and uploaded icons stay on this server; add them again after a move.
+      </p>
+      <div className="choice-row">
+        <a className="button button-quiet" href="/api/setup" download>
+          Download setup
+        </a>
+        {!readOnly && (
+          <label className="button button-quiet file-button">
+            Import a setup file
+            <input type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && void load(e.target.files[0])} />
+          </label>
+        )}
+      </div>
+      {msg && <p className="settings-note">{msg}</p>}
+      {err && <p className="crit-text">{err}</p>}
     </Section>
   );
 }
