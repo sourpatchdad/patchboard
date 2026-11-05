@@ -6087,6 +6087,63 @@ a.date:hover {
   text-underline-offset: 3px;
 }
 
+/* ---------- Container hub ---------- */
+
+.detail-number {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+  font: 400 15px/1.2 var(--f-mono);
+  color: var(--head);
+}
+
+.detail-number.tone-warn {
+  color: var(--warn);
+}
+
+.detail-number.tone-crit {
+  color: var(--crit);
+}
+
+/* ---------- First run ---------- */
+
+.welcome {
+  margin: 4px 0 28px;
+  padding: 22px 26px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, var(--line-soft));
+}
+
+.welcome-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.welcome h2 {
+  margin: 0 0 12px;
+  font: var(--display-weight) 24px/1.2 var(--f-display);
+  color: var(--head);
+}
+
+.welcome-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding-left: 1.3em;
+  color: var(--ink-2);
+}
+
+.welcome-steps strong {
+  color: var(--head);
+}
+
+.welcome-steps .button {
+  margin: 4px 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

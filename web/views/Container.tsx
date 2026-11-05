@@ -2,6 +2,8 @@
 // logs, how it's wired, what changed, and the runbook section that applies.
 // When something is wrong, the runbook moves to the top.
 
+import { Attention } from './Home.tsx';
+import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useMemo, useRef } from 'react';
@@ -55,6 +57,7 @@ export function ContainerPage() {
   const { data: stats } = useSource<StatsData>('stats');
   const uptime = useJson<UptimeData>('/api/uptime?days=30', 5 * 60_000).data;
   const upd = useUpdateJob(name);
+  const nums = useAppNumbers();
 
   if (!snap) return null;
   if (!ctr) {
@@ -75,6 +78,9 @@ export function ContainerPage() {
   const live = stats?.containers[name];
   const sections = runbook.data?.sections ?? [];
   const dozzle = snap.links.dozzle;
+  // This app's alerts, from the same list as Home's Needs attention.
+  const mine = snap.alerts.filter((a) => a.subject === name || a.href === `/c/${name}` || (svc && (a.subject === svc.name || a.title.includes(svc.name))));
+  const number = svc ? numberText(nums[svc.name]) : null;
 
   return (
     <div className="page detail">
@@ -101,6 +107,16 @@ export function ContainerPage() {
           <Link className="text-button" to={`/logs/${name}`}>
             Full logs
           </Link>
+          {!snap.readOnly &&
+            (svc ? (
+              <Link className="text-button" to={`/apps?edit=${encodeURIComponent(svc.name)}`} title="Icon, live number, group">
+                Edit app
+              </Link>
+            ) : (
+              <Link className="text-button" to={`/apps?adopt=${encodeURIComponent(name)}`} title="Put it on Home and Apps">
+                Add as an app
+              </Link>
+            ))}
           {dozzle && (
             <a className="text-button" href={dozzle === '#' ? '#' : `${dozzle}/container/${ctr.id}`} target="_blank" rel="noreferrer">
               Dozzle
@@ -113,6 +129,7 @@ export function ContainerPage() {
         <p className={`detail-state tone-${problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`}>
           <span className="status-led" aria-hidden />
           <span>{stateSentence(ctr.state, ctr.health, d, now, svc?.expectStopped)}</span>
+          {number && <span className={`detail-number tone-${number.tone}`}>{number.text}</span>}
         </p>
         <div className="ctr-actions-wrap">
           {!snap.readOnly && detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
@@ -128,6 +145,7 @@ export function ContainerPage() {
       <div className="detail-grid">
         <div className="detail-main">
           <UpdatePanel job={upd.job} error={upd.error} onRollback={(id) => void upd.rollback(id)} onDismiss={upd.dismiss} />
+          {mine.length > 0 && <Attention alerts={mine} now={now} />}
           {problem && sections.length > 0 && <Runbook sections={sections} open />}
           {d?.health === 'unhealthy' && d.healthLog.length > 0 && <HealthLog log={d.healthLog} now={now} />}
           {ctr.state === 'running' && <Resources name={name} cpu={live?.cpu} mem={live?.memBytes} />}

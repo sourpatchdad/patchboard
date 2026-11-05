@@ -35,6 +35,8 @@ const traktSecret = str('TRAKT_CLIENT_SECRET');
 export const config = {
   port: Number(env.PORT ?? 3200),
   demo: env.DEMO === '1' || env.DEMO === 'true',
+  /** Demo as a fresh install: no catalog, so the first-run welcome shows. */
+  demoEmpty: env.DEMO_EMPTY === '1',
   dataDir: str('DATA_DIR') ?? './data',
   catalogPath: str('CATALOG_PATH') ?? './config/services.yaml',
   staticDir: str('STATIC_DIR') ?? './dist/web',

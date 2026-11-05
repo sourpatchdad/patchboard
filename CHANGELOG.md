@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.19.0 — 2026-11-04
+
+From a fresh install to a full board in one click; each container page the
+place to fix that app.
+
+- **First run:** with no apps yet, Home welcomes you and offers every running
+  container as an app in one click, grouped by compose stack (single-app
+  stacks share an Apps group), or one by one. Then where to customize Home and
+  the look. Hide it any time; it leaves on its own once you've arranged apps.
+  Try it with `DEMO=1 DEMO_EMPTY=1`.
+- **Container pages:** this app's alerts at the top, its live number beside
+  its status, and Edit app (straight to its icon and live number) or, for a
+  container that isn't an app yet, Add as an app with its details filled in.
+- 43 tests, including one that caught Add all re-adding apps on a second run.
+
 ## 1.18.0 — 2026-11-04
 
 A calendar you can trust, and Settings you can find your way around.

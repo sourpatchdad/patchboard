@@ -1,6 +1,9 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { useJson } from '../lib/api.ts';
+import type { CatalogAudit } from '../../shared/types.ts';
+import { adoptAll, saveLayout } from '../lib/adopt.ts';
 import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
@@ -48,6 +51,7 @@ export function Home() {
   return (
     <div className="home">
       <Masthead now={now} weatherOnBoard={widgets.includes('weather')} />
+      <Welcome />
       <Board now={now} onWidgets={setWidgets} />
     </div>
   );
@@ -497,4 +501,97 @@ export function groupDrops(list: ReleaseItem[]): ReleaseItem[] {
     out.push(it);
   }
   return out;
+}
+
+/**
+ * First run: no apps yet. Offer the containers already running, grouped by
+ * stack, in one click; or picking them; then the two places to make it yours.
+ * Gone as soon as there's one app.
+ */
+function Welcome() {
+  const { snap } = useStore();
+  // A fresh install: hardly any apps (a label or two) and nothing arranged yet.
+  const count = snap?.catalog.groups.reduce((n, g) => n + g.services.length, 0) ?? 0;
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem('pb-welcome-hidden') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const none = !!snap && count < 5 && !snap.catalog.ordered && !dismissed;
+  const audit = useJson<CatalogAudit>(none ? '/api/catalog/audit' : null, 60_000);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  if (!snap || !none) return null;
+  const found = audit.data?.discovered ?? [];
+  const docker = snap.sources.docker;
+  const addAll = async () => {
+    setBusy(true);
+    setErr('');
+    let existing = null;
+    try {
+      existing = await (await fetch('/api/app-order')).json();
+    } catch {
+      /* none yet */
+    }
+    const e = await saveLayout(adoptAll(found, existing));
+    setBusy(false);
+    if (e) setErr(e);
+  };
+  return (
+    <section className="welcome" aria-label="Getting started">
+      <header className="welcome-head">
+        <h2>Welcome to Patchboard.</h2>
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => {
+            setDismissed(true);
+            try {
+              localStorage.setItem('pb-welcome-hidden', '1');
+            } catch {
+              /* fine: it just comes back next time */
+            }
+          }}
+        >
+          Hide this
+        </button>
+      </header>
+      <ol className="welcome-steps">
+        <li>
+          <strong>Your apps.</strong>{' '}
+          {!docker?.ok ? (
+            <span>
+              Patchboard can't see Docker yet. Mount <code>/var/run/docker.sock</code> (read-only is fine) or set <code>DOCKER_HOST</code>, then reload.
+            </span>
+          ) : found.length ? (
+            <span>
+              {found.length} {found.length === 1 ? 'container is' : 'containers are'} running.{' '}
+              {!snap.readOnly && (
+                <>
+                  <button type="button" className="button board-save" disabled={busy} onClick={() => void addAll()}>
+                    {busy ? 'Adding...' : `Add all ${found.length}, grouped by stack`}
+                  </button>{' '}
+                  or <Link to="/apps?arrange=1">pick them one by one</Link>.
+                </>
+              )}
+            </span>
+          ) : (
+            <span>Looking for running containers...</span>
+          )}
+          {err && <span className="crit-text"> {err}</span>}
+        </li>
+        <li>
+          <strong>Home.</strong> Press Customize (top right of the board) to choose widgets, their columns and order.
+        </li>
+        <li>
+          <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.
+        </li>
+      </ol>
+      <p className="settings-note">
+        Prefer files? A <code>services.yaml</code> or <code>patchboard.*</code> Docker labels work too, and so do Homepage's labels.
+      </p>
+    </section>
+  );
 }

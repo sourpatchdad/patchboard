@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { CatalogAudit } from '../../shared/types.ts';
+import type { CatalogAudit, Service } from '../../shared/types.ts';
 import { type Draft, draftFrom, draftProblem, EditApps, layoutOf } from '../components/AppEditor.tsx';
 import { AppTiles, TILE_SORTS, type TileSort } from '../components/AppTiles.tsx';
 import { Icon, Section } from '../components/ui.tsx';
@@ -23,6 +23,8 @@ export function Apps() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const audit = useJson<CatalogAudit>('/api/catalog/audit', 5 * 60_000);
+  /** The app form to open as editing starts (from a container page). */
+  const [openForm, setOpenForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(null);
   const startEditing = async () => {
     if (!snap) return;
     setQ('');
@@ -35,14 +37,32 @@ export function Apps() {
     }
     setDraft(draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]));
   };
-  // Home's Apps widget links here with ?arrange=1.
+  // Home's Apps widget links here with ?arrange=1; a container page with
+  // ?edit=<app> (its icon and live number) or ?adopt=<container>.
   useEffect(() => {
-    if (params.get('arrange') !== '1' || !snap || snap.readOnly) return;
+    if (!snap || snap.readOnly) return;
+    const edit = params.get('edit');
+    const adopt = params.get('adopt');
+    if (params.get('arrange') !== '1' && !edit && !adopt) return;
+    if (edit) {
+      const g = snap.catalog.groups.find((x) => x.services.some((s) => s.name === edit));
+      const app = g?.services.find((s) => s.name === edit);
+      if (g && app) setOpenForm({ app, group: g.name, isNew: false });
+    }
+    if (adopt) {
+      const d = audit.data?.discovered.find((x) => x.container === adopt);
+      if (!audit.data) return; // wait for the list of running containers
+      setOpenForm({
+        app: { name: d?.name ?? adopt, icon: d?.icon, href: d?.href, container: adopt, source: 'ui' },
+        group: snap.catalog.groups[0]?.name ?? 'Apps',
+        isNew: true,
+      });
+    }
     void startEditing();
     const next = new URLSearchParams(params);
-    next.delete('arrange');
+    for (const k of ['arrange', 'edit', 'adopt']) next.delete(k);
     setParams(next, { replace: true });
-  }, [params, !!snap]);
+  }, [params, !!snap, !!audit.data]);
   if (!snap) return null;
 
   const save = async (reset: boolean) => {
@@ -63,6 +83,7 @@ export function Apps() {
       return;
     }
     setDraft(null);
+    setOpenForm(null);
     setSort('catalog');
   };
   const match = (name: string) => name.toLowerCase().includes(q.toLowerCase());
@@ -91,7 +112,7 @@ export function Apps() {
                 Start over
               </button>
             )}
-            <button type="button" className="button button-quiet" onClick={() => setDraft(null)}>
+            <button type="button" className="button button-quiet" onClick={() => (setDraft(null), setOpenForm(null))}>
               Cancel
             </button>
             <button type="button" className="button board-save" disabled={saving} onClick={() => void save(false)}>
@@ -122,7 +143,13 @@ export function Apps() {
         </div>
       )}
       {draft ? (
-        <EditApps draft={draft} onChange={setDraft} discovered={audit.data?.discovered ?? []} containers={[...containerMap(snap).keys()].sort()} />
+        <EditApps
+          draft={draft}
+          onChange={setDraft}
+          discovered={audit.data?.discovered ?? []}
+          containers={[...containerMap(snap).keys()].sort()}
+          initialForm={openForm}
+        />
       ) : (
         <AppTiles filter={q} size="large" sort={sort} legend />
       )}

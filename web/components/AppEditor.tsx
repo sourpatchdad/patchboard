@@ -76,13 +76,16 @@ export function EditApps({
   onChange,
   discovered,
   containers,
+  initialForm = null,
 }: {
   draft: Draft;
   onChange: (d: Draft) => void;
   discovered: DiscoveredService[];
   containers: string[];
+  /** Open this app's form right away (arriving from a container page). */
+  initialForm?: { app: Service; group: string; isNew: boolean } | null;
 }) {
-  const [form, setForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(null);
+  const [form, setForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(initialForm);
   const groups = draft.groups;
   const set = (patch: Partial<Draft>) => onChange({ ...draft, ...patch });
   const setGroups = (gs: EditGroup[]) => set({ groups: gs });

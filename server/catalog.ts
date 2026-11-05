@@ -30,7 +30,7 @@ export function setCatalogContainers(list: Container[]): void {
 
 function load(): void {
   if (config.demo) {
-    catalog = demoCatalog;
+    catalog = config.demoEmpty ? { groups: [], dock: [] } : demoCatalog;
     merged = null;
     return;
   }

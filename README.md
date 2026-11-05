@@ -94,7 +94,7 @@ mkdir config && curl -fsSL $base/config/services.example.yaml -o config/services
 docker compose up -d
 ```
 
-Start with nothing but the Docker socket: containers, stacks, logs, stats and
+On a fresh install, Home offers every running container as an app in one click, grouped by compose stack. Or start with nothing but the Docker socket: containers, stacks, logs, stats and
 health work with no other configuration. Apps can register themselves with
 `patchboard.*` labels in their own compose files, and Homepage's
 `homepage.*` labels work unchanged. Add integrations one block of `.env`

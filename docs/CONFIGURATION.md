@@ -20,6 +20,7 @@ are set. Leave a block empty and that part of the page simply doesn't appear.
 | `BIND_ADDRESS` | `127.0.0.1` | Address the compose file publishes port 3200 on. Use a private one. |
 | `TZ` | `UTC` | Time zone for times and the "today" in calendars. |
 | `DEMO` | `0` | `1` runs on invented data with no network access. |
+| `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install (no catalog) so you can try the first-run welcome. |
 | `ALLOWED_HOSTS` | empty | Hostnames Patchboard is reached by (e.g. `dash.example.com`). IP addresses and `localhost` always work; any other name is refused, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `DATA_DIR` | `/data` | SQLite database location (mount it). |
