@@ -181,6 +181,8 @@ function build(str: Lookup) {
     adguard: str('ADGUARD_URL')
       ? { url: trimSlash(str('ADGUARD_URL')!), username: str('ADGUARD_USERNAME'), password: str('ADGUARD_PASSWORD') }
       : undefined,
+    speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
+    overseerr: pair('OVERSEERR_URL', 'OVERSEERR_KEY'),
     uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */

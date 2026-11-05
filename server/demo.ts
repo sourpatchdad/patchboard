@@ -15,6 +15,8 @@ import type {
   FeedEntry,
   FrigateData,
   DnsData,
+  SeerrData,
+  SpeedData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -317,6 +319,36 @@ const demoJellyfin = (): MediaServerData => ({
   itemPath: '',
 });
 
+// ---------- Speed tests and requests ----------
+
+/** A test every hour for a day: a cable line, with one slow evening hour. */
+function demoSpeed(): SpeedData {
+  const now = Date.now();
+  const runs = Array.from({ length: 24 }, (_, i) => {
+    const at = now - (23 - i) * 60 * MINUTE - 7 * MINUTE;
+    const slow = i === 17;
+    const wobble = ((i * 53) % 37) - 18;
+    return { at, down: slow ? 212.4 : Math.round((918 + wobble * 3) * 10) / 10, up: Math.round((41 + (wobble % 5)) * 10) / 10, ping: Math.round((11 + (i % 4) * 0.7) * 10) / 10, jitter: 1.2, loss: 0, healthy: true, server: 'Frontier, Dallas', isp: 'Spectrum' };
+  });
+  return { latest: runs[runs.length - 1], runs };
+}
+
+const demoRequests = [
+  { id: 41, kind: 'movie' as const, title: 'Poor Things', year: 2023, by: 'Kit', at: Date.now() - 2 * H, is4k: false, art: poster('Poor Things') },
+  { id: 40, kind: 'tv' as const, title: 'Andor', year: 2022, by: 'Sam', at: Date.now() - 9 * H, seasons: [1, 2], is4k: false, art: poster('Andor') },
+  { id: 38, kind: 'movie' as const, title: 'Sinners', year: 2025, by: 'Jo', at: Date.now() - 30 * H, is4k: true, art: poster('Sinners') },
+];
+const demoDecided = new Set<number>();
+
+export async function demoSeerrAct(id: number): Promise<void> {
+  demoDecided.add(id);
+}
+
+function demoSeerr(): SeerrData {
+  const requests = demoRequests.filter((r) => !demoDecided.has(r.id));
+  return { pending: requests.length, processing: 2, requests };
+}
+
 // ---------- Ad blocking ----------
 
 let demoDnsPausedUntil = 0;
@@ -550,6 +582,8 @@ export function demoAdapters(): Adapter[] {
     demo<CarData>('tessie', 'Tesla', 2 * MINUTE, demoCar),
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
+    demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<SeerrData>('overseerr', 'Requests', 2 * MINUTE, demoSeerr),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),

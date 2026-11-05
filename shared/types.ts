@@ -24,6 +24,8 @@ export type SourceId =
   | 'uptimekuma'
   | 'pihole'
   | 'adguard'
+  | 'speedtest'
+  | 'overseerr'
   | 'truenas'
   | 'stats'
   | 'checks'
@@ -419,6 +421,49 @@ export interface Car {
   driving: boolean;
   asleep: boolean;
   updatedAt: number;
+}
+
+/** One internet speed test, in megabits per second and milliseconds. */
+export interface SpeedRun {
+  at: number;
+  down: number;
+  up: number;
+  ping?: number;
+  jitter?: number;
+  /** Percent of packets lost. */
+  loss?: number;
+  /** Speedtest Tracker's verdict against your thresholds, when you set some. */
+  healthy?: boolean;
+  server?: string;
+  isp?: string;
+}
+
+export interface SpeedData {
+  latest: SpeedRun | null;
+  /** When the newest test failed, if it did. */
+  lastFailed?: number;
+  /** The last 24 hours, oldest first. */
+  runs: SpeedRun[];
+}
+
+/** A request waiting in Overseerr or Jellyseerr. */
+export interface SeerrRequest {
+  id: number;
+  kind: 'movie' | 'tv';
+  title: string;
+  year?: number;
+  by: string;
+  at: number;
+  seasons?: number[];
+  is4k: boolean;
+  /** Poster through Patchboard's art proxy. */
+  art?: string;
+}
+
+export interface SeerrData {
+  pending: number;
+  processing: number;
+  requests: SeerrRequest[];
 }
 
 /** Pi-hole or AdGuard Home: the last day's queries and whether blocking is on. */

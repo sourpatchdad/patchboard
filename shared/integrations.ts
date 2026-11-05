@@ -201,6 +201,22 @@ export const INTEGRATIONS: Integration[] = [
     source: false,
   },
   {
+    id: 'speedtest',
+    name: 'Speedtest Tracker',
+    adds: 'An Internet widget: the latest download, upload and ping, with the last day as a line. A failed test, or one under the thresholds you set in Speedtest Tracker, shows in Needs attention.',
+    env: ['SPEEDTEST_URL', 'SPEEDTEST_TOKEN'],
+    where: 'Speedtest Tracker 1.0 or newer: your profile, API tokens, create one with Read results.',
+    source: true,
+  },
+  {
+    id: 'overseerr',
+    name: 'Overseerr or Jellyseerr',
+    adds: 'A Requests widget: what people asked for, with posters, and Approve or Decline on each.',
+    env: ['OVERSEERR_URL', 'OVERSEERR_KEY'],
+    where: 'Settings, General, API Key. Jellyseerr works the same way.',
+    source: true,
+  },
+  {
     id: 'pihole',
     name: 'Pi-hole',
     adds: 'An Ad blocking widget: queries and blocks today, and Pause for 5, 30 or 60 minutes. Blocking left off with no timer shows in Needs attention.',

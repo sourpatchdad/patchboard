@@ -38,7 +38,7 @@ an app, grouped by compose stack.
 Then add what you use from Settings, Connections: press **Set up**, paste
 the address and key, test, save. Or set them in `.env`. Sonarr, Radarr,
 Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
-SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, TrueNAS, weather and more. Settings, Connections lists
+SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS, weather and more. Settings, Connections lists
 each integration, whether it's on, and the variables that turn it on.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 

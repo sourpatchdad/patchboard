@@ -23,7 +23,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -424,6 +424,10 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
       return <UptimeWidget now={now} />;
     case 'dns':
       return <DnsWidget now={now} />;
+    case 'speed':
+      return <SpeedWidget now={now} />;
+    case 'requests':
+      return <RequestsWidget now={now} />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':
@@ -535,6 +539,8 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     car: has('tessie'),
     uptime: has('uptimekuma'),
     dns: has('pihole') || has('adguard'),
+    speed: has('speedtest'),
+    requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),
   };

@@ -18,6 +18,7 @@ import type {
   TruenasData,
   UptimeKumaData,
   DnsData,
+  SpeedData,
 } from '../shared/types.ts';
 import { config } from './config.ts';
 import { lastEventAt } from './db.ts';
@@ -122,6 +123,15 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (d && !d.protecting && !d.resumesAt) {
       alerts.push({ id: `dns-off-${id}`, level: 'warn', title: `${name} isn't blocking ads`, detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: '/', source: id });
     }
+  }
+
+  // Internet speed: Speedtest Tracker's own thresholds decide what is slow.
+  const speed = data<SpeedData>(sources, 'speedtest');
+  if (speed?.lastFailed && (!speed.latest || speed.lastFailed > speed.latest.at)) {
+    alerts.push({ id: 'speed-failed', level: 'warn', title: 'The last speed test failed', detail: 'Speedtest Tracker could not reach a test server. The connection may be down.', since: speed.lastFailed, href: '/', source: 'speedtest' });
+  } else if (speed?.latest && speed.latest.healthy === false) {
+    const l = speed.latest;
+    alerts.push({ id: 'speed-slow', level: 'warn', title: 'The internet is slower than your thresholds', detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: '/', source: 'speedtest' });
   }
 
   // Uptime Kuma: a monitor that is down right now. Pending (Kuma's retry

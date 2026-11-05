@@ -35,9 +35,8 @@ files, and a non-root image.
 ### Integrations
 
 - [ ] Proxmox VMs and containers
-- [ ] Speedtest Tracker, Scrutiny, UPS (NUT), Unraid
+- [ ] Scrutiny, UPS (NUT), Unraid
 - [ ] Immich library stats
-- [ ] Overseerr and Jellyseerr requests, with Approve
 - [ ] Hardcover and Goodreads: what you are reading
 - [ ] Outgoing alerts through ntfy or Pushover, opt-in
 

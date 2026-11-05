@@ -18,6 +18,8 @@ import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
+import { speedtestAdapter } from './adapters/speedtest.ts';
+import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
@@ -36,7 +38,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl } from './demo.ts';
+import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -65,8 +67,9 @@ import { auditCatalog, draftYaml } from './catalog-audit.ts';
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
 
-type Made = { adapter: Adapter; control?: DownloadControl; dns?: DnsControl };
+type Made = { adapter: Adapter; control?: DownloadControl; dns?: DnsControl; seerr?: (id: number, action: 'approve' | 'decline') => Promise<void> };
 const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
+let seerrAct: ((id: number, action: 'approve' | 'decline') => Promise<void>) | null = null;
 
 /**
  * One factory per integration you can turn on. Each reads config when called,
@@ -96,18 +99,26 @@ const FACTORIES: Record<string, () => Made | null> = {
   uptimekuma: () => (config.uptimekuma ? { adapter: uptimeKumaAdapter() } : null),
   pihole: () => (config.pihole ? piholeClient() : null),
   adguard: () => (config.adguard ? adguardClient() : null),
+  speedtest: () => (config.speedtest ? { adapter: speedtestAdapter() } : null),
+  overseerr: () => {
+    if (!config.overseerr) return null;
+    const c = seerrClient();
+    return { adapter: c.adapter, seerr: c.act };
+  },
 };
 
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter(), checksAdapter()];
   downloadControls.clear();
   dnsControls.clear();
+  seerrAct = null;
   for (const [id, make] of Object.entries(FACTORIES)) {
     const m = make();
     if (!m) continue;
     list.push(m.adapter);
     if (m.control) downloadControls.set(id as DownloadClientId, m.control);
     if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
+    if (m.seerr) seerrAct = m.seerr;
   }
   return list;
 }
@@ -397,6 +408,27 @@ app.post('/api/dns/:id/:action', async (c) => {
   return c.json({ ok: true });
 });
 
+// Overseerr or Jellyseerr: approve or decline a request. Only requests
+// Patchboard last read as pending, so the route can't touch anything else.
+app.post('/api/requests/:id/:action', async (c) => {
+  const id = Number(c.req.param('id'));
+  const action = c.req.param('action');
+  if (action !== 'approve' && action !== 'decline') return c.json({ error: 'Unknown action' }, 400);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const act = config.demo ? demoSeerrAct : seerrAct;
+  if (!act) return c.json({ error: 'Overseerr is not configured' }, 404);
+  if (!config.demo && !pendingIds.has(id)) return c.json({ error: 'That request is not waiting for approval' }, 404);
+  try {
+    await act(id, action);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  pendingIds.delete(id);
+  recordAudit(who(c), `requests.${action}`, String(id));
+  void hub.pollNow('overseerr');
+  return c.json({ ok: true });
+});
+
 // Home Assistant: every entity, for the widget's picker.
 app.get('/api/ha/entities', async (c) => {
   if (config.demo) return c.json({ entities: demoHaList() });
@@ -537,6 +569,8 @@ function summarize(data: unknown): string {
   if (typeof d.downloading === 'number') bits.push(`${d.downloading} downloading`);
   if (n('cameras') !== undefined) bits.push(`${n('cameras')} cameras`);
   if (typeof d.queries === 'number') bits.push(`${(d.queries as number).toLocaleString('en-US')} queries today`);
+  if (n('runs') !== undefined) bits.push(`${n('runs')} speed tests today`);
+  if (n('requests') !== undefined) bits.push(`${typeof d.pending === 'number' ? d.pending : n('requests')} waiting for approval`);
   if (n('monitors') !== undefined) bits.push(`${n('monitors')} monitor${n('monitors') === 1 ? '' : 's'}`);
   if (n('pools') !== undefined) bits.push(`${n('pools')} pools`);
   if (n('days') !== undefined) bits.push('forecast loaded');

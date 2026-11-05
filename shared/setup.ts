@@ -31,6 +31,8 @@ export const UI_SETUP = new Set([
   'uptimekuma',
   'pihole',
   'adguard',
+  'speedtest',
+  'overseerr',
   'dozzle',
 ]);
 

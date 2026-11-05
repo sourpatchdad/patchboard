@@ -6677,6 +6677,130 @@ button.ha-act:hover {
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* ---------- Internet speed ---------- */
+
+.speed-nums {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+  margin: 4px 0 12px;
+}
+
+.speed-nums p {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.speed-big {
+  font: 500 34px/1.1 var(--f-display);
+  color: var(--head);
+  letter-spacing: -0.02em;
+}
+
+.speed-big.warn-text {
+  color: var(--warn);
+}
+
+.speed-mid {
+  font: 500 20px/1.1 var(--f-display);
+  color: var(--head);
+}
+
+.speed-unit {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.speed-seen {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---------- Requests ---------- */
+
+.req-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.req {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.req-art {
+  width: 34px;
+  height: 51px;
+  border-radius: 3px;
+  object-fit: cover;
+  background: var(--surface);
+}
+
+.req-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.req-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--head);
+}
+
+.req-year {
+  color: var(--ink-3);
+}
+
+.req-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.req-actions {
+  display: flex;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.text-button.req-quiet {
+  color: var(--ink-3);
+}
+
+.text-button.req-decline {
+  color: var(--crit);
+}
+
+.req-more {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* A narrow card puts the buttons under the title. */
+@container (max-width: 360px) {
+  .req {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .req-actions {
+    grid-column: 2;
+  }
+}
+
 /* ---------- Ad blocking ---------- */
 
 .dns-one + .dns-one {

@@ -1,9 +1,11 @@
 // Widgets for the house and the network: Home Assistant entities, the car,
-// Wake-on-LAN, Uptime Kuma monitors, and ad blocking.
+// Wake-on-LAN, Uptime Kuma monitors, ad blocking, internet speed, and
+// Overseerr requests.
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, HaEntity, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, HaEntity, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg } from '../lib/format.ts';
@@ -435,6 +437,128 @@ export function DnsWidget({ now }: { now: number }) {
       {on.map((b) => (
         <Blocker key={b.id} id={b.id} label={b.label} showName={on.length > 1} now={now} />
       ))}
+    </Section>
+  );
+}
+
+// ---------- Internet speed ----------
+
+export function SpeedWidget({ now }: { now: number }) {
+  const { state, data } = useSource<SpeedData>('speedtest');
+  if (!state || !data) return null;
+  const l = data.latest;
+  const failed = !!data.lastFailed && (!l || data.lastFailed > l.at);
+  return (
+    <Section title="Internet" source={state} className="speed">
+      {!l ? (
+        <Empty>No speed tests yet. Speedtest Tracker runs them on its schedule.</Empty>
+      ) : (
+        <>
+          <div className="speed-nums">
+            <p>
+              <span className={`speed-big ${l.healthy === false ? 'warn-text' : ''}`}>{Math.round(l.down)}</span>
+              <span className="speed-unit">Mbps down</span>
+            </p>
+            <p>
+              <span className="speed-mid">{Math.round(l.up)}</span>
+              <span className="speed-unit">up</span>
+            </p>
+            {l.ping != null && (
+              <p>
+                <span className="speed-mid">{Math.round(l.ping)}</span>
+                <span className="speed-unit">ms ping</span>
+              </p>
+            )}
+          </div>
+          <Spark data={data.runs.map((r) => [r.at, r.down] as [number, number])} height={28} label="Download speed, last 24 hours" />
+          <p className="speed-seen">
+            {failed ? <span className="warn-text">The last test failed. </span> : null}
+            Tested {agoLong(l.at, now)}{l.server ? ` against ${l.server}` : ''}
+            {l.loss ? `, ${l.loss}% packet loss` : ''}.
+          </p>
+        </>
+      )}
+    </Section>
+  );
+}
+
+// ---------- Overseerr and Jellyseerr requests ----------
+
+function seasonsText(s: number[]): string {
+  if (s.length === 1) return `Season ${s[0]}`;
+  const sorted = [...s].sort((a, b) => a - b);
+  const run = sorted.every((n, i) => i === 0 || n === sorted[i - 1] + 1);
+  return run ? `Seasons ${sorted[0]} to ${sorted[sorted.length - 1]}` : `${s.length} seasons`;
+}
+
+export function RequestsWidget({ now }: { now: number }) {
+  const { state, data } = useSource<SeerrData>('overseerr');
+  const { snap } = useStore();
+  const { limit = 5 } = useWidget();
+  const [busy, setBusy] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  if (!state || !data) return null;
+  async function act(id: number, action: 'approve' | 'decline') {
+    setBusy(id);
+    setError(null);
+    try {
+      await post(`/api/requests/${id}/${action}`);
+      setConfirm(null);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+  const shown = data.requests.slice(0, limit);
+  return (
+    <Section title="Requests" count={data.pending ? `${data.pending} waiting` : undefined} source={state} className="requests">
+      {shown.length === 0 ? (
+        <Empty>Nothing waiting for approval.{data.processing ? ` ${data.processing} approved and on the way.` : ''}</Empty>
+      ) : (
+        <ul className="req-list">
+          {shown.map((r) => (
+            <li key={r.id} className="req">
+              {r.art ? <img className="req-art" src={r.art} alt="" loading="lazy" /> : <span className="req-art req-art-none" aria-hidden />}
+              <div className="req-main">
+                <span className="req-title">
+                  {r.title}
+                  {r.year ? <span className="req-year"> {r.year}</span> : null}
+                </span>
+                <span className="req-sub">
+                  {[r.by, ago(r.at, now), r.seasons ? seasonsText(r.seasons) : null, r.is4k ? '4K' : null].filter(Boolean).join(', ')}
+                </span>
+              </div>
+              {!snap?.readOnly && (
+                <span className="req-actions">
+                  {confirm === r.id ? (
+                    <>
+                      <button type="button" className="text-button req-decline" disabled={busy === r.id} onClick={() => void act(r.id, 'decline')}>
+                        Decline it
+                      </button>
+                      <button type="button" className="text-button req-quiet" onClick={() => setConfirm(null)}>
+                        Keep
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" className="text-button" disabled={busy === r.id} onClick={() => void act(r.id, 'approve')}>
+                        Approve
+                      </button>
+                      <button type="button" className="text-button req-quiet" disabled={busy === r.id} onClick={() => setConfirm(r.id)}>
+                        Decline
+                      </button>
+                    </>
+                  )}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {data.requests.length > shown.length && <p className="req-more">{data.requests.length - shown.length} more waiting in Overseerr.</p>}
+      {error && <p className="dns-error warn-text">{error}</p>}
     </Section>
   );
 }

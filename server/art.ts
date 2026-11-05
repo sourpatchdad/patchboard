@@ -3,6 +3,7 @@
 // (/api/v3/mediacover, which takes the API key). If that fails it falls back
 // to the public poster URL they report (TheTVDB or TMDB). Trakt items have
 // no art of their own, so their shows are looked up on TVmaze by TVDB id.
+// Overseerr requests use the TMDB poster its API names.
 // Everything is fetched by the server, cached for a day, and failures for an
 // hour, so a missing poster never turns into a stream of requests.
 
@@ -45,12 +46,16 @@ async function tvmaze(tvdb: string): Promise<{ type: string; body: Uint8Array<Ar
 
 /** A poster for sonarr/<seriesId>, radarr/<movieId> or tvmaze/<tvdbId>, or null. */
 export async function poster(src: string, id: string): Promise<{ type: string; body: Uint8Array<ArrayBuffer> } | null> {
-  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze'].includes(src)) return null;
+  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze', 'seerr'].includes(src)) return null;
   const key = `${src}:${id}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ('miss' in hit ? 3_600_000 : 86_400_000)) return 'miss' in hit ? null : hit;
   let got: { type: string; body: Uint8Array<ArrayBuffer> } | null = null;
   if (src === 'tvmaze') got = await tvmaze(id);
+  else if (src === 'seerr') {
+    const url = remote.get(key);
+    if (url) got = await image(url, {}, true);
+  }
   else {
     const svc = src === 'sonarr' ? config.sonarr : config.radarr;
     if (svc) got = await image(`${svc.url}/api/v3/mediacover/${id}/poster-250.jpg`, { 'X-Api-Key': svc.key });

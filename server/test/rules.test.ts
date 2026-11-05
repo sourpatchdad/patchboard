@@ -264,3 +264,12 @@ test('Uptime Kuma: a down monitor needs attention; retrying waits; a stopped con
   const folded = computeAlerts(sources({ docker: { containers: [down('nextcloud')] }, uptimekuma: kuma('down') }), catalog());
   assert.deepEqual(folded.map((a) => a.id), ['ctr-down-nextcloud']);
 });
+
+test('Speed tests: a failed newest test, or a slow one by your thresholds, needs attention', () => {
+  const run = { at: 1000, down: 90, up: 9, ping: 30, healthy: false };
+  const slow = computeAlerts(sources({ speedtest: { latest: run, runs: [run] } }), catalog());
+  assert.deepEqual(slow.map((a) => [a.id, a.detail]), [['speed-slow', '90 Mbps down, 9 up, 30 ms ping in the last test.']]);
+  const failed = computeAlerts(sources({ speedtest: { latest: { ...run, healthy: true }, lastFailed: 2000, runs: [] } }), catalog());
+  assert.deepEqual(failed.map((a) => a.id), ['speed-failed']);
+  assert.equal(computeAlerts(sources({ speedtest: { latest: { ...run, healthy: true }, runs: [] } }), catalog()).length, 0);
+});

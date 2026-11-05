@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.33.0 (2026-11-05)
+
+- **Speedtest Tracker.** An Internet widget shows the latest download,
+  upload and ping, with the last day as a line. A failed test, or one
+  Speedtest Tracker marks as under your thresholds, shows in Needs
+  attention. Needs Speedtest Tracker 1.0 or newer and an API token.
+- **Overseerr and Jellyseerr.** A Requests widget lists what people asked
+  for, with posters, who asked, seasons and 4K. Approve takes one tap;
+  Decline asks once more. The route acts only on requests Patchboard last
+  read as waiting, and each decision lands in the audit log. Posters come
+  through Patchboard, so your browser never calls TMDB.
+- **The tour** gets a Network screenshot: Requests, Internet, Uptime and
+  Ad blocking on one board.
+
 ## 1.32.0 (2026-11-05)
 
 - **Pi-hole and AdGuard Home.** An Ad blocking widget shows the percent
