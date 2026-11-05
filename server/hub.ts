@@ -19,6 +19,7 @@ import type {
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
+import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
 import { firstEventAt, kvGet, kvSet, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
@@ -91,6 +92,8 @@ export class Hub {
     housekeeping();
     setInterval(housekeeping, 6 * H).unref();
     setInterval(() => this.sample(), 60_000).unref();
+    // A problem waits two minutes before it notifies; this tick sends it on time.
+    setInterval(() => void notifyAlerts(this.alerts), 30_000).unref();
   }
 
   /** The data every minute-by-minute chart is drawn from. */
@@ -224,6 +227,7 @@ export class Hub {
       this.alerts = next;
       this.emit({ type: 'alerts', alerts: next });
     }
+    void notifyAlerts(this.alerts);
   }
 
   snapshot(): Snapshot {
@@ -243,6 +247,8 @@ export class Hub {
         ...(config.docsPath || config.demo ? ['runbook'] : []),
         ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
         ...(config.wake.devices.length || config.demo ? ['wake'] : []),
+        ...(config.notify.ntfy || config.demo ? ['ntfy'] : []),
+        ...(config.notify.gotify ? ['gotify'] : []),
         // The slim image: Settings says why updates are off.
         ...(!dockerCli && !config.demo ? ['no-docker-cli'] : []),
       ],

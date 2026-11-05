@@ -19,6 +19,7 @@ import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapte
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
+import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
@@ -542,6 +543,12 @@ async function testIntegration(id: string): Promise<string> {
     const n = config.wake.devices.length;
     if (!n) throw new Error('No machine parsed. Use Name=aa:bb:cc:dd:ee:ff, comma-separated.');
     return `${n} machine${n === 1 ? '' : 's'} ready: ${config.wake.devices.map((d) => d.name).join(', ')}.`;
+  }
+  if (id === 'ntfy' || id === 'gotify') {
+    if (!(id === 'ntfy' ? config.notify.ntfy : config.notify.gotify)) throw new Error('Those settings are incomplete.');
+    // Only the one being tested, so a broken Gotify doesn't fail an ntfy test.
+    await send({ title: 'Patchboard can reach you here', body: 'Problems that last two minutes will show up like this, and again when they clear.', level: 'test' }, id);
+    return 'Sent a test notification. Check your phone.';
   }
   if (id === 'dozzle') {
     await request(config.dozzleUrl!, {}, 8000);

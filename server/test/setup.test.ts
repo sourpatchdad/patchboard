@@ -78,3 +78,9 @@ test('the vault round-trips, uses a fresh IV each time, rejects tampering, and k
   const keyFile = readFileSync(join(config.dataDir, 'secret.key'), 'utf8');
   assert.ok(keyFile.length >= 40, 'a random key file sits next to the database');
 });
+
+test('a menu field takes only its listed values', () => {
+  const ntfy = setup.setupIntegration('ntfy')!;
+  assert.deepEqual(setup.checkValues(ntfy, { NTFY_URL: 'https://ntfy.sh/x', NOTIFY_LEVEL: 'critical' }), { values: { NTFY_URL: 'https://ntfy.sh/x', NOTIFY_LEVEL: 'critical' } });
+  assert.match((setup.checkValues(ntfy, { NOTIFY_LEVEL: 'loud' }) as { error: string }).error, /warn, critical/);
+});

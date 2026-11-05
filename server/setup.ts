@@ -4,7 +4,7 @@
 // anything saved here.
 
 import { INTEGRATIONS, type Integration } from '../shared/integrations.ts';
-import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP } from '../shared/setup.ts';
+import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP, CHOICES } from '../shared/setup.ts';
 import { envHas, setSavedSettings } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
 import { seal, unseal } from './vault.ts';
@@ -70,6 +70,7 @@ export function checkValues(i: Integration, input: unknown): { values: Record<st
     if (!v && fieldKind(name) === 'secret') continue;
     if (v && fieldKind(name) === 'url' && !/^(https?|wss?):\/\/[^\s/]+/i.test(v)) return { error: `${fieldLabel(name)} must start with http:// or https://` };
     if (v && fieldKind(name) === 'flag' && v !== '1' && v !== '0') return { error: `${fieldLabel(name)} is on (1) or off (0)` };
+    if (v && fieldKind(name) === 'choice' && !CHOICES[name]!.some(([c]) => c === v)) return { error: `${fieldLabel(name)} is one of: ${CHOICES[name].map(([c]) => c).join(', ')}` };
     out[name] = v || null;
   }
   return { values: out };

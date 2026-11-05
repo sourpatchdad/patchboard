@@ -33,12 +33,23 @@ export const UI_SETUP = new Set([
   'adguard',
   'speedtest',
   'overseerr',
+  'ntfy',
+  'gotify',
   'dozzle',
 ]);
 
-export type FieldKind = 'url' | 'secret' | 'text' | 'flag';
+export type FieldKind = 'url' | 'secret' | 'text' | 'flag' | 'choice';
+
+/** Fields with a fixed set of values, shown as a menu. The first is the default. */
+export const CHOICES: Record<string, [value: string, label: string][]> = {
+  NOTIFY_LEVEL: [
+    ['warn', 'Problems and warnings'],
+    ['critical', 'Outages only'],
+  ],
+};
 
 export function fieldKind(name: string): FieldKind {
+  if (CHOICES[name]) return 'choice';
   if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name)) return 'secret';
   if (/VERIFY_TLS$/.test(name)) return 'flag';
   if (/_URL$/.test(name)) return 'url';
@@ -46,6 +57,8 @@ export function fieldKind(name: string): FieldKind {
 }
 
 const LABELS: [RegExp, string][] = [
+  [/^NTFY_URL$/, 'Topic address'],
+  [/^PATCHBOARD_URL$/, 'Patchboard address'],
   [/WEB_URL$/, 'Web address'],
   [/_URL$/, 'Address'],
   [/API_KEY$|_KEY$/, 'API key'],
@@ -60,6 +73,7 @@ const LABELS: [RegExp, string][] = [
   [/_LABEL$/, 'Place name'],
   [/_DEVICES$/, 'Machines'],
   [/_SLUG$/, 'Status page'],
+  [/_LEVEL$/, 'Send'],
   [/_BROADCAST$/, 'Broadcast address'],
   [/VERIFY_TLS$/, 'Check the certificate'],
 ];
@@ -72,6 +86,8 @@ const HINTS: Record<string, string> = {
   WOL_DEVICES: 'Name=MAC pairs, comma-separated: NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55',
   TRUENAS_URL: 'wss://truenas.local/api/current',
   UPTIME_KUMA_SLUG: 'home, from /status/home',
+  NTFY_URL: 'https://ntfy.sh/your-secret-topic',
+  PATCHBOARD_URL: 'https://patchboard.home.example',
   WEATHER_LAT: '40.71',
   WEATHER_LON: '-74.01',
 };

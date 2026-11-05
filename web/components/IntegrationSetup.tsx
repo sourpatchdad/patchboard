@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
-import type { SetupIntegration } from '../../shared/setup.ts';
+import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
 
 async function call(url: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const res = await fetch(url, {
@@ -118,6 +118,14 @@ export function IntegrationForm({
             <select className="field" value={values[f.name] || '0'} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
               <option value="0">No</option>
               <option value="1">Yes</option>
+            </select>
+          ) : f.kind === 'choice' ? (
+            <select className="field" value={values[f.name] || CHOICES[f.name][0][0]} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
+              {CHOICES[f.name].map(([v, label]) => (
+                <option key={v} value={v}>
+                  {label}
+                </option>
+              ))}
             </select>
           ) : (
             <input

@@ -38,7 +38,7 @@ files, and a non-root image.
 - [ ] Scrutiny, UPS (NUT), Unraid
 - [ ] Immich library stats
 - [ ] Hardcover and Goodreads: what you are reading
-- [ ] Outgoing alerts through ntfy or Pushover, opt-in
+- [ ] Pushover and email notifications
 
 ### Running it anywhere
 

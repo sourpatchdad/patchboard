@@ -183,6 +183,13 @@ function build(str: Lookup) {
       : undefined,
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     overseerr: pair('OVERSEERR_URL', 'OVERSEERR_KEY'),
+    notify: {
+      ntfy: str('NTFY_URL') ? { url: trimSlash(str('NTFY_URL')!), token: str('NTFY_TOKEN') } : undefined,
+      gotify: str('GOTIFY_URL') && str('GOTIFY_TOKEN') ? { url: trimSlash(str('GOTIFY_URL')!), token: str('GOTIFY_TOKEN')! } : undefined,
+      level: (str('NOTIFY_LEVEL') === 'critical' ? 'critical' : 'warn') as 'critical' | 'warn',
+      /** Where a tap on a notification opens Patchboard. */
+      publicUrl: str('PATCHBOARD_URL') ? trimSlash(str('PATCHBOARD_URL')!) : undefined,
+    },
     uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */

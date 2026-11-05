@@ -69,6 +69,11 @@ container creation, which comes close to full access.
   browser loads app icons from the dashboard-icons CDN on jsDelivr unless
   you upload your own, and article and poster pictures from wherever their
   publisher hosts them. No key or address rides along on any of those.
+- **Notifications are opt-in and go where you point them.** With ntfy or
+  Gotify set up, an alert's title and detail (a container name, a disk
+  temperature) go to that server. A self-hosted ntfy or Gotify keeps them on
+  your network. On the public ntfy.sh, anyone who guesses the topic can read
+  it, so use a long random topic name or a token.
 - **Keys are write-only.** They live in `.env`, or, when you type them in
   Settings, in the database in `DATA_DIR`. The browser can set a key but
   never read one back: the API says whether a key is set, never what it is.

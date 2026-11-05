@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.35.0 (2026-11-05)
+
+- **Push notifications through ntfy or Gotify.** A problem in Needs
+  attention that lasts two minutes reaches your phone, and you get one more
+  message when it clears. A container that restarts on its own stays quiet.
+  Patchboard remembers what it sent, so restarting it doesn't resend
+  everything still wrong. Choose problems and warnings, or outages only. Set
+  `PATCHBOARD_URL` and a tap opens the right page. Test in Settings,
+  Connections sends a real notification.
+- **Settings fields with fixed values are menus,** starting with what to
+  notify about.
+
 ## 1.34.0 (2026-11-05)
 
 - **A slim image.** Every release also ships as `-slim` (`latest-slim`,

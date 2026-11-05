@@ -58,7 +58,9 @@ by default, for a private address. Turn it on with `AUTH=password`, or
 
 **It answers before you ask.** Needs attention lists only what's wrong. The
 header says "All quiet" or "4 things need you". A container that crashed at
-3 AM still shows under Changes at breakfast.
+3 AM still shows under Changes at breakfast. Turn on ntfy or Gotify and a
+problem that lasts two minutes reaches your phone, then again when it
+clears.
 
 **Everything leads somewhere.** Each container has a page with its alerts, its
 runbook section, live logs, a 30-day health strip, and buttons to restart,
