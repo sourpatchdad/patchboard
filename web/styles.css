@@ -1493,7 +1493,7 @@ a.jack:focus-visible {
 .logs-layout {
   display: grid;
   grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
-  height: calc(100dvh - var(--topbar-h));
+  height: calc(100vh - var(--topbar-h));
 }
 
 .logs-layout {
@@ -7209,7 +7209,7 @@ button.ha-act:hover {
   }
 
   .side-logs .log-tail {
-    height: min(420px, calc(100dvh - 430px));
+    height: min(420px, calc(100vh - 430px));
     min-height: 260px;
   }
 }

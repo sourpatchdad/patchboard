@@ -297,6 +297,8 @@ const demoJellyfin = (): MediaServerData => ({
   streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', progress: Math.round(jitter(22, 2)), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
   recent: [
     { id: 'j1', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E10', addedAt: Date.now() - 5 * H },
+    // The same file on Plex too: Home shows it once, labeled Plex + Jellyfin.
+    { id: 'j4', type: 'movie', title: 'Dune: Part Two (2024)', thumb: poster('Dune: Part Two'), subtitle: '2024', addedAt: Date.now() - 8 * H - 4 * 60_000 },
     { id: 'j2', type: 'movie', title: 'Weapons', thumb: poster('Weapons'), subtitle: '2025', addedAt: Date.now() - 26 * H },
     { id: 'j3', type: 'series', title: 'Fallout', thumb: poster('Fallout'), subtitle: '8 new', addedAt: Date.now() - 2.5 * D },
   ],

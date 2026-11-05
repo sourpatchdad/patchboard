@@ -1,6 +1,7 @@
 // Plex (through Tautulli), Jellyfin and Emby behind one hook, so the board's
 // media widgets work with whichever servers you run, or all three.
 
+import { dedupeRecent } from '../../shared/media.ts';
 import type { MediaServerData, RecentItem, SourceId, TautulliData } from '../../shared/types.ts';
 import { useSource, useStore } from './store.tsx';
 
@@ -46,18 +47,20 @@ export function itemHref(server: MediaServer, id: string): string | undefined {
 
 export interface MergedItem extends RecentItem {
   server: MediaServer;
+  /** Every server that has it, the one the poster opens first. */
+  servers?: MediaServer[];
 }
 
-/** Newest first across servers; a title two servers both added shows once. */
+/**
+ * Newest first across servers. A release two servers both added shows once,
+ * opening on the first server with an address, and naming both.
+ */
 export function mergeRecent(servers: MediaServer[]): MergedItem[] {
-  const seen = new Set<string>();
-  return servers
-    .flatMap((server) => server.data.recent.map((r) => ({ ...r, server })))
-    .sort((a, b) => b.addedAt - a.addedAt)
-    .filter((r) => {
-      const k = `${r.title.toLowerCase()}|${r.subtitle ?? ''}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    });
+  const all = servers.flatMap((server) => server.data.recent.map((r) => ({ ...r, server })));
+  return dedupeRecent(all).map(({ item, also }) => {
+    const copies = [item, ...also];
+    const open = copies.find((c) => c.server.href) ?? item;
+    const names = [...new Set(copies.map((c) => c.server))];
+    return { ...open, title: item.title, subtitle: item.subtitle, addedAt: item.addedAt, thumb: open.thumb ?? item.thumb, servers: names };
+  });
 }

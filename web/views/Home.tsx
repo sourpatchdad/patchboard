@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
+import { sameRelease } from '../../shared/media.ts';
 import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
 import type {
   Alert,
@@ -482,7 +483,9 @@ export function RecentlyAdded({ now }: { now: number }) {
 export function NextUp() {
   const { servers } = useMediaServers();
   const { limit = 12 } = useWidget();
-  const items = servers.flatMap((server) => ('nextUp' in server.data ? server.data.nextUp.map((r) => ({ ...r, server })) : []));
+  const all = servers.flatMap((server) => ('nextUp' in server.data ? server.data.nextUp.map((r) => ({ ...r, server })) : []));
+  // Jellyfin and Emby on one library suggest the same episode: show it once.
+  const items = all.filter((r, i) => !all.slice(0, i).some((o) => sameRelease(o, r)));
   if (!items.length) return null;
   return (
     <Section title="Next up" className="recent">
@@ -504,7 +507,7 @@ function PosterShelf({ items, now, showServer }: { items: MergedItem[]; now?: nu
               <span className="poster-sub">
                 {r.subtitle && <Episode text={r.subtitle} />}
                 {now !== undefined && <time>{ago(r.addedAt, now)}</time>}
-                {showServer && <span className="poster-src">{r.server.label}</span>}
+                {showServer && <span className="poster-src">{(r.servers ?? [r.server]).map((s) => s.label).join(' + ')}</span>}
               </span>
             </a>
           </li>

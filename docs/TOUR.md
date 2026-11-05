@@ -8,7 +8,9 @@ they match the current code.
 The header tells you whether anything needs you. Below it sits a board of
 widgets on the columns you choose. Right now shows who is watching Plex,
 Jellyfin or Emby and what each download client is doing, with a Pause button
-per client.
+per client. Recently added merges every server newest first. A file Plex and
+Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
+name it a little differently.
 
 ![Home](screenshots/home.png)
 

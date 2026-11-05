@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.30.3 (2026-11-05)
+
+- **Recently added shows each release once.** When Plex and Jellyfin (or
+  Emby) share a library, Home lists a new file once and labels it
+  Plex + Jellyfin. Matching ignores tags like "(US)" or "(2024)",
+  punctuation and a leading "The", and accepts a longer name that contains
+  the shorter one ("Christmas Vacation" and "National Lampoon's Christmas
+  Vacation"), as long as the year or episode agrees. Next up drops repeats
+  the same way.
+- **Logs and Feeds fill the window at any browser zoom.** Chrome sized
+  them for 100% zoom, so at 90% they stopped short of the bottom edge.
+
 ## 1.30.2 (2026-11-04)
 
 - **A container's page puts the fix beside the logs.** What needs attention
