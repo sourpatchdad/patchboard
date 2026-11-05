@@ -30,6 +30,9 @@ COPY --from=build /app/dist ./dist
 COPY package.json ./
 COPY shared ./shared
 COPY server ./server
+# /data belongs to the node user, so a named volume there inherits that and
+# Patchboard can run as node (see examples/hardened).
+RUN mkdir -p /data && chown node:node /data
 EXPOSE 3200
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD wget -qO- http://127.0.0.1:3200/healthz || exit 1

@@ -49,10 +49,21 @@ export const config = {
   readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
 
   auth: {
-    mode: (['forward', 'password'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password',
+    mode: (['forward', 'password', 'oidc'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password' | 'oidc',
     userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
     password: str('PATCHBOARD_PASSWORD'),
     hookToken: str('HOOK_TOKEN'),
+    oidc: {
+      issuer: str('OIDC_ISSUER') ?? '',
+      clientId: str('OIDC_CLIENT_ID') ?? '',
+      clientSecret: str('OIDC_CLIENT_SECRET'),
+      scopes: str('OIDC_SCOPES') ?? 'openid email profile',
+      allowed: (str('OIDC_ALLOWED') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+      /** Where the provider sends people back. Set it when Patchboard sits behind a proxy. */
+      redirectUrl: str('OIDC_REDIRECT_URL'),
+      /** The button says "Sign in with <name>". */
+      name: str('OIDC_NAME') ?? 'your identity provider',
+    },
   },
   dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
 

@@ -38,7 +38,8 @@ import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
-import { currentUser, login, logout, readOnlyGuard, requireAuth, securityHeaders } from './security.ts';
+import { currentUser, login, logout, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
+import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
@@ -121,7 +122,38 @@ app.use('/api/*', readOnlyGuard());
 const who = (c: Parameters<typeof currentUser>[0]) => currentUser(c) ?? '?';
 
 // Who's here, how sign-in works, and whether changes are allowed.
-app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly }));
+app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly, provider: config.auth.mode === 'oidc' ? config.auth.oidc.name : undefined }));
+
+// OIDC: send the browser to the provider, then take it back.
+const oidcRedirect = (c: Parameters<typeof currentUser>[0]) => {
+  if (config.auth.oidc.redirectUrl) return config.auth.oidc.redirectUrl;
+  const u = new URL(c.req.url);
+  const proto = c.req.header('x-forwarded-proto') ?? u.protocol.replace(':', '');
+  return `${proto}://${c.req.header('host') ?? u.host}/api/oidc/callback`;
+};
+
+app.get('/api/oidc/login', async (c) => {
+  if (config.auth.mode !== 'oidc') return c.json({ error: 'OIDC sign-in is not enabled' }, 400);
+  try {
+    return c.redirect(await oidc.start(config.auth.oidc, oidcRedirect(c)));
+  } catch (e) {
+    return c.redirect(`/?signin_error=${encodeURIComponent((e as Error).message)}`);
+  }
+});
+
+app.get('/api/oidc/callback', async (c) => {
+  if (config.auth.mode !== 'oidc') return c.json({ error: 'OIDC sign-in is not enabled' }, 400);
+  const err = c.req.query('error_description') ?? c.req.query('error');
+  if (err) return c.redirect(`/?signin_error=${encodeURIComponent(err.slice(0, 200))}`);
+  try {
+    const { user } = await oidc.finish(config.auth.oidc, c.req.query('code') ?? '', c.req.query('state') ?? '');
+    startSession(c, user);
+    return c.redirect('/');
+  } catch (e) {
+    recordAudit('?', 'auth.failed', 'oidc', (e as Error).message.slice(0, 200));
+    return c.redirect(`/?signin_error=${encodeURIComponent((e as Error).message)}`);
+  }
+});
 
 app.post('/api/login', async (c) => {
   if (config.auth.mode !== 'password') return c.json({ error: 'Password sign-in is not enabled' }, 400);

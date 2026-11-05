@@ -20,10 +20,15 @@ it anywhere.
 |---|---|
 | `none` (default) | Only you can reach the address: Tailscale, or a LAN you control. Set `BIND_ADDRESS` to that address, never `0.0.0.0` on a shared network. |
 | `forward` | A reverse proxy (Authelia, Authentik, Cloudflare Access, oauth2-proxy) signs people in and passes the user in `TRUSTED_USER_HEADER`. Bind Patchboard to `127.0.0.1` or a network only the proxy shares, or anyone can send that header. |
-| `password` | You have no proxy. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
+| `oidc` | You have an identity provider: Authentik, Authelia, Keycloak, Pocket ID, Zitadel, Google. Patchboard uses the authorization-code flow with PKCE and checks the ID token's signature, issuer, audience, expiry and nonce. Set `OIDC_ALLOWED` to the emails, usernames or groups that may sign in; without it, anyone your provider signs in gets in. |
+| `password` | You have no proxy or provider. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
 
 With sign-in on, webhooks send `HOOK_TOKEN` as `Authorization: Bearer <token>`
 or `?token=`.
+
+OIDC sessions use the same hashed tokens with a SameSite=Lax cookie, so the
+cookie arrives on the redirect back from the provider. Changes still need the
+`X-Patchboard` header, which other sites can't send.
 
 ### Whether it can change anything
 
@@ -37,7 +42,8 @@ change that. For a narrower boundary, run a
 [socket proxy](https://github.com/Tecnativa/docker-socket-proxy) and set
 `DOCKER_HOST=tcp://socket-proxy:2375`.
 [examples/hardened](examples/hardened/docker-compose.yml) does this with
-read-only access. For restart buttons, the proxy needs `POST=1`,
+read-only access and runs Patchboard as the unprivileged `node` user with a
+read-only root filesystem. For restart buttons, the proxy needs `POST=1`,
 `ALLOW_START`, `ALLOW_STOP` and `ALLOW_RESTARTS`. Updates need image pulls and
 container creation, which comes close to full access.
 

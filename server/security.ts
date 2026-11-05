@@ -110,19 +110,26 @@ export function login(c: Context, password: string): { ok: true } | { ok: false;
     return { ok: false, status: 401, error: 'Wrong password.' };
   }
   attempts.delete(ip);
+  startSession(c, 'admin');
+  return { ok: true };
+}
+
+/** Sign someone in: a random token in an HttpOnly cookie, stored hashed. */
+export function startSession(c: Context, user: string): void {
   const token = randomBytes(32).toString('base64url');
   const all = sessions();
-  all[sha(token)] = { user: 'admin', expires: Date.now() + SESSION_DAYS * 86_400_000 };
+  all[sha(token)] = { user, expires: Date.now() + SESSION_DAYS * 86_400_000 };
   kvSet('sessions', all);
   setCookie(c, COOKIE, token, {
     httpOnly: true,
-    sameSite: 'Strict',
-    secure: c.req.url.startsWith('https:'),
+    // Lax, so the cookie arrives on the redirect back from an OIDC provider.
+    // Changes still need the X-Patchboard header, which no other site can send.
+    sameSite: config.auth.mode === 'oidc' ? 'Lax' : 'Strict',
+    secure: c.req.url.startsWith('https:') || c.req.header('x-forwarded-proto') === 'https',
     path: '/',
     maxAge: SESSION_DAYS * 86_400,
   });
-  recordAudit('admin', 'auth.signin', '', ip);
-  return { ok: true };
+  recordAudit(user, 'auth.signin', '', clientIp(c));
 }
 
 export function logout(c: Context): void {
@@ -148,7 +155,7 @@ export function currentUser(c: Context): string | null {
 }
 
 /** Routes that work without signing in. */
-const OPEN = new Set(['/api/session', '/api/login', '/api/logout']);
+const OPEN = new Set(['/api/session', '/api/login', '/api/logout', '/api/oidc/login', '/api/oidc/callback']);
 
 export function requireAuth(): MiddlewareHandler {
   return async (c, next) => {

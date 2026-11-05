@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.24.0 (2026-11-04)
+
+- **OIDC sign-in** (`AUTH=oidc`) for Authentik, Authelia, Keycloak, Pocket ID,
+  Zitadel, Google and other standard providers. The authorization-code flow
+  with PKCE, state and nonce; Patchboard checks the ID token's RS256 or ES256
+  signature against the provider's keys, and its issuer, audience, expiry and
+  nonce. `OIDC_ALLOWED` limits sign-in to listed emails, usernames or groups.
+  Tests run the whole flow against a fake provider, and a browser run signed
+  in through one.
+- **Run as non-root:** the image's `/data` belongs to the `node` user.
+  `examples/hardened` now runs as `node` with a read-only root filesystem and
+  a named volume.
+- Clearer in-app wording in a handful of places, mostly active voice.
+- 56 tests.
+
 ## 1.23.0 (2026-11-04)
 
 - **Pi-hole 6** live numbers: blocked today, percent blocked, queries,

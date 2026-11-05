@@ -1,13 +1,16 @@
-# Patchboard that can look but not touch. It reaches Docker through a socket
-# proxy that allows reads only, refuses every change including board edits
-# (READ_ONLY), and listens on 127.0.0.1 for a reverse proxy that signs people
-# in (AUTH=forward in .env). SECURITY.md explains each choice.
+# Patchboard that can look but not touch. It runs as the unprivileged node
+# user, reaches Docker through a socket proxy that allows reads only, refuses
+# every change including board edits (READ_ONLY), and listens on 127.0.0.1
+# for a reverse proxy that signs people in (AUTH=forward or AUTH=oidc in
+# .env). SECURITY.md explains each choice.
 
 services:
   patchboard:
     image: ghcr.io/sourpatchdad/patchboard:latest
     container_name: patchboard
     restart: unless-stopped
+    user: node
+    read_only: true
     env_file: .env
     environment:
       - TZ=${TZ:-UTC}
@@ -17,7 +20,9 @@ services:
       - "127.0.0.1:3200:3200"
     volumes:
       - ./config:/config:ro
-      - ./data:/data
+      - patchboard-data:/data
+    tmpfs:
+      - /tmp
     depends_on:
       - socket-proxy
 
@@ -34,3 +39,6 @@ services:
       - POST=0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  patchboard-data:

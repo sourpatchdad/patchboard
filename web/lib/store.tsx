@@ -6,7 +6,7 @@ interface Store {
   live: boolean;
   failed: boolean;
   /** The server answered 401: sign-in needed, and how. */
-  auth: 'password' | 'forward' | null;
+  auth: 'password' | 'forward' | 'oidc' | null;
 }
 
 const Ctx = createContext<Store>({ snap: null, live: false, failed: false, auth: null });
@@ -40,7 +40,7 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch('/api/snapshot');
         if (res.status === 401) {
-          const body = (await res.json().catch(() => ({}))) as { auth?: 'password' | 'forward' };
+          const body = (await res.json().catch(() => ({}))) as { auth?: 'password' | 'forward' | 'oidc' };
           if (!closed) setAuth(body.auth ?? 'password');
           return;
         }

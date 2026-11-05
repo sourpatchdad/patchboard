@@ -1,12 +1,34 @@
-// Shown when the server asks for sign-in. Password mode gets a form; forward
-// mode means the reverse proxy should have signed you in, so it says so.
+// Shown when the server asks for sign-in. Password mode gets a form; OIDC a
+// button to the provider; forward mode means the reverse proxy should have
+// signed you in, so it says so.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export function SignIn({ mode }: { mode: 'password' | 'forward' }) {
+export function SignIn({ mode }: { mode: 'password' | 'forward' | 'oidc' }) {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => new URLSearchParams(location.search).get('signin_error') ?? '');
   const [busy, setBusy] = useState(false);
+  const [provider, setProvider] = useState('your identity provider');
+  useEffect(() => {
+    if (mode !== 'oidc') return;
+    void (async () => {
+      const s = (await (await fetch('/api/session')).json()) as { provider?: string };
+      if (s.provider) setProvider(s.provider);
+    })();
+  }, [mode]);
+
+  if (mode === 'oidc') {
+    return (
+      <div className="signin">
+        <h1 className="page-title">Patchboard</h1>
+        <p className="page-lede">Sign in to see your server.</p>
+        <a className="button board-save" href="/api/oidc/login">
+          Sign in with {provider}
+        </a>
+        {error && <p className="crit-text">{error}</p>}
+      </div>
+    );
+  }
 
   if (mode === 'forward') {
     return (

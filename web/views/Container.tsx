@@ -66,7 +66,7 @@ export function ContainerPage() {
         <Crumbs />
         <h1 className="page-title">{name}</h1>
         <Empty>
-          {snap.sources.docker?.ok ? 'No container by this name. It may have been removed or renamed.' : "Can't see Docker right now."}
+          {snap.sources.docker?.ok ? 'Docker has no container by this name. Someone may have removed or renamed it.' : "Can't see Docker right now."}
         </Empty>
       </div>
     );

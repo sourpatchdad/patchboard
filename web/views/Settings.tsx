@@ -89,7 +89,7 @@ export function Settings() {
             a.theme === 'custom',
           )}
         </div>
-        {a.theme === 'custom' && <p className="settings-note">A custom theme is dark or light by its own background.</p>}
+        {a.theme === 'custom' && <p className="settings-note">A custom theme turns light or dark with its background color.</p>}
       </Section>
 
       <Section title="Accent">
@@ -137,7 +137,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          To choose which widgets Home shows, their order and their width, use <strong>Customize</strong> on Home. The board is the same on every device.
+          <strong>Customize</strong> on Home picks the widgets, their order and their width. Every device shows the same board.
         </p>
       </Section>
 
@@ -474,7 +474,7 @@ function Activity() {
   return (
     <Section title="Activity" count={rows ? `${rows.length} recent` : undefined} className="span-all">
       {!rows?.length ? (
-        <p className="settings-note">Nothing yet. Every container action, update, board change and sign-in will be listed here, with who did it.</p>
+        <p className="settings-note">Nothing yet. Container actions, updates, board changes and sign-ins show up here, with who did each.</p>
       ) : (
         <ul className="audit">
           {rows.slice(0, 60).map((r) => (
@@ -531,7 +531,7 @@ function Keys() {
   return (
     <Section title="Keys" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
-        API keys you pasted when setting up an app's live number. They stay on the server and are never shown again. An API numbers widget can use one as{' '}
+        Keys you pasted for live numbers. Patchboard keeps them on the server and never shows them again. An API numbers widget can use one as{' '}
         <code>{'${secret:NAME}'}</code>.
       </p>
       {list.length > 0 && (

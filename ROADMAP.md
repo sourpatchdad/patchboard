@@ -26,8 +26,6 @@ files, and a non-root image.
 
 ### Trust
 
-- [ ] OIDC sign-in
-- [ ] Non-root image variant
 
 ### Making it yours
 

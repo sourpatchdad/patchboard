@@ -677,7 +677,7 @@ function SettingsDrawer({
           )}
           {w.type === 'apps' && (
             <p className="settings-note">
-              To reorder apps, move them between groups, rename groups, hide apps or add new ones, <Link to="/apps?arrange=1">edit apps</Link>. Save this board first; that page saves on its own.
+              <Link to="/apps?arrange=1">Edit apps</Link> reorders, regroups, renames, hides and adds apps. Save this board first; Edit apps saves on its own.
             </p>
           )}
         </div>

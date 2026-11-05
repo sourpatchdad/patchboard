@@ -38,9 +38,15 @@ uploaded icons stay behind.
 
 | Variable | Default | |
 |---|---|---|
-| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header) or `password`. |
+| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header), `oidc` or `password`. |
 | `TRUSTED_USER_HEADER` | `Remote-User` | The header your forward-auth proxy sets. |
 | `PATCHBOARD_PASSWORD` | empty | The password for `AUTH=password`. |
+| `OIDC_ISSUER` | empty | Your provider's issuer URL, for `AUTH=oidc`. |
+| `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | empty | The client you created at the provider. Leave the secret empty for a public client. |
+| `OIDC_REDIRECT_URL` | from the request | `https://dash.example.com/api/oidc/callback`. Set it behind a reverse proxy, and register the same URL at the provider. |
+| `OIDC_ALLOWED` | empty | Emails, usernames or groups that may sign in, comma-separated. Empty lets in anyone the provider signs in. |
+| `OIDC_NAME` | `your identity provider` | The name on the sign-in button. |
+| `OIDC_SCOPES` | `openid email profile` | Add `groups` if your provider needs it to send groups. |
 | `HOOK_TOKEN` | empty | What webhooks send when sign-in is on. |
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
