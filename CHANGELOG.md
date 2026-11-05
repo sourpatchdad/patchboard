@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.38.2 (2026-11-05)
+
+- **The next three days sit beside today's weather** on wide screens, with a
+  hairline between, instead of on a row underneath. The top of Home reads as
+  one line: time, weather, forecast, status.
+
 ## 1.38.1 (2026-11-05)
 
 - **The art stays as drawn.** The icon build no longer recolors anything:

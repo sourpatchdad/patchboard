@@ -5726,6 +5726,47 @@ a.masthead-weather:hover {
   color: var(--warn);
 }
 
+/* With room, the next three days sit beside today instead of under it:
+   one row, a hairline between, each day stacked as name, high, sky. */
+@media (min-width: 1200px) {
+  .masthead-weather .weather-text {
+    white-space: nowrap;
+  }
+
+  .masthead-weather {
+    grid-template-columns: auto auto auto;
+    justify-content: start;
+    justify-self: start;
+    column-gap: 16px;
+  }
+
+  .masthead-weather .forecast {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    align-items: end;
+    gap: 22px;
+    margin-left: 10px;
+    padding-left: 26px;
+    border-left: 1px solid var(--line);
+  }
+
+  .masthead-weather .forecast li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .masthead-weather .forecast strong {
+    font-size: 15px;
+    color: var(--head);
+  }
+
+  .masthead-weather .masthead-alert {
+    grid-column: 1 / -1;
+  }
+}
+
 a.status-line {
   text-decoration: none;
 }
