@@ -1,5 +1,5 @@
 // Parsers for the server's own files: backup logs, audit reports, runbook.
-// Fixtures in ./fixtures mirror the real formats on HomeNAS.
+// Fixtures in ./fixtures mirror the formats of a real TrueNAS audit script.
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

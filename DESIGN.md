@@ -74,9 +74,17 @@ saved theme before the page loads; keep it in step with `appearance.ts`.
 Four patches sewn into one board: three calm, one lit amber. It says what
 Patchboard does. Everything's fine except the one thing that needs you.
 
-- `web/public/icon.svg` is the source: depth, stitches, and a rim that keeps
-  it apart from a dark dock or bookmark bar.
-- `web/public/favicon.svg` is the 16-pixel version for tabs and bookmarks:
-  bigger patches and no stitches, which blur at that size.
-- `npm run icons` renders the PNGs for home screens, including a full-bleed
-  copy Android crops to its own shape.
+- `web/public/icon.svg` (dark) and `icon-light.svg` are the sources: depth,
+  stitches, and a rim that keeps each apart from its background.
+- `favicon.svg` is the 16-pixel version for tabs and bookmarks, with bigger
+  patches and no stitches. It follows the system's light or dark mode on its
+  own. `favicon-dark.svg` and `favicon-light.svg` hold one look.
+- `npm run icons` renders the PNGs for home screens, including full-bleed
+  copies Android crops to its own shape.
+- Settings, Look, App icon picks per device: match the mode, dark or light.
+  Patchboard points the tab icon, the Apple touch icon and the install
+  manifest at the choice, and `index.html` does the same before the bundle
+  loads. Browsers read those links when you add to a home screen or install,
+  so the pick is what gets installed. iOS keeps a home-screen icon as it was
+  when added; web apps can't offer iOS dark or tinted icons the way App Store
+  apps can.

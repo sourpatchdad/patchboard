@@ -92,6 +92,27 @@ export function Settings() {
         {a.theme === 'custom' && <p className="settings-note">A custom theme turns light or dark with its background color.</p>}
       </Section>
 
+      <Section title="App icon">
+        <div className="choice-row icon-choices">
+          {(
+            [
+              ['auto', 'Match the mode', '/favicon.svg'],
+              ['dark', 'Dark', '/icon.svg'],
+              ['light', 'Light', '/icon-light.svg'],
+            ] as const
+          ).map(([v, label, src]) => (
+            <button key={v} type="button" className="icon-choice" aria-pressed={a.appIcon === v} onClick={() => setAppearance({ appIcon: v })}>
+              <img src={src} alt="" width={44} height={44} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+        <p className="settings-note">
+          For this device: the browser tab, bookmarks, and the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick
+          first, then add.
+        </p>
+      </Section>
+
       <Section title="Accent">
         <div className="choice-row swatches">
           <button type="button" className="swatch swatch-theme" aria-pressed={a.accent === 'default'} title="The theme's own" aria-label="The theme's own accent" onClick={() => setAppearance({ accent: 'default' })} />

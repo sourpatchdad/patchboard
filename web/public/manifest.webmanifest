@@ -1,7 +1,7 @@
 {
   "name": "Patchboard",
   "short_name": "Patchboard",
-  "description": "Control center for HomeNAS",
+  "description": "A control center for your home server",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

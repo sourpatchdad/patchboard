@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.28.0 (2026-11-04)
+
+- **Light and dark app icons.** The icon now has a light version: slate and
+  colored patches on warm paper. Browser tabs and bookmarks follow your
+  system's mode on their own.
+- **Pick the app icon per device** in Settings, Look: match the mode, dark or
+  light. The choice sets the tab icon, the home-screen icon from Add to Home
+  Screen, and the icon an installed app uses. A phone keeps the icon it had
+  when you added Patchboard, so pick first, then add.
+- **The browser bar matches the mode from the first paint**, before the app
+  loads, then follows your theme.
+- The install manifest no longer names one person's server.
+
 ## 1.27.1 (2026-11-04)
 
 - **The finished app icon.** Four patches sewn into one board, one lit

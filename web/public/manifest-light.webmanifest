@@ -1,0 +1,16 @@
+{
+  "name": "Patchboard",
+  "short_name": "Patchboard",
+  "description": "A control center for your home server",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F8",
+  "theme_color": "#F7F7F8",
+  "icons": [
+    { "src": "/icon-light.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/icon-light-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-light-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-light-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

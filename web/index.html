@@ -5,26 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Patchboard</title>
     <meta name="description" content="A control center for your home server" />
-    <meta name="theme-color" content="#0b0c0e" />
+    <meta name="theme-color" content="#0b0c0e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-180.png" />
     <script>
       // Paint the saved theme before any bundle loads (mirrors web/lib/appearance.ts).
       (function () {
         var r = document.documentElement, v = null;
         try { v = JSON.parse(localStorage.getItem('pb-vars') || 'null'); } catch (e) {}
         var light = matchMedia('(prefers-color-scheme: light)').matches;
-        if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; return; }
+        // The app icon follows the mode unless this device picked one (Settings, Look).
+        function icons(choice, scheme) {
+          var fixed = choice === 'dark' || choice === 'light', k = fixed ? choice : scheme, q = function (s) { return document.querySelector(s); };
+          q('link[rel="icon"]').href = fixed ? '/favicon-' + k + '.svg' : '/favicon.svg';
+          q('link[rel="apple-touch-icon"]').href = k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
+          q('link[rel="manifest"]').href = k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
+        }
+        if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; icons('auto', r.dataset.scheme); return; }
         var scheme = v.scheme === 'auto' ? (light ? 'light' : 'dark') : v.scheme;
+        icons(v.appIcon, scheme);
         var vars = v[scheme] || {};
         for (var k in vars) r.style.setProperty(k, vars[k]);
         r.dataset.scheme = scheme;
         for (var a in v.attrs || {}) r.dataset[a] = v.attrs[a];
       })();
     </script>
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icon-180.png" />
   </head>
   <body>
     <div id="root"></div>

@@ -11,6 +11,8 @@ import { contrast, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, 
 export type Scheme = 'auto' | 'dark' | 'light';
 export type IconMode = 'mono' | 'color';
 export type HomeApps = 'tiles' | 'patchbay';
+/** Which app icon this device installs and shows in its tab: follow the mode, or always one. */
+export type AppIcon = 'auto' | 'dark' | 'light';
 export type Density = 'compact' | 'comfortable' | 'large';
 export type TempUnit = 'f' | 'c' | 'both';
 export type HomeSection = 'inbox' | 'feeds' | 'upcoming' | 'now' | 'changes' | 'recent';
@@ -24,6 +26,7 @@ export interface Appearance {
   custom: CustomColors;
   icons: IconMode;
   homeApps: HomeApps;
+  appIcon: AppIcon;
   font: 'theme' | FontSet;
   density: Density;
   clock24: boolean;
@@ -43,6 +46,7 @@ export const DEFAULTS: Appearance = {
   custom: DEFAULT_CUSTOM,
   icons: 'mono',
   homeApps: 'tiles',
+  appIcon: 'auto',
   font: 'theme',
   density: 'comfortable',
   clock24: false,
@@ -154,11 +158,39 @@ function apply(a: Appearance): void {
   r.dataset.density = a.density;
   delete r.dataset.accent;
   try {
-    localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));
+    localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, appIcon: a.appIcon, attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));
   } catch {
     // Private mode: fine, the defaults paint first and this applies a moment later.
   }
   for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = vars[scheme]['--bg'];
+  applyIcon(a.appIcon, scheme);
+}
+
+/**
+ * Point the tab icon, the home-screen icon and the install manifest at the
+ * chosen variant. Browsers read these links when you add Patchboard to a home
+ * screen or install it, so the choice here is what gets installed. The same
+ * logic runs in index.html before the bundle loads.
+ */
+export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
+  const fixed = choice === 'dark' || choice === 'light';
+  const v = fixed ? choice : scheme;
+  return {
+    favicon: fixed ? `/favicon-${v}.svg` : '/favicon.svg',
+    touch: v === 'light' ? '/icon-light-180.png' : '/icon-180.png',
+    manifest: v === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest',
+  };
+}
+
+function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
+  const f = iconFiles(choice, scheme);
+  const set = (sel: string, href: string) => {
+    const el = document.querySelector<HTMLLinkElement>(sel);
+    if (el && el.getAttribute('href') !== href) el.setAttribute('href', href);
+  };
+  set('link[rel="icon"]', f.favicon);
+  set('link[rel="apple-touch-icon"]', f.touch);
+  set('link[rel="manifest"]', f.manifest);
 }
 
 media?.addEventListener('change', () => {

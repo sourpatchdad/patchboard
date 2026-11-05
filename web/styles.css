@@ -6443,3 +6443,30 @@ a.date:hover {
     grid-area: 1 / 5;
   }
 }
+
+/* Settings, App icon: three choices with the icon itself as the picture. */
+.icon-choices {
+  gap: 10px;
+}
+
+.icon-choice {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 14px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.icon-choice img {
+  border-radius: 10px;
+}
+
+.icon-choice[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--accent);
+  border-color: transparent;
+}
