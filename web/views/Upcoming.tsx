@@ -72,6 +72,7 @@ export function Upcoming() {
       )}
       {!any && <Empty>Connect Sonarr, Radarr or Trakt to fill this calendar.</Empty>}
       {any && byDay.size === 0 && <Empty>{kind === 'all' ? 'Nothing scheduled in the next two weeks.' : 'None of these in the next two weeks.'}</Empty>}
+      {any && byDay.size > 0 && <WeekGrid items={shown} now={now} />}
       <div className="agenda agenda-grid">
         {[...byDay].map(([day, { off, list }]) => (
           <section className={`agenda-day ${off === 0 ? 'is-today' : ''}`} key={day} aria-label={day}>
@@ -87,6 +88,63 @@ export function Upcoming() {
           </section>
         ))}
       </div>
+    </div>
+  );
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Wide screens: a real calendar. Monday to Sunday, every day of the weeks
+ * ahead in its place, empty days quiet, so rows line up and you read a week
+ * across. Narrow screens use the day list below instead.
+ */
+function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const last = Math.max(13, ...items.map((it) => dayOffset(it.when, now)));
+  const end = new Date(today.getTime() + last * DAY_MS);
+  end.setDate(end.getDate() + (7 - ((end.getDay() + 6) % 7) - 1));
+  const days: Date[] = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+  const byDate = new Map<string, ReleaseItem[]>();
+  for (const it of items) {
+    const k = new Date(it.when).toDateString();
+    byDate.set(k, [...(byDate.get(k) ?? []), it]);
+  }
+  return (
+    <div className="week-grid" role="grid" aria-label="Calendar">
+      {days.slice(0, 7).map((d) => (
+        <span key={`h${d.getDay()}`} className="week-head" role="columnheader">
+          {d.toLocaleDateString(undefined, { weekday: 'short' })}
+        </span>
+      ))}
+      {days.map((d) => {
+        const list = groupDrops(byDate.get(d.toDateString()) ?? []);
+        const off = Math.round((d.getTime() - today.getTime()) / DAY_MS);
+        return (
+          <section
+            key={d.toDateString()}
+            role="gridcell"
+            aria-label={d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            className={`week-day ${off === 0 ? 'is-today' : ''} ${off < 0 ? 'is-past' : ''} ${list.length ? '' : 'is-empty'}`}
+          >
+            <h3>
+              <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
+              {list.length > 1 && <small>{list.length}</small>}
+            </h3>
+            {list.length > 0 && (
+              <ul>
+                {list.map((it) => (
+                  <ReleaseRow key={it.id} it={it} art />
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.25.0 (2026-11-04)
+
+- **Posters show on real installs.** Sonarr and Radarr keep `/MediaCover/`
+  behind their web login, so every poster request ended at a login redirect.
+  Patchboard now asks their API (`/api/v3/mediacover`, which takes the API
+  key) and falls back to the public TheTVDB or TMDB poster they report.
+  Trakt shows get posters from TVmaze by their TVDB id. The server caches
+  posters for a day and misses for an hour.
+- **Upcoming is a calendar** on wide screens: Monday to Sunday, every day in
+  its place and empty days quiet, so weeks read across and rows line up.
+  Titles wrap instead of cutting off. Phones keep the day-by-day list.
+- **Image update marks clear when you're current.** Diun flags a new digest
+  for a tag even when the image you run hasn't changed (a re-published
+  `latest`). An update that finds nothing newer now clears the mark, and the
+  container page has **Dismiss** for the rest. Activity records dismissals.
+
 ## 1.24.0 (2026-11-04)
 
 - **OIDC sign-in** (`AUTH=oidc`) for Authentik, Authelia, Keycloak, Pocket ID,

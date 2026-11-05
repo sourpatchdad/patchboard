@@ -66,3 +66,12 @@ export function pendingUpdates(): Record<string, ImageUpdate> {
   const all = kvGet<Record<string, Stored>>(KEY) ?? {};
   return Object.fromEntries(Object.entries(all).map(([k, { imageIdAtNotice: _drop, ...u }]) => [k, u]));
 }
+
+/** Clear one container's mark: it runs the newest image, or someone dismissed it. */
+export function clearUpdate(name: string): boolean {
+  const all = kvGet<Record<string, Stored>>(KEY) ?? {};
+  if (!(name in all)) return false;
+  delete all[name];
+  kvSet(KEY, all);
+  return true;
+}

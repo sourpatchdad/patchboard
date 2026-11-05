@@ -45,6 +45,8 @@ import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, star
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog, setCatalogOrder } from './catalog.ts';
 import { catalogYaml } from '../shared/catalog-yaml.ts';
+import { poster } from './art.ts';
+import { clearUpdate } from './updates.ts';
 import { type AppOrder, validateOrder } from '../shared/order.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
@@ -414,6 +416,16 @@ app.delete('/api/board', (c) => {
   return c.json({ board: DEFAULT_BOARD, custom: false });
 });
 
+// Dismiss an image-update mark you know is wrong (a re-published tag).
+app.delete('/api/updates/:name', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const name = c.req.param('name');
+  if (!clearUpdate(name)) return c.json({ error: 'No update mark for that container' }, 404);
+  hub.emitUpdates();
+  recordAudit(who(c), 'update.dismiss', name);
+  return c.json({ ok: true });
+});
+
 // The order apps appear in, when rearranged in the UI. Applied to the catalog
 // on the server so every view and every device agrees.
 app.put('/api/app-order', async (c) => {
@@ -537,32 +549,11 @@ app.get('/api/appstats', async (c) => {
   return c.json(out);
 });
 
-// Posters for the calendar, from Sonarr's and Radarr's own cached covers
-// (the 250px versions). Fetched by the server so the API keys stay here;
-// cached in memory for a day.
-const artCache = new Map<string, { at: number; type: string; body: Uint8Array<ArrayBuffer> }>();
+// Posters for the calendar (see server/art.ts).
 app.get('/api/art/:src/:id', async (c) => {
-  const src = c.req.param('src');
-  const id = c.req.param('id');
-  const svc = src === 'sonarr' ? config.sonarr : src === 'radarr' ? config.radarr : undefined;
-  if (!svc || !/^\d{1,9}$/.test(id) || config.demo) return c.body(null, 404);
-  const k = `${src}:${id}`;
-  let hit = artCache.get(k);
-  if (!hit || Date.now() - hit.at > 86_400_000) {
-    try {
-      const res = await fetch(`${svc.url}/MediaCover/${id}/poster-250.jpg`, { headers: { 'X-Api-Key': svc.key }, redirect: 'manual', signal: AbortSignal.timeout(8000) });
-      const type = res.headers.get('content-type') ?? '';
-      if (!res.ok || !type.startsWith('image/')) return c.body(null, 404);
-      const body = new Uint8Array(await res.arrayBuffer());
-      if (body.length > 1_000_000) return c.body(null, 404);
-      hit = { at: Date.now(), type, body };
-      if (artCache.size > 400) artCache.delete(artCache.keys().next().value!);
-      artCache.set(k, hit);
-    } catch {
-      return c.body(null, 404);
-    }
-  }
-  return c.body(hit.body, 200, { 'Content-Type': hit.type, 'Cache-Control': 'private, max-age=86400' });
+  if (config.demo) return c.body(null, 404);
+  const got = await poster(c.req.param('src'), c.req.param('id'));
+  return got ? c.body(got.body, 200, { 'Content-Type': got.type, 'Cache-Control': 'private, max-age=86400' }) : c.body(null, 404);
 });
 
 // Uploaded icons. Named by content hash, so the same file uploads once and

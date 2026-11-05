@@ -459,6 +459,7 @@ const ACTION_TEXT: Record<string, string> = {
   'icon.upload': 'uploaded an icon',
   'pages.save': 'customized a page',
   'setup.import': 'imported a setup file',
+  'update.dismiss': 'dismissed an image update mark for',
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',
@@ -482,7 +483,7 @@ function Activity() {
               <span className="mono audit-who">{r.who}</span>
               <span>
                 {ACTION_TEXT[r.action] ?? r.action}
-                {r.target && (r.action.startsWith('container.') || r.action.startsWith('secret.')) && (
+                {r.target && (r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action === 'update.dismiss') && (
                   <>
                     {' '}
                     <span className="ident">{r.target}</span>

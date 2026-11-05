@@ -27,8 +27,8 @@ memory.
 
 ![Stacks](screenshots/stacks.png)
 
-**Upcoming:** Sonarr, Radarr and Trakt in one calendar, with posters and no
-doubles.
+**Upcoming:** Sonarr, Radarr and Trakt in one calendar, Monday to Sunday,
+with posters and no doubles. A phone gets a day-by-day list.
 
 ![Upcoming](screenshots/upcoming.png)
 

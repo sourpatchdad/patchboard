@@ -51,6 +51,7 @@ export function traktAdapter(): Adapter<TraktData> {
           when: s.first_aired,
           url: `https://trakt.tv/shows/${s.show.ids.slug}`,
           key: tvdbKey(s.show.ids.tvdb, s.episode.season, s.episode.number) ?? episodeKey(s.show.title, s.episode.season, s.episode.number),
+          ...(s.show.ids.tvdb ? { art: `/api/art/tvmaze/${s.show.ids.tvdb}` } : {}),
           alt: [episodeKey(s.show.title, s.episode.season, s.episode.number)],
         })),
         ...movies.map((m): ReleaseItem => ({

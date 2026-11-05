@@ -1,6 +1,7 @@
 // Sonarr and Radarr (v3 API, which v4/v5 still serve). Each gives us three
 // things: the release calendar, queue items that need a human, and health.
 
+import { rememberArt } from '../art.ts';
 import type { ArrData, ArrProblem, ReleaseItem } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson } from '../http.ts';
@@ -59,7 +60,7 @@ interface SonarrEpisode {
   airDateUtc?: string;
   hasFile: boolean;
   seriesId: number;
-  series: { title: string; titleSlug: string; tvdbId?: number };
+  series: { title: string; titleSlug: string; tvdbId?: number; images?: { coverType: string; remoteUrl?: string }[] };
 }
 
 /** "The Traitors (US)" and "Traitors" are the same show: drop articles, a trailing (US) or (2012), punctuation. */
@@ -105,7 +106,7 @@ export function sonarrAdapter(): Adapter<ArrData> {
           url: `${url}/series/${e.series.titleSlug}`,
           key: tvdbKey(e.series.tvdbId, e.seasonNumber, e.episodeNumber) ?? episodeKey(e.series.title, e.seasonNumber, e.episodeNumber),
           alt: [episodeKey(e.series.title, e.seasonNumber, e.episodeNumber)],
-          art: `/api/art/sonarr/${e.seriesId}`,
+          art: (rememberArt(`sonarr:${e.seriesId}`, e.series.images?.find((x) => x.coverType === 'poster')?.remoteUrl), `/api/art/sonarr/${e.seriesId}`),
         }));
       return { upcoming, ...rest };
     },
@@ -121,6 +122,7 @@ interface RadarrMovie {
   inCinemas?: string;
   digitalRelease?: string;
   physicalRelease?: string;
+  images?: { coverType: string; remoteUrl?: string }[];
 }
 
 export function radarrAdapter(): Adapter<ArrData> {
@@ -159,7 +161,7 @@ export function radarrAdapter(): Adapter<ArrData> {
             url: `${url}/movie/${m.tmdbId}`,
             key: `mv:${m.tmdbId}:${label}`,
             alt: [`mv:${m.tmdbId}`],
-            art: `/api/art/radarr/${m.id}`,
+            art: (rememberArt(`radarr:${m.id}`, m.images?.find((x) => x.coverType === 'poster')?.remoteUrl), `/api/art/radarr/${m.id}`),
           });
         }
       }

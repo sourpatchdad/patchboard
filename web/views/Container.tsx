@@ -169,6 +169,19 @@ export function ContainerPage() {
                   {snap.updates[name] && (
                     <span className="update-note">
                       Update available, found {ago(snap.updates[name].at, now)}
+                      {!snap.readOnly && (
+                        <>
+                          {' '}
+                          <button
+                            type="button"
+                            className="text-button"
+                            title="Clear this mark if you already run the newest image"
+                            onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
+                          >
+                            Dismiss
+                          </button>
+                        </>
+                      )}
                       {snap.updates[name].link && snap.updates[name].link !== '#' && (
                         <>
                           {' '}

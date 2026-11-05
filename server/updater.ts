@@ -20,6 +20,7 @@ import { isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../shared/types.ts';
 import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
+import { clearUpdate } from './updates.ts';
 
 interface Inspect {
   Image: string;
@@ -196,6 +197,9 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
       await run(j, [...compose, 'pull', service], dir);
       const fresh = await imageId(r.Config.Image);
       if (fresh === r.Image) {
+        // Diun flags a new digest for the tag even when the image you run is
+        // the same one (a re-published tag). Pulling proves it: clear the mark.
+        clearUpdate(c.name);
         step(j, 'pull', 'done', 'Already the newest image');
         step(j, 'recreate', 'skipped');
         step(j, 'healthy', 'skipped');

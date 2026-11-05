@@ -6215,6 +6215,124 @@ a.date:hover {
   }
 }
 
+/* ---------- Upcoming: a calendar on wide screens ---------- */
+
+.week-grid {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .week-grid + .agenda-grid {
+    display: none;
+  }
+}
+
+.week-head {
+  padding: 0 4px 2px;
+  font: 400 12px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.week-day {
+  min-height: 132px;
+  padding: 8px 10px 4px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--raised) 55%, var(--bg));
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  min-width: 0;
+}
+
+.week-day.is-empty {
+  background: transparent;
+}
+
+.week-day.is-past {
+  opacity: 0.4;
+}
+
+.week-day.is-today {
+  box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px var(--line-soft);
+}
+
+.week-day h3 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  font: 400 12.5px/1.2 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.week-day.is-today h3 {
+  color: var(--accent);
+}
+
+.week-day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Inside a calendar day: poster, then title, episode and time stacked. */
+.week-day .rel.with-art > a,
+.week-day .rel.with-art > div {
+  grid-template-columns: 34px auto minmax(0, 1fr);
+  grid-template-areas:
+    'art main main'
+    'art time src';
+  column-gap: 8px;
+  row-gap: 1px;
+  padding: 6px 0;
+}
+
+.week-day .rel-art .poster {
+  width: 34px;
+}
+
+.week-day .rel-title {
+  font-size: 13.5px;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+.week-day .rel-main {
+  display: grid;
+  white-space: normal;
+}
+
+.week-day .rel-src {
+  justify-self: start;
+  padding-left: 8px;
+}
+
+.week-day .rel:has(.rel-time:empty) .rel-src {
+  padding-left: 0;
+}
+
+.week-day .rel-sub {
+  font-size: 12px;
+  white-space: normal;
+}
+
+.week-day .rel-time,
+.week-day .rel-src {
+  font-size: 11px;
+}
+
+.week-day .rel:last-child > a,
+.week-day .rel:last-child > div {
+  border-bottom: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
