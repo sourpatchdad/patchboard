@@ -62,7 +62,7 @@ export function ContainerPage() {
   if (!snap) return null;
   if (!ctr) {
     return (
-      <div className="page detail">
+      <div className="page detail ctr-page">
         <Crumbs />
         <h1 className="page-title">{name}</h1>
         <Empty>
@@ -149,16 +149,17 @@ export function ContainerPage() {
           {problem && sections.length > 0 && <Runbook sections={sections} open />}
           {d?.health === 'unhealthy' && d.healthLog.length > 0 && <HealthLog log={d.healthLog} now={now} />}
           {ctr.state === 'running' && <Resources name={name} cpu={live?.cpu} mem={live?.memBytes} />}
-          <Section title="Logs" action={{ label: 'Open full view', to: `/logs/${name}` }}>
-            <LogTail name={name} />
-          </Section>
           {!problem && sections.length > 0 && <Runbook sections={sections} />}
           {runbook.data && !runbook.data.available && sections.length === 0 && problem && (
             <p className="detail-note">Mount your system docs at DOCS_PATH and the matching runbook section shows up here.</p>
           )}
         </div>
 
+        {/* The live logs sit beside the fix, so 2 AM needs no scrolling. */}
         <aside className="detail-side">
+          <Section title="Logs" action={{ label: 'Open full view', to: `/logs/${name}` }} className="side-logs">
+            <LogTail name={name} />
+          </Section>
           <AppPanel name={name} />
           <Section title="Container">
             {d ? (

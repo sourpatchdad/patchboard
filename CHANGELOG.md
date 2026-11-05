@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.30.2 (2026-11-04)
+
+- **A container's page puts the fix beside the logs.** What needs attention
+  and the runbook sit on the left, the live logs on the right, so a stopped
+  container shows its state, the Start button, the fix and the last log
+  lines on one laptop screen. Image, wiring and history follow below.
+- **Server uses three columns from 1200 pixels wide.** Scrolling on a
+  1440 by 900 screen drops from about 970 pixels to under 500. Disks take
+  one line whenever their column has room.
+
 ## 1.30.1 (2026-11-04)
 
 - **Phones.** The tab bar has an icon over each label, and every label fits.

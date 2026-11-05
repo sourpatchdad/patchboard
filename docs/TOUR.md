@@ -19,8 +19,8 @@ fills at this rate.
 
 ![Server](screenshots/server.png)
 
-**A container:** its alerts, the runbook section with the fix, logs, and
-buttons to start, restart, update or roll back.
+**A container:** what's wrong and the runbook's fix on the left, the live
+logs beside them, and buttons to start, restart, update or roll back.
 
 ![A container page](screenshots/container.png)
 

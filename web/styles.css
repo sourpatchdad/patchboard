@@ -6412,9 +6412,10 @@ a.date:hover {
   }
 }
 
-@media (min-width: 1600px) {
+@media (min-width: 1200px) {
   .server .detail-grid {
     column-count: 3;
+    column-gap: 40px;
   }
 }
 
@@ -6423,9 +6424,9 @@ a.date:hover {
   container-type: inline-size;
 }
 
-@container (min-width: 520px) {
+@container (min-width: 400px) {
   .detail-side .disks li {
-    grid-template-columns: 4.5em 6.5em minmax(0, 1fr) auto auto;
+    grid-template-columns: 4.5em 5.5em minmax(0, 1fr) auto auto;
   }
 
   .detail-side .disk-pool {
@@ -6435,6 +6436,8 @@ a.date:hover {
   .detail-side .disk-model {
     grid-area: 1 / 3;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .detail-side .disk-size {
@@ -7178,5 +7181,35 @@ button.ha-act:hover {
 
   .page-toolbar > :last-child:not(.sort-seg) {
     margin-left: 0;
+  }
+}
+
+/* ---------- A container's page: the fix and the logs side by side ---------- */
+
+.ctr-page .crumbs {
+  margin-bottom: 8px;
+}
+
+.ctr-page .detail-state {
+  margin: 14px 0 6px;
+}
+
+.ctr-page .detail-grid {
+  margin-top: 22px;
+}
+
+.ctr-page .section {
+  margin-bottom: 32px;
+}
+
+@media (min-width: 1081px) {
+  .ctr-page .detail-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 48px;
+  }
+
+  .side-logs .log-tail {
+    height: min(420px, calc(100dvh - 430px));
+    min-height: 260px;
   }
 }
