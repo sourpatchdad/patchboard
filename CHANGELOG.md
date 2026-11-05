@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.26.0 (2026-11-04)
+
+- **Jellyfin and Emby.** Set `JELLYFIN_URL` and `JELLYFIN_KEY` (or the `EMBY_`
+  pair) and Right now shows who is watching, Recently added mixes in their
+  arrivals, and the container page lists streams and Next up. Patchboard
+  sends the key in a header and proxies posters, so the browser never sees
+  it. `JELLYFIN_USER` picks whose library to read; blank uses the first admin.
+- **Next up**, a new widget: the next episode of each show you're watching
+  on Jellyfin or Emby. The Media night layout includes it.
+- **Posters open the item.** On Jellyfin and Emby a poster opens that film or
+  show in the server's web app. Plex posters open Plex.
+- **Recently added merges servers.** Run Plex and Jellyfin side by side and
+  the shelf shows each title once, newest first, with its server's name.
+- **Every tag gets a GitHub Release** with that version's notes from this
+  file.
+
 ## 1.25.0 (2026-11-04)
 
 - **Posters show on real installs.** Sonarr and Radarr keep `/MediaCover/`

@@ -8,6 +8,7 @@ import { adoptAll, saveLayout } from '../lib/adopt.ts';
 import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
+import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
 import type {
   Alert,
   ArrData,
@@ -263,19 +264,18 @@ export function FeedsBrief({ now }: { now: number }) {
 }
 
 export function NowPlaying() {
-  const { data: plex, state: plexState } = useSource<TautulliData>('tautulli');
+  const { servers, configured } = useMediaServers();
   const { data: qbit, state: qbitState } = useSource<QbitData>('qbit');
-  const streams = plex?.streams ?? [];
-  if (!plexState && !qbitState) return null;
+  if (!configured && !qbitState) return null;
 
   return (
     <Section title="Right now" className="now">
-      {plexState && (
-        <div className="now-block">
+      {servers.map((m) => (
+        <div className="now-block" key={m.id}>
           <h3>
-            <Link to="/c/plex">{streams.length ? `${plural(streams.length, 'stream')} on Plex` : 'Nobody is watching Plex'}</Link>
+            <Link to={`/c/${m.container}`}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</Link>
           </h3>
-          {streams.map((s, i) => (
+          {m.data.streams.map((s, i) => (
             <div className="stream" key={i}>
               <div className="stream-line">
                 <span className="stream-title">
@@ -297,7 +297,7 @@ export function NowPlaying() {
             </div>
           ))}
         </div>
-      )}
+      ))}
 
       {qbitState && qbit && (
         <div className="now-block">
@@ -456,29 +456,51 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
 }
 
 export function RecentlyAdded({ now }: { now: number }) {
-  const { state, data } = useSource<TautulliData>('tautulli');
-  const plexHref = useStore()
-    .snap?.catalog.groups.flatMap((g) => g.services)
-    .find((s) => s.container === 'plex' || s.name.toLowerCase() === 'plex')?.href;
+  const { servers } = useMediaServers();
   const { limit = 12 } = useWidget();
-  if (!state || !data?.recent.length) return null;
+  const items = mergeRecent(servers);
+  if (!items.length) return null;
+  const title = servers.length === 1 ? `Recently added to ${servers[0].label}` : 'Recently added';
   return (
-    <Section title="Recently added to Plex" className="recent">
-      <ul className="posters">
-        {data.recent.slice(0, limit).map((r) => (
-          <li key={r.id}>
-            <a className="poster-link" href={plexHref && plexHref !== '#' ? plexHref : undefined} target="_blank" rel="noreferrer" title={plexHref ? 'Open Plex' : undefined}>
+    <Section title={title} className="recent">
+      <PosterShelf items={items.slice(0, limit)} now={now} showServer={servers.length > 1} />
+    </Section>
+  );
+}
+
+/** Jellyfin and Emby: the next episode of each show you're watching. */
+export function NextUp() {
+  const { servers } = useMediaServers();
+  const { limit = 12 } = useWidget();
+  const items = servers.flatMap((server) => ('nextUp' in server.data ? server.data.nextUp.map((r) => ({ ...r, server })) : []));
+  if (!items.length) return null;
+  return (
+    <Section title="Next up" className="recent">
+      <PosterShelf items={items.slice(0, limit)} showServer={servers.length > 1} />
+    </Section>
+  );
+}
+
+function PosterShelf({ items, now, showServer }: { items: MergedItem[]; now?: number; showServer: boolean }) {
+  return (
+    <ul className="posters">
+      {items.map((r) => {
+        const href = itemHref(r.server, r.id);
+        return (
+          <li key={`${r.server.id}:${r.id}:${r.subtitle ?? ''}`}>
+            <a className="poster-link" href={href} target="_blank" rel="noreferrer" title={href ? `Open in ${r.server.label}` : undefined}>
               <Poster title={r.title} thumb={r.thumb} />
               <span className="poster-title">{r.title}</span>
               <span className="poster-sub">
                 {r.subtitle && <Episode text={r.subtitle} />}
-                <time>{ago(r.addedAt, now)}</time>
+                {now !== undefined && <time>{ago(r.addedAt, now)}</time>}
+                {showServer && <span className="poster-src">{r.server.label}</span>}
               </span>
             </a>
           </li>
-        ))}
-      </ul>
-    </Section>
+        );
+      })}
+    </ul>
   );
 }
 

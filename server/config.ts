@@ -19,6 +19,11 @@ function pair(urlKey: string, keyKey: string): { url: string; key: string } | un
   return url && key ? { url: trimSlash(url), key } : undefined;
 }
 
+/** Jellyfin and Emby: whose library and Next up to show. Blank picks the first admin. */
+function withUser(p: { url: string; key: string } | undefined, userKey: string) {
+  return p ? { ...p, user: str(userKey) } : undefined;
+}
+
 const qbitUrl = str('QBIT_URL');
 const qbitUser = str('QBIT_USERNAME');
 const qbitPass = str('QBIT_PASSWORD');
@@ -115,6 +120,8 @@ export const config = {
   sonarr: pair('SONARR_URL', 'SONARR_KEY'),
   radarr: pair('RADARR_URL', 'RADARR_KEY'),
   tautulli: pair('TAUTULLI_URL', 'TAUTULLI_KEY'),
+  jellyfin: withUser(pair('JELLYFIN_URL', 'JELLYFIN_KEY'), 'JELLYFIN_USER'),
+  emby: withUser(pair('EMBY_URL', 'EMBY_KEY'), 'EMBY_USER'),
   miniflux: pair('MINIFLUX_URL', 'MINIFLUX_TOKEN'),
   qbit:
     qbitUrl && qbitUser && qbitPass

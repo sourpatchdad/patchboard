@@ -22,7 +22,7 @@ import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
-import { Attention, Changes, FeedsBrief, Inbox, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
+import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -411,6 +411,8 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
       return <Changes changes={snap.changes} now={now} />;
     case 'recent':
       return <RecentlyAdded now={now} />;
+    case 'nextup':
+      return <NextUp />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':

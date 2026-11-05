@@ -37,8 +37,8 @@ const data = <T>(snap: Snapshot, id: keyof Snapshot['sources']) => (snap.sources
 /** What the app's own integration can say, keyed by container name. */
 function integrationLine(snap: Snapshot, s: Service): string | null {
   const c = s.container ?? '';
-  if (c === 'plex') {
-    const p = data<TautulliData>(snap, 'tautulli');
+  if (c === 'plex' || c === 'jellyfin' || c === 'emby') {
+    const p = data<TautulliData>(snap, c === 'plex' ? 'tautulli' : c);
     if (!p) return null;
     return p.streams.length ? plural(p.streams.length, 'stream') : 'Nobody watching';
   }

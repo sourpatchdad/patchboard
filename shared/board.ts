@@ -15,6 +15,7 @@ export type WidgetType =
   | 'feeds'
   | 'changes'
   | 'recent'
+  | 'nextup'
   | 'container'
   | 'json'
   | 'weather';
@@ -105,12 +106,13 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
     options: {},
   },
   vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
-  now: { name: 'Right now', about: 'Who is watching Plex and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  now: { name: 'Right now', about: 'Who is watching Plex, Jellyfin or Emby, and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   upcoming: { name: 'This week', about: 'Episodes and movies due in the next week or two.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [9, 3, 40], days: true } },
   inbox: { name: 'Inbox', about: 'Newest mail and the unread count.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
   feeds: { name: 'Feeds', about: 'Newest unread articles.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
   changes: { name: 'Changes', about: 'Containers that stopped, started or recovered in the last two days.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
-  recent: { name: 'Recently added', about: 'New arrivals on Plex, as posters.', size: 'xl', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [12, 2, 24] } },
+  recent: { name: 'Recently added', about: 'New arrivals on Plex, Jellyfin and Emby, as posters. Each opens in its app.', size: 'xl', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [12, 2, 24] } },
+  nextup: { name: 'Next up', about: 'The next episode of each show you are watching on Jellyfin or Emby.', size: 'w', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [8, 2, 24] } },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };
@@ -210,6 +212,7 @@ export const STARTERS: { id: string; name: string; about: string; board: Board }
         { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { days: '14', limit: '14' } },
         { id: 'attention', type: 'attention', size: 'm', span: 1 },
         { id: 'recent', type: 'recent', size: 'xl', span: 3 },
+        { id: 'nextup', type: 'nextup', size: 'xl', span: 3 },
       ],
     },
   },

@@ -16,6 +16,7 @@ import { listEntries, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitAdapter } from './adapters/qbit.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
+import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
 import { traktAdapter } from './adapters/trakt.ts';
 import { truenasAdapter } from './adapters/truenas.ts';
 import { backupsAdapter } from './adapters/backups.ts';
@@ -60,6 +61,8 @@ function realAdapters(): Adapter[] {
   if (config.radarr) list.push(radarrAdapter());
   if (config.trakt) list.push(traktAdapter());
   if (config.tautulli) list.push(tautulliAdapter());
+  if (config.jellyfin) list.push(mediaServerAdapter('jellyfin'));
+  if (config.emby) list.push(mediaServerAdapter('emby'));
   if (config.qbit) list.push(qbitAdapter());
   if (config.miniflux) list.push(minifluxAdapter());
   if (config.fastmail) list.push(fastmailAdapter());
@@ -647,6 +650,22 @@ app.get('/api/history', (c) => {
     if (/^[\w.:-]+$/.test(k)) out[k] = series(k, hours * 3_600_000, points);
   }
   return c.json(out);
+});
+
+app.get('/api/img/:kind{jellyfin|emby}', async (c) => {
+  const kind = c.req.param('kind') as 'jellyfin' | 'emby';
+  if (config.demo || !config[kind]) return c.body(null, 404);
+  try {
+    const res = await mediaImage(kind, c.req.query('id') ?? '');
+    return new Response(res.body, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return c.body(null, 404);
+  }
 });
 
 app.get('/api/img/tautulli', async (c) => {

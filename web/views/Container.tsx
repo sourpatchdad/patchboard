@@ -7,6 +7,7 @@ import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useMemo, useRef } from 'react';
+import { useMediaServers } from '../lib/media.ts';
 import { Link, useParams } from 'react-router-dom';
 import type {
   ArrData,
@@ -16,7 +17,6 @@ import type {
   QbitData,
   RunbookSection,
   StatsData,
-  TautulliData,
   UptimeData,
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
@@ -519,7 +519,7 @@ function History({ name, now }: { name: string; now: number }) {
 function AppPanel({ name }: { name: string }) {
   const sonarr = useSource<ArrData>('sonarr').data;
   const radarr = useSource<ArrData>('radarr').data;
-  const plex = useSource<TautulliData>('tautulli').data;
+  const { servers } = useMediaServers();
   const qbit = useSource<QbitData>('qbit').data;
   const frigate = useSource<FrigateData>('frigate').data;
   const feeds = useSource<MinifluxData>('miniflux').data;
@@ -542,13 +542,17 @@ function AppPanel({ name }: { name: string }) {
       </Section>
     );
   }
-  if ((name === 'plex' || name === 'tautulli') && plex) {
+  const media = servers.find((m) => m.container === name || (m.id === 'tautulli' && name === 'tautulli'));
+  if (media) {
+    const d = media.data;
+    const next = 'nextUp' in d ? d.nextUp : [];
     return (
-      <Section title="In Plex">
+      <Section title={`In ${media.label}`}>
         <dl className="ledger">
-          <Row k="Streams">{plex.streams.length ? plex.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody watching'}</Row>
-          <Row k="Transcoding">{plex.streams.filter((s) => s.transcode).length || 'None'}</Row>
-          {plex.recent[0] && <Row k="Last added">{plex.recent[0].title}</Row>}
+          <Row k="Streams">{d.streams.length ? d.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody watching'}</Row>
+          <Row k="Transcoding">{d.streams.filter((s) => s.transcode).length || 'None'}</Row>
+          {d.recent[0] && <Row k="Last added">{d.recent[0].title}</Row>}
+          {next.length > 0 && <Row k="Next up">{next.slice(0, 3).map((n) => n.title).join(', ')}</Row>}
         </dl>
       </Section>
     );

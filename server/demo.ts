@@ -19,6 +19,7 @@ import type {
   ChecksData,
   StatsData,
   SystemData,
+  MediaServerData,
   TautulliData,
   TraktData,
   TruenasData,
@@ -47,6 +48,7 @@ export const demoCatalog: Catalog = {
       name: 'Watch & listen',
       services: [
         { name: 'Plex', href: '#', icon: 'plex.png', container: 'plex' },
+        { name: 'Jellyfin', href: '#', icon: 'jellyfin.png', container: 'jellyfin' },
         { name: 'Audiobookshelf', label: 'Books', href: '#', icon: 'audiobookshelf.png', container: 'audiobookshelf' },
         { name: 'Tautulli', href: '#', icon: 'tautulli.png', container: 'tautulli' },
         { name: 'Navidrome', href: '#', icon: 'navidrome.png', container: 'navidrome' },
@@ -244,6 +246,25 @@ const demoPlex = (): TautulliData => ({
   ],
 });
 
+const demoJellyfin = (): MediaServerData => ({
+  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', progress: Math.round(jitter(22, 2)), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
+  recent: [
+    { id: 'j1', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E10', addedAt: Date.now() - 5 * H },
+    { id: 'j2', type: 'movie', title: 'Weapons', thumb: poster('Weapons'), subtitle: '2025', addedAt: Date.now() - 26 * H },
+    { id: 'j3', type: 'series', title: 'Fallout', thumb: poster('Fallout'), subtitle: '8 new', addedAt: Date.now() - 2.5 * D },
+  ],
+  nextUp: [
+    { id: 'n1', type: 'episode', title: 'Andor', thumb: poster('Andor'), subtitle: 'S02E07', addedAt: Date.now() - 6 * D },
+    { id: 'n2', type: 'episode', title: 'The Pitt', thumb: poster('The Pitt'), subtitle: 'S01E12', addedAt: Date.now() - 9 * D },
+    { id: 'n3', type: 'episode', title: 'Slow Horses', thumb: poster('Slow Horses'), subtitle: 'S05E02', addedAt: Date.now() - 2 * D },
+    { id: 'n4', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E04', addedAt: Date.now() - 5 * H },
+    { id: 'n5', type: 'episode', title: 'Severance', thumb: poster('Severance'), subtitle: 'S02E06', addedAt: Date.now() - 12 * D },
+    { id: 'n6', type: 'episode', title: 'The Last of Us', thumb: poster('The Last of Us'), subtitle: 'S02E03', addedAt: Date.now() - 20 * D },
+    { id: 'n7', type: 'episode', title: 'Fallout', thumb: poster('Fallout'), subtitle: 'S01E01', addedAt: Date.now() - 2.5 * D },
+  ],
+  itemPath: '',
+});
+
 function demoQbit(): QbitData {
   const s1 = jitter(28e6, 6e6);
   const s2 = jitter(9e6, 3e6);
@@ -330,6 +351,7 @@ export function demoAdapters(): Adapter[] {
     })),
     demo<TraktData>('trakt', 'Trakt', 30 * MINUTE, () => ({ upcoming: traktUpcoming() })),
     demo<TautulliData>('tautulli', 'Plex', 15 * SECOND, demoPlex),
+    demo<MediaServerData>('jellyfin', 'Jellyfin', 15 * SECOND, demoJellyfin),
     demo<QbitData>('qbit', 'qBittorrent', 5 * SECOND, demoQbit),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,

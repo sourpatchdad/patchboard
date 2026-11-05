@@ -1258,6 +1258,10 @@ a.jack:focus-visible {
   color: var(--ink-3);
 }
 
+.poster-src {
+  font: 400 11.5px/1.5 var(--f-mono);
+}
+
 /* Icons */
 
 .icon-img {

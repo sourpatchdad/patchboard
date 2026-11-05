@@ -18,7 +18,7 @@ export function hash(s: string): number {
 }
 
 export const PROJECTS: Record<string, string> = {
-  plex: 'media', tautulli: 'media', audiobookshelf: 'media', navidrome: 'media',
+  plex: 'media', jellyfin: 'media', tautulli: 'media', audiobookshelf: 'media', navidrome: 'media',
   sonarr: 'arr', radarr: 'arr', prowlarr: 'arr', bazarr: 'arr', qbittorrent: 'arr', unpackerr: 'arr', recyclarr: 'arr',
   'immich-server': 'immich', 'immich-postgres': 'immich', 'immich-redis': 'immich',
   frigate: 'home', homeassistant: 'home', mosquitto: 'home',
@@ -37,6 +37,7 @@ export const DEPENDS: Record<string, string[]> = {
 
 export const IMAGES: Record<string, string> = {
   plex: 'plexinc/pms-docker:latest',
+  jellyfin: 'jellyfin/jellyfin:latest',
   'immich-server': 'ghcr.io/immich-app/immich-server:release',
   'immich-postgres': 'ghcr.io/immich-app/postgres:15-vectorchord0.4',
   'immich-redis': 'valkey/valkey:9',
@@ -57,7 +58,7 @@ export const IMAGES: Record<string, string> = {
 
 // Typical load per container: [cpu % of the machine, memory MB].
 const LOAD: Record<string, [number, number]> = {
-  plex: [3.4, 1480], frigate: [6.2, 1210], 'immich-server': [1.1, 910], 'immich-postgres': [0.4, 640],
+  plex: [3.4, 1480], jellyfin: [2.1, 760], frigate: [6.2, 1210], 'immich-server': [1.1, 910], 'immich-postgres': [0.4, 640],
   homeassistant: [0.9, 520], nextcloud: [0.3, 410], paperless: [0.2, 760], qbittorrent: [1.8, 690],
   sonarr: [0.4, 330], radarr: [0.3, 360], prowlarr: [0.1, 210], bazarr: [0.2, 240], audiobookshelf: [0.1, 180],
   vaultwarden: [0.02, 40], caddy: [0.1, 45], cloudflared: [0.2, 38], patchboard: [0.3, 96],
@@ -135,7 +136,7 @@ export function demoMem() {
 }
 
 const PORTS: Record<string, string> = {
-  plex: '32400/tcp', sonarr: '8989/tcp', radarr: '7878/tcp', prowlarr: '9696/tcp', bazarr: '6767/tcp',
+  plex: '32400/tcp', jellyfin: '8096/tcp', sonarr: '8989/tcp', radarr: '7878/tcp', prowlarr: '9696/tcp', bazarr: '6767/tcp',
   qbittorrent: '8080/tcp', tautulli: '8181/tcp', 'immich-server': '2283/tcp', frigate: '5000/tcp',
   homeassistant: '8123/tcp', nextcloud: '80/tcp', miniflux: '8080/tcp', vaultwarden: '80/tcp', patchboard: '3200/tcp',
 };

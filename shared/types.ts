@@ -8,6 +8,8 @@ export type SourceId =
   | 'sonarr'
   | 'radarr'
   | 'tautulli'
+  | 'jellyfin'
+  | 'emby'
   | 'qbit'
   | 'miniflux'
   | 'fastmail'
@@ -357,6 +359,13 @@ export interface RecentItem {
 export interface TautulliData {
   streams: Stream[];
   recent: RecentItem[];
+}
+
+/** Jellyfin and Emby: the Plex shape plus the episodes you watch next. */
+export interface MediaServerData extends TautulliData {
+  nextUp: RecentItem[];
+  /** Appended to the app's address, then the item id, to open it in the server's web app. */
+  itemPath: string;
 }
 
 export interface ActiveTorrent {
