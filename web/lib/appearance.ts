@@ -5,7 +5,7 @@
 // between dark and light since the last visit. Keep KEY and VARS_KEY in step
 // with that script.
 
-import { moodFor, otterDataUrl } from '../../shared/otter.ts';
+import { moodFor, OTTER, otterSrc } from '../../shared/otter.ts';
 import { useSyncExternalStore } from 'react';
 import { contrast, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
@@ -180,7 +180,7 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
   const fixed = choice === 'dark' || choice === 'light';
   const v = fixed ? choice : scheme;
   return {
-    favicon: fixed ? `/favicon-${v}.svg` : '/favicon.svg',
+    favicon: `/favicon-${v}.png`,
     touch: v === 'light' ? '/icon-light-180.png' : '/icon-180.png',
     manifest: v === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest',
   };
@@ -208,19 +208,46 @@ export function setStatus(level: 'critical' | 'warn' | null, count: number): voi
   }
 }
 
+let drawn = 0;
+
+/** The mood's tile with a status dot in the corner, as a data URL. */
+async function statusIcon(level: 'critical' | 'warn', light: boolean): Promise<string> {
+  const img = new Image();
+  img.src = otterSrc(moodFor(level), { tile: true, light });
+  await img.decode();
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  if (!g) throw new Error('no canvas');
+  g.drawImage(img, 0, 0, 64, 64);
+  g.beginPath();
+  g.arc(51, 13, 11, 0, Math.PI * 2);
+  g.fillStyle = level === 'critical' ? OTTER.crit : OTTER.warn;
+  g.strokeStyle = light ? OTTER.cream : OTTER.navy;
+  g.lineWidth = 4;
+  g.fill();
+  g.stroke();
+  return c.toDataURL('image/png');
+}
+
 function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
   const f = iconFiles(choice, scheme);
-  if (status.level) {
-    const fixed = choice === 'dark' || choice === 'light';
-    f.favicon = otterDataUrl({ small: true, bg: fixed ? choice : 'none', mood: moodFor(status.level), badge: status.level === 'critical' ? 'crit' : 'warn' });
-  }
   const set = (sel: string, href: string) => {
     const el = document.querySelector<HTMLLinkElement>(sel);
     if (el && el.getAttribute('href') !== href) el.setAttribute('href', href);
   };
-  set('link[rel="icon"]', f.favicon);
   set('link[rel="apple-touch-icon"]', f.touch);
   set('link[rel="manifest"]', f.manifest);
+  const turn = ++drawn;
+  const level = status.level;
+  if (!level) {
+    set('link[rel="icon"]', f.favicon);
+    return;
+  }
+  const light = (choice === 'dark' || choice === 'light' ? choice : scheme) === 'light';
+  statusIcon(level, light)
+    .then((url) => turn === drawn && set('link[rel="icon"]', url))
+    .catch(() => turn === drawn && set('link[rel="icon"]', f.favicon));
 }
 
 media?.addEventListener('change', () => {

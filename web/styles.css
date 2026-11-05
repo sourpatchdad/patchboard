@@ -309,10 +309,16 @@ time,
   color: var(--ink-3);
 }
 
-.otter svg {
+.otter img {
   display: block;
   width: 100%;
   height: 100%;
+  user-select: none;
+}
+
+:root[data-scheme='light'] .otter-on-dark,
+:root:not([data-scheme='light']) .otter-on-light {
+  display: none;
 }
 
 .wordmark-otter {

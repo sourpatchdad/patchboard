@@ -98,7 +98,7 @@ export function Shell() {
     <div className="shell">
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label="Patchboard home">
-          <Otter mood={mood} size={26} small className="wordmark-otter" />
+          <Otter mood={mood} size={28} tile className="wordmark-otter" />
           <span>Patchboard</span>
         </NavLink>
         <nav className="nav" aria-label="Views">

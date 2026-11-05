@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.38.0 (2026-11-05)
+
+- **The otter is the designed artwork.** The seven final images in
+  `art/otter` are now the source for the app icons, the tab icons,
+  `favicon.ico`, the header mark and the mascot. `npm run icons` lifts the
+  otter off its navy tile and builds every size: a navy or cream tile, a
+  full square for home screens, a maskable icon, and the otter in its pool
+  with no tile. On light pages and the cream tile, whiskers turn brown and
+  the marks above the head turn navy, so nothing cream disappears.
+- **The header mark is the app icon,** on a navy tile in dark mode and a
+  cream one in light, and its face still follows the server.
+- **The status tab icon** draws the mood's tile with an amber or red dot.
+- The SVG icon files are gone; the manifests list PNGs only.
+
 ## 1.37.2 (2026-11-05)
 
 - **The otter matches the designed icon set.** Traced in code from the final

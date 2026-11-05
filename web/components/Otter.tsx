@@ -1,13 +1,11 @@
 // The otter in the page: the header mark and the mascot in quiet, empty and
-// lost moments. The SVG comes from shared/otter.ts, our own string, never
-// user input, so setting it as HTML is safe.
+// lost moments. Each mood has a dark-page and a light-page image; CSS shows
+// the one that matches the scheme, and the browser only fetches what shows.
 
-import { useMemo } from 'react';
-import { type OtterMood, otterSvg } from '../../shared/otter.ts';
+import { type OtterMood, otterSrc } from '../../shared/otter.ts';
 import { useAppearance } from '../lib/appearance.ts';
 
-export function Otter({ mood = 'calm', size = 72, small, className, label }: { mood?: OtterMood; size?: number; small?: boolean; className?: string; label?: string }) {
-  const svg = useMemo(() => otterSvg({ mood, bg: 'none', small: small ?? size < 40 }), [mood, size, small]);
+export function Otter({ mood = 'calm', size = 72, tile, className, label }: { mood?: OtterMood; size?: number; tile?: boolean; className?: string; label?: string }) {
   return (
     <span
       className={`otter ${className ?? ''}`}
@@ -15,8 +13,10 @@ export function Otter({ mood = 'calm', size = 72, small, className, label }: { m
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    >
+      <img className="otter-on-dark" src={otterSrc(mood, { tile })} alt="" width={size} height={size} loading="lazy" decoding="async" draggable={false} />
+      <img className="otter-on-light" src={otterSrc(mood, { tile, light: true })} alt="" width={size} height={size} loading="lazy" decoding="async" draggable={false} />
+    </span>
   );
 }
 

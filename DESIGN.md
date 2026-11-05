@@ -75,19 +75,18 @@ An otter peeking over the edge of the water, keeping an eye on your server
 so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
-- **One drawing.** `shared/otter.ts` traces the designed icon set on a 100
-  by 100 grid: a brown dome with round ears, a cream face from the eyes
-  down, a rounded-triangle nose over a wide "w" mouth, two cream whiskers a
-  side, two paws on one band of water with rounded shoulders. The app icon
-  wears the hello face, open eyes and the smile, which reads best at every
-  size; the header and the tab follow the server's mood.
+- **The art.** `art/otter` holds the designed artwork, one 1254-pixel PNG
+  per mood (hello, calm, alert, worried, asleep, happy, lost), each the
+  otter on a navy tile: a brown dome with round ears, a cream face from the
+  eyes down, a nose over a wide "w" mouth, cream whiskers, two paws on one
+  band of water. The app icon wears the hello face.
 - **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
   only on the alert otter and red only on the tab icon's dot, the same rule
-  as the rest of the interface: color means trouble. Whiskers are cream on
-  navy and brown on the light tile, so they never vanish.
-- **Two sizes.** Below 40 pixels the drawing drops whiskers and mouth, grows
-  the eyes and nose, and crops to the face, so it holds up on a bookmark
-  bar.
+  as the rest of the interface: color means trouble.
+- **Light pages.** On the cream tile and with no tile on a light page,
+  whiskers turn brown and the marks above the head turn navy, so nothing
+  cream disappears. The page shows the dark or light image to match its
+  scheme.
 - **Moods follow the server.** Calm when all is quiet, asleep on quiet
   nights, alert with an amber dot when something needs you, worried with a
   red dot when something is down. The header mark, the tab icon, the page
@@ -96,11 +95,15 @@ something needs it, and Patchboard should feel the same.
 - **Quiet by default.** Healthy stays neutral here too: the otter shows up in
   empty and quiet moments and never pops up uninvited. Settings, Look turns
   the mascot off per device; the header mark stays.
-- **Files.** `npm run icons` writes `icon.svg` (dark tile), `icon-light.svg`,
-  `favicon.svg` (the small otter with no tile, for any browser theme),
-  `favicon-dark.svg` and `favicon-light.svg`, the home-screen PNGs with
-  square corners (the platform rounds them), maskable PNGs with the otter
-  inside Android's safe zone, and `favicon.ico`.
+- **The header mark** is the app icon at 28 pixels, on the tile that
+  matches the mode, wearing the server's mood.
+- **Files.** `npm run icons` reads `art/otter` and writes
+  `web/public/otter/<mood>.png` (navy tile), `<mood>-light.png` (cream
+  tile), `<mood>-clear.png` and `<mood>-clear-light.png` (no tile, for the
+  mascot), the home-screen PNGs with square corners (the platform rounds
+  them), maskable PNGs with the otter inside Android's safe zone,
+  `favicon-dark.png`, `favicon-light.png` and `favicon.ico`. To change the
+  otter, replace the art and run it again.
 - **Per device.** Settings, Look, App icon picks match the mode, dark or
   light. Patchboard points the tab icon, the Apple touch icon and the install
   manifest at the choice, and `index.html` does the same before the bundle

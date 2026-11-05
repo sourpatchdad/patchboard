@@ -98,9 +98,9 @@ export function Settings() {
         <div className="choice-row icon-choices">
           {(
             [
-              ['auto', 'Match the mode', '/favicon.svg'],
-              ['dark', 'Dark', '/icon.svg'],
-              ['light', 'Light', '/icon-light.svg'],
+              ['auto', 'Match the mode', '/otter/hello-clear.png'],
+              ['dark', 'Dark', '/icon-192.png'],
+              ['light', 'Light', '/icon-light-192.png'],
             ] as const
           ).map(([v, label, src]) => (
             <button key={v} type="button" className="icon-choice" aria-pressed={a.appIcon === v} onClick={() => setAppearance({ appIcon: v })}>

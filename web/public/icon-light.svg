@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <defs><clipPath id="otter-tile"><rect width="100" height="100" rx="22"/></clipPath></defs>
-  
-  <rect width="100" height="100" rx="22" fill="#f5efe4"/>
-  <g clip-path="url(#otter-tile)">
-    <circle cx="21.5" cy="41.5" r="7.2" fill="#a06e48"/><circle cx="78.5" cy="41.5" r="7.2" fill="#a06e48"/><path d="M18.5 62 C17 41 31 27 50 27 C69 27 83 41 81.5 62 C80.5 72 75 78 68 80 L32 80 C25 78 19.5 72 18.5 62 Z" fill="#a06e48"/><path d="M21 66 C21 56 30 50 37 50.5 C42 51 45 48.5 50 48.5 C55 48.5 58 51 63 50.5 C70 50 79 56 79 66 C79 76 68 82 50 82 C32 82 21 76 21 66 Z" fill="#f1dfc8"/><g stroke="#a06e48" stroke-width="2.1" stroke-linecap="round" fill="none"><path d="M26.5 55 q-7 0 -13.5 2"/><path d="M26.5 58 q-7 1 -11.5 5"/><path d="M73.5 55 q7 0 13.5 2"/><path d="M73.5 58 q7 1 11.5 5"/></g><circle cx="36.3" cy="48.5" r="4" fill="#1d1714"/><circle cx="63.3" cy="48.5" r="4" fill="#1d1714"/><path d="M44.6 52 C44.6 49.6 55.4 49.6 55.4 52 C55.4 54.5 52 57 50 57 C48 57 44.6 54.5 44.6 52 Z" fill="#1d1714"/><path d="M50 56 v3 M41.5 59.5 q4.25 5.5 8.5 0 q4.25 5.5 8.5 0" fill="none" stroke="#1d1714" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><g><path d="M-20 88 C-2 80 6 75.4 18 75.4 L82 75.4 C94 75.4 102 80 120 88 L120 120 L-20 120 Z" fill="#3581ee"/></g><ellipse cx="26.7" cy="74" rx="9.4" ry="6.2" fill="#a06e48"/><ellipse cx="73.3" cy="74" rx="9.4" ry="6.2" fill="#a06e48"/>
-  </g>
-  
-</svg>

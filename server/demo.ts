@@ -98,7 +98,7 @@ export const demoCatalog: Catalog = {
         { name: 'Diun', icon: 'diun.png', container: 'diun' },
         { name: 'Vaultwarden', label: 'Vault', href: '#', icon: 'vaultwarden.png', container: 'vaultwarden' },
         { name: 'Uptime Kuma', label: 'Kuma', href: '#', icon: 'uptime-kuma.png', container: 'uptime-kuma' },
-        { name: 'Patchboard', label: 'Patch', href: '#', icon: '/icon.svg', container: 'patchboard' },
+        { name: 'Patchboard', label: 'Patch', href: '#', icon: '/icon-192.png', container: 'patchboard' },
       ],
     },
   ],
