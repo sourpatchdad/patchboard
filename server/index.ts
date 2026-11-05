@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
+import { request } from './http.ts';
 import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -17,6 +18,8 @@ import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { sendWake } from './wake.ts';
+import { candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
+import { withConfig } from './config.ts';
 import { haActionFor, pinnedEntities } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
@@ -60,39 +63,48 @@ import { auditCatalog, draftYaml } from './catalog-audit.ts';
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
 
+type Made = { adapter: Adapter; control?: DownloadControl };
+
+/**
+ * One factory per integration you can turn on. Each reads config when called,
+ * so the same factory builds the live adapter and, inside withConfig, a
+ * connection test against values that aren't saved yet.
+ */
+const FACTORIES: Record<string, () => Made | null> = {
+  truenas: () => (config.truenas ? { adapter: truenasAdapter() } : null),
+  backups: () => (config.logsPath ? { adapter: backupsAdapter() } : null),
+  weather: () => (config.weather ? { adapter: weatherAdapter() } : null),
+  sonarr: () => (config.sonarr ? { adapter: sonarrAdapter() } : null),
+  radarr: () => (config.radarr ? { adapter: radarrAdapter() } : null),
+  trakt: () => (config.trakt ? { adapter: traktAdapter() } : null),
+  tautulli: () => (config.tautulli ? { adapter: tautulliAdapter() } : null),
+  jellyfin: () => (config.jellyfin ? { adapter: mediaServerAdapter('jellyfin') } : null),
+  emby: () => (config.emby ? { adapter: mediaServerAdapter('emby') } : null),
+  homeassistant: () => (config.homeassistant ? { adapter: homeAssistantAdapter() } : null),
+  tessie: () => (config.tessie ? { adapter: tessieAdapter() } : null),
+  qbit: () => (config.qbit ? qbitClient() : null),
+  transmission: () => (config.transmission ? transmissionClient() : null),
+  deluge: () => (config.deluge ? delugeClient() : null),
+  sabnzbd: () => (config.sabnzbd ? sabnzbdClient() : null),
+  nzbget: () => (config.nzbget ? nzbgetClient() : null),
+  miniflux: () => (config.miniflux ? { adapter: minifluxAdapter() } : null),
+  fastmail: () => (config.fastmail ? { adapter: fastmailAdapter() } : null),
+  frigate: () => (config.frigate ? { adapter: frigateAdapter() } : null),
+};
+
 function realAdapters(): Adapter[] {
-  const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter()];
-  if (config.truenas) list.push(truenasAdapter());
-  list.push(checksAdapter());
-  if (config.logsPath) list.push(backupsAdapter());
-  if (config.weather) list.push(weatherAdapter());
-  if (config.sonarr) list.push(sonarrAdapter());
-  if (config.radarr) list.push(radarrAdapter());
-  if (config.trakt) list.push(traktAdapter());
-  if (config.tautulli) list.push(tautulliAdapter());
-  if (config.jellyfin) list.push(mediaServerAdapter('jellyfin'));
-  if (config.homeassistant) list.push(homeAssistantAdapter());
-  if (config.tessie) list.push(tessieAdapter());
-  if (config.emby) list.push(mediaServerAdapter('emby'));
-  const clients: [DownloadClientId, (() => { adapter: Adapter; control: DownloadControl }) | false][] = [
-    ['qbit', !!config.qbit && qbitClient],
-    ['transmission', !!config.transmission && transmissionClient],
-    ['deluge', !!config.deluge && delugeClient],
-    ['sabnzbd', !!config.sabnzbd && sabnzbdClient],
-    ['nzbget', !!config.nzbget && nzbgetClient],
-  ];
-  for (const [id, make] of clients) {
-    if (!make) continue;
-    const { adapter, control } = make();
-    list.push(adapter);
-    downloadControls.set(id, control);
+  const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter(), checksAdapter()];
+  downloadControls.clear();
+  for (const [id, make] of Object.entries(FACTORIES)) {
+    const m = make();
+    if (!m) continue;
+    list.push(m.adapter);
+    if (m.control) downloadControls.set(id as DownloadClientId, m.control);
   }
-  if (config.miniflux) list.push(minifluxAdapter());
-  if (config.fastmail) list.push(fastmailAdapter());
-  if (config.frigate) list.push(frigateAdapter());
   return list;
 }
 
+loadSavedSettings();
 if (config.demo) {
   seedDemoHistory();
   seedDemoSamples();
@@ -406,6 +418,99 @@ app.post('/api/wake/:name', async (c) => {
   recordAudit(who(c), 'wake', name);
   return c.json({ ok: true });
 });
+
+// ---------- Integration setup from the UI ----------
+// Saving and testing need sign-in (when it's on) and the action header, like
+// every other change. READ_ONLY refuses both. Secret values go in and never
+// come back out; tests run on a scoped copy of the settings.
+
+app.get('/api/setup/integrations', (c) => c.json({ integrations: describeSetup(), demo: config.demo }));
+
+const lastTest = new Map<string, number>();
+
+app.post('/api/setup/integrations/:id/test', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const i = setupIntegration(c.req.param('id'));
+  if (!i) return c.json({ error: 'That integration is set up in the environment only' }, 404);
+  // One test per integration every two seconds: enough for a person, useless for a port scan.
+  if (Date.now() - (lastTest.get(i.id) ?? 0) < 2000) return c.json({ error: 'One test at a time. Try again in a moment.' }, 429);
+  lastTest.set(i.id, Date.now());
+  const checked = checkValues(i, (await c.req.json().catch(() => null))?.values ?? {});
+  if ('error' in checked) return c.json({ ok: false, error: checked.error });
+  const gaps = missing(i, checked.values);
+  if (gaps.length) return c.json({ ok: false, error: `Fill in ${gaps.map((n) => n).join(', ')} first.` });
+  recordAudit(who(c), 'setup.test', i.id);
+  if (config.demo) return c.json({ ok: true, summary: 'Demo mode: nothing to connect to, so this always passes.' });
+  try {
+    const summary = await withConfig(candidate(checked.values), () => testIntegration(i.id));
+    return c.json({ ok: true, summary });
+  } catch (err) {
+    return c.json({ ok: false, error: (err as Error).message });
+  }
+});
+
+app.put('/api/setup/integrations/:id', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const i = setupIntegration(c.req.param('id'));
+  if (!i) return c.json({ error: 'That integration is set up in the environment only' }, 404);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save integration settings." }, 400);
+  const checked = checkValues(i, (await c.req.json().catch(() => null))?.values ?? {});
+  if ('error' in checked) return c.json({ error: checked.error }, 400);
+  const gaps = missing(i, checked.values);
+  if (gaps.length) return c.json({ error: `Fill in ${gaps.join(', ')} first.` }, 400);
+  saveValues(checked.values);
+  recordAudit(who(c), 'setup.save', i.id, Object.keys(checked.values).join(', '));
+  hub.replaceAdapters(realAdapters());
+  return c.json({ integrations: describeSetup() });
+});
+
+app.delete('/api/setup/integrations/:id', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const i = setupIntegration(c.req.param('id'));
+  if (!i) return c.json({ error: 'That integration is set up in the environment only' }, 404);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save integration settings." }, 400);
+  clearIntegration(i);
+  recordAudit(who(c), 'setup.remove', i.id);
+  hub.replaceAdapters(realAdapters());
+  return c.json({ integrations: describeSetup() });
+});
+
+/** One fetch with the candidate settings, summed up in a line. Runs inside withConfig. */
+async function testIntegration(id: string): Promise<string> {
+  if (id === 'wake') {
+    const n = config.wake.devices.length;
+    if (!n) throw new Error('No machine parsed. Use Name=aa:bb:cc:dd:ee:ff, comma-separated.');
+    return `${n} machine${n === 1 ? '' : 's'} ready: ${config.wake.devices.map((d) => d.name).join(', ')}.`;
+  }
+  if (id === 'dozzle') {
+    await request(config.dozzleUrl!, {}, 8000);
+    return 'Dozzle answered.';
+  }
+  const made = FACTORIES[id]?.();
+  if (!made) throw new Error('Those settings are incomplete.');
+  const data = await Promise.race([
+    made.adapter.fetch(),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('No answer in 15 seconds')), 15_000)),
+  ]);
+  return summarize(data);
+}
+
+function summarize(data: unknown): string {
+  const d = (data ?? {}) as Record<string, unknown>;
+  const n = (k: string) => (Array.isArray(d[k]) ? (d[k] as unknown[]).length : undefined);
+  const bits: string[] = [];
+  if (n('streams') !== undefined) bits.push(`${n('streams')} streaming`);
+  if (n('recent') !== undefined) bits.push(`${n('recent')} recently added`);
+  if (n('upcoming') !== undefined) bits.push(`${n('upcoming')} upcoming`);
+  if (typeof d.unread === 'number') bits.push(`${d.unread} unread`);
+  if (typeof d.total === 'number' && n('entities') !== undefined) bits.push(`${d.total} entities`);
+  if (n('cars') !== undefined) bits.push(`${n('cars')} car${n('cars') === 1 ? '' : 's'}`);
+  if (typeof d.downloading === 'number') bits.push(`${d.downloading} downloading`);
+  if (n('cameras') !== undefined) bits.push(`${n('cameras')} cameras`);
+  if (n('pools') !== undefined) bits.push(`${n('pools')} pools`);
+  if (n('days') !== undefined) bits.push('forecast loaded');
+  return bits.length ? `Connected: ${bits.join(', ')}.` : 'Connected.';
+}
 
 // Trakt sign-in (device flow). Same action header as container actions.
 app.get('/api/trakt', (c) =>

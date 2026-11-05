@@ -1,167 +1,211 @@
+// Configuration comes from the environment first, then from integration
+// settings saved in the UI (Settings, Connections). An environment variable
+// always wins, and the UI shows it as locked. An integration turns on only
+// when every variable it needs is present.
+//
+// `config` reads through to the current settings. A connection test runs
+// inside withConfig(), which hands that one call a candidate copy, so live
+// polling never sees values that haven't been saved.
+
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { parseDevices } from './wake.ts';
-// All configuration comes from the environment. Secrets arrive via `env_file:`
-// in compose and are never written to disk by Patchboard. An integration turns
-// on only when every variable it needs is present.
 
 const env = process.env;
 
-function str(key: string): string | undefined {
+type Lookup = (key: string) => string | undefined;
+
+/** Values saved from the UI, by variable name. Set by setSavedSettings. */
+let saved: Record<string, string> = {};
+
+const fromEnv = (key: string): string | undefined => {
   const v = env[key]?.trim();
   return v ? v : undefined;
-}
-
-function trimSlash(url: string): string {
-  return url.replace(/\/+$/, '');
-}
-
-function pair(urlKey: string, keyKey: string): { url: string; key: string } | undefined {
-  const url = str(urlKey);
-  const key = str(keyKey);
-  return url && key ? { url: trimSlash(url), key } : undefined;
-}
-
-/** Jellyfin and Emby: whose library and Next up to show. Blank picks the first admin. */
-function withUser(p: { url: string; key: string } | undefined, userKey: string) {
-  return p ? { ...p, user: str(userKey) } : undefined;
-}
-
-const qbitUrl = str('QBIT_URL');
-const qbitUser = str('QBIT_USERNAME');
-const qbitPass = str('QBIT_PASSWORD');
-
-const lat = str('WEATHER_LAT');
-const lon = str('WEATHER_LON');
-
-const truenasKey = str('TRUENAS_API_KEY');
-
-const traktId = str('TRAKT_CLIENT_ID');
-const traktToken = str('TRAKT_ACCESS_TOKEN');
-const traktSecret = str('TRAKT_CLIENT_SECRET');
-
-export const config = {
-  port: Number(env.PORT ?? 3200),
-  /** The address to answer on. Blank means every interface, which inside a container is what ports: maps. */
-  listenHost: str('LISTEN_HOST'),
-  demo: env.DEMO === '1' || env.DEMO === 'true',
-  /** Demo as a fresh install: no catalog, so the first-run welcome shows. */
-  demoEmpty: env.DEMO_EMPTY === '1',
-  dataDir: str('DATA_DIR') ?? './data',
-  catalogPath: str('CATALOG_PATH') ?? './config/services.yaml',
-  staticDir: str('STATIC_DIR') ?? './dist/web',
-
-  dockerSocket: str('DOCKER_SOCKET') ?? '/var/run/docker.sock',
-  /** tcp://host:port of a Docker socket proxy, used instead of the socket when set. */
-  dockerHost: str('DOCKER_HOST'),
-
-  /** Refuse every change to the server: actions, updates, board edits. */
-  readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
-
-  auth: {
-    mode: (['forward', 'password', 'oidc'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password' | 'oidc',
-    userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
-    password: str('PATCHBOARD_PASSWORD'),
-    hookToken: str('HOOK_TOKEN'),
-    oidc: {
-      issuer: str('OIDC_ISSUER') ?? '',
-      clientId: str('OIDC_CLIENT_ID') ?? '',
-      clientSecret: str('OIDC_CLIENT_SECRET'),
-      scopes: str('OIDC_SCOPES') ?? 'openid email profile',
-      allowed: (str('OIDC_ALLOWED') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
-      /** Where the provider sends people back. Set it when Patchboard sits behind a proxy. */
-      redirectUrl: str('OIDC_REDIRECT_URL'),
-      /** The button says "Sign in with <name>". */
-      name: str('OIDC_NAME') ?? 'your identity provider',
-    },
-  },
-  dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
-
-  poolPath: str('POOL_PATH'),
-  poolWarnPct: Number(env.POOL_WARN_PCT ?? 85),
-  diskWarnC: Number(env.DISK_WARN_C ?? 50),
-
-  /**
-   * Hostnames the API answers to besides IP addresses and localhost, e.g. the
-   * name a reverse proxy serves Patchboard on. Protects against DNS rebinding.
-   */
-  allowedHosts: (str('ALLOWED_HOSTS') ?? '')
-    .split(',')
-    .map((d) => d.trim().toLowerCase())
-    .filter(Boolean),
-
-  /** Domains whose service links get reachability checks, e.g. "example.com,example.org". */
-  checkDomains: (str('CHECK_DOMAINS') ?? '')
-    .split(',')
-    .map((d) => d.trim().toLowerCase())
-    .filter(Boolean),
-
-  /**
-   * Compose stacks under this folder can be updated from the UI. It must be
-   * mounted read-only at the same path as on the host, so compose files and
-   * relative paths resolve the same way inside the container.
-   */
-  composeRoot: str('COMPOSE_ROOT'),
-
-  /** Read-only mounts of the server's own notes and logs (see docker-compose). */
-  docsPath: str('DOCS_PATH'),
-  logsPath: str('LOGS_PATH'),
-
-  // TrueNAS 25.04+ revokes an API key that is ever sent over plain ws://, so
-  // only wss:// is accepted. Its certificate is self-signed by default.
-  truenas: truenasKey
-    ? {
-        url: (str('TRUENAS_URL') ?? 'wss://localhost/api/current').replace(/^ws:\/\//, 'wss://'),
-        apiKey: truenasKey,
-        verifyTls: env.TRUENAS_VERIFY_TLS === '1',
-      }
-    : undefined,
-
-  weather:
-    lat && lon
-      ? { lat: Number(lat), lon: Number(lon), label: str('WEATHER_LABEL') ?? 'Weather' }
-      : undefined,
-
-  sonarr: pair('SONARR_URL', 'SONARR_KEY'),
-  radarr: pair('RADARR_URL', 'RADARR_KEY'),
-  tautulli: pair('TAUTULLI_URL', 'TAUTULLI_KEY'),
-  jellyfin: withUser(pair('JELLYFIN_URL', 'JELLYFIN_KEY'), 'JELLYFIN_USER'),
-  emby: withUser(pair('EMBY_URL', 'EMBY_KEY'), 'EMBY_USER'),
-  miniflux: pair('MINIFLUX_URL', 'MINIFLUX_TOKEN'),
-  qbit:
-    qbitUrl && qbitUser && qbitPass
-      ? { url: trimSlash(qbitUrl), username: qbitUser, password: qbitPass }
-      : undefined,
-  homeassistant: str('HA_URL') && str('HA_TOKEN') ? { url: trimSlash(str('HA_URL')!), token: str('HA_TOKEN')! } : undefined,
-  tessie: str('TESSIE_TOKEN') ? { token: str('TESSIE_TOKEN')!, vin: str('TESSIE_VIN') } : undefined,
-  wake: {
-    devices: parseDevices(str('WOL_DEVICES')),
-    broadcast: str('WOL_BROADCAST') ?? '255.255.255.255',
-  },
-  transmission: str('TRANSMISSION_URL')
-    ? { url: trimSlash(str('TRANSMISSION_URL')!), username: str('TRANSMISSION_USERNAME'), password: str('TRANSMISSION_PASSWORD') }
-    : undefined,
-  deluge: str('DELUGE_URL') && str('DELUGE_PASSWORD') ? { url: trimSlash(str('DELUGE_URL')!), password: str('DELUGE_PASSWORD')! } : undefined,
-  sabnzbd: pair('SABNZBD_URL', 'SABNZBD_KEY'),
-  nzbget: str('NZBGET_URL')
-    ? { url: trimSlash(str('NZBGET_URL')!), username: str('NZBGET_USERNAME'), password: str('NZBGET_PASSWORD') }
-    : undefined,
-  fastmail: str('FASTMAIL_TOKEN')
-    ? {
-        token: str('FASTMAIL_TOKEN')!,
-        webUrl: str('FASTMAIL_WEB_URL') ?? 'https://app.fastmail.com/mail/Inbox/',
-      }
-    : undefined,
-  // A Client ID is enough: sign in from Settings with a code. Trakt no longer
-  // issues secrets to new apps; one is still sent if you have it.
-  trakt: traktId
-    ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
-    : undefined,
-  frigate: str('FRIGATE_URL') ? { url: trimSlash(str('FRIGATE_URL')!) } : undefined,
-
-  /** Days of releases to show in Upcoming. */
-  upcomingDays: Number(env.UPCOMING_DAYS ?? 14),
 };
 
-export type Config = typeof config;
+function lookup(overlay: Record<string, string> = {}): Lookup {
+  return (key) => fromEnv(key) ?? (overlay[key]?.trim() || undefined) ?? (saved[key]?.trim() || undefined);
+}
+
+/** True when the environment sets this variable, so the UI can't change it. */
+export const envHas = (key: string): boolean => fromEnv(key) !== undefined;
+
+function build(str: Lookup) {
+
+  function trimSlash(url: string): string {
+    return url.replace(/\/+$/, '');
+  }
+
+  function pair(urlKey: string, keyKey: string): { url: string; key: string } | undefined {
+    const url = str(urlKey);
+    const key = str(keyKey);
+    return url && key ? { url: trimSlash(url), key } : undefined;
+  }
+
+  /** Jellyfin and Emby: whose library and Next up to show. Blank picks the first admin. */
+  function withUser(p: { url: string; key: string } | undefined, userKey: string) {
+    return p ? { ...p, user: str(userKey) } : undefined;
+  }
+
+  const qbitUrl = str('QBIT_URL');
+  const qbitUser = str('QBIT_USERNAME');
+  const qbitPass = str('QBIT_PASSWORD');
+
+  const lat = str('WEATHER_LAT');
+  const lon = str('WEATHER_LON');
+
+  const truenasKey = str('TRUENAS_API_KEY');
+
+  const traktId = str('TRAKT_CLIENT_ID');
+  const traktToken = str('TRAKT_ACCESS_TOKEN');
+  const traktSecret = str('TRAKT_CLIENT_SECRET');
+
+  return {
+    port: Number(env.PORT ?? 3200),
+    /** The address to answer on. Blank means every interface, which inside a container is what ports: maps. */
+    listenHost: str('LISTEN_HOST'),
+    demo: env.DEMO === '1' || env.DEMO === 'true',
+    /** Demo as a fresh install: no catalog, so the first-run welcome shows. */
+    demoEmpty: env.DEMO_EMPTY === '1',
+    dataDir: str('DATA_DIR') ?? './data',
+    catalogPath: str('CATALOG_PATH') ?? './config/services.yaml',
+    staticDir: str('STATIC_DIR') ?? './dist/web',
+
+    dockerSocket: str('DOCKER_SOCKET') ?? '/var/run/docker.sock',
+    /** tcp://host:port of a Docker socket proxy, used instead of the socket when set. */
+    dockerHost: str('DOCKER_HOST'),
+
+    /** Refuse every change to the server: actions, updates, board edits. */
+    readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
+
+    auth: {
+      mode: (['forward', 'password', 'oidc'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password' | 'oidc',
+      userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
+      password: str('PATCHBOARD_PASSWORD'),
+      hookToken: str('HOOK_TOKEN'),
+      oidc: {
+        issuer: str('OIDC_ISSUER') ?? '',
+        clientId: str('OIDC_CLIENT_ID') ?? '',
+        clientSecret: str('OIDC_CLIENT_SECRET'),
+        scopes: str('OIDC_SCOPES') ?? 'openid email profile',
+        allowed: (str('OIDC_ALLOWED') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+        /** Where the provider sends people back. Set it when Patchboard sits behind a proxy. */
+        redirectUrl: str('OIDC_REDIRECT_URL'),
+        /** The button says "Sign in with <name>". */
+        name: str('OIDC_NAME') ?? 'your identity provider',
+      },
+    },
+    dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
+
+    poolPath: str('POOL_PATH'),
+    poolWarnPct: Number(env.POOL_WARN_PCT ?? 85),
+    diskWarnC: Number(env.DISK_WARN_C ?? 50),
+
+    /**
+     * Hostnames the API answers to besides IP addresses and localhost, e.g. the
+     * name a reverse proxy serves Patchboard on. Protects against DNS rebinding.
+     */
+    allowedHosts: (str('ALLOWED_HOSTS') ?? '')
+      .split(',')
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean),
+
+    /** Domains whose service links get reachability checks, e.g. "example.com,example.org". */
+    checkDomains: (str('CHECK_DOMAINS') ?? '')
+      .split(',')
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean),
+
+    /**
+     * Compose stacks under this folder can be updated from the UI. It must be
+     * mounted read-only at the same path as on the host, so compose files and
+     * relative paths resolve the same way inside the container.
+     */
+    composeRoot: str('COMPOSE_ROOT'),
+
+    /** Read-only mounts of the server's own notes and logs (see docker-compose). */
+    docsPath: str('DOCS_PATH'),
+    logsPath: str('LOGS_PATH'),
+
+    // TrueNAS 25.04+ revokes an API key that is ever sent over plain ws://, so
+    // only wss:// is accepted. Its certificate is self-signed by default.
+    truenas: truenasKey
+      ? {
+          url: (str('TRUENAS_URL') ?? 'wss://localhost/api/current').replace(/^ws:\/\//, 'wss://'),
+          apiKey: truenasKey,
+          verifyTls: env.TRUENAS_VERIFY_TLS === '1',
+        }
+      : undefined,
+
+    weather:
+      lat && lon
+        ? { lat: Number(lat), lon: Number(lon), label: str('WEATHER_LABEL') ?? 'Weather' }
+        : undefined,
+
+    sonarr: pair('SONARR_URL', 'SONARR_KEY'),
+    radarr: pair('RADARR_URL', 'RADARR_KEY'),
+    tautulli: pair('TAUTULLI_URL', 'TAUTULLI_KEY'),
+    jellyfin: withUser(pair('JELLYFIN_URL', 'JELLYFIN_KEY'), 'JELLYFIN_USER'),
+    emby: withUser(pair('EMBY_URL', 'EMBY_KEY'), 'EMBY_USER'),
+    miniflux: pair('MINIFLUX_URL', 'MINIFLUX_TOKEN'),
+    qbit:
+      qbitUrl && qbitUser && qbitPass
+        ? { url: trimSlash(qbitUrl), username: qbitUser, password: qbitPass }
+        : undefined,
+    homeassistant: str('HA_URL') && str('HA_TOKEN') ? { url: trimSlash(str('HA_URL')!), token: str('HA_TOKEN')! } : undefined,
+    tessie: str('TESSIE_TOKEN') ? { token: str('TESSIE_TOKEN')!, vin: str('TESSIE_VIN') } : undefined,
+    wake: {
+      devices: parseDevices(str('WOL_DEVICES')),
+      broadcast: str('WOL_BROADCAST') ?? '255.255.255.255',
+    },
+    transmission: str('TRANSMISSION_URL')
+      ? { url: trimSlash(str('TRANSMISSION_URL')!), username: str('TRANSMISSION_USERNAME'), password: str('TRANSMISSION_PASSWORD') }
+      : undefined,
+    deluge: str('DELUGE_URL') && str('DELUGE_PASSWORD') ? { url: trimSlash(str('DELUGE_URL')!), password: str('DELUGE_PASSWORD')! } : undefined,
+    sabnzbd: pair('SABNZBD_URL', 'SABNZBD_KEY'),
+    nzbget: str('NZBGET_URL')
+      ? { url: trimSlash(str('NZBGET_URL')!), username: str('NZBGET_USERNAME'), password: str('NZBGET_PASSWORD') }
+      : undefined,
+    fastmail: str('FASTMAIL_TOKEN')
+      ? {
+          token: str('FASTMAIL_TOKEN')!,
+          webUrl: str('FASTMAIL_WEB_URL') ?? 'https://app.fastmail.com/mail/Inbox/',
+        }
+      : undefined,
+    // A Client ID is enough: sign in from Settings with a code. Trakt no longer
+    // issues secrets to new apps; one is still sent if you have it.
+    trakt: traktId
+      ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
+      : undefined,
+    frigate: str('FRIGATE_URL') ? { url: trimSlash(str('FRIGATE_URL')!) } : undefined,
+
+    /** Days of releases to show in Upcoming. */
+    upcomingDays: Number(env.UPCOMING_DAYS ?? 14),
+  };
+}
+
+export type Config = ReturnType<typeof build>;
+
+let current: Config = build(lookup());
+const scoped = new AsyncLocalStorage<Config>();
+
+export const config: Config = new Proxy({} as Config, {
+  get: (_t, k) => Reflect.get(scoped.getStore() ?? current, k),
+  has: (_t, k) => Reflect.has(scoped.getStore() ?? current, k),
+  ownKeys: () => Reflect.ownKeys(scoped.getStore() ?? current),
+  getOwnPropertyDescriptor: (_t, k) => Reflect.getOwnPropertyDescriptor(scoped.getStore() ?? current, k),
+});
+
+/** Replace the UI-saved values and rebuild the live configuration. */
+export function setSavedSettings(values: Record<string, string>): void {
+  saved = { ...values };
+  current = build(lookup());
+}
+
+/** Run fn against the saved settings plus candidate values, without touching the live ones. */
+export function withConfig<T>(candidate: Record<string, string>, fn: () => Promise<T>): Promise<T> {
+  return scoped.run(build(lookup(candidate)), fn);
+}
+
 
 /** Where Docker API requests go: the unix socket, or a socket proxy over TCP. */
 export function dockerTarget(): { socketPath: string } | { host: string; port: number } {

@@ -28,7 +28,8 @@ uploaded icons stay behind.
 | `ALLOWED_HOSTS` | empty | Hostnames you reach Patchboard by, such as `dash.example.com`. IP addresses and `localhost` always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |
-| `DATA_DIR` | `/data` | The SQLite database. Mount it. |
+| `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the board, apps, history, integration settings, keys) and `secret.key`, which encrypts the keys. Mount it, back it up, keep it owner-only. A few megabytes. |
+| `PATCHBOARD_SECRET_KEY` | a random `secret.key` | Any long string. Encrypts keys saved in the UI instead of the generated file, so the database and the key can live on different disks. Changing it makes saved keys unreadable; type them again. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |
 | `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |

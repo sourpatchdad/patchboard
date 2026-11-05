@@ -35,7 +35,8 @@ an app, grouped by compose stack.
 
 ![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.png)
 
-Then add what you use, one block of `.env` at a time: Sonarr, Radarr,
+Then add what you use from Settings, Connections: press **Set up**, paste
+the address and key, test, save. Or set them in `.env`. Sonarr, Radarr,
 Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
 SABnzbd, NZBGet, Home Assistant, Tessie, TrueNAS, weather and more. Settings, Connections lists
 each integration, whether it's on, and the variables that turn it on.

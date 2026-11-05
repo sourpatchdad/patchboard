@@ -58,9 +58,32 @@ container creation, which comes close to full access.
 - **Content-Security-Policy:** scripts load only from Patchboard. The single
   inline script runs by its SHA-256 hash. No frames, no plugins, no form
   posts elsewhere, `nosniff`, no referrer.
-- **Keys stay on the server.** They live in `.env`, or, when you paste them in
-  the UI, in the database in `DATA_DIR`. Protect that folder like `.env`. The
-  API lists key names, never values. Requests refer to keys as
+- **Connection details stay on your box.** Patchboard sends no telemetry and
+  calls no service of its own. It talks to the apps you connect, plus the
+  public services you turn on (weather from Open-Meteo and the US National
+  Weather Service, Tessie, Trakt, Fastmail, TVmaze for posters). Your
+  browser loads app icons from the dashboard-icons CDN on jsDelivr unless
+  you upload your own, and article and poster pictures from wherever their
+  publisher hosts them. No key or address rides along on any of those.
+- **Keys are write-only.** They live in `.env`, or, when you type them in
+  Settings, in the database in `DATA_DIR`. The browser can set a key but
+  never read one back: the API says whether a key is set, never what it is.
+  The setup file export carries no keys and no addresses.
+- **Saved keys are encrypted at rest** with AES-256-GCM. The key that seals
+  them sits apart from the database, in `DATA_DIR/secret.key` (owner-only),
+  or in `PATCHBOARD_SECRET_KEY` if you set one. A copy of `patchboard.db` on
+  its own reveals nothing. Anyone who can read both files, or the running
+  process, can read the keys, the same as your `.env`; protect `DATA_DIR`
+  the same way.
+- **Setting up an integration in the UI is guarded like any change:** sign-in
+  when it's on, the action header, refused under `READ_ONLY`, recorded in
+  Activity. An environment variable always wins and shows as locked. Sign-in
+  settings (`AUTH`, OIDC), Docker access, folder mounts and the webhook token
+  can only come from the environment, so a session can't widen its own
+  access. **Test connection** runs one request with the values in the form,
+  on a scoped copy of the settings, so live polling never sees unsaved
+  values. Tests are limited to one every two seconds per integration.
+- **Requests fill in keys late.** Requests refer to keys as
   `${secret:NAME}` or `${env:WIDGET_NAME}`, and the server fills them in only
   when it makes the call. Error messages never include URLs, because some
   APIs put keys in the query string. Patchboard proxies Plex and calendar

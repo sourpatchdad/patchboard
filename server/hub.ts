@@ -30,6 +30,9 @@ type Listener = (e: ServerEvent) => void;
 
 const CHANGE_WINDOW = 48 * 3_600_000;
 
+/** Always on: these keep their loops when integrations change. */
+const CORE = new Set<SourceId>(['docker', 'stats', 'system', 'checks']);
+
 export class Hub {
   private sources: Partial<Record<SourceId, SourceState>> = {};
   private alerts: Alert[] = [];
@@ -44,6 +47,23 @@ export class Hub {
       this.sources[a.id] = { id: a.id, label: a.label, ok: false, updatedAt: null, data: null };
     }
     this.changes = listChanges(CHANGE_WINDOW);
+  }
+
+  /** Bumped when the adapter set changes, so loops from the old set stop. */
+  private generation = 0;
+
+  /**
+   * Swap the integrations after settings change in the UI. Old poll loops end
+   * at their next tick; sources that went away leave every open tab.
+   */
+  replaceAdapters(next: Adapter[]): void {
+    this.generation++;
+    this.adapters = next;
+    const keep = new Set(next.map((a) => a.id));
+    for (const id of Object.keys(this.sources) as SourceId[]) if (!keep.has(id)) delete this.sources[id];
+    for (const a of next) this.sources[a.id] ??= { id: a.id, label: a.label, ok: false, updatedAt: null, data: null };
+    this.emit({ type: 'sources', sources: this.sources });
+    for (const a of next) if (!CORE.has(a.id)) void this.loop(a);
   }
 
   start(): void {
@@ -120,9 +140,10 @@ export class Hub {
     if (a) await this.poll(a);
   }
 
-  private async loop(a: Adapter): Promise<void> {
+  private async loop(a: Adapter, gen = this.generation): Promise<void> {
+    if (gen !== this.generation && !CORE.has(a.id)) return;
     await this.poll(a);
-    setTimeout(() => void this.loop(a), a.intervalMs).unref();
+    setTimeout(() => void this.loop(a, gen), a.intervalMs).unref();
   }
 
   private async poll(a: Adapter): Promise<void> {

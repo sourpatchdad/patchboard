@@ -3,11 +3,12 @@
 // names and when each was set, never values. Values are resolved only when
 // the server makes a request, and never appear in a response or an error.
 //
-// Stored in Patchboard's SQLite database in DATA_DIR, which deserves the same
-// care as your .env: same owner, not world-readable, kept out of backups you
-// share.
+// Sealed with AES-256-GCM before they reach SQLite (server/vault.ts), with the
+// key kept apart from the database. Keys saved before encryption existed are
+// sealed the next time the store is written.
 
 import { kvGet, kvSet } from './db.ts';
+import { seal, unseal } from './vault.ts';
 
 const KEY = 'secrets';
 export const SECRET_NAME = /^[A-Z0-9_]{1,40}$/;
@@ -17,7 +18,8 @@ type Store = Record<string, { value: string; at: number }>;
 const read = (): Store => kvGet<Store>(KEY) ?? {};
 
 export function getSecret(name: string): string | undefined {
-  return read()[name]?.value;
+  const v = read()[name]?.value;
+  return v === undefined ? undefined : unseal(v);
 }
 
 export function listSecrets(): { name: string; at: number }[] {
@@ -28,7 +30,8 @@ export function listSecrets(): { name: string; at: number }[] {
 
 export function setSecret(name: string, value: string): void {
   const s = read();
-  s[name] = { value, at: Date.now() };
+  s[name] = { value: seal(value), at: Date.now() };
+  for (const k of Object.keys(s)) s[k].value = seal(unseal(s[k].value));
   kvSet(KEY, s);
 }
 

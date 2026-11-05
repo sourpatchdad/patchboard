@@ -90,9 +90,13 @@ apps.
 
 ![Settings](screenshots/settings-look.png)
 
-**Connections** shows which integrations run and what the rest need.
+**Connections** shows which integrations run. **Set up** takes an address and
+a key, tests the connection, and saves. Keys are encrypted on the server and
+never shown again; anything set in the environment file shows as locked.
 
 ![Integrations](screenshots/integrations.png)
+
+![Setting up an integration](screenshots/integration-setup.png)
 
 ## Themes
 

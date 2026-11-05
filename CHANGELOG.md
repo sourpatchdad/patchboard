@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.30.0 (2026-11-04)
+
+- **Set up integrations from the UI.** Settings, Connections has **Set up**
+  on every integration that talks to another app: fill in the address and
+  key, press **Test connection** to see it work (or the exact error), then
+  **Save**. Patchboard connects at once, with no restart. `.env` still works
+  and always wins; a field it sets shows as locked.
+- **Keys are encrypted at rest.** Keys typed in Settings and in Settings,
+  Keys are sealed with AES-256-GCM before they reach the database. The key
+  that seals them lives in `DATA_DIR/secret.key`, apart from the database,
+  or in `PATCHBOARD_SECRET_KEY`. Keys saved before this release get sealed
+  the next time any key is saved.
+- **Keys go in, never out.** The browser can set a key but never read one;
+  the setup file carries neither keys nor addresses. Sign-in settings,
+  Docker access, folder mounts and the webhook token stay environment-only,
+  so a session can't widen its own access. Activity records every test,
+  save and removal.
+- **favicon.ico** for browsers and bookmark bars that ask for it by name. It
+  used to get the app's HTML page back.
+- **A lighter image.** The server now installs only the four packages it
+  runs (Hono, its Node adapter, ws and yaml); React, fonts and the rest live
+  only in the 1.8 MB web bundle. Server packages in the image went from
+  23 MB to 5.5 MB. A running container idles at about 60 MB of memory.
+
 ## 1.29.0 (2026-11-04)
 
 - **Home Assistant.** Add a Home Assistant widget, open its settings, and

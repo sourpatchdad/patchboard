@@ -66,6 +66,12 @@ async function shoot(page, name, opts = {}) {
   console.log(`  ${name}.png`);
 }
 
+/** One element instead of the page. */
+async function shootEl(locator, name) {
+  await locator.screenshot({ path: join(OUT, `${name}.png`) });
+  console.log(`  ${name}.png`);
+}
+
 /** A browser context with a theme saved, as Settings would save it. */
 async function context(browser, opts, appearance) {
   const ctx = await browser.newContext(opts);
@@ -160,6 +166,13 @@ try {
   await shoot(page, 'settings-look', { fullPage: true });
   await go('/settings?tab=connections');
   await shoot(page, 'integrations', { fullPage: true });
+  const emby = page.locator('.integration', { hasText: 'Emby' }).first();
+  await emby.getByRole('button', { name: 'Set up' }).click();
+  await emby.getByLabel('Address').fill('http://192.168.1.10:8096');
+  await emby.getByLabel('API key').fill('a-key-you-paste');
+  await emby.getByRole('button', { name: 'Test connection' }).click();
+  await settle(page, 800);
+  await shootEl(emby, 'integration-setup');
 
   console.log('Themes');
   const themes = [

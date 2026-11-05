@@ -53,8 +53,15 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 
 ## Built-in integrations
 
-Add the variables to `.env`, then run `docker compose up -d`. A restart keeps
-the old values.
+Set one up in **Settings, Connections**: press **Set up**, fill in the
+address and key, **Test connection**, then **Save**. Patchboard connects at
+once, with no restart. Keys you type there are encrypted on the server and
+never shown again.
+
+Or add the variables to `.env` and run `docker compose up -d` (a restart keeps
+the old values). A variable in `.env` always wins and shows in Settings as
+locked. Integrations that read folders need their mount in compose, so those
+use `.env` only.
 
 <!-- generated:integrations -->
 | Integration | What it adds | Turn on with | Where to find it |

@@ -8,6 +8,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
+import { IntegrationForm } from '../components/IntegrationSetup.tsx';
+import type { SetupIntegration } from '../../shared/setup.ts';
 import {
   ACCENTS,
   type Appearance,
@@ -592,51 +594,94 @@ function Keys() {
  */
 function Integrations() {
   const { snap } = useStore();
+  const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [results, setResults] = useState<Record<string, { ok: boolean; text: string } | null>>({});
+  useEffect(() => {
+    fetch('/api/setup/integrations')
+      .then((r) => r.json())
+      .then((b) => setSetup(b as { integrations: SetupIntegration[]; demo: boolean }))
+      .catch(() => setSetup({ integrations: [], demo: false }));
+  }, []);
   if (!snap) return null;
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off' } => {
     if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: 'On', tone: 'ok' } : { on: false, text: 'Off', tone: 'off' };
     const s = snap.sources[i.id as keyof typeof snap.sources];
     if (!s) return { on: false, text: 'Off', tone: 'off' };
-    if (!s.ok) return { on: true, text: s.error ? `Can't reach it: ${s.error}` : "Can't reach it", tone: 'warn' };
+    if (!s.ok) return { on: true, text: s.error ? `Can't reach it: ${s.error}` : s.updatedAt ? "Can't reach it" : 'Connecting', tone: s.error ? 'warn' : 'off' };
     return { on: true, text: s.updatedAt ? `On, updated ${agoLong(s.updatedAt)}` : 'On', tone: 'ok' };
   };
+  const setupOf = (id: string) => setup?.integrations.find((x) => x.id === id);
   const rows = INTEGRATIONS.map((i) => ({ i, st: status(i) }));
   const on = rows.filter((r) => r.st.on);
   const off = rows.filter((r) => !r.st.on);
+  const row = ({ i, st }: { i: Integration; st: ReturnType<typeof status> }) => {
+    const su = setupOf(i.id);
+    const locked = su ? su.fields.every((f) => f.locked) : false;
+    return (
+      <li key={i.id} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''}`}>
+        <span className="integration-name">{i.name}</span>
+        <span className="integration-adds">
+          {i.adds}
+          {!su && !st.on && i.where && <small>{i.where}</small>}
+        </span>
+        <span className="integration-end">
+          <span className={`integration-status tone-${st.tone}`}>
+            {st.text}
+            {su?.fromUi && <small> Set up here</small>}
+            {locked && st.on && <small> From the environment</small>}
+          </span>
+          {su && (
+            <button type="button" className="text-button" aria-expanded={open === i.id} onClick={() => setOpen(open === i.id ? null : i.id)}>
+              {open === i.id ? 'Close' : st.on ? 'Settings' : 'Set up'}
+            </button>
+          )}
+          {!su && !st.on && (
+            <span className="integration-env">
+              {[...i.env, ...(i.optional ?? []).map((v) => `${v} (optional)`)].map((v) => (
+                <code key={v}>{v}</code>
+              ))}
+            </span>
+          )}
+        </span>
+        {open === i.id && su && setup && (
+          <div className="integration-form">
+            <IntegrationForm
+              integration={i}
+              setup={su}
+              demo={setup.demo}
+              readOnly={!!snap.readOnly}
+              onSaved={(all) => setSetup({ ...setup, integrations: all })}
+              onClose={() => setOpen(null)}
+              result={results[i.id] ?? null}
+              setResult={(r) => setResults((prev) => ({ ...prev, [i.id]: r }))}
+            />
+          </div>
+        )}
+      </li>
+    );
+  };
   return (
     <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all">
+      <p className="settings-note">
+        Set one up here, or with variables in your environment file. A variable in the environment always wins and shows here as locked. Keys you
+        type here are encrypted on this server and never sent back to a browser, not even this one.
+      </p>
+      {/* One list, so a row that turns on moves without its open form starting over. */}
       <ul className="integrations">
-        {on.map(({ i, st }) => (
-          <li key={i.id} className={`integration tone-${st.tone}`}>
-            <span className="integration-name">{i.name}</span>
-            <span className="integration-adds">{i.adds}</span>
-            <span className={`integration-status tone-${st.tone}`}>{st.text}</span>
+        {on.map(row)}
+        {off.length > 0 && (
+          <li key="available" className="integrations-divider" aria-hidden>
+            <h3 className="jw-sub">Available to turn on</h3>
           </li>
-        ))}
+        )}
+        {off.map(row)}
       </ul>
       {off.length > 0 && (
         <>
-          <h3 className="jw-sub">Available to turn on</h3>
           <p className="settings-note">
-            Add the variables to your <code>.env</code>, then recreate the container (<code>docker compose up -d</code>; a restart doesn't reload them). App
-            numbers on tiles need no variables: set them up in Apps, Edit apps.
+            The rest read folders, so they need a mount in compose and their variable there. App numbers on tiles need nothing here: set them up in Apps, Edit apps.
           </p>
-          <ul className="integrations">
-            {off.map(({ i }) => (
-              <li key={i.id} className="integration tone-off">
-                <span className="integration-name">{i.name}</span>
-                <span className="integration-adds">
-                  {i.adds}
-                  {i.where && <small>{i.where}</small>}
-                </span>
-                <span className="integration-env">
-                  {[...i.env, ...(i.optional ?? []).map((v) => `${v} (optional)`)].map((v) => (
-                    <code key={v}>{v}</code>
-                  ))}
-                </span>
-              </li>
-            ))}
-          </ul>
         </>
       )}
       <p className="settings-note">

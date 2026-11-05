@@ -15,6 +15,8 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
   switch (e.type) {
     case 'source':
       return { ...prev, sources: { ...prev.sources, [e.state.id]: e.state } };
+    case 'sources':
+      return { ...prev, sources: e.sources };
     case 'alerts':
       return { ...prev, alerts: e.alerts };
     case 'changes':

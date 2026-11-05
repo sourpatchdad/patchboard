@@ -587,6 +587,7 @@ export interface Snapshot {
 
 export type ServerEvent =
   | { type: 'source'; state: SourceState }
+  | { type: 'sources'; sources: Snapshot['sources'] }
   | { type: 'alerts'; alerts: Alert[] }
   | { type: 'changes'; changes: ChangeEvent[] }
   | { type: 'updates'; updates: Record<string, ImageUpdate> }
