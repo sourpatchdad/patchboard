@@ -3,17 +3,23 @@
 // or Node use, so the browser (live favicon, mascot) and the icon script
 // (PNGs) share it.
 //
-// One shape vocabulary on a 100 by 100 grid: a broad head that peeks over a
-// line of water, small low ears, a pale muzzle, a dark nose, two paws on the
-// edge. Below 40 pixels the drawing drops whiskers, mouth and ear detail and
-// grows the eyes and nose, so it still reads as a face on a bookmark bar.
+// Flat and few-colored on purpose. Navy tile, one fur tone, a cream face, ink
+// features and one band of water; amber and red appear only when the server
+// needs you, the same rule the rest of the interface follows. The shape is a
+// wide, flat head with tiny ears low on the sides, a broad nose and paws on
+// the water line: wide and low reads as otter, tall with ears on top as bear.
+// Below 40 pixels the drawing drops whiskers and mouth and grows the eyes and
+// nose, so it still reads on a bookmark bar.
 
 export type OtterMood = 'calm' | 'alert' | 'worried' | 'asleep' | 'happy' | 'lost';
 export type OtterBadge = 'warn' | 'crit' | null;
+/** Brown: a river otter's brown cap over a cream face. Cream: a sea otter's pale head. */
+export type OtterCoat = 'brown' | 'cream';
 
 export interface OtterOptions {
   mood?: OtterMood;
-  /** Background: a rounded tile in the dark or light scheme, a full square for PNGs, or none. */
+  coat?: OtterCoat;
+  /** Background: a rounded tile in the dark or light scheme, or none. */
   bg?: 'dark' | 'light' | 'none';
   /** Square corners for platform icons, which apply their own mask. */
   square?: boolean;
@@ -27,122 +33,115 @@ export interface OtterOptions {
 
 export const OTTER = {
   navy: '#14213b',
-  navyDeep: '#0e182c',
   cream: '#f5efe4',
   fur: '#9c6b45',
-  furDark: '#7a5135',
   face: '#f1e2cc',
+  pale: '#f7efe2',
   ink: '#1d1714',
   water: '#3b82f6',
-  waterDeep: '#2563c9',
   warn: '#f0a43a',
   crit: '#ef5b4c',
 } as const;
 
+const EYE_Y = 53;
+
 function eyes(mood: OtterMood, small: boolean): string {
   const c = OTTER.ink;
-  const w = small ? 4.4 : 3;
-  const y = 50;
-  const arc = (x: number, up: boolean) =>
-    `<path d="M${x - 5} ${y + 1} q5 ${up ? -6 : 5} 10 0" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
-  const dot = (x: number, r: number) =>
-    `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>` + (small ? '' : `<circle cx="${x + 1.2}" cy="${y - 1.3}" r="${r * 0.33}" fill="#fff"/>`);
-  const r = small ? 4.6 : 3.5;
+  const w = small ? 4.6 : 3.2;
+  const r = small ? 5 : 3.8;
+  const arc = (x: number, up: boolean) => `<path d="M${x - 5.5} ${EYE_Y + 1} q5.5 ${up ? -6.5 : 5.5} 11 0" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+  const dot = (x: number, dx = 0, dy = 0) => `<circle cx="${x + dx}" cy="${EYE_Y + dy}" r="${r}" fill="${c}"/>`;
   switch (mood) {
     case 'calm':
     case 'happy':
-      return arc(37, true) + arc(63, true);
+      return arc(36, true) + arc(64, true);
     case 'asleep':
-      return arc(37, false) + arc(63, false);
+      return arc(36, false) + arc(64, false);
     case 'alert':
-      return dot(37, r) + dot(63, r);
     case 'worried':
-      return dot(37, r) + dot(63, r);
-    case 'lost': {
-      // Eyes glancing up and aside.
-      const look = (x: number) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>` + (small ? '' : `<circle cx="${x - 1.4}" cy="${y - 1.4}" r="${r * 0.35}" fill="#fff"/>`);
-      return look(36) + look(62);
-    }
+      return dot(36) + dot(64);
+    case 'lost':
+      return dot(36, -1.5, -1.5) + dot(64, -1.5, -1.5);
   }
 }
 
 function mouth(mood: OtterMood): string {
   const c = OTTER.ink;
-  if (mood === 'happy') return `<path d="M44 65 q6 6 12 0 z" fill="${c}" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/>`;
-  if (mood === 'worried' || mood === 'lost') return `<path d="M45.5 67 q4.5 -3 9 0" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`;
-  if (mood === 'alert') return `<ellipse cx="50" cy="66.5" rx="2" ry="2.4" fill="${c}"/>`;
-  return `<path d="M45 64.5 q2.5 2.6 5 0 q2.5 2.6 5 0" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const s = `fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"`;
+  switch (mood) {
+    case 'happy':
+      return `<path d="M44 66 q6 7.5 12 0 z" fill="${c}" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>`;
+    case 'worried':
+    case 'lost':
+      return `<path d="M45.5 69 q4.5 -3.4 9 0" ${s}/>`;
+    case 'alert':
+      return `<ellipse cx="50" cy="68" rx="2.2" ry="2.8" fill="${c}"/>`;
+    default:
+      return `<path d="M44.5 65.5 q2.75 2.8 5.5 0 q2.75 2.8 5.5 0" ${s}/>`;
+  }
 }
 
 /** The otter as an SVG document. */
 export function otterSvg(o: OtterOptions = {}): string {
   const mood = o.mood ?? 'calm';
+  const coat = o.coat ?? 'brown';
   const small = !!o.small;
   const bg = o.bg ?? 'dark';
   const C = OTTER;
-  // Small: crop to the face so it fills a 16-pixel square.
-  const view = o.safe ? '-8 -8 116 116' : small ? '15 24 70 70' : '0 0 100 100';
-  const tile =
-    bg === 'none'
-      ? ''
-      : o.safe
-        ? `<rect x="-8" y="-8" width="116" height="116" fill="${bg === 'dark' ? C.navy : C.cream}"/>`
-        : `<rect width="100" height="100" rx="${o.square ? 0 : 22}" fill="${bg === 'dark' ? C.navy : C.cream}"/>`;
+  const head = coat === 'brown' ? C.fur : C.pale;
+  const view = o.safe ? '-8 -8 116 116' : small ? '12 24 76 76' : '0 0 100 100';
+  const tileFill = bg === 'dark' ? C.navy : C.cream;
+  const tile = bg === 'none' ? '' : o.safe ? `<rect x="-8" y="-8" width="116" height="116" fill="${tileFill}"/>` : `<rect width="100" height="100" rx="${o.square ? 0 : 22}" fill="${tileFill}"/>`;
   const clip = bg === 'none' || o.safe ? '' : ' clip-path="url(#otter-tile)"';
   // With no tile, the water is a rounded pool, so the otter never sits in a box.
   const pool = bg === 'none' ? ' clip-path="url(#otter-pool)"' : '';
-  // Tiny ears, set wide and low on the sides of the head: the otter tell.
-  const ear = (x: number) =>
-    `<circle cx="${x}" cy="44" r="${small ? 6 : 5}" fill="${C.furDark}"/>` + (small ? '' : `<circle cx="${x}" cy="44.5" r="2.3" fill="${C.ink}" opacity=".4"/>`);
-  // A wide, flat head: broader than tall.
-  const head = `<path d="M16 70 C14 47 31 35 50 35 C69 35 86 47 84 70 L84 84 L16 84 Z" fill="${C.fur}"/>`;
-  // The pale face from the eyes down, with puffy whisker pads.
-  const face = `<path d="M22 66 C22 52 34 45 50 45 C66 45 78 52 78 66 C78 76 66 80 50 80 C34 80 22 76 22 66 Z" fill="${C.face}"/>`;
-  const pads = `<ellipse cx="43" cy="62" rx="8" ry="6.5" fill="#fbf4ea"/><ellipse cx="57" cy="62" rx="8" ry="6.5" fill="#fbf4ea"/>`;
-  const freckles = small
-    ? ''
-    : `<g fill="${C.furDark}" opacity=".55"><circle cx="40" cy="61" r=".9"/><circle cx="43" cy="63.5" r=".9"/><circle cx="39.5" cy="64.5" r=".9"/><circle cx="60" cy="61" r=".9"/><circle cx="57" cy="63.5" r=".9"/><circle cx="60.5" cy="64.5" r=".9"/></g>`;
+  // Marks around the otter: cream on the dark tile, navy on the light one, the
+  // page's text color with no tile.
+  const fg = bg === 'light' ? C.navy : bg === 'none' ? 'currentColor' : C.cream;
+
+  // Round ears, low on the sides; a broad, domed head.
+  const ears = `<circle cx="20" cy="46" r="${small ? 9 : 8}" fill="${head}"/><circle cx="80" cy="46" r="${small ? 9 : 8}" fill="${head}"/>`;
+  const skull = `<path d="M15 84 C14 52 27 32 50 32 C73 32 86 52 85 84 Z" fill="${head}"/>`;
+  // River otter: the cream face starts just above the eyes, so they sit on
+  // cream and stay readable at 16 pixels. Sea otter: a soft muzzle.
+  const face =
+    coat === 'brown'
+      ? `<path d="M19 74 C17 55 27 45 50 45 C73 45 83 55 81 74 C80 83 68 88 50 88 C32 88 20 83 19 74 Z" fill="${C.face}"/>`
+      : `<ellipse cx="42.5" cy="62" rx="9.5" ry="7" fill="#fffaf2"/><ellipse cx="57.5" cy="62" rx="9.5" ry="7" fill="#fffaf2"/>`;
+  // Whiskers run past the head: cream on navy, brown where cream would vanish.
+  const wc = bg === 'light' ? C.fur : bg === 'none' ? 'currentColor' : C.face;
   const whiskers = small
     ? ''
-    : `<g stroke="${C.furDark}" stroke-width="1.2" stroke-linecap="round">
-        <path d="M36 61 l-14 -3"/><path d="M36 64 l-14 1"/><path d="M37 66.5 l-12 4"/>
-        <path d="M64 61 l14 -3"/><path d="M64 64 l14 1"/><path d="M63 66.5 l12 4"/>
-      </g>`;
-  // A broad, dark nose.
+    : `<g stroke="${wc}" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M33 61 q-12 -3 -23 -1"/><path d="M33 65 q-11 0 -21 5"/><path d="M67 61 q12 -3 23 -1"/><path d="M67 65 q11 0 21 5"/></g>`;
+  // A rounded triangle of a nose.
   const nose = small
-    ? `<path d="M41 54 h18 c0 5 -5 9 -9 9 c-4 0 -9 -4 -9 -9 z" fill="${C.ink}"/>`
-    : `<path d="M42.5 54.5 h15 c0 4.5 -4 7.5 -7.5 7.5 c-3.5 0 -7.5 -3 -7.5 -7.5 z" fill="${C.ink}"/><ellipse cx="46.5" cy="56" rx="2.2" ry="1.1" fill="#fff" opacity=".35"/>`;
-  const water = `<path d="M-20 79 C0 73 14 83 30 78 C44 74 56 83 70 78 C84 73 96 82 120 77 L120 120 L-20 120 Z" fill="${C.water}"/>
-    <path d="M-20 89 C0 84 16 93 32 89 C48 85 60 93 76 89 C90 85 104 92 120 88 L120 120 L-20 120 Z" fill="${C.waterDeep}"/>`;
-  const paw = (x: number) =>
-    `<ellipse cx="${x}" cy="78.5" rx="${small ? 9.5 : 8.5}" ry="${small ? 5.5 : 5}" fill="${C.furDark}"/>` +
-    (small ? '' : `<path d="M${x - 3.2} 76.5 v3 M${x} 76 v3.5 M${x + 3.2} 76.5 v3" stroke="${C.ink}" stroke-width="1" stroke-linecap="round" opacity=".45"/>`);
-  const zz =
-    mood === 'asleep' && !small
-      ? `<g fill="none" stroke="${bg === 'light' ? C.navy : bg === 'none' ? 'currentColor' : C.cream}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".8"><path d="M74 22 h7 l-7 8 h7"/><path d="M84 11 h5 l-5 6 h5"/></g>`
-      : '';
-  // With no tile, marks around the otter take the page's text color.
-  const fg = bg === 'light' ? C.navy : bg === 'none' ? 'currentColor' : C.cream;
-  const extra =
-    small
-      ? ''
-      : mood === 'worried'
-        ? `<path d="M79 40 c-3 5 -4 7 -4 9 a4 4 0 0 0 8 0 c0 -2 -1 -4 -4 -9 z" fill="#8cc4ff"/>`
-        : mood === 'lost'
-          ? `<g fill="none" stroke="${fg}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"><path d="M75 15 c0 -5 9 -5 9 0 c0 4 -5 4 -5 8"/></g><circle cx="79" cy="28" r="1.8" fill="${fg}" opacity=".85"/>`
-          : '';
+    ? `<path d="M41 55 h18 c0 4.5 -5 8.5 -9 8.5 c-4 0 -9 -4 -9 -8.5 z" fill="${C.ink}"/>`
+    : `<path d="M43.5 55 h13 c0 3.6 -3.6 6.6 -6.5 6.6 c-2.9 0 -6.5 -3 -6.5 -6.6 z" fill="${C.ink}" stroke="${C.ink}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  // One band of water with a gentle curve.
+  const water = `<path d="M-20 83 Q50 74 120 83 L120 120 L-20 120 Z" fill="${C.water}"/>`;
+  const paw = (x: number) => `<ellipse cx="${x}" cy="81" rx="${small ? 11 : 10}" ry="${small ? 7 : 6.5}" fill="${head}"/>`;
+
+  let extra = '';
+  if (!small) {
+    if (mood === 'asleep') extra = `<g fill="none" stroke="${fg}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M72 22 h6 l-6 7 h6"/><path d="M82 11 h8 l-8 9 h8"/></g>`;
+    else if (mood === 'alert') extra = `<g stroke="${C.warn}" stroke-width="3.4" stroke-linecap="round"><path d="M50 13 v8"/><path d="M36 17 l4 6"/><path d="M64 17 l-4 6"/></g>`;
+    else if (mood === 'worried') extra = `<path d="M80 30 c-3 5 -4 7 -4 9 a4 4 0 0 0 8 0 c0 -2 -1 -4 -4 -9 z" fill="${fg}"/>`;
+    else if (mood === 'lost') extra = `<g fill="none" stroke="${fg}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M74 13 c0 -5 9 -5 9 0 c0 4 -4.5 4 -4.5 8"/></g><circle cx="78.5" cy="26" r="1.9" fill="${fg}"/>`;
+  }
   const ring = bg === 'light' ? C.cream : bg === 'dark' ? C.navy : 'none';
   const badge = o.badge
-    ? `<circle cx="${small ? 76 : 82}" cy="${small ? 34 : 18}" r="${small ? 11 : 11}" fill="${o.badge === 'crit' ? C.crit : C.warn}" stroke="${ring}" stroke-width="${bg === 'none' ? 0 : 4}"/>`
+    ? `<circle cx="${small ? 74 : 82}" cy="${small ? 34 : 18}" r="11" fill="${o.badge === 'crit' ? C.crit : C.warn}" stroke="${ring}" stroke-width="${bg === 'none' ? 0 : 4}"/>`
     : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${view}">
   ${clip ? `<defs><clipPath id="otter-tile"><rect width="100" height="100" rx="${o.square ? 0 : 22}"/></clipPath></defs>` : ''}
-  ${pool ? `<defs><clipPath id="otter-pool"><rect x="${small ? 15 : 6}" y="60" width="${small ? 70 : 88}" height="${small ? 34 : 36}" rx="${small ? 12 : 16}"/></clipPath></defs>` : ''}
+  ${pool ? `<defs><clipPath id="otter-pool"><rect x="${small ? 12 : 6}" y="64" width="${small ? 76 : 88}" height="${small ? 40 : 36}" rx="${small ? 13 : 16}"/></clipPath></defs>` : ''}
   ${tile}
   <g${clip}>
-    ${ear(22)}${ear(78)}${head}${face}${pads}${freckles}${whiskers}${eyes(mood, small)}${nose}${small ? '' : mouth(mood)}<g${pool}>${water}</g>${paw(37)}${paw(63)}
+    <g${small ? '' : ' transform="translate(50 50) scale(1.06) translate(-50 -50)"'}>
+      ${ears}${skull}${face}${whiskers}${eyes(mood, small)}${nose}${small ? '' : mouth(mood)}<g${pool}>${water}</g>${paw(31)}${paw(69)}
+    </g>
   </g>
-  ${zz}${extra}${badge}
+  ${extra}${badge}
 </svg>`;
 }
 

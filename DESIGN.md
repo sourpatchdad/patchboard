@@ -76,13 +76,17 @@ so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
 - **One drawing.** `shared/otter.ts` builds every otter from one shape
-  vocabulary on a 100 by 100 grid: a wide, flat head, tiny ears set low on
-  the sides, a pale face with whisker pads, a broad dark nose, two paws on the
-  water line. Wide and low reads as otter; tall with ears on top reads as
-  bear, which is why the ears stay small and low.
-- **Two sizes.** Below 40 pixels the drawing drops whiskers, mouth and ear
-  detail, grows the eyes and nose, and crops to the face, so it holds up on a
-  bookmark bar.
+  vocabulary on a 100 by 100 grid: a domed head with round ears low on the
+  sides, a brown cap over a cream face, a rounded-triangle nose, two paws on
+  one line of water. The eyes sit on the cream, below the brown, so they
+  stay readable at any size.
+- **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
+  only on the alert otter and red only on the tab icon's dot, the same rule
+  as the rest of the interface: color means trouble. Whiskers are cream on
+  navy and brown on the light tile, so they never vanish.
+- **Two sizes.** Below 40 pixels the drawing drops whiskers and mouth, grows
+  the eyes and nose, and crops to the face, so it holds up on a bookmark
+  bar.
 - **Moods follow the server.** Calm when all is quiet, asleep on quiet
   nights, alert with an amber dot when something needs you, worried with a
   red dot when something is down. The header mark, the tab icon, the page

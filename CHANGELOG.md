@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.37.0 (2026-11-05)
+
+- **A simpler otter.** Fewer colors and bolder shapes: a domed head, round
+  ears, a brown cap over a cream face, big paws and one line of water.
+  Navy, brown, cream, ink and blue carry it; amber shows only when the otter
+  is on alert. Its eyes sit on the cream, so it reads at 16 pixels on light
+  and dark tabs. Every icon, the tab icon and the mascot use the new drawing.
+- **The Demo data label** stays on one line on a phone at Large density.
+
 ## 1.36.1 (2026-11-05)
 
 - **Logs and Feeds fill the window at every density.** Compact density
