@@ -2,6 +2,7 @@
 // network access. This is what the public portfolio build and screenshots run
 // on, so it should look like a believable, slightly imperfect homelab.
 
+import { demoPosterUrl } from './demo-art.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
   ArrData,
@@ -154,15 +155,16 @@ function ep(show: string, s: number, e: number, title: string, when: string, has
     when,
     hasFile,
     url: '#',
+    art: demoPosterUrl(show),
     key: episodeKey(show, s, e),
     alt: [episodeKey(show, s, e)],
   };
 }
 
 const radarrUpcoming = (): ReleaseItem[] => [
-  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Quiet Harbor', subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
-  { id: 'r2', source: 'radarr', kind: 'movie', title: 'The Glass Orchard', subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
-  { id: 'r3', source: 'radarr', kind: 'movie', title: 'Low Tide Hotel', subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
+  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Quiet Harbor', art: demoPosterUrl('Quiet Harbor'), subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
+  { id: 'r2', source: 'radarr', kind: 'movie', title: 'The Glass Orchard', art: demoPosterUrl('The Glass Orchard'), subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
+  { id: 'r3', source: 'radarr', kind: 'movie', title: 'Low Tide Hotel', art: demoPosterUrl('Low Tide Hotel'), subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
 ];
 
 const traktUpcoming = (): ReleaseItem[] => [
@@ -230,13 +232,13 @@ const demoPlex = (): TautulliData => ({
     { user: 'Kit', title: 'Quiet Harbor', progress: 81, state: 'paused', transcode: true },
   ],
   recent: [
-    { id: 'p1', type: 'episode', title: 'Salt & Cinder', subtitle: 'S01E03 Slag', addedAt: Date.now() - 3 * H },
-    { id: 'p2', type: 'movie', title: 'Paper Lanterns', subtitle: '2025', addedAt: Date.now() - 8 * H },
-    { id: 'p3', type: 'episode', title: 'Field Notes', subtitle: 'S05E08 Moss', addedAt: Date.now() - 20 * H },
-    { id: 'p4', type: 'movie', title: 'The Cartographer', subtitle: '2024', addedAt: Date.now() - 30 * H },
-    { id: 'p5', type: 'season', title: 'Night Ferry', subtitle: 'Season 2', addedAt: Date.now() - 2 * D },
-    { id: 'p6', type: 'movie', title: 'Winter Range', subtitle: '2025', addedAt: Date.now() - 3 * D },
-    { id: 'p7', type: 'movie', title: 'Small Hours', subtitle: '2023', addedAt: Date.now() - 4 * D },
+    { id: 'p1', type: 'episode', title: 'Salt & Cinder', thumb: demoPosterUrl('Salt & Cinder'), subtitle: 'S01E03 Slag', addedAt: Date.now() - 3 * H },
+    { id: 'p2', type: 'movie', title: 'Paper Lanterns', thumb: demoPosterUrl('Paper Lanterns'), subtitle: '2025', addedAt: Date.now() - 8 * H },
+    { id: 'p3', type: 'episode', title: 'Field Notes', thumb: demoPosterUrl('Field Notes'), subtitle: 'S05E08 Moss', addedAt: Date.now() - 20 * H },
+    { id: 'p4', type: 'movie', title: 'The Cartographer', thumb: demoPosterUrl('The Cartographer'), subtitle: '2024', addedAt: Date.now() - 30 * H },
+    { id: 'p5', type: 'season', title: 'Night Ferry', thumb: demoPosterUrl('Night Ferry'), subtitle: 'Season 2', addedAt: Date.now() - 2 * D },
+    { id: 'p6', type: 'movie', title: 'Winter Range', thumb: demoPosterUrl('Winter Range'), subtitle: '2025', addedAt: Date.now() - 3 * D },
+    { id: 'p7', type: 'movie', title: 'Small Hours', thumb: demoPosterUrl('Small Hours'), subtitle: '2023', addedAt: Date.now() - 4 * D },
   ],
 });
 

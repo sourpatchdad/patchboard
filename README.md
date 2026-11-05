@@ -93,7 +93,7 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 - [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
 - [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
-- [CHANGELOG.md](CHANGELOG.md)
+- [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
 
 ## Development
 

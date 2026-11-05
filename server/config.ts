@@ -69,7 +69,7 @@ export const config = {
     .map((d) => d.trim().toLowerCase())
     .filter(Boolean),
 
-  /** Domains whose service links get reachability checks, e.g. "nbnstack.com,ledger.fyi". */
+  /** Domains whose service links get reachability checks, e.g. "example.com,example.org". */
   checkDomains: (str('CHECK_DOMAINS') ?? '')
     .split(',')
     .map((d) => d.trim().toLowerCase())

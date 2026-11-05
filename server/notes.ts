@@ -77,7 +77,7 @@ const bytes = (s: string) => {
 
 /**
  * Pool used/size from each audit report. The report's ZFS DATASET USAGE table
- * starts with the pool's root dataset: "HomeNAS  4.00T  3.14T  240G  ...".
+ * starts with the pool's root dataset: "tank  4.00T  3.14T  240G  ...".
  */
 export async function seedPoolHistoryFromAudits(): Promise<number> {
   if (!config.logsPath) return 0;

@@ -1,13 +1,26 @@
 # Changelog
 
+## 1.21.0 (2026-11-04)
+
+- **Poster art in demo mode.** The demo paints its own posters for its
+  invented titles: a scene from words in the title (water for a harbor,
+  ridges for a valley, a skyline for a night), a palette per title, the title
+  set at the foot. Recently added and Upcoming show art, and so do the
+  screenshots. Trakt-only items keep their initials, as on a real install.
+- **Docs for whoever pulls the repo.** DESIGN.md states the goal and the
+  decisions a contributor needs. ROADMAP.md holds what people ask for and
+  what comes next. The planning notes about one particular server left the
+  repo.
+- Example values in code comments use example.com instead of real domains.
+
 ## 1.20.1 (2026-11-04)
 
 - **Fix:** the three example compose files never reached the repo, because
   `.gitignore` excluded every `docker-compose.yml`. It now excludes only the
   root one, your own.
 - The docs describe Patchboard on its own terms, without comparisons to
-  other dashboards. docs/RESEARCH.md keeps what people ask for and drops
-  project names, links and CVEs; its backlog shows what has shipped since.
+  other dashboards. The research notes keep what people ask for and drop
+  project names, links and CVEs; their backlog shows what has shipped since.
 
 ## 1.20.0 (2026-11-04)
 
@@ -272,7 +285,7 @@ Home is a board you arrange.
 
 ## 1.8.0 (2026-11-04)
 
-First piece of v2 (docs/DESIGN-v2.md).
+First piece of v2: a customizable board.
 
 - **Docker label discovery:** a container registers itself with
   `patchboard.name`, `.group`, `.href`, `.icon` and friends in its own

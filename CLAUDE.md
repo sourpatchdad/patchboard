@@ -1,17 +1,16 @@
 # Patchboard
 
-Start page and control center for HomeNAS. Read DESIGN.md before changing
-behavior; it records why things are the way they are.
+A start page and control center for a home server. Read DESIGN.md before
+changing behavior; it records the goal and the decisions that follow from it.
 
 - `npm run dev:demo` for UI work: invented data, no secrets needed.
-- Visual changes follow DESIGN.md "Themes": every color and typeface is a
-  token in a theme block at the top of `web/styles.css`; rules below the
-  token blocks use tokens only, never raw colors. Color means trouble:
-  healthy stays neutral. A new theme is a token block plus an entry in
-  `web/lib/appearance.ts` (keep the inline script in `web/index.html` in step).
+- Visual changes follow DESIGN.md "Themes": colors and type are tokens from
+  `web/lib/themes.ts`; rules in `web/styles.css` use tokens only, never raw
+  colors. Color means trouble: healthy stays neutral. A new theme is one
+  entry in `themes.ts` (keep the inline script in `web/index.html` in step).
 - `npm run typecheck` and `npm test` before calling anything done. Parser
   and rule changes get a test in `server/test/` with a fixture shaped like
-  the real file on the NAS.
+  the real file.
 - Anything that changes state on the server (container actions, sign-ins)
   goes through a POST that requires the `X-Patchboard: action` header and is
   recorded as an event.
