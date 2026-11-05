@@ -1,6 +1,7 @@
 // Two weeks of episodes and films as a grid of days: it fills a wide screen
 // instead of stretching one list across it, and folds to a list on a phone.
 
+import { useEffect, useState } from 'react';
 import type { ReleaseItem } from '../../shared/types.ts';
 import { Empty } from '../components/ui.tsx';
 import { dayLabel, dayOffset, plural } from '../lib/format.ts';
@@ -45,7 +46,7 @@ export function Upcoming() {
         )}
       </div>
       <div className="lede-row">
-        <p className="page-lede">Episodes and films from Sonarr, Radarr and your Trakt calendar.</p>
+        <p className="page-lede cal-lede">Episodes and films from Sonarr, Radarr and your Trakt calendar.</p>
         <CustomizePage
           page="upcoming"
           title="Upcoming"
@@ -135,16 +136,50 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
               <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
               {list.length > 1 && <small>{list.length}</small>}
             </h3>
-            {list.length > 0 && (
-              <ul>
-                {list.map((it) => (
-                  <ReleaseRow key={it.id} it={it} art />
-                ))}
-              </ul>
-            )}
+            {list.length > 0 && <DayList list={list} />}
           </section>
         );
       })}
     </div>
   );
+}
+
+/** A calendar day: three releases, then the rest a click away, so every week fits. */
+function DayList({ list }: { list: ReturnType<typeof groupDrops> }) {
+  const [all, setAll] = useState(false);
+  const SHOWN = useFits();
+  const shown = all ? list : list.slice(0, SHOWN);
+  return (
+    <>
+      <ul>
+        {shown.map((it) => (
+          <ReleaseRow key={it.id} it={it} art />
+        ))}
+      </ul>
+      {list.length > SHOWN && (
+        <button type="button" className="text-button cal-more" onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `${list.length - SHOWN} more`}
+        </button>
+      )}
+    </>
+  );
+}
+
+/** How many releases a calendar day can show so three weeks fit the window. */
+function useFits(): number {
+  const calc = () => {
+    if (typeof window === 'undefined') return 3;
+    const zoom = Number(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1;
+    const h = window.innerHeight / zoom;
+    const row = (h - 56 - 200) / 3;
+    const item = window.innerWidth / zoom >= 1600 ? 82 : 66;
+    return Math.max(1, Math.floor((row - 52) / item));
+  };
+  const [n, setN] = useState(calc);
+  useEffect(() => {
+    const on = () => setN(calc());
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return n;
 }

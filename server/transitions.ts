@@ -36,6 +36,12 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
   const pending = { ...prev.pending };
 
   for (const c of containers) {
+    // "Created" is the moment between compose making a container and starting
+    // it, every recreate passes through it. It isn't a stop: keep what we knew.
+    if (c.state === 'created') {
+      if (prev.states[c.name] !== undefined) states[c.name] = prev.states[c.name];
+      continue;
+    }
     const state: Seen = c.state === 'running' ? (c.health === 'unhealthy' ? 'unhealthy' : 'running') : 'stopped';
     states[c.name] = state;
     const before = prev.states[c.name];
@@ -62,8 +68,9 @@ export function settle(prev: Track, containers: Container[], now: number): { tra
       continue;
     }
     if (before === undefined) {
-      // New to us, or back after being recreated: an image change is an update.
-      if (imageChanged) events.push({ kind: 'container.restarted', subject: c.name, detail: 'updated', at: now });
+      // Back after being recreated (we knew its image): one line, updated when
+      // the image changed. Brand new containers say nothing.
+      if (prev.images[c.name]) events.push({ kind: 'container.restarted', subject: c.name, detail: imageChanged ? 'updated' : 'restarted', at: now });
       continue;
     }
     if (before === state) continue;

@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Recreated containers show once.** Compose recreates a container by
+  removing it and creating a new one, which passes through Created on the
+  way. Patchboard counted Created as a stop, so every update showed
+  "stopped" then "started". Now it's one line: "updated" when the image
+  changed, "restarted" when it didn't.
+- **Upcoming fits one screen.** The calendar's three weeks fill the window
+  exactly at any size and density. A busy day shows what fits and opens the
+  rest in place. Customize moved up beside the title.
+- **Season drops read plainly:** "Season 1, episodes 1 to 8", one row even
+  when other releases sit between the episodes.
+- **Live is green.** A connected tab shows a green dot that breathes slowly;
+  reconnecting turns it gray and still.
+- **On wide screens the top of Home is bigger:** a larger clock, today's
+  weather centered, and a larger status line.
 - **Desktop uses the whole screen.** Pages line up with the top bar's edges
   instead of sitting in a 1,720-pixel column with empty gutters, so a 2560
   screen gets 2,500 pixels of dashboard. The Feeds edition and the Upcoming

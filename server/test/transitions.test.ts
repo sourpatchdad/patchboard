@@ -42,3 +42,20 @@ test('a restart loop is reported at once', () => {
   assert.deepEqual(r.events.map((e) => e.kind), ['container.stopped']);
   assert.ok(!settling(r.track, 'unpackerr', T + 6_000));
 });
+
+test('compose recreate (gone, then Created, then running) is one line, never "started"', () => {
+  const { track } = settle(emptyTrack(), [ctr('game-night', 'running', 'v1')], T);
+  let r = settle(track, [], T + 5_000);
+  r = settle(r.track, [ctr('game-night', 'created', 'v2')], T + 10_000);
+  assert.deepEqual(r.events, [], 'Created is not a stop');
+  r = settle(r.track, [ctr('game-night', 'running', 'v2')], T + 15_000);
+  assert.deepEqual(r.events.map((e) => [e.kind, e.detail]), [['container.restarted', 'updated']]);
+});
+
+test('Created seen while it was running, then running again on the same image: restarted, no stop', () => {
+  const { track } = settle(emptyTrack(), [ctr('acme', 'running', 'v1')], T);
+  let r = settle(track, [ctr('acme', 'created', 'v1')], T + 5_000);
+  assert.deepEqual(r.events, []);
+  r = settle(r.track, [ctr('acme', 'running', 'v1')], T + 9_000);
+  assert.deepEqual(r.events, [], 'it never left running as far as we can tell');
+});

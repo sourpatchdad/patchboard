@@ -588,25 +588,38 @@ function PosterShelf({ items, now, showServer }: { items: MergedItem[]; now?: nu
 }
 
 /**
- * A season dropped at once becomes one row: "S02E01 to E08, 8 episodes".
- * Only consecutive episodes of one show, on one day, from one source.
+ * A season dropped at once becomes one row: "Season 2, episodes 1 to 8".
+ * Only episodes of one show and season, on one day, from one source.
  */
 export function groupDrops(list: ReleaseItem[]): ReleaseItem[] {
-  const out: ReleaseItem[] = [];
   const ep = (it: ReleaseItem) => /^S(\d+)E(\d+)/.exec(it.subtitle ?? '');
+  const day = (it: ReleaseItem) => new Date(it.when).toDateString();
+  // Collect each show-season-day-source run first, wherever its episodes sit
+  // in the list, then write one row per run at its first episode's place.
+  const runs = new Map<string, { first: ReleaseItem; eps: number[]; season: number }>();
+  const out: (ReleaseItem | string)[] = [];
   for (const it of list) {
-    const prev = out[out.length - 1];
-    const a = prev && ep(prev);
-    const b = ep(it);
-    if (prev && a && b && it.kind === 'episode' && prev.title === it.title && prev.source === it.source && a[1] === b[1] && new Date(prev.when).toDateString() === new Date(it.when).toDateString()) {
-      const first = (prev as ReleaseItem & { _first?: string })._first ?? `S${a[1]}E${a[2]}`;
-      const count = ((prev as ReleaseItem & { _count?: number })._count ?? 1) + 1;
-      out[out.length - 1] = { ...prev, subtitle: `${first} to E${b[2]}, ${count} episodes`, _first: first, _count: count } as ReleaseItem;
+    const m = ep(it);
+    if (it.kind !== 'episode' || !m) {
+      out.push(it);
       continue;
     }
-    out.push(it);
+    const key = [it.title, it.source, m[1], day(it)].join('|');
+    const run = runs.get(key);
+    if (run) run.eps.push(Number(m[2]));
+    else {
+      runs.set(key, { first: it, eps: [Number(m[2])], season: Number(m[1]) });
+      out.push(key);
+    }
   }
-  return out;
+  return out.map((x) => {
+    if (typeof x !== 'string') return x;
+    const r = runs.get(x)!;
+    if (r.eps.length === 1) return r.first;
+    const lo = Math.min(...r.eps);
+    const hi = Math.max(...r.eps);
+    return { ...r.first, subtitle: lo === 1 ? `Season ${r.season}, episodes 1 to ${hi}` : `Season ${r.season}, episodes ${lo} to ${hi}` };
+  });
 }
 
 /**

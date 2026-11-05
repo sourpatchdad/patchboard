@@ -406,8 +406,32 @@ time,
   background: var(--ink-3);
 }
 
+/* Connected: a green dot that breathes slowly, so a glance says it's live.
+   Reconnecting: gray and still. */
+.live-on {
+  color: var(--ink-2);
+}
+
 .live-on::before {
-  background: var(--ink-2);
+  background: var(--ok);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent);
+  animation: live-pulse 2.4s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--ok) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-on::before {
+    animation: none;
+  }
 }
 
 .jump {
@@ -6488,12 +6512,13 @@ a.date:hover {
 }
 
 @media (min-width: 1100px) {
-  /* Three weeks fill the window below the toolbar; a busy day grows. */
+  /* Three weeks fill the window below the toolbar, and each day shows as
+     many releases as fit (the rest open in place), so nothing scrolls. */
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     grid-template-rows: auto;
-    grid-auto-rows: minmax(max(140px, calc((calc(100vh / var(--zoom)) - var(--topbar-h) - 250px) / 3)), auto);
+    grid-auto-rows: max(140px, calc((calc(100vh / var(--zoom)) - var(--topbar-h) - 228px) / 3));
     gap: 8px;
     margin-top: 14px;
   }
@@ -6600,6 +6625,41 @@ a.date:hover {
 .cal-day .rel:last-child > a,
 .cal-day .rel:last-child > div {
   border-bottom: 0;
+}
+
+.cal-more {
+  margin: 2px 0 6px;
+  font-size: 12.5px;
+}
+
+.cal-day {
+  overflow: hidden;
+}
+
+.cal-day:has(.cal-more) {
+  overflow: visible;
+}
+
+/* The calendar speaks for itself: the source line steps aside to save a row. */
+@media (min-width: 1100px) {
+  .upcoming-page:has(.cal-grid) {
+    padding-bottom: 20px;
+  }
+
+  .lede-row .cal-lede {
+    display: none;
+  }
+
+  /* Customize joins the title row instead of a row of its own. */
+  .upcoming-page:has(.cal-grid) {
+    position: relative;
+  }
+
+  .upcoming-page:has(.cal-grid) .lede-row {
+    position: absolute;
+    top: 30px;
+    right: 32px;
+  }
 }
 
 /* A wide screen: bigger posters and type, so a day reads from across the room. */
@@ -7946,5 +8006,51 @@ button.ha-act:hover {
 @media (max-width: 760px) {
   .wordmark-otter {
     display: none;
+  }
+}
+
+/* A wide screen: the top of Home grows into its row. Time on the left,
+   today and the next three days centered, the status on the right, each
+   larger, so the row reads as the page's headline instead of a strip. */
+@media (min-width: 1600px) {
+  .masthead {
+    padding-bottom: 20px;
+  }
+
+  .clock {
+    font-size: 84px;
+  }
+
+  .date {
+    font-size: 17px;
+  }
+
+  .masthead-weather {
+    justify-self: center;
+  }
+
+  .temp {
+    font-size: 56px;
+  }
+
+  .weather-text {
+    font-size: 16px;
+  }
+
+  .masthead-weather .forecast strong {
+    font-size: 18px;
+  }
+
+  .masthead-weather .forecast {
+    font-size: 14px;
+    gap: 28px;
+  }
+
+  .status-line {
+    font-size: 26px;
+  }
+
+  .head-alerts {
+    font-size: 15px;
   }
 }
