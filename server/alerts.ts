@@ -27,7 +27,10 @@ type Sources = Partial<Record<SourceId, SourceState>>;
 
 const data = <T>(s: Sources, id: SourceId) => (s[id]?.ok ? (s[id]!.data as T) : null);
 
-export function computeAlerts(sources: Sources, catalog: Catalog, updates: Record<string, ImageUpdate> = {}): Alert[] {
+/** How long an integration fails before Patchboard mentions it. */
+export const SOURCE_GRACE_MS = 2 * 60_000;
+
+export function computeAlerts(sources: Sources, catalog: Catalog, updates: Record<string, ImageUpdate> = {}, now = Date.now()): Alert[] {
   const alerts: Alert[] = [];
   const expectStopped = new Set(
     catalog.groups.flatMap((g) => g.services.filter((s) => s.expectStopped && s.container).map((s) => s.container!)),
@@ -243,10 +246,11 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     });
   }
 
-  // An integration we can't reach is worth knowing about, but quietly.
+  // An integration we can't reach is worth knowing about, but quietly, and
+  // only once it has failed for two minutes: restarting Jellyfin isn't news.
   for (const s of Object.values(sources)) {
-    if (s && !s.ok && s.error) {
-      alerts.push({ id: `src-${s.id}`, level: 'info', title: `Can't reach ${s.label}`, detail: s.error, source: s.id });
+    if (s && !s.ok && s.error && (!s.failingSince || now - s.failingSince >= SOURCE_GRACE_MS)) {
+      alerts.push({ id: `src-${s.id}`, level: 'info', title: `Can't reach ${s.label}`, detail: s.error, since: s.failingSince, href: '/settings?tab=connections', source: s.id });
     }
   }
 

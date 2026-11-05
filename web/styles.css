@@ -632,6 +632,16 @@ time,
   border-right-color: var(--crit);
 }
 
+.head-alert.alert-info > a,
+.head-alert.alert-info > span {
+  border-right-color: var(--line);
+}
+
+.head-alert.alert-info .head-alert-title {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 .head-alert-title {
   color: var(--head);
   font-weight: 500;
@@ -684,6 +694,11 @@ h2.status-line {
   .head-alert.alert-critical > a,
   .head-alert.alert-critical > span {
     border-left-color: var(--crit);
+  }
+
+  .head-alert.alert-info > a,
+  .head-alert.alert-info > span {
+    border-left-color: var(--line);
   }
 }
 

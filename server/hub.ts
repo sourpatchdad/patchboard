@@ -170,7 +170,7 @@ export class Hub {
       const error = (err as Error).message || 'Unknown error';
       if (prev.error !== error) console.warn(`${a.id}: ${error}`);
       // Keep the last good data so the page degrades instead of going blank.
-      next = { ...prev, ok: false, error };
+      next = { ...prev, ok: false, error, failingSince: prev.ok || !prev.failingSince ? Date.now() : prev.failingSince };
     }
     this.sources[a.id] = next;
     this.emit({ type: 'source', state: next });

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.39.1 (2026-11-05)
+
+- **A restart isn't news.** Patchboard mentions an app it can't reach only
+  after two minutes of failing, so restarting Jellyfin no longer flashes a
+  note on Home.
+- **Quiet notes stay quiet.** "Can't reach Jellyfin" shows in gray under
+  the status line, after any real problems, and links to Settings,
+  Connections. The otter stays beside "All quiet", and the card keeps
+  "Nothing needs you" above such notes. Before, a note in the card pushed
+  the otter out while the header still said all quiet, and in the header
+  the note didn't show at all.
+
 ## 1.39.0 (2026-11-05)
 
 - **Needs attention moves into Home's header.** Each problem gets one line

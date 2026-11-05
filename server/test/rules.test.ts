@@ -273,3 +273,16 @@ test('Speed tests: a failed newest test, or a slow one by your thresholds, needs
   assert.deepEqual(failed.map((a) => a.id), ['speed-failed']);
   assert.equal(computeAlerts(sources({ speedtest: { latest: { ...run, healthy: true }, runs: [] } }), catalog()).length, 0);
 });
+
+test('an unreachable integration is mentioned quietly, and only after two minutes of failing', () => {
+  const t = 1_800_000_000_000;
+  const jf = (failingSince: number): Partial<Record<SourceId, SourceState>> => ({
+    jellyfin: { id: 'jellyfin', label: 'Jellyfin', ok: false, error: 'HTTP 403', failingSince, updatedAt: null, data: null },
+  });
+  assert.equal(computeAlerts(jf(t - 30_000), catalog(), {}, t).length, 0, 'a restart is not news');
+  const late = computeAlerts(jf(t - 3 * 60_000), catalog(), {}, t);
+  assert.equal(late.length, 1);
+  assert.equal(late[0].level, 'info');
+  assert.equal(late[0].since, t - 3 * 60_000);
+  assert.equal(late[0].href, '/settings?tab=connections');
+});

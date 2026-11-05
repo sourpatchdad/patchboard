@@ -157,7 +157,9 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
  */
 function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   const [all, setAll] = useState(false);
-  const list = alerts.filter((a) => a.level !== 'info');
+  // Problems first, worst first; then quiet notes, like an app Patchboard
+  // can't reach, in gray.
+  const list = [...alerts.filter((a) => a.level === 'critical'), ...alerts.filter((a) => a.level === 'warn'), ...alerts.filter((a) => a.level === 'info')];
   if (!list.length) return null;
   const SHOWN = 3;
   const shown = all ? list : list.slice(0, SHOWN);
@@ -213,25 +215,24 @@ function Overnight({ now }: { now: number }) {
 }
 
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
-  if (!alerts.length) {
-    const h = new Date(now).getHours();
-    const night = h >= 23 || h < 6;
-    return (
-      <Section title="Needs attention" className="attention">
-        <div className="all-clear">
-          <Mascot mood={night ? 'asleep' : 'calm'} size={88} />
-          <p>
-            <strong>Nothing needs you.</strong>
-            <br />
-            {night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
-          </p>
-        </div>
-      </Section>
-    );
-  }
   const serious = alerts.filter((a) => a.level !== 'info').length;
+  const h = new Date(now).getHours();
+  const night = h >= 23 || h < 6;
+  // The otter stays whenever nothing is wrong, even with a quiet note below.
+  const clear = serious === 0 && (
+    <div className="all-clear">
+      <Mascot mood={night ? 'asleep' : 'calm'} size={88} />
+      <p>
+        <strong>Nothing needs you.</strong>
+        <br />
+        {night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+      </p>
+    </div>
+  );
+  if (!alerts.length) return <Section title="Needs attention" className="attention">{clear}</Section>;
   return (
     <Section title="Needs attention" count={serious || undefined} className="attention">
+      {clear}
       <ul className="alerts">
         {alerts.map((a) => {
           const body = (

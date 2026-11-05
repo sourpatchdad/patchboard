@@ -36,6 +36,8 @@ export interface SourceState<T = unknown> {
   label: string;
   ok: boolean;
   error?: string;
+  /** When the current run of failures began; cleared by the next success. */
+  failingSince?: number;
   updatedAt: number | null;
   data: T | null;
 }
