@@ -6677,6 +6677,98 @@ button.ha-act:hover {
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* ---------- Uptime Kuma ---------- */
+
+.kuma-list {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 0;
+}
+
+.kuma {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(3.6em, auto);
+  align-items: center;
+  column-gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.kuma-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kuma-num {
+  font: 400 12.5px/1 var(--f-mono);
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.kuma-down .kuma-num {
+  color: var(--crit);
+}
+
+.kuma-pending .kuma-num {
+  color: var(--warn);
+}
+
+.kuma-why {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.beats {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 3px;
+  gap: 2px;
+  height: 14px;
+}
+
+/* Healthy beats stay quiet, so a red or amber one is what you see. */
+.beat {
+  display: block;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--sq-up) 55%, transparent);
+}
+
+.beat-down {
+  background: var(--crit);
+}
+
+.beat-pending {
+  background: var(--warn);
+}
+
+.beat-maintenance {
+  background: var(--accent);
+}
+
+.kuma-more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Narrower cards keep fewer checks, so names stay whole. */
+@container (max-width: 420px) {
+  .beat:nth-last-child(n + 21) {
+    display: none;
+  }
+}
+
+@container (max-width: 300px) {
+  .beat:nth-last-child(n + 11) {
+    display: none;
+  }
+}
+
 /* Scrollbars: thin and in the theme's colors everywhere, instead of the
    system's wide gray bar with arrows on Windows. */
 * {
@@ -6904,6 +6996,58 @@ button.ha-act:hover {
   padding-left: 12px;
   padding-right: 12px;
   border-radius: var(--radius-lg);
+}
+
+/* Wide screens: integrations in two columns, the description under each
+   name, so the whole list fits about one screen. An open form stays in its
+   own column, so nothing jumps when you open one. */
+@media (min-width: 1200px) {
+  .integrations {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    column-gap: 56px;
+  }
+
+  .integration {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 3px 16px;
+    padding: 11px 0;
+  }
+
+  .integration-name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .integration-end {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 26em;
+  }
+
+  .integration-adds {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 13.5px;
+    color: var(--ink-3);
+  }
+
+  .integration:not(.is-open) .integration-adds {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .integration-env {
+    max-width: none;
+  }
+
+  .integrations-divider {
+    grid-column: 1 / -1;
+  }
 }
 
 .setup-form {

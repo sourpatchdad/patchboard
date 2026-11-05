@@ -21,6 +21,7 @@ export type SourceId =
   | 'fastmail'
   | 'trakt'
   | 'frigate'
+  | 'uptimekuma'
   | 'truenas'
   | 'stats'
   | 'checks'
@@ -416,6 +417,30 @@ export interface Car {
   driving: boolean;
   asleep: boolean;
   updatedAt: number;
+}
+
+export type KumaState = 'up' | 'down' | 'pending' | 'maintenance' | 'unknown';
+
+export interface KumaMonitor {
+  id: number;
+  name: string;
+  group: string;
+  status: KumaState;
+  ping?: number;
+  /** Percent up over the last 24 hours. */
+  uptime24?: number;
+  /** When the current state began, as far back as the beats go. */
+  since?: number;
+  /** Kuma's message for the last beat, when it isn't up. */
+  msg?: string;
+  /** The last beats, oldest first. */
+  beats: Exclude<KumaState, 'unknown'>[];
+}
+
+export interface UptimeKumaData {
+  /** The status page, to open from the widget. */
+  link: string;
+  monitors: KumaMonitor[];
 }
 
 export interface CarData {

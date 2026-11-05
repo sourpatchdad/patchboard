@@ -17,6 +17,7 @@ import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
+import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { sendWake } from './wake.ts';
 import { candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { withConfig } from './config.ts';
@@ -90,6 +91,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   miniflux: () => (config.miniflux ? { adapter: minifluxAdapter() } : null),
   fastmail: () => (config.fastmail ? { adapter: fastmailAdapter() } : null),
   frigate: () => (config.frigate ? { adapter: frigateAdapter() } : null),
+  uptimekuma: () => (config.uptimekuma ? { adapter: uptimeKumaAdapter() } : null),
 };
 
 function realAdapters(): Adapter[] {
@@ -507,6 +509,7 @@ function summarize(data: unknown): string {
   if (n('cars') !== undefined) bits.push(`${n('cars')} car${n('cars') === 1 ? '' : 's'}`);
   if (typeof d.downloading === 'number') bits.push(`${d.downloading} downloading`);
   if (n('cameras') !== undefined) bits.push(`${n('cameras')} cameras`);
+  if (n('monitors') !== undefined) bits.push(`${n('monitors')} monitor${n('monitors') === 1 ? '' : 's'}`);
   if (n('pools') !== undefined) bits.push(`${n('pools')} pools`);
   if (n('days') !== undefined) bits.push('forecast loaded');
   return bits.length ? `Connected: ${bits.join(', ')}.` : 'Connected.';

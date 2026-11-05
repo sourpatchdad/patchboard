@@ -113,7 +113,7 @@ try {
   await go('/feeds?e=1');
   await shoot(page, 'feeds');
 
-  // The house: a board of Home Assistant, the car and Wake, then back to the default.
+  // The house: a board of Home Assistant, the car, Wake and Uptime, then back to the default.
   const board = (method, body) =>
     page.evaluate(
       ([m, b]) => fetch('/api/board', { method: m, headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: b && JSON.stringify(b) }),
@@ -127,7 +127,7 @@ try {
       { id: 'ha-1', type: 'homeassistant', size: 'm', span: 2, config: { title: 'Downstairs', entities: 'light.living_room,light.kitchen,light.porch,scene.movie_night,switch.coffee_maker,sensor.living_room_temperature,binary_sensor.back_door,lock.front_door,cover.garage_door,sensor.house_power,person.sam,automation.night_lights' } },
       { id: 'car', type: 'car', size: 'm', span: 1 },
       { id: 'wake', type: 'wake', size: 's', span: 1 },
-      { id: 'now', type: 'now', size: 'm', span: 1 },
+      { id: 'uptime', type: 'uptime', size: 'm', span: 1 },
     ],
   });
   await go('/', 1500);

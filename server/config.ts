@@ -177,6 +177,7 @@ function build(str: Lookup) {
       ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
       : undefined,
     frigate: str('FRIGATE_URL') ? { url: trimSlash(str('FRIGATE_URL')!) } : undefined,
+    uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */
     upcomingDays: Number(env.UPCOMING_DAYS ?? 14),

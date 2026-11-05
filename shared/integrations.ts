@@ -201,6 +201,15 @@ export const INTEGRATIONS: Integration[] = [
     source: false,
   },
   {
+    id: 'uptimekuma',
+    name: 'Uptime Kuma',
+    adds: 'An Uptime widget: each monitor with its last 30 checks and 24-hour uptime. A monitor that goes down shows in Needs attention.',
+    env: ['UPTIME_KUMA_URL'],
+    optional: ['UPTIME_KUMA_SLUG'],
+    where: 'Uptime Kuma: Status Pages, New Status Page, then add the monitors you want. UPTIME_KUMA_SLUG is the end of its address. No key needed.',
+    source: true,
+  },
+  {
     id: 'frigate',
     name: 'Frigate',
     adds: 'Cameras online and offline.',

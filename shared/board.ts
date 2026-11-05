@@ -20,6 +20,7 @@ export type WidgetType =
   | 'homeassistant'
   | 'car'
   | 'wake'
+  | 'uptime'
   | 'container'
   | 'json'
   | 'weather';
@@ -119,6 +120,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   nextup: { name: 'Next up', about: 'The next episode of each show you are watching on Jellyfin or Emby.', size: 'w', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [8, 2, 24] } },
   homeassistant: { name: 'Home Assistant', about: 'Lights, switches, sensors and scenes you pick. Tap to toggle a light or run a scene.', size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
   car: { name: 'Car', about: 'Your Tesla through Tessie: battery, range, charging, climate and locks.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  uptime: { name: 'Uptime', about: 'Uptime Kuma monitors: problems first, each with its last 30 checks and 24-hour uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
   wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines in WOL_DEVICES.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },

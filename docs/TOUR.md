@@ -49,11 +49,13 @@ the original.
 
 ![Feeds, reading](screenshots/feeds.png)
 
-**The house:** Home Assistant lights, sensors and scenes, the car, and Wake
-buttons, on the Home board. Tap a light or a scene; a lock or a garage door
-only shows its state.
+**The house and the network:** Home Assistant lights, sensors and scenes,
+the car, Wake buttons and Uptime Kuma, on the Home board. Tap a light or a
+scene; a lock or a garage door only shows its state. Uptime lists monitors
+with problems first, each with its last 30 checks, and a monitor that goes
+down joins Needs attention.
 
-![Home Assistant, the car and Wake on the board](screenshots/house.png)
+![Home Assistant, the car, Wake and Uptime on the board](screenshots/house.png)
 
 **Logs:** live from Docker.
 

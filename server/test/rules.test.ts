@@ -249,3 +249,18 @@ test('board: an API numbers widget keeps only validated settings', () => {
   }
   assert.ok('error' in validateBoard({ widgets: [{ id: 'j2', type: 'json', size: 's', config: { json: '{"url":"ftp://x"}' } }] }));
 });
+
+test('Uptime Kuma: a down monitor needs attention; retrying waits; a stopped container speaks for it', () => {
+  const kuma = (status: string, name = 'Nextcloud') => ({
+    link: 'http://kuma/status/home',
+    monitors: [{ id: 7, name, group: 'Files', status, msg: 'connect ECONNREFUSED.', since: 1, beats: [] }],
+  });
+  const one = computeAlerts(sources({ docker: { containers: [] }, uptimekuma: kuma('down') }), catalog());
+  assert.equal(one.length, 1);
+  assert.equal(one[0].title, 'Nextcloud is down');
+  assert.equal(one[0].detail, 'connect ECONNREFUSED. Seen by Uptime Kuma.');
+  assert.equal(one[0].href, 'http://kuma/status/home');
+  assert.equal(computeAlerts(sources({ uptimekuma: kuma('pending') }), catalog()).length, 0);
+  const folded = computeAlerts(sources({ docker: { containers: [down('nextcloud')] }, uptimekuma: kuma('down') }), catalog());
+  assert.deepEqual(folded.map((a) => a.id), ['ctr-down-nextcloud']);
+});

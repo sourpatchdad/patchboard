@@ -1,12 +1,14 @@
-// Widgets for the house: Home Assistant entities, the car, and Wake-on-LAN.
+// Widgets for the house and the network: Home Assistant entities, the car,
+// Wake-on-LAN, and Uptime Kuma monitors.
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, HaEntity, HomeAssistantData } from '../../shared/types.ts';
+import type { CarData, HaEntity, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg } from '../lib/format.ts';
 import { useSource, useStore } from '../lib/store.tsx';
+import { useWidget } from './widget-context.ts';
 
 async function post(url: string): Promise<void> {
   const res = await fetch(url, { method: 'POST', headers: { 'X-Patchboard': 'action' } });
@@ -287,6 +289,67 @@ export function WakeWidget() {
             </li>
           ))}
         </ul>
+      )}
+    </Section>
+  );
+}
+
+// ---------- Uptime Kuma ----------
+
+const KUMA_ORDER: Record<KumaState, number> = { down: 0, pending: 1, maintenance: 2, unknown: 3, up: 4 };
+const KUMA_WORDS: Record<KumaState, string> = { up: 'Up', down: 'Down', pending: 'Retrying', maintenance: 'Maintenance', unknown: 'No checks yet' };
+
+function Beats({ m }: { m: KumaMonitor }) {
+  const bad = m.beats.filter((b) => b === 'down').length;
+  return (
+    <span className="beats" role="img" aria-label={`${m.name}, last ${m.beats.length} checks: ${bad ? `${bad} down` : 'all up'}`}>
+      {m.beats.map((b, i) => (
+        <i key={i} className={`beat beat-${b}`} />
+      ))}
+    </span>
+  );
+}
+
+export function UptimeWidget({ now }: { now: number }) {
+  const { state, data } = useSource<UptimeKumaData>('uptimekuma');
+  const { limit = 8 } = useWidget();
+  if (!state || !data) return null;
+  const sorted = [...data.monitors].sort((a, b) => KUMA_ORDER[a.status] - KUMA_ORDER[b.status] || a.name.localeCompare(b.name));
+  const down = sorted.filter((m) => m.status === 'down').length;
+  const up = sorted.filter((m) => m.status === 'up').length;
+  const shown = sorted.slice(0, limit);
+  const rest = sorted.slice(limit);
+  const restDown = rest.filter((m) => m.status !== 'up').length;
+  return (
+    <Section title="Uptime" count={down ? `${down} down` : `${up} of ${sorted.length} up`} source={state} action={{ label: 'Open', href: data.link }} className={`uptime ${down ? 'has-down' : ''}`}>
+      {sorted.length === 0 ? (
+        <Empty>This status page has no monitors. Add some in Uptime Kuma.</Empty>
+      ) : (
+        <ul className="kuma-list">
+          {shown.map((m) => (
+            <li key={m.id} className={`kuma kuma-${m.status}`}>
+              <span className="kuma-name" title={m.group}>
+                {m.name}
+              </span>
+              <Beats m={m} />
+              <span className="kuma-num">
+                {m.status === 'up' ? (m.uptime24 != null ? `${m.uptime24 % 1 ? m.uptime24.toFixed(1) : m.uptime24}%` : m.ping != null ? `${m.ping} ms` : 'Up') : KUMA_WORDS[m.status]}
+              </span>
+              {m.status !== 'up' && (m.msg || m.since) && (
+                <span className="kuma-why">
+                  {m.msg}
+                  {m.msg && m.since ? ', ' : ''}
+                  {m.since ? `since ${ago(m.since, now)}` : ''}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {rest.length > 0 && (
+        <a className="kuma-more" href={data.link} target="_blank" rel="noreferrer">
+          {rest.length} more{restDown ? `, ${restDown} not up` : ', all up'}
+        </a>
       )}
     </Section>
   );

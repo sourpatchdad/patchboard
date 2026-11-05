@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.31.0 (2026-11-05)
+
+- **Uptime Kuma.** Point Patchboard at a Kuma status page (address and slug,
+  no key) and add the Uptime widget: monitors with problems first, each with
+  its last 30 checks and 24-hour uptime. A monitor that goes down joins
+  Needs attention with Kuma's reason and a link to the status page. A
+  monitor that is retrying waits for Kuma to decide. When a stopped
+  container already explains the outage, you see that alert alone. Set it
+  up from Settings, Connections, or with `UPTIME_KUMA_URL` and
+  `UPTIME_KUMA_SLUG`.
+- **Settings, Connections in two columns on wide screens,** with each
+  description under its name. Scrolling on a 1440 by 900 screen drops by
+  about 200 pixels. An open setup form stays in its own column, so the rows
+  around it hold still.
+- **The roadmap** drops what has shipped and adds what's next: Speedtest
+  Tracker, Pi-hole and AdGuard with Pause, Overseerr with Approve, Hardcover,
+  a slim image and Unraid templates.
+
 ## 1.30.3 (2026-11-05)
 
 - **Recently added shows each release once.** When Plex and Jellyfin (or

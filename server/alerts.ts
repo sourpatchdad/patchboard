@@ -16,6 +16,7 @@ import type {
   SourceState,
   SystemData,
   TruenasData,
+  UptimeKumaData,
 } from '../shared/types.ts';
 import { config } from './config.ts';
 import { lastEventAt } from './db.ts';
@@ -113,6 +114,25 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({ id: `nas-${a.id}`, level, title: first.length > 110 ? `${first.slice(0, 107)}...` : first, detail: rest.join(' ') || undefined, since: a.at ?? undefined, href: '/server', source: 'truenas' });
   }
 
+  // Uptime Kuma: a monitor that is down right now. Pending (Kuma's retry
+  // window) waits for Kuma to decide, so a single slow check stays quiet.
+  const kuma = data<UptimeKumaData>(sources, 'uptimekuma');
+  for (const m of kuma?.monitors ?? []) {
+    if (m.status !== 'down') continue;
+    // A stopped container with the same name already says why; one alert is enough.
+    if (alerts.some((a) => a.subject?.toLowerCase() === m.name.toLowerCase())) continue;
+    alerts.push({
+      id: `kuma-${m.id}`,
+      subject: m.name,
+      level: 'critical',
+      title: `${m.name} is down`,
+      detail: `${m.msg ? `${m.msg.replace(/\.$/, '')}. ` : ''}Seen by Uptime Kuma.`,
+      since: m.since,
+      href: kuma!.link,
+      source: 'uptimekuma',
+    });
+  }
+
   // An app that doesn't answer while its container looks fine. Two misses in a
   // row first, so one slow minute doesn't raise anything.
   const checks = data<ChecksData>(sources, 'checks');
@@ -122,6 +142,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!ck || ck.ok || ck.fails < 2) continue;
     const ctr = s.container ? byName.get(s.container) : undefined;
     if (ctr && ctr.state !== 'running') continue; // the container alert covers it
+    if (alerts.some((a) => a.source === 'uptimekuma' && a.subject?.toLowerCase() === s.name.toLowerCase())) continue;
     alerts.push({
       id: `check-${s.name}`,
       subject: s.name,

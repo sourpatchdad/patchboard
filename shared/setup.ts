@@ -28,6 +28,7 @@ export const UI_SETUP = new Set([
   'tessie',
   'wake',
   'frigate',
+  'uptimekuma',
   'dozzle',
 ]);
 
@@ -54,6 +55,7 @@ const LABELS: [RegExp, string][] = [
   [/_LON$/, 'Longitude'],
   [/_LABEL$/, 'Place name'],
   [/_DEVICES$/, 'Machines'],
+  [/_SLUG$/, 'Status page'],
   [/_BROADCAST$/, 'Broadcast address'],
   [/VERIFY_TLS$/, 'Check the certificate'],
 ];
@@ -65,6 +67,7 @@ export function fieldLabel(name: string): string {
 const HINTS: Record<string, string> = {
   WOL_DEVICES: 'Name=MAC pairs, comma-separated: NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55',
   TRUENAS_URL: 'wss://truenas.local/api/current',
+  UPTIME_KUMA_SLUG: 'home, from /status/home',
   WEATHER_LAT: '40.71',
   WEATHER_LON: '-74.01',
 };

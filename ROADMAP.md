@@ -24,25 +24,29 @@ files, and a non-root image.
 
 ## Next
 
-### Trust
-
-
 ### Making it yours
 
 - [ ] Homepage config import in the UI (the CLI exists)
 - [ ] A search box with `!` shortcuts
 - [ ] iCal and CalDAV calendar widget
-- [ ] Wake-on-LAN
-- [ ] Several Docker hosts
 - [ ] Notes and to-do widget
+- [ ] Several Docker hosts
 
 ### Integrations
 
 - [ ] Proxmox VMs and containers
-- [ ] Uptime Kuma, and history for Patchboard's own checks
-- [ ] Jellyfin and Emby sessions on Right now
-- [ ] Unraid, UPS (NUT), Scrutiny, Speedtest Tracker
+- [ ] Speedtest Tracker, Scrutiny, UPS (NUT), Unraid
+- [ ] Immich library stats
+- [ ] Pi-hole and AdGuard Home, with a Pause button
+- [ ] Overseerr and Jellyseerr requests, with Approve
+- [ ] Hardcover and Goodreads: what you are reading
 - [ ] Outgoing alerts through ntfy or Pushover, opt-in
+
+### Running it anywhere
+
+- [ ] A slim image without the Docker CLI, for read-only installs
+- [ ] Unraid and TrueNAS app templates
+- [ ] A Proxmox LXC script, and running from Node without Docker
 
 ### Polish
 

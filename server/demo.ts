@@ -14,6 +14,8 @@ import type {
   FastmailData,
   FeedEntry,
   FrigateData,
+  KumaMonitor,
+  UptimeKumaData,
   MinifluxData,
   QbitData,
   ReleaseItem,
@@ -314,6 +316,31 @@ const demoJellyfin = (): MediaServerData => ({
   itemPath: '',
 });
 
+// ---------- Uptime Kuma ----------
+
+/** Monitors on a status page: one retrying after a blip, the rest steady. */
+function demoKuma(): UptimeKumaData {
+  const up = Array<KumaMonitor['beats'][number]>(30).fill('up');
+  const m = (id: number, name: string, group: string, extra: Partial<KumaMonitor> = {}): KumaMonitor => ({
+    id, name, group, status: 'up', ping: 20 + ((id * 37) % 90), uptime24: 100, beats: up, ...extra,
+  });
+  return {
+    link: '#',
+    monitors: [
+      m(1, 'Router', 'Network', { ping: 2 }),
+      m(2, 'Cloudflare tunnel', 'Network', { uptime24: 99.3, beats: [...up.slice(0, 18), 'down', 'down', ...up.slice(0, 10)] }),
+      m(3, 'Home Assistant', 'House', { status: 'pending', msg: 'timeout of 48000ms exceeded', since: Date.now() - 3 * MINUTE, uptime24: 99.8, beats: [...up.slice(0, 28), 'pending', 'pending'] }),
+      m(4, 'Plex', 'Media'),
+      m(5, 'Jellyfin', 'Media'),
+      m(6, 'Immich', 'Photos'),
+      m(7, 'Nextcloud', 'Files', { uptime24: 99.9 }),
+      m(8, 'Vaultwarden', 'Files'),
+      m(9, 'Public website', 'Web', { ping: 140 }),
+      m(10, 'Mail (IMAP)', 'Web'),
+    ],
+  };
+}
+
 // ---------- Home Assistant and the car ----------
 
 const HA_DEMO: HaEntity[] = [
@@ -502,6 +529,7 @@ export function demoAdapters(): Adapter[] {
     demo<QbitData>('sabnzbd', 'SABnzbd', 5 * SECOND, demoSab),
     demo<HomeAssistantData>('homeassistant', 'Home Assistant', 15 * SECOND, () => demoHa(() => pinnedEntities(savedBoard()))),
     demo<CarData>('tessie', 'Tesla', 2 * MINUTE, demoCar),
+    demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),
