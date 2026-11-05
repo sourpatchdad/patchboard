@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.36.1 (2026-11-05)
+
+- **Logs and Feeds fill the window at every density.** Compact density
+  scales the page to 90%, and the scale shrank their full-height layout with
+  it, so both stopped a tenth short of the bottom edge. Large ran a tenth
+  past it and scrolled the page. Every height and width tied to the window
+  now undoes the density scale, and dialogs size correctly too. This was the
+  real cause behind the 1.30.3 fix, which guessed browser zoom.
+
 ## 1.36.0 (2026-11-05)
 
 - **Meet the otter.** Patchboard's new icon and mascot: an otter peeking
