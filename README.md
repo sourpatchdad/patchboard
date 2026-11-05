@@ -11,7 +11,8 @@ container, a full pool, a stuck import, tonight's episodes.
 
 ## Try it
 
-Invented data, nothing to configure, nothing leaves your machine:
+Demo data, nothing to configure. The demo's only outside requests load
+posters from TVmaze and Wikipedia:
 
 ```sh
 docker run --rm -p 127.0.0.1:3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
@@ -107,3 +108,6 @@ npm run screenshots   # regenerate docs/screenshots from demo mode
 
 TypeScript on Node 24 without a build step for the server, Hono, React 19,
 Vite and SQLite. [DESIGN.md](DESIGN.md) records why.
+
+Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and
+Wikipedia and belong to their studios.

@@ -5933,6 +5933,10 @@ a.status-line {
   place-items: center;
 }
 
+.poster-small::before {
+  display: none;
+}
+
 .poster-small span {
   font: 600 13px/1 var(--f-body) !important;
   padding: 0 !important;

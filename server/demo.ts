@@ -2,7 +2,7 @@
 // network access. This is what the public portfolio build and screenshots run
 // on, so it should look like a believable, slightly imperfect homelab.
 
-import { demoPosterUrl } from './demo-art.ts';
+import { poster } from './demo-media.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
   ArrData,
@@ -134,48 +134,48 @@ export function demoContainers(): Container[] {
 }
 
 const sonarrUpcoming = (): ReleaseItem[] => [
-  ep('The Long Meridian', 2, 6, 'Dead Reckoning', dayAt(0, 21), false),
-  ep('Salt & Cinder', 1, 4, 'The Kiln', dayAt(1, 20), false),
-  ep('Night Ferry', 3, 1, 'Crossing', dayAt(3, 21, 30), false),
-  ep('The Long Meridian', 2, 7, 'Doldrums', dayAt(7, 21), false),
-  ep('Field Notes', 5, 9, 'Lichen', dayAt(9, 19), false),
-  ep('Salt & Cinder', 1, 5, 'Annealing', dayAt(8, 20), false),
+  ep('Severance', 3, 6, dayAt(0, 21), false),
+  ep('The Bear', 4, 4, dayAt(1, 20), false),
+  ep('Slow Horses', 5, 1, dayAt(3, 21, 30), false),
+  ep('Severance', 3, 7, dayAt(7, 21), false),
+  ep('The Last of Us', 3, 2, dayAt(9, 21), false),
+  ep('Silo', 3, 5, dayAt(8, 20), false),
   // A whole season dropped at once: one row on the calendar.
-  ...[1, 2, 3, 4, 5, 6].map((e) => ep('Harbor Lights', 1, e, `Chapter ${e}`, dayAt(4, 3), false)),
+  ...[1, 2, 3, 4, 5, 6].map((e) => ep('Fallout', 2, e, dayAt(4, 3), false)),
 ];
 
-function ep(show: string, s: number, e: number, title: string, when: string, hasFile: boolean): ReleaseItem {
+function ep(show: string, s: number, e: number, when: string, hasFile: boolean): ReleaseItem {
   const sxe = `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
   return {
     id: `sonarr-${show}-${s}-${e}`,
     source: 'sonarr',
     kind: 'episode',
     title: show,
-    subtitle: `${sxe} ${title}`,
+    subtitle: sxe,
     when,
     hasFile,
     url: '#',
-    art: demoPosterUrl(show),
+    art: poster(show),
     key: episodeKey(show, s, e),
     alt: [episodeKey(show, s, e)],
   };
 }
 
 const radarrUpcoming = (): ReleaseItem[] => [
-  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Quiet Harbor', art: demoPosterUrl('Quiet Harbor'), subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
-  { id: 'r2', source: 'radarr', kind: 'movie', title: 'The Glass Orchard', art: demoPosterUrl('The Glass Orchard'), subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
-  { id: 'r3', source: 'radarr', kind: 'movie', title: 'Low Tide Hotel', art: demoPosterUrl('Low Tide Hotel'), subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
+  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Sinners', art: poster('Sinners'), subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
+  { id: 'r2', source: 'radarr', kind: 'movie', title: 'Weapons', art: poster('Weapons'), subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
+  { id: 'r3', source: 'radarr', kind: 'movie', title: 'One Battle After Another', art: poster('One Battle After Another'), subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
 ];
 
 const traktUpcoming = (): ReleaseItem[] => [
   // Duplicate of a Sonarr item; the client dedupes by key.
   { ...sonarrUpcoming()[0], id: 'trakt-dup', source: 'trakt' },
-  // The same show under Trakt's name for it ("(US)", no "The"): matched by title.
-  { id: 'trakt-us', source: 'trakt', kind: 'episode', title: 'Night Ferry (US)', subtitle: 'S03E01 Crossing', when: dayAt(3, 21, 30), url: '#', key: 'tv:0:3:1', alt: [episodeKey('Night Ferry (US)', 3, 1)] },
+  // The same show under another name for it (a year in parentheses): matched by title.
+  { id: 'trakt-us', source: 'trakt', kind: 'episode', title: 'Slow Horses (2022)', subtitle: 'S05E01', when: dayAt(3, 21, 30), url: '#', key: 'tv:0:5:1', alt: [episodeKey('Slow Horses (2022)', 5, 1)] },
   // A film Radarr has as a digital release, which Trakt calls just "Release".
-  { id: 'trakt-mv', source: 'trakt', kind: 'movie', title: 'Quiet Harbor', subtitle: 'Release', when: dayAt(2, 12), url: '#', key: 'mv:1:Release', alt: ['mv:1'] },
-  { id: 't1', source: 'trakt', kind: 'episode', title: 'Copper Valley', subtitle: 'S04E02 Assay', when: dayAt(2, 20), url: '#', key: 'ep:coppervalley:4:2' },
-  { id: 't2', source: 'trakt', kind: 'episode', title: 'Wren & Pike', subtitle: 'S01E01 Pilot', when: dayAt(5, 21), url: '#', key: 'ep:wrenpike:1:1' },
+  { id: 'trakt-mv', source: 'trakt', kind: 'movie', title: 'Sinners', subtitle: 'Release', when: dayAt(2, 12), url: '#', key: 'mv:1:Release', alt: ['mv:1'] },
+  { id: 't1', source: 'trakt', kind: 'episode', title: 'Andor', subtitle: 'S03E02', when: dayAt(2, 20), url: '#', key: 'ep:andor:3:2' },
+  { id: 't2', source: 'trakt', kind: 'episode', title: 'The Pitt', subtitle: 'S02E01', when: dayAt(5, 21), url: '#', key: 'ep:pitt:2:1' },
 ];
 
 /** Entries marked read during this demo session. */
@@ -228,17 +228,19 @@ const demoMail = (): FastmailData => ({
 
 const demoPlex = (): TautulliData => ({
   streams: [
-    { user: 'Sam', title: 'The Long Meridian', subtitle: 'S02E05 Trade Winds', progress: Math.round(jitter(48, 2)), state: 'playing', transcode: false },
-    { user: 'Kit', title: 'Quiet Harbor', progress: 81, state: 'paused', transcode: true },
+    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', progress: Math.round(jitter(48, 2)), state: 'playing', transcode: false },
+    { user: 'Kit', title: 'Poor Things', progress: 81, state: 'paused', transcode: true },
   ],
   recent: [
-    { id: 'p1', type: 'episode', title: 'Salt & Cinder', thumb: demoPosterUrl('Salt & Cinder'), subtitle: 'S01E03 Slag', addedAt: Date.now() - 3 * H },
-    { id: 'p2', type: 'movie', title: 'Paper Lanterns', thumb: demoPosterUrl('Paper Lanterns'), subtitle: '2025', addedAt: Date.now() - 8 * H },
-    { id: 'p3', type: 'episode', title: 'Field Notes', thumb: demoPosterUrl('Field Notes'), subtitle: 'S05E08 Moss', addedAt: Date.now() - 20 * H },
-    { id: 'p4', type: 'movie', title: 'The Cartographer', thumb: demoPosterUrl('The Cartographer'), subtitle: '2024', addedAt: Date.now() - 30 * H },
-    { id: 'p5', type: 'season', title: 'Night Ferry', thumb: demoPosterUrl('Night Ferry'), subtitle: 'Season 2', addedAt: Date.now() - 2 * D },
-    { id: 'p6', type: 'movie', title: 'Winter Range', thumb: demoPosterUrl('Winter Range'), subtitle: '2025', addedAt: Date.now() - 3 * D },
-    { id: 'p7', type: 'movie', title: 'Small Hours', thumb: demoPosterUrl('Small Hours'), subtitle: '2023', addedAt: Date.now() - 4 * D },
+    { id: 'p1', type: 'episode', title: 'The Bear', thumb: poster('The Bear'), subtitle: 'S04E03', addedAt: Date.now() - 3 * H },
+    { id: 'p2', type: 'movie', title: 'Dune: Part Two', thumb: poster('Dune: Part Two'), subtitle: '2024', addedAt: Date.now() - 8 * H },
+    { id: 'p3', type: 'episode', title: 'Shōgun', thumb: poster('Shōgun'), subtitle: 'S01E08', addedAt: Date.now() - 20 * H },
+    { id: 'p4', type: 'movie', title: 'Past Lives', thumb: poster('Past Lives'), subtitle: '2023', addedAt: Date.now() - 30 * H },
+    { id: 'p5', type: 'season', title: 'The White Lotus', thumb: poster('The White Lotus'), subtitle: 'Season 3', addedAt: Date.now() - 2 * D },
+    { id: 'p6', type: 'movie', title: 'Oppenheimer', thumb: poster('Oppenheimer'), subtitle: '2023', addedAt: Date.now() - 3 * D },
+    { id: 'p7', type: 'movie', title: 'The Holdovers', thumb: poster('The Holdovers'), subtitle: '2023', addedAt: Date.now() - 4 * D },
+    { id: 'p8', type: 'season', title: 'Andor', thumb: poster('Andor'), subtitle: 'Season 2', addedAt: Date.now() - 5 * D },
+    { id: 'p9', type: 'movie', title: 'Spider-Man: Across the Spider-Verse', thumb: poster('Spider-Man: Across the Spider-Verse'), subtitle: '2023', addedAt: Date.now() - 6 * D },
   ],
 });
 
@@ -253,8 +255,8 @@ function demoQbit(): QbitData {
     stalled: 1,
     errored: [],
     active: [
-      { name: 'Salt.and.Cinder.S01E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, speed: s1, etaSec: 340 },
-      { name: 'Low.Tide.Hotel.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: 2900 },
+      { name: 'The.Bear.S04E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, speed: s1, etaSec: 340 },
+      { name: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: 2900 },
     ],
   };
 }
@@ -323,7 +325,7 @@ export function demoAdapters(): Adapter[] {
     demo<ArrData>('radarr', 'Radarr', 5 * MINUTE, () => ({
       upcoming: radarrUpcoming(),
       queueTotal: 2,
-      problems: [{ title: 'Low.Tide.Hotel.2025.2160p.WEB-DL', message: 'No files found are eligible for import' }],
+      problems: [{ title: 'One.Battle.After.Another.2025.2160p.WEB-DL', message: 'No files found are eligible for import' }],
       health: [],
     })),
     demo<TraktData>('trakt', 'Trakt', 30 * MINUTE, () => ({ upcoming: traktUpcoming() })),

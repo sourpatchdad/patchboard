@@ -25,7 +25,7 @@ A restart keeps the old values.
 | `PORT` | `3200` | Port inside the container. |
 | `DATA_DIR` | `/data` | The SQLite database. Mount it. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
-| `DEMO` | `0` | `1` runs on invented data with no network access. |
+| `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |
 | `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |
 
 ## Sign-in and safety

@@ -35,7 +35,6 @@ import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts'
 import { PRESETS } from '../shared/presets.ts';
 import { type Pages, validatePages } from '../shared/pages.ts';
 import { demoAppStat, demoJson } from './demo-ops.ts';
-import { demoPoster } from './demo-art.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
@@ -485,17 +484,6 @@ app.get('/api/art/:src/:id', async (c) => {
     }
   }
   return c.body(hit.body, 200, { 'Content-Type': hit.type, 'Cache-Control': 'private, max-age=86400' });
-});
-
-// Demo mode paints its own poster art for its invented titles.
-app.get('/api/demo-art', (c) => {
-  const t = c.req.query('t') ?? '';
-  if (!config.demo || !t || t.length > 80) return c.body(null, 404);
-  return c.body(demoPoster(t), 200, {
-    'Content-Type': 'image/svg+xml',
-    'Cache-Control': 'public, max-age=86400',
-    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
-  });
 });
 
 // Uploaded icons. Named by content hash, so the same file uploads once and

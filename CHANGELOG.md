@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.21.1 (2026-11-04)
+
+- **Real titles and posters in demo mode.** The demo library now holds
+  well-known shows and films (Severance, The Bear, Shōgun, Slow Horses,
+  Dune: Part Two, Oppenheimer and more) with their real posters, which the
+  browser loads from TVmaze and Wikipedia. They replace the painted posters
+  from 1.21.0. Episode labels are codes only, so the demo invents nothing
+  about a real episode. The screenshots show the same library.
+- Small initials tiles drop the decorative line meant for full-size posters.
+
 ## 1.21.0 (2026-11-04)
 
 - **Poster art in demo mode.** The demo paints its own posters for its
