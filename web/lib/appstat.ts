@@ -10,6 +10,7 @@ import type {
   Container,
   FrigateData,
   MinifluxData,
+  ImmichData,
   QbitData,
   Service,
   Snapshot,
@@ -56,6 +57,12 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
     if (q.paused) return 'Paused';
     if (q.downloading) return `↓ ${speed(q.down)}`;
     return q.kind === 'usenet' ? 'Queue empty' : `${q.seeding} seeding`;
+  }
+  if (c === 'immich' || c === 'immich-server') {
+    const im = data<ImmichData>(snap, 'immich');
+    if (!im) return null;
+    const busy = im.queues.reduce((n, q) => n + q.active + q.waiting, 0);
+    return busy ? `Processing ${busy.toLocaleString()}` : `${im.photos.toLocaleString()} photos`;
   }
   if (c === 'miniflux') {
     const m = data<MinifluxData>(snap, 'miniflux');

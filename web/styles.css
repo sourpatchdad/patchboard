@@ -6947,6 +6947,29 @@ button.ha-act:hover {
   color: var(--ink-3);
 }
 
+/* ---------- Photos (Immich) ---------- */
+
+.photo-queues {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.photo-queues li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink-2);
+}
+
+.photo-queue-n {
+  font: 400 12.5px var(--f-mono);
+  color: var(--ink-3);
+}
+
 /* ---------- Requests ---------- */
 
 .req-list {

@@ -182,6 +182,7 @@ function build(str: Lookup) {
       ? { url: trimSlash(str('ADGUARD_URL')!), username: str('ADGUARD_USERNAME'), password: str('ADGUARD_PASSWORD') }
       : undefined,
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
+    immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     overseerr: pair('OVERSEERR_URL', 'OVERSEERR_KEY'),
     notify: {
       ntfy: str('NTFY_URL') ? { url: trimSlash(str('NTFY_URL')!), token: str('NTFY_TOKEN') } : undefined,

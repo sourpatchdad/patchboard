@@ -4,11 +4,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, HaEntity, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, HaEntity, ImmichData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
-import { ago, agoLong, deg } from '../lib/format.ts';
+import { ago, agoLong, deg, size } from '../lib/format.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
 
@@ -478,6 +478,77 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Immich ----------
+
+/** Immich's queue names, as people say them. */
+const QUEUE_NAMES: Record<string, string> = {
+  thumbnailGeneration: 'thumbnails',
+  metadataExtraction: 'metadata',
+  videoConversion: 'video encoding',
+  faceDetection: 'face detection',
+  facialRecognition: 'face recognition',
+  smartSearch: 'smart search',
+  duplicateDetection: 'duplicate check',
+  storageTemplateMigration: 'storage moves',
+  library: 'library scan',
+  sidecar: 'sidecar files',
+  migration: 'migration',
+  backgroundTask: 'cleanup',
+  search: 'search index',
+  notifications: 'notifications',
+  ocr: 'text recognition',
+};
+
+export function PhotosWidget() {
+  const { state, data } = useSource<ImmichData>('immich');
+  if (!state || !data) return null;
+  const busy = data.queues.filter((q) => q.active + q.waiting > 0).sort((a, b) => b.active + b.waiting - (a.active + a.waiting));
+  const failed = data.queues.reduce((n, q) => n + q.failed, 0);
+  const paused = data.queues.filter((q) => q.paused);
+  return (
+    <Section title="Photos" source={state} className="photos" action={{ label: 'Open Immich', href: data.webUrl }}>
+      <div className="speed-nums">
+        <p>
+          <span className="speed-big">{data.photos.toLocaleString()}</span>
+          <span className="speed-unit">photos</span>
+        </p>
+        <p>
+          <span className="speed-mid">{data.videos.toLocaleString()}</span>
+          <span className="speed-unit">videos</span>
+        </p>
+        <p>
+          <span className="speed-mid">{size(data.usage)}</span>
+        </p>
+      </div>
+      {busy.length > 0 ? (
+        <ul className="photo-queues">
+          {busy.slice(0, 3).map((q) => (
+            <li key={q.name}>
+              <span>{QUEUE_NAMES[q.name] ?? q.name}</span>
+              <span className="photo-queue-n">{(q.active + q.waiting).toLocaleString()} to go</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="speed-seen">Nothing processing.</p>
+      )}
+      {(failed > 0 || paused.length > 0) && (
+        <p className="speed-seen">
+          {failed > 0 && (
+            <a className="warn-text" href={`${data.webUrl}/admin/jobs-status`} target="_blank" rel="noreferrer">
+              {failed.toLocaleString()} failed {failed === 1 ? 'job' : 'jobs'}
+            </a>
+          )}
+          {failed > 0 && paused.length > 0 ? '. ' : ''}
+          {paused.length > 0 && `Paused: ${paused.map((q) => QUEUE_NAMES[q.name] ?? q.name).join(', ')}`}
+          .
+        </p>
+      )}
+      {data.version && <p className="speed-seen">Immich {data.version}</p>}
     </Section>
   );
 }

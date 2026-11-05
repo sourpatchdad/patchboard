@@ -17,6 +17,7 @@ import type {
   DnsData,
   SeerrData,
   SpeedData,
+  ImmichData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -583,6 +584,19 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<ImmichData>('immich', 'Immich', MINUTE, () => ({
+      photos: 48_213,
+      videos: 2_311,
+      usage: 1_910_000_000_000,
+      version: '2.3.1',
+      webUrl: 'http://immich.local',
+      queues: [
+        { name: 'faceDetection', active: 1, waiting: 36, failed: 0, paused: false },
+        { name: 'metadataExtraction', active: 0, waiting: 0, failed: 3, paused: false },
+        { name: 'thumbnailGeneration', active: 2, waiting: 148, failed: 0, paused: false },
+        { name: 'videoConversion', active: 0, waiting: 0, failed: 0, paused: false },
+      ],
+    })),
     demo<SeerrData>('overseerr', 'Requests', 2 * MINUTE, demoSeerr),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,

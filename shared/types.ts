@@ -25,6 +25,7 @@ export type SourceId =
   | 'pihole'
   | 'adguard'
   | 'speedtest'
+  | 'immich'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -438,6 +439,27 @@ export interface SpeedRun {
   healthy?: boolean;
   server?: string;
   isp?: string;
+}
+
+/** One Immich job queue: thumbnails, face detection and so on. */
+export interface ImmichQueue {
+  name: string;
+  active: number;
+  /** Waiting plus delayed. */
+  waiting: number;
+  failed: number;
+  paused: boolean;
+}
+
+export interface ImmichData {
+  photos: number;
+  videos: number;
+  /** Bytes the library takes. */
+  usage: number;
+  version?: string;
+  /** Empty when the key can't read queues. */
+  queues: ImmichQueue[];
+  webUrl: string;
 }
 
 export interface SpeedData {

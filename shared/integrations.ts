@@ -227,6 +227,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'immich',
+    name: 'Immich',
+    adds: "A Photos widget: how many photos and videos, how much space they take, and what Immich is working on, such as thumbnails or face detection. The Immich tile shows the photo count, or what it's processing.",
+    env: ['IMMICH_URL', 'IMMICH_KEY'],
+    where: 'Immich, signed in as an admin: Account Settings, API Keys, New API Key. Give it All permissions, or at least server.statistics and job.read.',
+    source: true,
+  },
+  {
     id: 'overseerr',
     name: 'Overseerr or Jellyseerr',
     adds: 'A Requests widget: what people asked for, with posters, and Approve or Decline on each.',

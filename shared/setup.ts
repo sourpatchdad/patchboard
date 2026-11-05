@@ -32,6 +32,7 @@ export const UI_SETUP = new Set([
   'pihole',
   'adguard',
   'speedtest',
+  'immich',
   'overseerr',
   'ntfy',
   'gotify',

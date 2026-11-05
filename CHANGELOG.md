@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Immich.** A Photos widget shows how many photos and videos you have,
+  how much space they take, and what Immich is working on, such as
+  thumbnails or face detection, with failed jobs linked to Immich's job
+  page. The Immich tile shows the photo count, or what it's processing.
+  Turn it on in Settings, Connections with an admin's API key.
 - **A tidier repository.** The top level holds the code, the Dockerfile,
   README, LICENSE, SECURITY and this changelog. The design notes, roadmap
   and release guide moved to `docs/`; contributing and the code of conduct
