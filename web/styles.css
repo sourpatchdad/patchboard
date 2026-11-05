@@ -457,12 +457,14 @@ time,
   padding: 32px 32px 80px;
 }
 
+/* A desktop uses its whole width: pages line up with the top bar's edges
+   instead of floating in the middle with empty gutters. */
 @media (min-width: 1100px) {
   .home,
   .page {
-    max-width: 1760px;
-    padding-left: 40px;
-    padding-right: 40px;
+    max-width: none;
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }
 
@@ -4430,12 +4432,6 @@ a.vitals:hover .vital-label {
 /* ---------- Wide screens ---------- */
 
 @media (min-width: 1600px) {
-  .home,
-  .page {
-    max-width: 1720px;
-    padding-left: 48px;
-    padding-right: 48px;
-  }
 
   /* Three balanced columns; each section stays whole. */
   .home-grid {
@@ -5839,10 +5835,17 @@ a.vw:hover {
 /* ---------- A tighter masthead ---------- */
 
 @media (min-width: 761px) {
+  /* Every block hangs from one top line: the clock, today's weather, the
+     next three days and the status line start level, whatever grows below. */
   .masthead {
     gap: 48px;
     padding: 0 0 12px;
-    align-items: center;
+    align-items: start;
+  }
+
+  .masthead-weather,
+  .masthead-weather .forecast {
+    align-items: start;
   }
 
   .clock {
@@ -6485,9 +6488,12 @@ a.date:hover {
 }
 
 @media (min-width: 1100px) {
+  /* Three weeks fill the window below the toolbar; a busy day grows. */
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto;
+    grid-auto-rows: minmax(max(140px, calc((calc(100vh / var(--zoom)) - var(--topbar-h) - 250px) / 3)), auto);
     gap: 8px;
     margin-top: 14px;
   }
@@ -6594,6 +6600,37 @@ a.date:hover {
 .cal-day .rel:last-child > a,
 .cal-day .rel:last-child > div {
   border-bottom: 0;
+}
+
+/* A wide screen: bigger posters and type, so a day reads from across the room. */
+@media (min-width: 1600px) {
+  .cal-day {
+    padding: 10px 14px 6px;
+  }
+
+  .cal-day .rel.with-art > a,
+  .cal-day .rel.with-art > div {
+    grid-template-columns: 48px auto minmax(0, 1fr);
+    column-gap: 12px;
+    padding: 8px 0;
+  }
+
+  .cal-day .rel-art .poster {
+    width: 48px;
+  }
+
+  .cal-day .rel-title {
+    font-size: 15px;
+  }
+
+  .cal-day .rel-sub {
+    font-size: 13px;
+  }
+
+  .cal-day .rel-time,
+  .cal-day .rel-src {
+    font-size: 12px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -6945,6 +6982,30 @@ button.ha-act:hover {
   margin: 8px 0 0;
   font-size: 13px;
   color: var(--ink-3);
+}
+
+/* ---------- Feeds: search, feed and time filters ---------- */
+
+.feeds-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px 10px;
+}
+
+.feeds-filters .feeds-search {
+  grid-column: 1 / -1;
+}
+
+.feeds-filters label,
+.feeds-filters select {
+  min-width: 0;
+  width: 100%;
+}
+
+.feeds-filters .text-button {
+  justify-self: start;
 }
 
 /* ---------- Photos (Immich) ---------- */
@@ -7300,7 +7361,11 @@ button.ha-act:hover {
 .edition {
   display: grid;
   gap: 28px;
-  max-width: 1180px;
+}
+
+/* The lead story stays a readable size; the cards below fill the width. */
+.edition-lead {
+  max-width: 1400px;
 }
 
 .edition-date {
@@ -7872,6 +7937,14 @@ button.ha-act:hover {
 /* A narrow phone: the demo label gives way so the name and icons fit. */
 @media (max-width: 400px) {
   .topbar-end .demo-pill {
+    display: none;
+  }
+}
+
+/* On a phone the otter shows only where it reacts, beside the status line;
+   the header keeps just the name. */
+@media (max-width: 760px) {
+  .wordmark-otter {
     display: none;
   }
 }

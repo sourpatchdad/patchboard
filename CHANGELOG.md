@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Desktop uses the whole screen.** Pages line up with the top bar's edges
+  instead of sitting in a 1,720-pixel column with empty gutters, so a 2560
+  screen gets 2,500 pixels of dashboard. The Feeds edition and the Upcoming
+  calendar spread to match: the calendar's three weeks fill the window, with
+  bigger posters on wide screens.
+- **The top of Home lines up.** The clock, today's weather, the next three
+  days and the status line all start on one top line.
+- **Feeds filters.** Search titles, pick one feed (with its unread count) or
+  the last 24 hours or 7 days. Miniflux does the filtering, so it covers
+  every unread article, not just the newest 150. With a filter on, Mark all
+  read marks only what the filter shows.
+- **On a phone the header is just the name.** The otter shows where it
+  reacts: beside "All quiet", on first run and on a wrong address.
 - **Immich.** A Photos widget shows how many photos and videos you have,
   how much space they take, and what Immich is working on, such as
   thumbnails or face detection, with failed jobs linked to Immich's job

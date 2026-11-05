@@ -55,6 +55,12 @@ export function Feeds() {
   const [confirmAll, setConfirmAll] = useState(false);
   const [sort, setSort] = useUrlChoice<FeedSort>('sort', ['newest', 'oldest', 'quick'], 'newest');
   const category = params.get('cat') ?? 'All';
+  // Narrowing beyond a category: one feed, a time window, words in the title.
+  const feedId = Number(params.get('feed')) || undefined;
+  const since = params.get('since') === 'day' || params.get('since') === 'week' ? params.get('since')! : '';
+  const query = params.get('q') ?? '';
+  const [typed, setTyped] = useState(query);
+  const filtered = !!(feedId || since || query);
   const readerRef = useRef<HTMLElement>(null);
   const selectedId = Number(params.get('e')) || null;
 
@@ -64,7 +70,12 @@ export function Feeds() {
 
   const load = useCallback(async (id?: number) => {
     try {
-      const res = await fetch(`/api/feeds?status=unread${id ? `&cat=${id}` : ''}`);
+      const q = new URLSearchParams({ status: 'unread' });
+      if (id) q.set('cat', String(id));
+      if (feedId) q.set('feed', String(feedId));
+      if (since) q.set('since', since);
+      if (query) q.set('q', query);
+      const res = await fetch(`/api/feeds?${q}`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
       setData(body as FeedsResponse);
@@ -73,7 +84,30 @@ export function Feeds() {
     } catch (err) {
       setError((err as Error).message);
     }
-  }, []);
+  }, [feedId, since, query]);
+
+  // Search as you type, after a pause.
+  useEffect(() => {
+    if (typed === query) return;
+    const t = setTimeout(() => setFilter('q', typed.trim()), 350);
+    return () => clearTimeout(t);
+  }, [typed]);
+
+  const setFilter = (key: 'feed' | 'since' | 'q', value: string) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    next.delete('e');
+    setParams(next, { replace: true });
+    setConfirmAll(false);
+  };
+
+  const clearFilters = () => {
+    const next = new URLSearchParams(params);
+    for (const k of ['feed', 'since', 'q', 'e']) next.delete(k);
+    setTyped('');
+    setParams(next, { replace: true });
+  };
 
   // Reload when the category changes. The first load has no id yet; it brings the category list.
   useEffect(() => {
@@ -110,6 +144,11 @@ export function Feeds() {
 
   async function markAll() {
     setConfirmAll(false);
+    // A filtered view marks only what it shows; the whole category stays as it is.
+    if (filtered) {
+      markRead(unreadShown.map((e) => e.id));
+      return;
+    }
     try {
       await post('/api/feeds/read-all', { category: catId }, true);
       await load(catId);
@@ -203,6 +242,43 @@ export function Feeds() {
           </div>
         )}
 
+        <div className="feeds-filters">
+          <input
+            className="field field-small feeds-search"
+            type="search"
+            placeholder="Search titles"
+            aria-label="Search titles"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+          />
+          {(data?.feeds?.length ?? 0) > 1 && (
+            <label>
+              <span className="sr-only">Feed</span>
+              <select className="field field-small" value={feedId ?? ''} onChange={(e) => setFilter('feed', e.target.value)}>
+                <option value="">All feeds</option>
+                {data!.feeds!.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.title} ({f.unread})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label>
+            <span className="sr-only">Published</span>
+            <select className="field field-small" value={since} onChange={(e) => setFilter('since', e.target.value)}>
+              <option value="">Any time</option>
+              <option value="day">Last 24 hours</option>
+              <option value="week">Last 7 days</option>
+            </select>
+          </label>
+          {filtered && (
+            <button type="button" className="text-button" onClick={clearFilters}>
+              Clear
+            </button>
+          )}
+        </div>
+
         <div className="feeds-bar">
           <label className="feeds-sort">
             <span className="sr-only">Sort</span>
@@ -215,7 +291,7 @@ export function Feeds() {
           {!snap?.readOnly &&
             (confirmAll ? (
               <span className="feeds-confirm">
-                Mark {total} read?
+                Mark {filtered ? unreadShown.length : total} read?
                 <button type="button" className="text-button" onClick={() => void markAll()}>
                   Mark read
                 </button>

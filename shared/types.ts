@@ -553,6 +553,7 @@ export interface FeedEntry {
   title: string;
   url: string;
   feed: string;
+  feedId?: number;
   category: string;
   categoryId?: number;
   publishedAt: string;
@@ -573,6 +574,16 @@ export interface FeedsResponse {
   total: number;
   entries: FeedEntry[];
   categories: FeedCategory[];
+  /** Feeds with unread articles, for the feed filter. */
+  feeds?: FeedCategory[];
+}
+
+/** Narrowing the Feeds page beyond a category. */
+export interface FeedFilter {
+  feedId?: number;
+  /** Only articles published within this many hours. */
+  withinHours?: number;
+  search?: string;
 }
 
 export interface MinifluxData {

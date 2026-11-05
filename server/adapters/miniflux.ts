@@ -2,7 +2,7 @@
 // Patchboard is a reader on top of it. Counts come from Miniflux itself, so
 // the nav badge, the page and each category always agree.
 
-import type { FeedCategory, FeedEntry, FeedsResponse, MinifluxData } from '../../shared/types.ts';
+import type { FeedCategory, FeedEntry, FeedFilter, FeedsResponse, MinifluxData } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson, request } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
@@ -41,6 +41,7 @@ function toEntry(e: RawEntry, withContent: boolean): FeedEntry {
     title: e.title,
     url: e.url,
     feed: e.feed.title,
+    feedId: e.feed.id,
     category: e.feed.category.title,
     categoryId: e.feed.category.id,
     publishedAt: e.published_at,
@@ -69,15 +70,32 @@ export async function listCategories(): Promise<FeedCategory[]> {
   return cats.map((c) => ({ id: c.id, title: c.title, unread: c.total_unread ?? 0 }));
 }
 
-export async function listEntries(opts: { status: 'unread' | 'all'; limit: number; categoryId?: number }): Promise<FeedsResponse> {
+/** Feeds with unread articles, most unread first. */
+export async function listFeeds(): Promise<FeedCategory[]> {
+  const [feeds, counters] = await Promise.all([
+    getJson<{ id: number; title: string }[]>(`${base()}/v1/feeds`, { headers: headers() }),
+    getJson<{ unreads: Record<string, number> }>(`${base()}/v1/feeds/counters`, { headers: headers() }),
+  ]);
+  return feeds
+    .map((f) => ({ id: f.id, title: f.title, unread: counters.unreads[f.id] ?? 0 }))
+    .filter((f) => f.unread > 0)
+    .sort((a, b) => b.unread - a.unread || a.title.localeCompare(b.title));
+}
+
+export async function listEntries(opts: { status: 'unread' | 'all'; limit: number; categoryId?: number } & FeedFilter): Promise<FeedsResponse> {
   const q = new URLSearchParams({ order: 'published_at', direction: 'desc', limit: String(opts.limit) });
   if (opts.status === 'unread') q.set('status', 'unread');
   if (opts.categoryId) q.set('category_id', String(opts.categoryId));
-  const [r, categories] = await Promise.all([
-    getJson<{ total: number; entries: RawEntry[] }>(`${base()}/v1/entries?${q}`, { headers: headers() }),
+  if (opts.withinHours) q.set('after', String(Math.floor(Date.now() / 1000) - opts.withinHours * 3600));
+  if (opts.search) q.set('search', opts.search);
+  // One feed has its own endpoint; Miniflux's entry list filters by category only.
+  const path = opts.feedId ? `/v1/feeds/${opts.feedId}/entries` : '/v1/entries';
+  const [r, categories, feeds] = await Promise.all([
+    getJson<{ total: number; entries: RawEntry[] }>(`${base()}${path}?${q}`, { headers: headers() }),
     listCategories(),
+    listFeeds().catch(() => undefined),
   ]);
-  return { total: r.total, entries: r.entries.map((e) => toEntry(e, true)), categories };
+  return { total: r.total, entries: r.entries.map((e) => toEntry(e, true)), categories, feeds };
 }
 
 export async function markRead(ids: number[]): Promise<void> {

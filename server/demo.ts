@@ -17,6 +17,7 @@ import type {
   DnsData,
   SeerrData,
   SpeedData,
+  FeedFilter,
   ImmichData,
   KumaMonitor,
   UptimeKumaData,
@@ -226,13 +227,30 @@ const FEED_IMAGES: Record<number, string> = {
 };
 const CATEGORY_IDS: Record<string, number> = { Homelab: 1, Outdoors: 2, Dev: 3, Tech: 4, Food: 5, Productivity: 6 };
 
-export function demoFeedsResponse(status: 'unread' | 'all', categoryId?: number): FeedsResponse {
+export function demoFeedsResponse(status: 'unread' | 'all', categoryId?: number, filter: FeedFilter = {}): FeedsResponse {
   const unread = demoFeeds.filter((e) => !demoReadIds.has(e.id));
   const pool = status === 'all' ? demoFeeds : unread;
-  const entries = pool.filter((e) => !categoryId || e.categoryId === categoryId);
+  const after = filter.withinHours ? Date.now() - filter.withinHours * 3_600_000 : 0;
+  const needle = filter.search?.toLowerCase();
+  const entries = pool.filter(
+    (e) =>
+      (!categoryId || e.categoryId === categoryId) &&
+      (!filter.feedId || e.feedId === filter.feedId) &&
+      Date.parse(e.publishedAt) >= after &&
+      (!needle || e.title.toLowerCase().includes(needle)),
+  );
   const categories = Object.entries(CATEGORY_IDS).map(([title, id]) => ({ id, title, unread: unread.filter((e) => e.categoryId === id).length }));
-  return { total: status === 'unread' ? entries.length : unread.length, entries, categories };
+  const feeds = [...new Set(unread.map((e) => e.feed))]
+    .map((title) => ({ id: feedIdOf(title), title, unread: unread.filter((e) => e.feed === title).length }))
+    .sort((a, b) => b.unread - a.unread || a.title.localeCompare(b.title));
+  return { total: status === 'unread' ? entries.length : unread.length, entries, categories, feeds };
 }
+
+const feedIds = new Map<string, number>();
+const feedIdOf = (name: string) => {
+  if (!feedIds.has(name)) feedIds.set(name, 100 + feedIds.size);
+  return feedIds.get(name)!;
+};
 
 export const demoFeeds: FeedEntry[] = [
   feed(1, 'Running ZFS special vdevs for metadata: a year of numbers', 'Disk Pressure', 'Homelab', 40 * MINUTE, 7),
@@ -255,6 +273,7 @@ function feed(id: number, title: string, feedName: string, category: string, age
     title,
     url: '#',
     feed: feedName,
+    feedId: feedIdOf(feedName),
     category,
     categoryId: CATEGORY_IDS[category],
     image: FEED_IMAGES[id],

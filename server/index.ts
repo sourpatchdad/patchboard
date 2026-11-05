@@ -272,10 +272,15 @@ app.get('/api/events', (c) =>
 app.get('/api/feeds', async (c) => {
   const status = c.req.query('status') === 'all' ? 'all' : 'unread';
   const categoryId = Number(c.req.query('cat')) || undefined;
-  if (config.demo) return c.json(demoFeedsResponse(status, categoryId));
+  const filter = {
+    feedId: Number(c.req.query('feed')) || undefined,
+    withinHours: ({ day: 24, week: 168 } as Record<string, number>)[c.req.query('since') ?? ''],
+    search: (c.req.query('q') ?? '').trim().slice(0, 100) || undefined,
+  };
+  if (config.demo) return c.json(demoFeedsResponse(status, categoryId, filter));
   if (!config.miniflux) return c.json({ error: 'Miniflux is not configured' }, 404);
   try {
-    return c.json(await listEntries({ status, limit: 150, categoryId }));
+    return c.json(await listEntries({ status, limit: 150, categoryId, ...filter }));
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
   }
