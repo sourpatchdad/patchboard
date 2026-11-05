@@ -76,9 +76,10 @@ so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
 - **One drawing.** `shared/otter.ts` builds every otter from one shape
-  vocabulary on a 100 by 100 grid: a domed head with round ears low on the
-  sides, a brown cap over a cream face, a rounded-triangle nose, two paws on
-  one line of water. The eyes sit on the cream, below the brown, so they
+  vocabulary on a 100 by 100 grid: a wide, low dome with round ears at its
+  top corners, a brown cap over cream cheeks that reach the edge of the head,
+  a rounded-triangle nose over a small "w" mouth, three whiskers a side, two
+  big paws on one line of water. The eyes sit on the cream, below the brown, so they
   stay readable at any size.
 - **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
   only on the alert otter and red only on the tab icon's dot, the same rule

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.37.1 (2026-11-05)
+
+- **The otter, refined from a designed icon pack.** A wider, lower head with
+  ears at its top corners, cream cheeks out to the edge of the head, a "w"
+  mouth, three whiskers a side and bigger paws. It stays one drawing in
+  code, so every mood, both tiles, the tab icon and its status dot still
+  come from the same shapes. With no tile, the water is a rounded pool.
+
 ## 1.37.0 (2026-11-05)
 
 - **A simpler otter.** Fewer colors and bolder shapes: a domed head, round
