@@ -17,6 +17,7 @@ import type {
   SystemData,
   TruenasData,
   UptimeKumaData,
+  DnsData,
 } from '../shared/types.ts';
 import { config } from './config.ts';
 import { lastEventAt } from './db.ts';
@@ -112,6 +113,15 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!level || /space usage for pool/i.test(a.text)) continue;
     const [first, ...rest] = a.text.split(/(?<=\.)\s+/);
     alerts.push({ id: `nas-${a.id}`, level, title: first.length > 110 ? `${first.slice(0, 107)}...` : first, detail: rest.join(' ') || undefined, since: a.at ?? undefined, href: '/server', source: 'truenas' });
+  }
+
+  // Ad blocking switched off with no timer: someone paused it "for a minute"
+  // from the app itself and it never came back. A timed pause stays quiet.
+  for (const [id, name] of [['pihole', 'Pi-hole'], ['adguard', 'AdGuard Home']] as const) {
+    const d = data<DnsData>(sources, id);
+    if (d && !d.protecting && !d.resumesAt) {
+      alerts.push({ id: `dns-off-${id}`, level: 'warn', title: `${name} isn't blocking ads`, detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: '/', source: id });
+    }
   }
 
   // Uptime Kuma: a monitor that is down right now. Pending (Kuma's retry

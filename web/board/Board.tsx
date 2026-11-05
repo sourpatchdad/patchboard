@@ -23,7 +23,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -422,6 +422,8 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
       return <WakeWidget />;
     case 'uptime':
       return <UptimeWidget now={now} />;
+    case 'dns':
+      return <DnsWidget now={now} />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':
@@ -532,6 +534,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     homeassistant: has('homeassistant'),
     car: has('tessie'),
     uptime: has('uptimekuma'),
+    dns: has('pihole') || has('adguard'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),
   };

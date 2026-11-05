@@ -29,6 +29,8 @@ export const UI_SETUP = new Set([
   'wake',
   'frigate',
   'uptimekuma',
+  'pihole',
+  'adguard',
   'dozzle',
 ]);
 

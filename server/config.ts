@@ -177,6 +177,10 @@ function build(str: Lookup) {
       ? { clientId: traktId, clientSecret: traktSecret, staticToken: traktToken, redirectUri: str('TRAKT_REDIRECT_URI') ?? 'http://localhost' }
       : undefined,
     frigate: str('FRIGATE_URL') ? { url: trimSlash(str('FRIGATE_URL')!) } : undefined,
+    pihole: str('PIHOLE_URL') ? { url: trimSlash(str('PIHOLE_URL')!), password: str('PIHOLE_PASSWORD') } : undefined,
+    adguard: str('ADGUARD_URL')
+      ? { url: trimSlash(str('ADGUARD_URL')!), username: str('ADGUARD_USERNAME'), password: str('ADGUARD_PASSWORD') }
+      : undefined,
     uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */

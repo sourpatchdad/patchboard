@@ -10,7 +10,10 @@ it anywhere.
   read-only mounts of notes and logs, and the APIs you connect.
 - **Change:** start, stop, restart, update or roll back a container; save the
   board, the app layout and page settings; store keys you paste; sign in to
-  Trakt.
+  Trakt. With those integrations on: pause a download client, toggle the
+  Home Assistant lights and scenes you pinned, wake a machine you listed,
+  and pause Pi-hole or AdGuard Home for at most an hour. Each is a POST with
+  the action header, and each lands in the audit log.
 
 ## Three choices when you deploy
 

@@ -50,12 +50,14 @@ the original.
 ![Feeds, reading](screenshots/feeds.png)
 
 **The house and the network:** Home Assistant lights, sensors and scenes,
-the car, Wake buttons and Uptime Kuma, on the Home board. Tap a light or a
-scene; a lock or a garage door only shows its state. Uptime lists monitors
-with problems first, each with its last 30 checks, and a monitor that goes
-down joins Needs attention.
+the car, Wake buttons, Uptime Kuma and ad blocking, on the Home board. Tap a
+light or a scene; a lock or a garage door only shows its state. Uptime lists
+monitors with problems first, each with its last 30 checks, and a monitor
+that goes down joins Needs attention. Ad blocking shows what Pi-hole or
+AdGuard Home blocked today and pauses it for 5, 30 or 60 minutes; it turns
+itself back on when the time runs out.
 
-![Home Assistant, the car, Wake and Uptime on the board](screenshots/house.png)
+![Home Assistant, the car, Wake, Uptime and ad blocking on the board](screenshots/house.png)
 
 **Logs:** live from Docker.
 

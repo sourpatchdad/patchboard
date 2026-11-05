@@ -18,6 +18,7 @@ import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
+import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { withConfig } from './config.ts';
@@ -35,7 +36,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook } from './demo.ts';
+import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -64,7 +65,8 @@ import { auditCatalog, draftYaml } from './catalog-audit.ts';
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
 
-type Made = { adapter: Adapter; control?: DownloadControl };
+type Made = { adapter: Adapter; control?: DownloadControl; dns?: DnsControl };
+const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
 
 /**
  * One factory per integration you can turn on. Each reads config when called,
@@ -92,16 +94,20 @@ const FACTORIES: Record<string, () => Made | null> = {
   fastmail: () => (config.fastmail ? { adapter: fastmailAdapter() } : null),
   frigate: () => (config.frigate ? { adapter: frigateAdapter() } : null),
   uptimekuma: () => (config.uptimekuma ? { adapter: uptimeKumaAdapter() } : null),
+  pihole: () => (config.pihole ? piholeClient() : null),
+  adguard: () => (config.adguard ? adguardClient() : null),
 };
 
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter(), checksAdapter()];
   downloadControls.clear();
+  dnsControls.clear();
   for (const [id, make] of Object.entries(FACTORIES)) {
     const m = make();
     if (!m) continue;
     list.push(m.adapter);
     if (m.control) downloadControls.set(id as DownloadClientId, m.control);
+    if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
   }
   return list;
 }
@@ -370,6 +376,27 @@ app.post('/api/downloads/:id/:action', async (c) => {
   return c.json({ ok: true });
 });
 
+// Ad blocking: pause for 5, 30 or 60 minutes, or turn it back on. A pause
+// always has a timer, so blocking comes back on its own.
+app.post('/api/dns/:id/:action', async (c) => {
+  const id = c.req.param('id');
+  const action = c.req.param('action');
+  if (id !== 'pihole' && id !== 'adguard') return c.json({ error: 'Unknown blocker' }, 404);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const minutes = action === 'resume' ? null : Number(/^pause-(\d+)$/.exec(action)?.[1]);
+  if (minutes !== null && !PAUSE_MINUTES.includes(minutes)) return c.json({ error: 'Pause for 5, 30 or 60 minutes' }, 400);
+  const control = config.demo ? demoDnsControl(id) : dnsControls.get(id);
+  if (!control) return c.json({ error: 'That blocker is not configured' }, 404);
+  try {
+    await control(minutes);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), minutes === null ? 'dns.resume' : `dns.pause.${minutes}m`, id);
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
 // Home Assistant: every entity, for the widget's picker.
 app.get('/api/ha/entities', async (c) => {
   if (config.demo) return c.json({ entities: demoHaList() });
@@ -509,6 +536,7 @@ function summarize(data: unknown): string {
   if (n('cars') !== undefined) bits.push(`${n('cars')} car${n('cars') === 1 ? '' : 's'}`);
   if (typeof d.downloading === 'number') bits.push(`${d.downloading} downloading`);
   if (n('cameras') !== undefined) bits.push(`${n('cameras')} cameras`);
+  if (typeof d.queries === 'number') bits.push(`${(d.queries as number).toLocaleString('en-US')} queries today`);
   if (n('monitors') !== undefined) bits.push(`${n('monitors')} monitor${n('monitors') === 1 ? '' : 's'}`);
   if (n('pools') !== undefined) bits.push(`${n('pools')} pools`);
   if (n('days') !== undefined) bits.push('forecast loaded');

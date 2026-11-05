@@ -6677,6 +6677,67 @@ button.ha-act:hover {
   border-bottom: 1px solid var(--line-soft);
 }
 
+/* ---------- Ad blocking ---------- */
+
+.dns-one + .dns-one {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.dns-name {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.dns-big {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+}
+
+.dns-pct {
+  font: 500 34px/1.1 var(--f-display);
+  color: var(--head);
+  letter-spacing: -0.02em;
+  margin-right: 4px;
+}
+
+.dns-sub,
+.dns-state {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.dns-state.warn-text {
+  color: var(--warn);
+}
+
+/* Paused: the number is yesterday's news; the state line carries the page. */
+.dns-one.is-paused .dns-pct {
+  color: var(--ink-3);
+}
+
+.dns-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-top: 12px;
+}
+
+.dns-label {
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.dns-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
 /* ---------- Uptime Kuma ---------- */
 
 .kuma-list {

@@ -14,6 +14,7 @@ import type {
   FastmailData,
   FeedEntry,
   FrigateData,
+  DnsData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -316,6 +317,24 @@ const demoJellyfin = (): MediaServerData => ({
   itemPath: '',
 });
 
+// ---------- Ad blocking ----------
+
+let demoDnsPausedUntil = 0;
+
+export function demoDnsControl(id: string): ((minutes: number | null) => Promise<void>) | undefined {
+  if (id !== 'pihole') return undefined;
+  return async (minutes) => {
+    demoDnsPausedUntil = minutes === null ? 0 : Date.now() + minutes * MINUTE;
+  };
+}
+
+function demoPihole(): DnsData {
+  const paused = demoDnsPausedUntil > Date.now();
+  const queries = 48_213 + Math.floor((Date.now() / 60_000) % 400);
+  const blocked = Math.round(queries * 0.183);
+  return { kind: 'pihole', queries, blocked, pct: Math.round((blocked / queries) * 1000) / 10, protecting: !paused, resumesAt: paused ? demoDnsPausedUntil : undefined, listSize: 912_406 };
+}
+
 // ---------- Uptime Kuma ----------
 
 /** Monitors on a status page: one retrying after a blip, the rest steady. */
@@ -530,6 +549,7 @@ export function demoAdapters(): Adapter[] {
     demo<HomeAssistantData>('homeassistant', 'Home Assistant', 15 * SECOND, () => demoHa(() => pinnedEntities(savedBoard()))),
     demo<CarData>('tessie', 'Tesla', 2 * MINUTE, demoCar),
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
+    demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),

@@ -22,6 +22,8 @@ export type SourceId =
   | 'trakt'
   | 'frigate'
   | 'uptimekuma'
+  | 'pihole'
+  | 'adguard'
   | 'truenas'
   | 'stats'
   | 'checks'
@@ -417,6 +419,20 @@ export interface Car {
   driving: boolean;
   asleep: boolean;
   updatedAt: number;
+}
+
+/** Pi-hole or AdGuard Home: the last day's queries and whether blocking is on. */
+export interface DnsData {
+  kind: 'pihole' | 'adguard';
+  queries: number;
+  blocked: number;
+  /** Percent of queries blocked. */
+  pct: number;
+  protecting: boolean;
+  /** When a timed pause ends. Unset while blocking is on, or when it is off with no timer. */
+  resumesAt?: number;
+  /** Domains on the blocklists (Pi-hole). */
+  listSize?: number;
 }
 
 export type KumaState = 'up' | 'down' | 'pending' | 'maintenance' | 'unknown';

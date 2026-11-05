@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.32.0 (2026-11-05)
+
+- **Pi-hole and AdGuard Home.** An Ad blocking widget shows the percent
+  blocked and today's queries, with Pause for 5, 30 or 60 minutes. A pause
+  always carries a timer, so blocking comes back on its own. Blocking
+  switched off with no timer shows in Needs attention. Pi-hole needs
+  version 6 and an app password; AdGuard Home takes your sign-in. Set either
+  up from Settings, Connections.
+- **Pi-hole keeps one session.** Polls reuse it and sign in again only when
+  it expires, so Patchboard never fills Pi-hole's session slots.
+- **The repository is complete:** an MIT license, CONTRIBUTING.md with what
+  a new integration or widget needs, a code of conduct, issue forms for
+  bugs, ideas and integration requests, and `.editorconfig`. The image
+  carries the license and OCI labels.
+
 ## 1.31.0 (2026-11-05)
 
 - **Uptime Kuma.** Point Patchboard at a Kuma status page (address and slug,

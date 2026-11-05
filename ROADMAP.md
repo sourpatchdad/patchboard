@@ -37,7 +37,6 @@ files, and a non-root image.
 - [ ] Proxmox VMs and containers
 - [ ] Speedtest Tracker, Scrutiny, UPS (NUT), Unraid
 - [ ] Immich library stats
-- [ ] Pi-hole and AdGuard Home, with a Pause button
 - [ ] Overseerr and Jellyseerr requests, with Approve
 - [ ] Hardcover and Goodreads: what you are reading
 - [ ] Outgoing alerts through ntfy or Pushover, opt-in

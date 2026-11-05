@@ -1,9 +1,9 @@
 // Widgets for the house and the network: Home Assistant entities, the car,
-// Wake-on-LAN, and Uptime Kuma monitors.
+// Wake-on-LAN, Uptime Kuma monitors, and ad blocking.
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, HaEntity, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, HaEntity, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg } from '../lib/format.ts';
@@ -351,6 +351,90 @@ export function UptimeWidget({ now }: { now: number }) {
           {rest.length} more{restDown ? `, ${restDown} not up` : ', all up'}
         </a>
       )}
+    </Section>
+  );
+}
+
+// ---------- Ad blocking ----------
+
+const BLOCKERS = [
+  { id: 'pihole', label: 'Pi-hole' },
+  { id: 'adguard', label: 'AdGuard Home' },
+] as const;
+
+function Blocker({ id, label, showName, now }: { id: 'pihole' | 'adguard'; label: string; showName: boolean; now: number }) {
+  const { state, data } = useSource<DnsData>(id);
+  const { snap } = useStore();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!state || !data) return null;
+  async function act(action: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      await post(`/api/dns/${id}/${action}`);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  // The board clock ticks once a minute; the later of the two keeps "30 min" from reading 31.
+  const left = data.resumesAt ? Math.max(1, Math.ceil((data.resumesAt - Math.max(now, Date.now())) / 60_000)) : 0;
+  return (
+    <div className={`dns-one ${data.protecting ? '' : 'is-paused'}`}>
+      {showName && <h3 className="dns-name">{label}</h3>}
+      <p className="dns-big">
+        <span className="dns-pct">{data.pct}%</span> blocked
+      </p>
+      <p className="dns-sub">
+        {data.blocked.toLocaleString()} of {data.queries.toLocaleString()} queries today
+      </p>
+      <p className={`dns-state ${data.protecting ? '' : 'warn-text'}`}>
+        {data.protecting
+          ? data.listSize
+            ? `On, ${data.listSize.toLocaleString()} domains on the lists.`
+            : 'On.'
+          : data.resumesAt
+            ? `Paused, back on in ${left >= 60 ? `${Math.round(left / 60)} h` : `${left} min`}.`
+            : 'Off, with no timer.'}
+      </p>
+      {!snap?.readOnly && (
+        <div className="dns-actions">
+          {data.protecting ? (
+            <>
+              <span className="dns-label">Pause</span>
+              <button type="button" className="text-button" disabled={busy} onClick={() => void act('pause-5')}>
+                5 min
+              </button>
+              <button type="button" className="text-button" disabled={busy} onClick={() => void act('pause-30')}>
+                30 min
+              </button>
+              <button type="button" className="text-button" disabled={busy} onClick={() => void act('pause-60')}>
+                1 h
+              </button>
+            </>
+          ) : (
+            <button type="button" className="text-button" disabled={busy} onClick={() => void act('resume')}>
+              Turn back on
+            </button>
+          )}
+        </div>
+      )}
+      {error && <p className="dns-error warn-text">{error}</p>}
+    </div>
+  );
+}
+
+export function DnsWidget({ now }: { now: number }) {
+  const states = { pihole: useSource<DnsData>('pihole').state, adguard: useSource<DnsData>('adguard').state };
+  const on = BLOCKERS.filter((b) => states[b.id]);
+  if (!on.length) return null;
+  return (
+    <Section title="Ad blocking" source={on.length === 1 ? states[on[0].id] : undefined} className="dns">
+      {on.map((b) => (
+        <Blocker key={b.id} id={b.id} label={b.label} showName={on.length > 1} now={now} />
+      ))}
     </Section>
   );
 }
