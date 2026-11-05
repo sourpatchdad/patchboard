@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.27.1 (2026-11-04)
+
+- **The finished app icon.** Four patches sewn into one board, one lit
+  amber, with depth and stitching on home screens and a simpler version for
+  browser tabs and bookmarks. It holds up on light and dark backgrounds from
+  16 pixels to full size. Android gets a full-bleed copy for its icon shapes.
+  The header mark matches.
+- `npm run icons` renders the PNGs from `icon.svg`, so the SVG is the only
+  source.
+
 ## 1.27.0 (2026-11-04)
 
 - **Transmission, Deluge, SABnzbd and NZBGet.** Each one shows in Right now

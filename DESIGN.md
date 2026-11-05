@@ -68,3 +68,15 @@ variables on `<html>`, and every rule in `web/styles.css` uses those tokens.
 Keep `ok`, `warn` and `crit` apart from `accent`, and quiet text (`ink3`) at
 4.5:1 or better on `bg`. The inline script in `web/index.html` paints the
 saved theme before the page loads; keep it in step with `appearance.ts`.
+
+## The icon
+
+Four patches sewn into one board: three calm, one lit amber. It says what
+Patchboard does. Everything's fine except the one thing that needs you.
+
+- `web/public/icon.svg` is the source: depth, stitches, and a rim that keeps
+  it apart from a dark dock or bookmark bar.
+- `web/public/favicon.svg` is the 16-pixel version for tabs and bookmarks:
+  bigger patches and no stitches, which blur at that size.
+- `npm run icons` renders the PNGs for home screens, including a full-bleed
+  copy Android crops to its own shape.

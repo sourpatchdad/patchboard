@@ -301,13 +301,17 @@ time,
   text-decoration: none;
 }
 
-/* The mark: four tiles, one lit. Everything's fine except the one thing that needs you. */
+/* The mark: four patches sewn into one board, one lit. Everything's fine except the one thing that needs you. */
 .wordmark svg rect {
   fill: var(--ink);
 }
 
 .wordmark svg .mark-lit {
   fill: var(--warn);
+}
+
+.wordmark svg .mark-blue {
+  fill: var(--accent);
 }
 
 .nav {

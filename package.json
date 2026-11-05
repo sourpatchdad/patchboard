@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.27.0",
+  "version": "1.27.1",
   "private": true,
   "description": "A control center and start page for a home server.",
   "type": "module",
@@ -13,7 +13,7 @@
     "build": "vite build",
     "start": "node --disable-warning=ExperimentalWarning server/index.ts",
     "import-homepage": "node scripts/import-homepage.ts",
-    "icons": "node scripts/make-icons.ts",
+    "icons": "node scripts/make-icons.mjs",
     "docs": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts",
     "docs:check": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts --check",
     "screenshots": "node scripts/screenshots.mjs",
