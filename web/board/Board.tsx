@@ -57,7 +57,7 @@ function useBoard() {
 export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: string[]) => void }) {
   const { snap } = useStore();
   const { board, custom, save } = useBoard();
-  const types = board?.widgets.map((w) => w.type).join(',') ?? '';
+  const types = board?.widgets.map((w) => (w.type === 'attention' && w.config?.style === 'card' ? 'attention-card' : w.type)).join(',') ?? '';
   useEffect(() => {
     if (board) onWidgets?.(types.split(','));
   }, [types]);
@@ -175,7 +175,7 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
       </div>
 
       <div className="board" ref={measureRef} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {shown.widgets.map((w, i) => (
+        {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card').map((w, i) => (
           <Cell
             key={w.id}
             w={w}
@@ -192,7 +192,7 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
             bind={editing ? sort.bind(w.id) : undefined}
             dragging={sort.dragging === w.id}
           >
-            <WidgetBody w={w} now={now} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
+            <WidgetBody w={w} now={now} editing={editing} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
           </Cell>
         ))}
       </div>
@@ -389,7 +389,7 @@ function Cell(props: {
   );
 }
 
-function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean }) {
+function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved: boolean; editing?: boolean }) {
   const { snap } = useStore();
   const { homeApps } = useAppearance();
   if (!snap) return null;
@@ -397,6 +397,12 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
     case 'apps':
       return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} /> : <AppTiles legend />;
     case 'attention':
+      if (w.config?.style !== 'card')
+        return editing ? (
+          <Section title="Needs attention" className="attention">
+            <p className="settings-note">Shows in the header, under the status line. Its settings put it back on the board as a card.</p>
+          </Section>
+        ) : null;
       return <Attention alerts={snap.alerts} now={now} />;
     case 'vitals':
       return <Vitals />;

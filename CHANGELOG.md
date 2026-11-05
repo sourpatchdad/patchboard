@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.39.0 (2026-11-05)
+
+- **Needs attention moves into Home's header.** Each problem gets one line
+  under "4 things need you", worst first, linked to its fix. Three show;
+  the rest open in place. When all is quiet, the otter sits beside "All
+  quiet". To keep the card on the board, open Customize, then the widget's
+  settings, and pick A card on the board.
+- **The top bar fits tablets and narrow windows.** From 761 to 1180 pixels
+  the search icon stands in for Jump to and the live dot steps aside; below
+  980 the otter alone is the wordmark. Nothing clips at any density.
+
 ## 1.38.4 (2026-11-05)
 
 - **A solid status bar in the installed iPhone app:** black in dark mode,

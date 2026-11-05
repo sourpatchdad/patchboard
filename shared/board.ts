@@ -67,6 +67,9 @@ export function spanOf(w: Widget, cols: number): number {
 
 export const SPAN: Record<WidgetSize, number> = { s: 3, m: 4, l: 6, w: 8, xl: 12 };
 
+/** Needs attention sits in Home's header unless the board asks for a card. */
+export const attentionInHeader = (b: Board | null | undefined): boolean => !b?.widgets.some((w) => w.type === 'attention' && w.config?.style === 'card');
+
 /** What each widget lets you change beyond its width. */
 export interface WidgetOptions {
   /** Items shown: default, min, max. */
@@ -87,7 +90,20 @@ const ANY: WidgetSize[] = ['s', 'm', 'l', 'w', 'xl'];
 const WIDE: WidgetSize[] = ['m', 'l', 'w', 'xl'];
 
 export const WIDGET_INFO: Record<WidgetType, Info> = {
-  attention: { name: 'Needs attention', about: 'Everything broken or about to be. Always on the board.', size: 'm', sizes: ANY, removable: false, multiple: false, options: {} },
+  attention: {
+    name: 'Needs attention',
+    about: 'Everything broken or about to be. Always on Home: in the header under the status line, or as a card on the board.',
+    size: 'm',
+    sizes: ANY,
+    removable: false,
+    multiple: false,
+    options: {
+      styles: [
+        ['', 'In the header'],
+        ['card', 'A card on the board'],
+      ],
+    },
+  },
   apps: {
     name: 'Apps',
     about: 'Every app in your catalog, as a patch bay of icons or as tiles with one live number each.',

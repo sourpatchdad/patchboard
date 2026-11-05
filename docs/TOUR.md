@@ -17,7 +17,12 @@ name it a little differently.
 **The otter** follows the server in the header and the browser tab: calm,
 asleep on quiet nights, alert with an amber dot, worried with a red one. The
 tab title counts what needs you, as in "(2) Patchboard". When nothing does,
-Needs attention says so, and the otter keeps watch. Settings, Look hides it.
+it sits beside "All quiet" and keeps watch. Settings, Look hides it.
+
+**Needs attention** sits in Home's header, one line per problem under the
+status line, worst first, with three showing and the rest a click away. To
+keep it as a card on the board instead, open Customize, then its settings,
+and pick A card on the board.
 
 ## Pages
 

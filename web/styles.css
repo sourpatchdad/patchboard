@@ -414,6 +414,8 @@ time,
   display: flex;
   align-items: center;
   gap: 24px;
+  white-space: nowrap;
+  flex: none;
   padding: 6px 7px 6px 12px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
@@ -598,6 +600,91 @@ time,
 .tone-crit .status-led {
   background: var(--crit);
   animation: led-pulse 1.6s ease-in-out infinite;
+}
+
+/* Needs attention in the header: short lines under the status line, a
+   colored rule on the edge facing the status line. */
+.head-alerts {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+  margin: -4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  max-width: 460px;
+}
+
+.head-alert > a,
+.head-alert > span {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-right: 12px;
+  border-right: 2px solid var(--warn);
+  color: var(--ink-2);
+  text-decoration: none;
+  text-align: right;
+}
+
+.head-alert.alert-critical > a,
+.head-alert.alert-critical > span {
+  border-right-color: var(--crit);
+}
+
+.head-alert-title {
+  color: var(--head);
+  font-weight: 500;
+  min-width: 0;
+}
+
+.head-alert > a:hover .head-alert-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.head-alert-since {
+  flex: none;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.head-alert-more .text-button {
+  font-size: 13px;
+}
+
+h2.status-line {
+  margin: 0;
+}
+
+/* All quiet, with Needs attention in the header: the otter keeps watch
+   beside the line, the mascot's moment that the card used to hold. */
+.status-line.is-quiet {
+  gap: 10px;
+  text-decoration: none;
+}
+
+.status-line.is-quiet .otter {
+  margin: -8px 0;
+}
+
+@media (max-width: 1099px) {
+  .head-alerts {
+    justify-items: start;
+  }
+
+  .head-alert > a,
+  .head-alert > span {
+    padding: 0 0 0 12px;
+    border-right: none;
+    border-left: 2px solid var(--warn);
+    text-align: left;
+  }
+
+  .head-alert.alert-critical > a,
+  .head-alert.alert-critical > span {
+    border-left-color: var(--crit);
+  }
 }
 
 /* ---------- Patch row ---------- */
@@ -3665,6 +3752,46 @@ a.vitals:hover .vital-label {
 
 .topbar-search {
   display: none;
+}
+
+/* A tablet or a narrow window: the search icon stands in for Jump to, and the
+   live dot steps aside, so the navigation keeps its room. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .topbar .jump,
+  .topbar .live {
+    display: none;
+  }
+
+  .topbar-search {
+    display: grid;
+  }
+
+  .topbar {
+    gap: 20px;
+    padding: 0 20px;
+  }
+
+  .topbar-end {
+    gap: 6px;
+  }
+}
+
+/* Narrower still: the otter alone is the wordmark, the demo label steps
+   aside, and the tabs sit closer. */
+@media (min-width: 761px) and (max-width: 980px) {
+  .wordmark > span:not(.otter),
+  .topbar-end .demo-pill {
+    display: none;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+
+  .nav-link {
+    padding: 0 8px;
+    font-size: 14.5px;
+  }
 }
 
 @media (max-width: 760px) {

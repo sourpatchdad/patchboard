@@ -56,8 +56,8 @@ by default, for a private address. Turn it on with `AUTH=password`, or
 
 ## What you get
 
-**It answers before you ask.** Needs attention lists only what's wrong. The
-header says "All quiet" or "4 things need you". A container that crashed at
+**It answers before you ask.** The top of Home says "All quiet" or "4 things
+need you", with each problem on its own line under it, linked to its fix. A container that crashed at
 3 AM still shows under Changes at breakfast. Turn on ntfy or Gotify and a
 problem that lasts two minutes reaches your phone, then again when it
 clears.

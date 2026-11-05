@@ -53,7 +53,7 @@ export function Home() {
   if (!snap) return <HomeSkeleton />;
   return (
     <div className="home">
-      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} />
+      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} />
       <Welcome />
       <Board now={now} onWidgets={setWidgets} />
     </div>
@@ -69,7 +69,7 @@ function HomeSkeleton() {
   );
 }
 
-function Masthead({ now, weatherOnBoard }: { now: number; weatherOnBoard: boolean }) {
+function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weatherOnBoard: boolean; attentionCard: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
   const { clock24, temp: unit } = useAppearance();
@@ -81,6 +81,7 @@ function Masthead({ now, weatherOnBoard }: { now: number; weatherOnBoard: boolea
   const date = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   const alerts = snap!.alerts.filter((a) => a.level !== 'info');
+  const night = d.getHours() >= 23 || d.getHours() < 6;
   const running = [...containerMap(snap).values()].filter((c) => c.state === 'running').length;
   const dockerOk = !!snap!.sources.docker?.ok;
   const status =
@@ -123,17 +124,68 @@ function Masthead({ now, weatherOnBoard }: { now: number; weatherOnBoard: boolea
         </Link>
       )}
       <div className={`masthead-status tone-${status.tone}`}>
-        <a className="status-line" href={alerts.length ? '#w-attention' : '/stacks'} onClick={(e) => {
-            if (!alerts.length) return;
-            e.preventDefault();
-            document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}>
-          <span className="status-led" aria-hidden />
-          <span>{status.text}</span>
-        </a>
+        {!attentionCard && !alerts.length ? (
+          <Link className="status-line is-quiet" to="/stacks">
+            <Mascot mood={night ? 'asleep' : 'calm'} size={40} />
+            <span>{status.text}</span>
+          </Link>
+        ) : attentionCard || !alerts.length ? (
+          <a className="status-line" href={alerts.length ? '#w-attention' : '/stacks'} onClick={(e) => {
+              if (!alerts.length) return;
+              e.preventDefault();
+              document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}>
+            <span className="status-led" aria-hidden />
+            <span>{status.text}</span>
+          </a>
+        ) : (
+          <h2 className="status-line">
+            <span className="status-led" aria-hidden />
+            <span>{status.text}</span>
+          </h2>
+        )}
+        {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
         <Overnight now={now} />
       </div>
     </header>
+  );
+}
+
+/**
+ * Needs attention in the header: one line per problem under the status line,
+ * worst first, each one a link to its fix. Three show; the rest open in place.
+ */
+function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
+  const [all, setAll] = useState(false);
+  const list = alerts.filter((a) => a.level !== 'info');
+  if (!list.length) return null;
+  const SHOWN = 3;
+  const shown = all ? list : list.slice(0, SHOWN);
+  return (
+    <ul className="head-alerts" aria-label="Needs attention">
+      {shown.map((a) => {
+        const body = (
+          <>
+            <span className="head-alert-title">
+              <WithSubject title={a.title} subject={a.subject} />
+            </span>
+            {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
+          </>
+        );
+        return (
+          <li key={a.id} className={`head-alert alert-${a.level}`} title={a.detail}>
+            {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer">{body}</a> : <Link to={a.href}>{body}</Link> : <span>{body}</span>}
+          </li>
+        );
+      })}
+      {list.length > SHOWN && (
+        <li className="head-alert-more">
+          <button type="button" className="text-button" onClick={() => setAll(!all)}>
+            {all ? 'Show fewer' : `${list.length - SHOWN} more`}
+          </button>
+        </li>
+      )}
+    </ul>
   );
 }
 
