@@ -38,9 +38,20 @@ with posters and no doubles. A phone gets a day-by-day list.
 
 ![Weather](screenshots/weather.png)
 
-**Feeds:** a Miniflux reader. `j` and `k` move, `o` opens the original.
+**Feeds:** your Miniflux unread as a morning edition: a lead story, then the
+newest from each category, with pictures. Filter by category, sort, or mark a
+category read. Open an article to read it here; `j` and `k` move, `o` opens
+the original.
 
-![Feeds](screenshots/feeds.png)
+![Feeds, the edition](screenshots/feeds-edition.png)
+
+![Feeds, reading](screenshots/feeds.png)
+
+**The house:** Home Assistant lights, sensors and scenes, the car, and Wake
+buttons, on the Home board. Tap a light or a scene; a lock or a garage door
+only shows its state.
+
+![Home Assistant, the car and Wake on the board](screenshots/house.png)
 
 **Logs:** live from Docker.
 

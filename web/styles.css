@@ -1559,7 +1559,7 @@ a.jack:focus-visible {
 
 .reader {
   overflow-y: auto;
-  padding: 56px 64px 112px;
+  padding: 32px 48px 96px;
 }
 
 .reader-back {
@@ -6469,4 +6469,386 @@ a.date:hover {
 .icon-choice[aria-pressed='true'] {
   box-shadow: 0 0 0 2px var(--accent);
   border-color: transparent;
+}
+
+/* ---------- Home Assistant ---------- */
+
+.ha-grid {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.ha-act {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  color: var(--ink);
+  font: inherit;
+}
+
+button.ha-act {
+  cursor: pointer;
+}
+
+button.ha-act:hover {
+  border-color: var(--line);
+}
+
+.ha-tile.is-on .ha-act {
+  background: color-mix(in srgb, var(--accent) 16%, var(--raised));
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.ha-tile.is-muted {
+  opacity: 0.55;
+}
+
+.ha-tile.is-muted:not(:has(.ha-act)) {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.ha-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.ha-state {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.ha-tile.is-on .ha-state {
+  color: var(--accent);
+}
+
+.ha-since {
+  color: var(--ink-3);
+}
+
+.ha-state.ha-run {
+  color: var(--accent);
+}
+
+.ha-state.is-warn {
+  color: var(--warn);
+}
+
+.ha-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.ha-pick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+}
+
+.ha-pick-list label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.ha-pick-list label:hover {
+  background: var(--surface);
+}
+
+.ha-pick-id {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Car ---------- */
+
+.car-one + .car-one {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.car-name {
+  font: 500 15px/1.3 var(--f-body);
+  margin-bottom: 6px;
+}
+
+.car-top {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-top: 12px;
+}
+
+.car-pct {
+  font: 400 40px/1 var(--f-mono);
+  letter-spacing: -0.03em;
+  color: var(--head);
+}
+
+.car-range {
+  font: 400 18px/1 var(--f-mono);
+  color: var(--ink-2);
+}
+
+.car-bar {
+  position: relative;
+  margin-top: 12px;
+}
+
+.car-limit {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ink-3);
+}
+
+.car-line {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.car-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px 18px;
+  margin: 14px 0 0;
+}
+
+.car-facts dt {
+  font: 400 12px/1.4 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.car-facts dd {
+  margin: 0;
+  font-size: 14.5px;
+}
+
+.car-seen {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* ---------- Wake ---------- */
+
+.wake-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 0;
+}
+
+.wake-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* Scrollbars: thin and in the theme's colors everywhere, instead of the
+   system's wide gray bar with arrows on Windows. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink-3) 55%, transparent) transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Feeds: list pane ---------- */
+
+.feeds-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 0 20px;
+}
+
+.feeds-head > :last-child {
+  margin-left: auto;
+}
+
+.feeds-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 20px 0;
+}
+
+.feeds-cats .chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chip-count {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.feeds-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.field-small {
+  padding: 5px 8px;
+  font-size: 13px;
+  width: auto;
+}
+
+.feeds-confirm {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.entry.has-thumb {
+  grid-template-columns: minmax(0, 1fr) 64px;
+  column-gap: 14px;
+}
+
+.entry-thumb {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.feeds-more {
+  padding: 14px 20px 24px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---------- Feeds: the edition ---------- */
+
+.edition {
+  display: grid;
+  gap: 28px;
+  max-width: 1180px;
+}
+
+.edition-date {
+  margin: 0;
+  color: var(--ink-3);
+}
+
+.edition-lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.edition-lead:not(:has(.edition-lead-img)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.edition-lead-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.edition-lead-text {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+}
+
+.edition-lead-title {
+  font: var(--display-weight) clamp(22px, 2.2vw, 30px) / 1.15 var(--f-display);
+  letter-spacing: var(--display-tracking);
+  color: var(--head);
+}
+
+.edition-lead:hover .edition-lead-title {
+  color: var(--accent);
+}
+
+.edition-section {
+  display: grid;
+  gap: 12px;
+}
+
+.edition-cat {
+  font: 500 15px/1.2 var(--f-body);
+  color: var(--ink-2);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.edition .feed-cards {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.feed-card-img {
+  width: calc(100% + 32px);
+  margin: -14px -16px 2px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+}
+
+.edition .feed-card-text {
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 900px) {
+  .edition-lead {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

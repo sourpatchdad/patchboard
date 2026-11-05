@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.29.0 (2026-11-04)
+
+- **Home Assistant.** Add a Home Assistant widget, open its settings, and
+  tick the lights, switches, sensors and scenes to show. Tap a light, switch,
+  fan or automation to toggle it, or a scene, script or button to run it.
+  An open door shows amber with how long it's been open. Add the widget as
+  many times as you like, one per room. Patchboard only reads and changes
+  entities pinned on the saved board, and never locks, garage doors, alarms
+  or thermostats, so a stolen session can't open the house. Activity records
+  every tap.
+- **Tessie, for your Tesla.** A Car widget with battery, range, charging and
+  time to full, the charge limit, climate and locks. It reads Tessie's
+  cached state and never wakes the car.
+- **Wake-on-LAN.** List machines in `WOL_DEVICES` and the Wake widget gets a
+  button for each. `examples/wake-on-lan` runs Patchboard on the host
+  network, which the broadcast needs, and the new `LISTEN_HOST` picks the
+  address it answers on.
+- **Add a widget lists only what can show.** Home Assistant, Car, Wake and
+  Next up appear once their integration is on. Adding a second copy of a
+  widget that allows several no longer fails to save.
+- **Feeds, rebuilt.** The count beside Feeds in the nav and on the page now
+  come from Miniflux and always agree. Category filters show their unread
+  counts and ask Miniflux for that category, so a filter shows everything in
+  it, not just what had loaded. With nothing open, the reading pane is a
+  morning edition: a lead story with its picture, then the newest three from
+  each category. Articles show their picture in the list. Sorting is one
+  menu, and Mark all read clears a category or everything after you confirm.
+- **Thin scrollbars in the theme's colors** everywhere, instead of Windows'
+  wide gray bar.
+- **The tab and bookmark icon fills its square**: the four patches alone on
+  a clear background, slate on a light browser bar and cream on a dark one.
+
 ## 1.28.0 (2026-11-04)
 
 - **Light and dark app icons.** The icon now has a light version: slate and

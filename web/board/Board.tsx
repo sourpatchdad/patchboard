@@ -23,6 +23,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -413,6 +414,12 @@ function WidgetBody({ w, now, saved }: { w: Widget; now: number; saved: boolean 
       return <RecentlyAdded now={now} />;
     case 'nextup':
       return <NextUp />;
+    case 'homeassistant':
+      return <HomeAssistantWidget entities={w.config?.entities} />;
+    case 'car':
+      return <CarWidget />;
+    case 'wake':
+      return <WakeWidget />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':
@@ -517,7 +524,15 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
   const present = new Set(board.widgets.map((w) => w.type));
-  const types = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => WIDGET_INFO[t].multiple || !present.has(t));
+  // Integration widgets appear once their integration is on, so nothing lands empty.
+  const has = (id: string) => !!snap?.sources[id as keyof typeof snap.sources];
+  const ready: Partial<Record<WidgetType, boolean>> = {
+    homeassistant: has('homeassistant'),
+    car: has('tessie'),
+    wake: !!snap?.features?.includes('wake'),
+    nextup: has('jellyfin') || has('emby'),
+  };
+  const types = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => (WIDGET_INFO[t].multiple || !present.has(t)) && ready[t] !== false);
   const containers = [...containerMap(snap).values()].filter((c) => c.name.includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
   const id = (base: string) => {
     let n = 1;
@@ -540,7 +555,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
               <li key={t}>
                 <button
                   type="button"
-                  onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: t, type: t, size: WIDGET_INFO[t].size }))}
+                  onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size }))}
                 >
                   <strong>{WIDGET_INFO[t].name}</strong>
                   <span>{WIDGET_INFO[t].about}</span>
@@ -677,6 +692,7 @@ function SettingsDrawer({
               </span>
             </div>
           )}
+          {w.type === 'homeassistant' && <HaPicker value={cfg.entities} onChange={(v) => set('entities', v)} />}
           {w.type === 'apps' && (
             <p className="settings-note">
               <Link to="/apps?arrange=1">Edit apps</Link> reorders, regroups, renames, hides and adds apps. Save this board first; Edit apps saves on its own.

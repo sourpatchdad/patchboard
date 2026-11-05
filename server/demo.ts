@@ -2,6 +2,8 @@
 // network access. This is what the public portfolio build and screenshots run
 // on, so it should look like a believable, slightly imperfect homelab.
 
+import { pinnedEntities } from '../shared/ha.ts';
+import { savedBoard } from './adapters/homeassistant.ts';
 import { poster } from './demo-media.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
@@ -19,7 +21,11 @@ import type {
   ChecksData,
   StatsData,
   SystemData,
+  CarData,
   DownloadClientId,
+  FeedsResponse,
+  HaEntity,
+  HomeAssistantData,
   MediaServerData,
   TautulliData,
   TraktData,
@@ -185,6 +191,43 @@ const traktUpcoming = (): ReleaseItem[] => [
 /** Entries marked read during this demo session. */
 export const demoReadIds = new Set<number>();
 
+// Demo article photos from Wikimedia Commons, under the licenses listed:
+//   Hard disk head crash.jpg, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:Hard_disk_head_crash.jpg
+//   Tangled cables mrbill.jpg, CC BY 2.0, https://commons.wikimedia.org/wiki/File:Tangled_cables_mrbill.jpg
+//   Carolina Chickadee feeding off of bird feeder.jpg, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Carolina_Chickadee_feeding_off_of_bird_feeder.jpg
+//   RaspberryPi.jpg, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:RaspberryPi.jpg
+//   HP Pavilion v72 17 inch CRT Monitor front view IMG 9419.JPG, CC BY 3.0, https://commons.wikimedia.org/wiki/File:HP_Pavilion_v72_17_inch_CRT_Monitor_front_view_IMG_9419.JPG
+//   Smoked Brisket with smoke ring.jpg, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Smoked_Brisket_with_smoke_ring.jpg
+//   Numerical Keys on a Vintage Typewriter.jpg, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Numerical_Keys_on_a_Vintage_Typewriter.jpg
+//   Raised vegetable beds Harmony Gardens Broadwater Farm Estate Haringey London England 01.jpg, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Raised_vegetable_beds_Harmony_Gardens_Broadwater_Farm_Estate_Haringey_London_England_01.jpg
+//   Shipping container - Port of Rotterdam - 2017 - 3.jpg, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Shipping_container_-_Port_of_Rotterdam_-_2017_-_3.jpg
+//   India - Kolkata electricity meters - 3832.jpg, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:India_-_Kolkata_electricity_meters_-_3832.jpg
+//   Mechanical keyboard example.jpg, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Mechanical_keyboard_example.jpg
+//   Desk with notebook pens and glasses.jpg, CC BY 2.0, https://commons.wikimedia.org/wiki/File:Desk_with_notebook_pens_and_glasses.jpg
+const FEED_IMAGES: Record<number, string> = {
+  1: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Hard_disk_head_crash.jpg/960px-Hard_disk_head_crash.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  2: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Tangled_cables_mrbill.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+  3: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Carolina_Chickadee_feeding_off_of_bird_feeder.jpg/960px-Carolina_Chickadee_feeding_off_of_bird_feeder.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  4: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/RaspberryPi.jpg/960px-RaspberryPi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  5: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/HP_Pavilion_v72_17_inch_CRT_Monitor_front_view_IMG_9419.JPG/960px-HP_Pavilion_v72_17_inch_CRT_Monitor_front_view_IMG_9419.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  6: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Smoked_Brisket_with_smoke_ring.jpg/960px-Smoked_Brisket_with_smoke_ring.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  7: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Numerical_Keys_on_a_Vintage_Typewriter.jpg/960px-Numerical_Keys_on_a_Vintage_Typewriter.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  8: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Raised_vegetable_beds_Harmony_Gardens_Broadwater_Farm_Estate_Haringey_London_England_01.jpg/960px-Raised_vegetable_beds_Harmony_Gardens_Broadwater_Farm_Estate_Haringey_London_England_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  9: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Shipping_container_-_Port_of_Rotterdam_-_2017_-_3.jpg/960px-Shipping_container_-_Port_of_Rotterdam_-_2017_-_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  10: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/India_-_Kolkata_electricity_meters_-_3832.jpg/960px-India_-_Kolkata_electricity_meters_-_3832.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  11: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Mechanical_keyboard_example.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+  12: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Desk_with_notebook_pens_and_glasses.jpg/960px-Desk_with_notebook_pens_and_glasses.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+};
+const CATEGORY_IDS: Record<string, number> = { Homelab: 1, Outdoors: 2, Dev: 3, Tech: 4, Food: 5, Productivity: 6 };
+
+export function demoFeedsResponse(status: 'unread' | 'all', categoryId?: number): FeedsResponse {
+  const unread = demoFeeds.filter((e) => !demoReadIds.has(e.id));
+  const pool = status === 'all' ? demoFeeds : unread;
+  const entries = pool.filter((e) => !categoryId || e.categoryId === categoryId);
+  const categories = Object.entries(CATEGORY_IDS).map(([title, id]) => ({ id, title, unread: unread.filter((e) => e.categoryId === id).length }));
+  return { total: status === 'unread' ? entries.length : unread.length, entries, categories };
+}
+
 export const demoFeeds: FeedEntry[] = [
   feed(1, 'Running ZFS special vdevs for metadata: a year of numbers', 'Disk Pressure', 'Homelab', 40 * MINUTE, 7),
   feed(2, 'Why my reverse proxy config finally fits on one screen', 'Small Servers', 'Homelab', 2 * H, 5),
@@ -207,6 +250,8 @@ function feed(id: number, title: string, feedName: string, category: string, age
     url: '#',
     feed: feedName,
     category,
+    categoryId: CATEGORY_IDS[category],
+    image: FEED_IMAGES[id],
     publishedAt: ago(age),
     readingTime: mins,
     content: `<p>This is demo content for <em>${title}</em>. In a real install, Patchboard shows the full article that Miniflux fetched, cleaned and sanitized, right here in the reader.</p>
@@ -266,6 +311,71 @@ const demoJellyfin = (): MediaServerData => ({
   ],
   itemPath: '',
 });
+
+// ---------- Home Assistant and the car ----------
+
+const HA_DEMO: HaEntity[] = [
+  { id: 'light.living_room', name: 'Living room', state: 'on', changedAt: Date.now() - 2 * H },
+  { id: 'light.kitchen', name: 'Kitchen', state: 'off', changedAt: Date.now() - 40 * 60_000 },
+  { id: 'light.porch', name: 'Porch', state: 'on', changedAt: Date.now() - 3 * H },
+  { id: 'switch.coffee_maker', name: 'Coffee maker', state: 'off', changedAt: Date.now() - 9 * H },
+  { id: 'fan.bedroom', name: 'Bedroom fan', state: 'off', changedAt: Date.now() - 11 * H },
+  { id: 'input_boolean.guest_mode', name: 'Guest mode', state: 'off', changedAt: Date.now() - 4 * D },
+  { id: 'automation.night_lights', name: 'Night lights', state: 'on', changedAt: Date.now() - 6 * D },
+  { id: 'scene.movie_night', name: 'Movie night', state: 'scening', changedAt: Date.now() - D },
+  { id: 'script.goodnight', name: 'Goodnight', state: 'off', changedAt: Date.now() - 20 * H },
+  { id: 'sensor.living_room_temperature', name: 'Living room', state: '71.2', unit: '°F', deviceClass: 'temperature', changedAt: Date.now() - 5 * 60_000 },
+  { id: 'sensor.outdoor_humidity', name: 'Outside humidity', state: '58', unit: '%', deviceClass: 'humidity', changedAt: Date.now() - 9 * 60_000 },
+  { id: 'sensor.house_power', name: 'House power', state: '1.84', unit: 'kW', deviceClass: 'power', changedAt: Date.now() - 60_000 },
+  { id: 'sensor.washer_status', name: 'Washer', state: 'Rinse', changedAt: Date.now() - 22 * 60_000 },
+  { id: 'binary_sensor.front_door', name: 'Front door', state: 'off', deviceClass: 'door', changedAt: Date.now() - 2 * H },
+  { id: 'binary_sensor.back_door', name: 'Back door', state: 'on', deviceClass: 'door', changedAt: Date.now() - 6 * 60_000 },
+  { id: 'lock.front_door', name: 'Front door lock', state: 'locked', changedAt: Date.now() - 2 * H },
+  { id: 'cover.garage_door', name: 'Garage door', state: 'closed', deviceClass: 'garage', changedAt: Date.now() - 5 * H },
+  { id: 'person.sam', name: 'Sam', state: 'home', changedAt: Date.now() - 7 * H },
+];
+const haState = new Map(HA_DEMO.map((e) => [e.id, { ...e }]));
+
+export const demoHaList = (): HaEntity[] => [...haState.values()];
+
+export function demoHaAction(id: string, action: 'toggle' | 'run'): void {
+  const e = haState.get(id);
+  if (!e) throw new Error('No such entity');
+  if (action === 'toggle') e.state = e.state === 'on' ? 'off' : 'on';
+  e.changedAt = Date.now();
+}
+
+/** The demo pins the board's Home Assistant entities, like the real adapter. */
+function demoHa(pinned: () => Set<string>): HomeAssistantData {
+  const want = pinned();
+  return { total: 412, entities: [...haState.values()].filter((e) => want.has(e.id)) };
+}
+
+function demoCar(): CarData {
+  return {
+    cars: [
+      {
+        vin: 'DEMO',
+        name: 'Model Y',
+        battery: Math.min(90, 72 + Math.floor((Date.now() / 600_000) % 18)),
+        rangeMi: 231,
+        charging: 'Charging',
+        minutesToFull: 85,
+        chargeKw: 11,
+        limit: 90,
+        insideC: 19,
+        outsideC: 14,
+        climateOn: false,
+        locked: true,
+        sentry: false,
+        odometerMi: 23418,
+        driving: false,
+        asleep: false,
+        updatedAt: Date.now() - 4 * 60_000,
+      },
+    ],
+  };
+}
 
 /** Demo pause and resume: flips a flag the demo clients read. */
 const demoPaused = new Set<DownloadClientId>();
@@ -388,6 +498,8 @@ export function demoAdapters(): Adapter[] {
     demo<MediaServerData>('jellyfin', 'Jellyfin', 15 * SECOND, demoJellyfin),
     demo<QbitData>('qbit', 'qBittorrent', 5 * SECOND, demoQbit),
     demo<QbitData>('sabnzbd', 'SABnzbd', 5 * SECOND, demoSab),
+    demo<HomeAssistantData>('homeassistant', 'Home Assistant', 15 * SECOND, () => demoHa(() => pinnedEntities(savedBoard()))),
+    demo<CarData>('tessie', 'Tesla', 2 * MINUTE, demoCar),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),

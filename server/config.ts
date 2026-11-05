@@ -1,3 +1,4 @@
+import { parseDevices } from './wake.ts';
 // All configuration comes from the environment. Secrets arrive via `env_file:`
 // in compose and are never written to disk by Patchboard. An integration turns
 // on only when every variable it needs is present.
@@ -39,6 +40,8 @@ const traktSecret = str('TRAKT_CLIENT_SECRET');
 
 export const config = {
   port: Number(env.PORT ?? 3200),
+  /** The address to answer on. Blank means every interface, which inside a container is what ports: maps. */
+  listenHost: str('LISTEN_HOST'),
   demo: env.DEMO === '1' || env.DEMO === 'true',
   /** Demo as a fresh install: no catalog, so the first-run welcome shows. */
   demoEmpty: env.DEMO_EMPTY === '1',
@@ -127,6 +130,12 @@ export const config = {
     qbitUrl && qbitUser && qbitPass
       ? { url: trimSlash(qbitUrl), username: qbitUser, password: qbitPass }
       : undefined,
+  homeassistant: str('HA_URL') && str('HA_TOKEN') ? { url: trimSlash(str('HA_URL')!), token: str('HA_TOKEN')! } : undefined,
+  tessie: str('TESSIE_TOKEN') ? { token: str('TESSIE_TOKEN')!, vin: str('TESSIE_VIN') } : undefined,
+  wake: {
+    devices: parseDevices(str('WOL_DEVICES')),
+    broadcast: str('WOL_BROADCAST') ?? '255.255.255.255',
+  },
   transmission: str('TRANSMISSION_URL')
     ? { url: trimSlash(str('TRANSMISSION_URL')!), username: str('TRANSMISSION_USERNAME'), password: str('TRANSMISSION_PASSWORD') }
     : undefined,

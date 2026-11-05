@@ -220,7 +220,9 @@ export class Hub {
         ...(config.composeRoot || config.demo ? ['updates'] : []),
         ...(config.docsPath || config.demo ? ['runbook'] : []),
         ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
+        ...(config.wake.devices.length || config.demo ? ['wake'] : []),
       ],
+      wake: config.demo ? ['Desktop', 'Media PC', 'Backup NAS'] : config.wake.devices.map((d) => d.name),
       links: config.demo
         ? { dozzle: '#', fastmail: '#', miniflux: '#', sonarr: '#', radarr: '#' }
         : {

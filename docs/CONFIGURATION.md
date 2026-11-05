@@ -27,6 +27,7 @@ uploaded icons stay behind.
 | `TZ` | `UTC` | Time zone for clocks and calendars. |
 | `ALLOWED_HOSTS` | empty | Hostnames you reach Patchboard by, such as `dash.example.com`. IP addresses and `localhost` always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
+| `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |
 | `DATA_DIR` | `/data` | The SQLite database. Mount it. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |

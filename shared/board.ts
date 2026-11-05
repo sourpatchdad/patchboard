@@ -3,6 +3,7 @@
 // edits it), so a saved board can never hold something the UI can't render.
 // Runtime code is fine here: no Node or DOM use.
 
+import { parseEntities } from './ha.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -16,6 +17,9 @@ export type WidgetType =
   | 'changes'
   | 'recent'
   | 'nextup'
+  | 'homeassistant'
+  | 'car'
+  | 'wake'
   | 'container'
   | 'json'
   | 'weather';
@@ -113,6 +117,9 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   changes: { name: 'Changes', about: 'Containers that stopped, started or recovered in the last two days.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
   recent: { name: 'Recently added', about: 'New arrivals on Plex, Jellyfin and Emby, as posters. Each opens in its app.', size: 'xl', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [12, 2, 24] } },
   nextup: { name: 'Next up', about: 'The next episode of each show you are watching on Jellyfin or Emby.', size: 'w', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [8, 2, 24] } },
+  homeassistant: { name: 'Home Assistant', about: 'Lights, switches, sensors and scenes you pick. Tap to toggle a light or run a scene.', size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
+  car: { name: 'Car', about: 'Your Tesla through Tessie: battery, range, charging, climate and locks.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines in WOL_DEVICES.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };
@@ -167,6 +174,10 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
       const v = validateJsonConfig(parsed);
       if ('error' in v) return { error: v.error };
       config = { json: JSON.stringify(v.config) };
+    }
+    if (w.type === 'homeassistant') {
+      const ids = parseEntities((w.config as Record<string, unknown> | undefined)?.entities as string | undefined);
+      if (ids.length) config = { entities: ids.join(',') };
     }
     const common = commonOptions(info, w.config);
     if (Object.keys(common).length) config = { ...(config ?? {}), ...common };

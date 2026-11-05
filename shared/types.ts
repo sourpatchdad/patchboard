@@ -9,6 +9,8 @@ export type SourceId =
   | 'radarr'
   | 'tautulli'
   | 'jellyfin'
+  | 'homeassistant'
+  | 'tessie'
   | 'emby'
   | 'qbit'
   | 'transmission'
@@ -379,6 +381,47 @@ export interface ActiveTorrent {
   etaSec: number;
 }
 
+export interface HaEntity {
+  id: string;
+  name: string;
+  state: string;
+  unit?: string;
+  deviceClass?: string;
+  changedAt: number;
+}
+
+export interface HomeAssistantData {
+  /** Only the entities pinned to a Home Assistant widget. */
+  entities: HaEntity[];
+  /** How many entities Home Assistant has in all. */
+  total: number;
+}
+
+export interface Car {
+  vin: string;
+  name: string;
+  battery: number;
+  rangeMi: number;
+  /** Tesla's own word: Charging, Complete, Disconnected, Stopped, Starting, NoPower. */
+  charging: string;
+  minutesToFull?: number;
+  chargeKw?: number;
+  limit: number;
+  insideC?: number;
+  outsideC?: number;
+  climateOn: boolean;
+  locked: boolean;
+  sentry: boolean;
+  odometerMi: number;
+  driving: boolean;
+  asleep: boolean;
+  updatedAt: number;
+}
+
+export interface CarData {
+  cars: Car[];
+}
+
 export type DownloadClientId = 'qbit' | 'transmission' | 'deluge' | 'sabnzbd' | 'nzbget';
 
 /** Any download client. Usenet clients report no seeding or upload. */
@@ -401,9 +444,25 @@ export interface FeedEntry {
   url: string;
   feed: string;
   category: string;
+  categoryId?: number;
   publishedAt: string;
   readingTime: number;
+  /** A picture for the card: an image enclosure or the article's first image. */
+  image?: string;
   content?: string;
+}
+
+export interface FeedCategory {
+  id: number;
+  title: string;
+  unread: number;
+}
+
+export interface FeedsResponse {
+  /** Unread in Miniflux for this view (all, or one category), not just what loaded. */
+  total: number;
+  entries: FeedEntry[];
+  categories: FeedCategory[];
 }
 
 export interface MinifluxData {
@@ -522,6 +581,8 @@ export interface Snapshot {
   pages?: import('./pages.ts').Pages;
   /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */
   features?: string[];
+  /** Wake-on-LAN device names, from WOL_DEVICES. */
+  wake?: string[];
 }
 
 export type ServerEvent =

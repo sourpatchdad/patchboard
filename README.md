@@ -37,7 +37,7 @@ an app, grouped by compose stack.
 
 Then add what you use, one block of `.env` at a time: Sonarr, Radarr,
 Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
-SABnzbd, NZBGet, TrueNAS, weather and more. Settings, Connections lists
+SABnzbd, NZBGet, Home Assistant, Tessie, TrueNAS, weather and more. Settings, Connections lists
 each integration, whether it's on, and the variables that turn it on.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
@@ -121,4 +121,5 @@ TypeScript on Node 24 without a build step for the server, Hono, React 19,
 Vite and SQLite. [DESIGN.md](DESIGN.md) records why.
 
 Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and
-Wikipedia and belong to their studios.
+Wikipedia and belong to their studios. Demo article photos come from
+Wikimedia Commons under the licenses credited in `server/demo.ts`.

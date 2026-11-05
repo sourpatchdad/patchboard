@@ -12,8 +12,12 @@ import { radarrAdapter, sonarrAdapter } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter } from './adapters/frigate.ts';
-import { listEntries, markRead, minifluxAdapter } from './adapters/miniflux.ts';
+import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
+import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
+import { tessieAdapter } from './adapters/tessie.ts';
+import { sendWake } from './wake.ts';
+import { haActionFor, pinnedEntities } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
@@ -27,7 +31,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoAdapters, demoDownloadControl, demoFeeds, demoInspect, demoLogs, demoReadIds, demoRunbook } from './demo.ts';
+import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -67,6 +71,8 @@ function realAdapters(): Adapter[] {
   if (config.trakt) list.push(traktAdapter());
   if (config.tautulli) list.push(tautulliAdapter());
   if (config.jellyfin) list.push(mediaServerAdapter('jellyfin'));
+  if (config.homeassistant) list.push(homeAssistantAdapter());
+  if (config.tessie) list.push(tessieAdapter());
   if (config.emby) list.push(mediaServerAdapter('emby'));
   const clients: [DownloadClientId, (() => { adapter: Adapter; control: DownloadControl }) | false][] = [
     ['qbit', !!config.qbit && qbitClient],
@@ -231,11 +237,31 @@ app.get('/api/events', (c) =>
 // Feeds: the reader needs full content, which the snapshot leaves out.
 app.get('/api/feeds', async (c) => {
   const status = c.req.query('status') === 'all' ? 'all' : 'unread';
-  if (config.demo) {
-    return c.json(demoFeeds.filter((e) => status === 'all' || !demoReadIds.has(e.id)));
-  }
+  const categoryId = Number(c.req.query('cat')) || undefined;
+  if (config.demo) return c.json(demoFeedsResponse(status, categoryId));
   if (!config.miniflux) return c.json({ error: 'Miniflux is not configured' }, 404);
-  return c.json(await listEntries({ status, limit: 80 }));
+  try {
+    return c.json(await listEntries({ status, limit: 150, categoryId }));
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+// Mark a whole category read, or everything. The header guards it like any action.
+app.post('/api/feeds/read-all', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const { category } = await c.req.json<{ category?: unknown }>().catch(() => ({ category: undefined }));
+  const categoryId = Number.isInteger(category) && (category as number) > 0 ? (category as number) : undefined;
+  try {
+    if (config.demo) demoFeeds.filter((e) => !categoryId || e.categoryId === categoryId).forEach((e) => demoReadIds.add(e.id));
+    else if (config.miniflux) await markAllRead(categoryId);
+    else return c.json({ error: 'Miniflux is not configured' }, 404);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'feeds.read-all', categoryId ? `category ${categoryId}` : 'all');
+  void hub.pollNow('miniflux');
+  return c.json({ ok: true });
 });
 
 app.post('/api/feeds/read', async (c) => {
@@ -327,6 +353,57 @@ app.post('/api/downloads/:id/:action', async (c) => {
   }
   recordAudit(who(c), `downloads.${action}`, id);
   void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// Home Assistant: every entity, for the widget's picker.
+app.get('/api/ha/entities', async (c) => {
+  if (config.demo) return c.json({ entities: demoHaList() });
+  if (!config.homeassistant) return c.json({ error: 'Home Assistant is not configured' }, 404);
+  try {
+    return c.json({ entities: await haEntityList() });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+// Toggle a light or run a scene. Only entities pinned on the saved board, and
+// only the domains shared/ha.ts allows, so a stolen session can't open a lock.
+app.post('/api/ha/:entity/:action', async (c) => {
+  const entity = c.req.param('entity');
+  const action = c.req.param('action');
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (action !== 'toggle' && action !== 'run') return c.json({ error: 'Unknown action' }, 400);
+  if (!pinnedEntities(savedBoard()).has(entity)) return c.json({ error: 'Pin that entity to a Home Assistant widget first' }, 403);
+  if (haActionFor(entity) !== action) return c.json({ error: 'Patchboard does not change that kind of entity' }, 403);
+  try {
+    if (config.demo) demoHaAction(entity, action);
+    else if (config.homeassistant) await haCall(entity, action);
+    else return c.json({ error: 'Home Assistant is not configured' }, 404);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `ha.${action}`, entity);
+  void hub.pollNow('homeassistant');
+  return c.json({ ok: true });
+});
+
+// Wake-on-LAN by device name. The MAC never leaves the server.
+app.post('/api/wake/:name', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const name = c.req.param('name');
+  if (config.demo) {
+    recordAudit(who(c), 'wake', name);
+    return c.json({ ok: true });
+  }
+  const device = config.wake.devices.find((d) => d.name === name);
+  if (!device) return c.json({ error: 'No such device in WOL_DEVICES' }, 404);
+  try {
+    await sendWake(device.mac, config.wake.broadcast);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'wake', name);
   return c.json({ ok: true });
 });
 
@@ -446,6 +523,8 @@ app.put('/api/board', async (c) => {
   if ('error' in v) return c.json({ error: v.error }, 400);
   kvSet('board', v.board);
   recordAudit(who(c), 'board.save', 'home', `${v.board.widgets.length} widgets`);
+  // Newly pinned Home Assistant entities show up without waiting for the next poll.
+  if (config.homeassistant || config.demo) void hub.pollNow('homeassistant');
   return c.json({ board: v.board, custom: true });
 });
 
@@ -736,6 +815,6 @@ app.onError((err, c) => {
   return c.json({ error: err.message }, 500);
 });
 
-serve({ fetch: app.fetch, port: config.port }, (info) => {
+serve({ fetch: app.fetch, port: config.port, ...(config.listenHost ? { hostname: config.listenHost } : {}) }, (info) => {
   console.log(`patchboard: listening on :${info.port}`);
 });

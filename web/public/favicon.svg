@@ -1,19 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- Tabs and bookmarks. Follows the system's light or dark mode. -->
+  <!-- Tabs and bookmarks: the four patches alone, edge to edge on a clear background. The calm patches turn slate on a light browser bar. -->
   <style>
-    .bg { fill: #161B22; }
-    .rim { stroke: #fff; stroke-opacity: 0.16; }
-    .calm { fill: #F3EDE2; }
-    @media (prefers-color-scheme: light) {
-      .bg { fill: #F4F1EA; }
-      .rim { stroke: #000; stroke-opacity: 0.14; }
-      .calm { fill: #2B3442; }
-    }
+    .calm { fill: #ECE6DA; }
+    @media (prefers-color-scheme: light) { .calm { fill: #2B3442; } }
   </style>
-  <rect class="bg" width="64" height="64" rx="15"/>
-  <rect class="rim" x="0.75" y="0.75" width="62.5" height="62.5" rx="14.25" fill="none" stroke-width="1.5"/>
-  <rect class="calm" x="9" y="9" width="21.5" height="21.5" rx="5"/>
-  <rect x="33.5" y="9" width="21.5" height="21.5" rx="5" fill="#6A92E8"/>
-  <rect x="9" y="33.5" width="21.5" height="21.5" rx="5" fill="#F2A947"/>
-  <rect class="calm" x="33.5" y="33.5" width="21.5" height="21.5" rx="5"/>
+  <rect class="calm" x="1" y="1" width="29.5" height="29.5" rx="7"/>
+  <rect x="33.5" y="1" width="29.5" height="29.5" rx="7" fill="#6A92E8"/>
+  <rect x="1" y="33.5" width="29.5" height="29.5" rx="7" fill="#F2A947"/>
+  <rect class="calm" x="33.5" y="33.5" width="29.5" height="29.5" rx="7"/>
 </svg>
