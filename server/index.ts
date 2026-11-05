@@ -13,10 +13,12 @@ import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspe
 import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter } from './adapters/frigate.ts';
 import { listEntries, markRead, minifluxAdapter } from './adapters/miniflux.ts';
-import { qbitAdapter } from './adapters/qbit.ts';
+import { qbitClient } from './adapters/qbit.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
+import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
+import type { DownloadClientId } from '../shared/types.ts';
 import { traktAdapter } from './adapters/trakt.ts';
 import { truenasAdapter } from './adapters/truenas.ts';
 import { backupsAdapter } from './adapters/backups.ts';
@@ -25,7 +27,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoAdapters, demoFeeds, demoInspect, demoLogs, demoReadIds, demoRunbook } from './demo.ts';
+import { demoAdapters, demoDownloadControl, demoFeeds, demoInspect, demoLogs, demoReadIds, demoRunbook } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -51,6 +53,9 @@ import { clearUpdate } from './updates.ts';
 import { type AppOrder, validateOrder } from '../shared/order.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
+/** Pause and resume for each configured download client. */
+const downloadControls = new Map<DownloadClientId, DownloadControl>();
+
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter()];
   if (config.truenas) list.push(truenasAdapter());
@@ -63,7 +68,19 @@ function realAdapters(): Adapter[] {
   if (config.tautulli) list.push(tautulliAdapter());
   if (config.jellyfin) list.push(mediaServerAdapter('jellyfin'));
   if (config.emby) list.push(mediaServerAdapter('emby'));
-  if (config.qbit) list.push(qbitAdapter());
+  const clients: [DownloadClientId, (() => { adapter: Adapter; control: DownloadControl }) | false][] = [
+    ['qbit', !!config.qbit && qbitClient],
+    ['transmission', !!config.transmission && transmissionClient],
+    ['deluge', !!config.deluge && delugeClient],
+    ['sabnzbd', !!config.sabnzbd && sabnzbdClient],
+    ['nzbget', !!config.nzbget && nzbgetClient],
+  ];
+  for (const [id, make] of clients) {
+    if (!make) continue;
+    const { adapter, control } = make();
+    list.push(adapter);
+    downloadControls.set(id, control);
+  }
   if (config.miniflux) list.push(minifluxAdapter());
   if (config.fastmail) list.push(fastmailAdapter());
   if (config.frigate) list.push(frigateAdapter());
@@ -290,6 +307,26 @@ app.post('/api/containers/:name/action', async (c) => {
   }
   void hub.pollNow('docker');
   hub.refreshChanges();
+  return c.json({ ok: true });
+});
+
+// Pause or resume every download in one client. Same action header as
+// container actions; READ_ONLY blocks it with every other write.
+app.post('/api/downloads/:id/:action', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  const action = c.req.param('action');
+  if (!DOWNLOAD_CLIENTS.includes(id)) return c.json({ error: 'Unknown client' }, 404);
+  if (action !== 'pause' && action !== 'resume') return c.json({ error: 'Unknown action' }, 400);
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const control = config.demo ? demoDownloadControl(id) : downloadControls.get(id);
+  if (!control) return c.json({ error: 'That client is not configured' }, 404);
+  try {
+    await control(action);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `downloads.${action}`, id);
+  void hub.pollNow(id);
   return c.json({ ok: true });
 });
 

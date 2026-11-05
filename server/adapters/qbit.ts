@@ -4,6 +4,7 @@ import type { QbitData } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import type { DownloadControl } from './downloads.ts';
 
 interface Torrent {
   name: string;
@@ -16,9 +17,15 @@ interface Torrent {
 const DOWNLOADING = new Set(['downloading', 'forcedDL', 'metaDL', 'checkingDL', 'queuedDL']);
 const SEEDING = new Set(['uploading', 'forcedUP', 'stalledUP', 'queuedUP']);
 const ERRORED = new Set(['error', 'missingFiles']);
+// qBittorrent 5 renamed paused to stopped.
+const PAUSED = new Set(['pausedDL', 'pausedUP', 'stoppedDL', 'stoppedUP']);
 const LOGIN_BACKOFF = 30 * 60 * 1000;
 
 export function qbitAdapter(): Adapter<QbitData> {
+  return qbitClient().adapter;
+}
+
+export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadControl } {
   const { url, username, password } = config.qbit!;
   let cookie = '';
   // qBittorrent bans an IP after a few failed logins, and the ban hits every
@@ -56,22 +63,37 @@ export function qbitAdapter(): Adapter<QbitData> {
     return pending;
   }
 
-  async function get<T>(path: string): Promise<T> {
+  async function send(path: string, init: RequestInit = {}): Promise<Response> {
     if (!cookie) await login();
+    const go = () => request(`${url}${path}`, { ...init, headers: { ...(init.headers as Record<string, string>), Cookie: cookie } });
     try {
-      return (await (await request(`${url}${path}`, { headers: { Cookie: cookie } })).json()) as T;
+      return await go();
     } catch (err) {
       // An expired session answers 403. Re-login once; login() itself is rate limited.
       if (err instanceof HttpError && err.status === 403) {
         cookie = '';
         await login();
-        return (await (await request(`${url}${path}`, { headers: { Cookie: cookie } })).json()) as T;
+        return go();
       }
       throw err;
     }
   }
 
-  return {
+  const get = async <T>(path: string): Promise<T> => (await (await send(path)).json()) as T;
+
+  /** Every torrent at once. qBittorrent 5 calls it stop and start; 4.x, pause and resume. */
+  const control: DownloadControl = async (action) => {
+    const post = (verb: string) =>
+      send(`/api/v2/torrents/${verb}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'hashes=all' });
+    try {
+      await post(action === 'pause' ? 'stop' : 'start');
+    } catch (err) {
+      if (!(err instanceof HttpError && err.status === 404)) throw err;
+      await post(action);
+    }
+  };
+
+  const adapter: Adapter<QbitData> = {
     id: 'qbit',
     label: 'qBittorrent',
     intervalMs: 5 * SECOND,
@@ -86,6 +108,8 @@ export function qbitAdapter(): Adapter<QbitData> {
         .slice(0, 4)
         .map((t) => ({ name: t.name, progress: t.progress, speed: t.dlspeed, etaSec: t.eta }));
       return {
+        kind: 'torrent',
+        paused: torrents.length > 0 && torrents.every((t) => PAUSED.has(t.state)),
         down: info.dl_info_speed,
         up: info.up_info_speed,
         downloading: torrents.filter((t) => DOWNLOADING.has(t.state)).length,
@@ -96,4 +120,5 @@ export function qbitAdapter(): Adapter<QbitData> {
       };
     },
   };
+  return { adapter, control };
 }

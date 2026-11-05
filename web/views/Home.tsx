@@ -8,6 +8,7 @@ import { adoptAll, saveLayout } from '../lib/adopt.ts';
 import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
+import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
 import type {
   Alert,
@@ -16,10 +17,8 @@ import type {
   ChangeEvent,
   FastmailData,
   MinifluxData,
-  QbitData,
   ReleaseItem,
   SystemData,
-  TautulliData,
   TraktData,
   TruenasData,
   WeatherData,
@@ -265,8 +264,8 @@ export function FeedsBrief({ now }: { now: number }) {
 
 export function NowPlaying() {
   const { servers, configured } = useMediaServers();
-  const { data: qbit, state: qbitState } = useSource<QbitData>('qbit');
-  if (!configured && !qbitState) return null;
+  const { clients, configured: anyClient } = useDownloadClients();
+  if (!configured && !anyClient) return null;
 
   return (
     <Section title="Right now" className="now">
@@ -299,26 +298,37 @@ export function NowPlaying() {
         </div>
       ))}
 
-      {qbitState && qbit && (
-        <div className="now-block">
-          <h3>
-            <Link to="/c/qbittorrent">{qbit.downloading ? `Downloading ${qbit.downloading} at ${speed(qbit.down)}` : 'No downloads running'}</Link>
+      {clients.map((d) => (
+        <div className="now-block" key={d.id}>
+          <h3 className="now-head">
+            <Link to={`/c/${d.container}`}>
+              {d.data.paused
+                ? `${d.label} is paused`
+                : d.data.downloading
+                  ? `Downloading ${d.data.downloading} in ${d.label} at ${speed(d.data.down)}`
+                  : `Nothing downloading in ${d.label}`}
+            </Link>
+            <PauseButton client={d} />
           </h3>
-          {qbit.active.map((t) => (
-            <div className="stream" key={t.name}>
-              <div className="stream-line">
-                <span className="stream-title torrent-name">{t.name}</span>
-                <span className="stream-user">{eta(t.etaSec) || speed(t.speed)}</span>
+          {!d.data.paused &&
+            d.data.active.map((t) => (
+              <div className="stream" key={t.name}>
+                <div className="stream-line">
+                  <span className="stream-title torrent-name">{t.name}</span>
+                  <span className="stream-user">{t.speed ? eta(t.etaSec) || speed(t.speed) : 'Queued'}</span>
+                </div>
+                <Meter value={t.progress * 100} level="ok" />
               </div>
-              <Meter value={t.progress * 100} level="ok" />
-            </div>
-          ))}
-          <p className="now-foot">
-            Seeding {qbit.seeding}, uploading at {speed(qbit.up)}
-            {qbit.stalled ? `. ${qbit.stalled} stalled` : ''}.
-          </p>
+            ))}
+          {d.data.kind !== 'usenet' && !d.data.paused && (
+            <p className="now-foot">
+              Seeding {d.data.seeding}, uploading at {speed(d.data.up)}
+              {d.data.stalled ? `. ${d.data.stalled} stalled` : ''}.
+            </p>
+          )}
+          {d.data.errored.length > 0 && <p className="now-foot crit-text">{plural(d.data.errored.length, 'download')} failed: {d.data.errored.slice(0, 2).join(', ')}</p>}
         </div>
-      )}
+      ))}
 
     </Section>
   );

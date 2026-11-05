@@ -19,6 +19,7 @@ import type {
   ChecksData,
   StatsData,
   SystemData,
+  DownloadClientId,
   MediaServerData,
   TautulliData,
   TraktData,
@@ -62,6 +63,7 @@ export const demoCatalog: Catalog = {
         { name: 'Prowlarr', href: '#', icon: 'prowlarr.png', container: 'prowlarr' },
         { name: 'Bazarr', href: '#', icon: 'bazarr.png', container: 'bazarr' },
         { name: 'qBittorrent', label: 'qBit', href: '#', icon: 'qbittorrent.png', container: 'qbittorrent' },
+        { name: 'SABnzbd', href: '#', icon: 'sabnzbd.png', container: 'sabnzbd' },
         { name: 'Unpackerr', icon: 'unpackerr.png', container: 'unpackerr' },
         { name: 'Recyclarr', icon: 'recyclarr.png', container: 'recyclarr', expectStopped: true },
       ],
@@ -265,14 +267,46 @@ const demoJellyfin = (): MediaServerData => ({
   itemPath: '',
 });
 
-function demoQbit(): QbitData {
-  const s1 = jitter(28e6, 6e6);
-  const s2 = jitter(9e6, 3e6);
+/** Demo pause and resume: flips a flag the demo clients read. */
+const demoPaused = new Set<DownloadClientId>();
+export function demoDownloadControl(id: DownloadClientId): ((action: 'pause' | 'resume') => Promise<void>) | undefined {
+  if (id !== 'qbit' && id !== 'sabnzbd') return undefined;
+  return async (action) => {
+    if (action === 'pause') demoPaused.add(id);
+    else demoPaused.delete(id);
+  };
+}
+
+function demoSab(): QbitData {
+  const paused = demoPaused.has('sabnzbd');
+  const rate = paused ? 0 : jitter(61e6, 8e6);
   return {
+    kind: 'usenet',
+    paused,
+    down: rate,
+    up: 0,
+    downloading: 2,
+    seeding: 0,
+    stalled: 0,
+    errored: [],
+    active: [
+      { name: 'Silo.S02E10.2160p.ATVP.WEB-DL', progress: (Date.now() / 1000 / 300) % 1, speed: rate, etaSec: paused ? -1 : 95 },
+      { name: 'Andor.S02E08.1080p.DSNP.WEB-DL', progress: 0, speed: 0, etaSec: -1 },
+    ],
+  };
+}
+
+function demoQbit(): QbitData {
+  const paused = demoPaused.has('qbit');
+  const s1 = paused ? 0 : jitter(28e6, 6e6);
+  const s2 = paused ? 0 : jitter(9e6, 3e6);
+  return {
+    kind: 'torrent',
+    paused,
     down: s1 + s2,
     up: jitter(2.4e6, 0.8e6),
-    downloading: 2,
-    seeding: 41,
+    downloading: paused ? 0 : 2,
+    seeding: paused ? 0 : 41,
     stalled: 1,
     errored: [],
     active: [
@@ -353,6 +387,7 @@ export function demoAdapters(): Adapter[] {
     demo<TautulliData>('tautulli', 'Plex', 15 * SECOND, demoPlex),
     demo<MediaServerData>('jellyfin', 'Jellyfin', 15 * SECOND, demoJellyfin),
     demo<QbitData>('qbit', 'qBittorrent', 5 * SECOND, demoQbit),
+    demo<QbitData>('sabnzbd', 'SABnzbd', 5 * SECOND, demoSab),
     demo<MinifluxData>('miniflux', 'Feeds', 5 * MINUTE, () => ({
       unread: demoFeeds.filter((e) => !demoReadIds.has(e.id)).length,
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),

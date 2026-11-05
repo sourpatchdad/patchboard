@@ -127,6 +127,14 @@ export const config = {
     qbitUrl && qbitUser && qbitPass
       ? { url: trimSlash(qbitUrl), username: qbitUser, password: qbitPass }
       : undefined,
+  transmission: str('TRANSMISSION_URL')
+    ? { url: trimSlash(str('TRANSMISSION_URL')!), username: str('TRANSMISSION_USERNAME'), password: str('TRANSMISSION_PASSWORD') }
+    : undefined,
+  deluge: str('DELUGE_URL') && str('DELUGE_PASSWORD') ? { url: trimSlash(str('DELUGE_URL')!), password: str('DELUGE_PASSWORD')! } : undefined,
+  sabnzbd: pair('SABNZBD_URL', 'SABNZBD_KEY'),
+  nzbget: str('NZBGET_URL')
+    ? { url: trimSlash(str('NZBGET_URL')!), username: str('NZBGET_USERNAME'), password: str('NZBGET_PASSWORD') }
+    : undefined,
   fastmail: str('FASTMAIL_TOKEN')
     ? {
         token: str('FASTMAIL_TOKEN')!,

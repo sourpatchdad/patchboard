@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.27.0 (2026-11-04)
+
+- **Transmission, Deluge, SABnzbd and NZBGet.** Each one shows in Right now
+  next to qBittorrent: what's downloading, time left, seeding for torrents,
+  and failed downloads from the last day for Usenet. Their app tiles and
+  container pages show the same.
+- **Pause and Resume every download client** from Right now or its container
+  page, in one click. Activity records who paused what. Read-only mode hides
+  the button and the server refuses the request.
+- **A new app icon:** four tiles, one lit amber. Everything's fine except the
+  one thing that needs you. The header mark matches.
+
 ## 1.26.1 (2026-11-04)
 
 - **Weather's week fits again.** The Upcoming calendar's day boxes leaked

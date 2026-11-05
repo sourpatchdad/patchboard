@@ -8,13 +8,13 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useMemo, useRef } from 'react';
 import { useMediaServers } from '../lib/media.ts';
+import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { Link, useParams } from 'react-router-dom';
 import type {
   ArrData,
   ContainerDetail,
   FrigateData,
   MinifluxData,
-  QbitData,
   RunbookSection,
   StatsData,
   UptimeData,
@@ -520,7 +520,7 @@ function AppPanel({ name }: { name: string }) {
   const sonarr = useSource<ArrData>('sonarr').data;
   const radarr = useSource<ArrData>('radarr').data;
   const { servers } = useMediaServers();
-  const qbit = useSource<QbitData>('qbit').data;
+  const { clients } = useDownloadClients();
   const frigate = useSource<FrigateData>('frigate').data;
   const feeds = useSource<MinifluxData>('miniflux').data;
 
@@ -557,18 +557,25 @@ function AppPanel({ name }: { name: string }) {
       </Section>
     );
   }
-  if (name === 'qbittorrent' && qbit) {
+  const dl = clients.find((d) => d.container === name);
+  if (dl) {
+    const q = dl.data;
     return (
-      <Section title="In qBittorrent">
+      <Section title={`In ${dl.label}`}>
         <dl className="ledger">
-          <Row k="Downloading">
-            {qbit.downloading} <span className="ledger-aside">{speed(qbit.down)}</span>
+          <Row k="State">
+            {q.paused ? 'Paused' : q.downloading ? 'Downloading' : 'Idle'} <PauseButton client={dl} />
           </Row>
-          <Row k="Seeding">
-            {qbit.seeding} <span className="ledger-aside">{speed(qbit.up)}</span>
+          <Row k={q.kind === 'usenet' ? 'In the queue' : 'Downloading'}>
+            {q.downloading} <span className="ledger-aside">{speed(q.down)}</span>
           </Row>
-          <Row k="Stalled">{qbit.stalled}</Row>
-          <Row k="Errored">{qbit.errored.length || 'None'}</Row>
+          {q.kind !== 'usenet' && (
+            <Row k="Seeding">
+              {q.seeding} <span className="ledger-aside">{speed(q.up)}</span>
+            </Row>
+          )}
+          {q.kind !== 'usenet' && <Row k="Stalled">{q.stalled}</Row>}
+          <Row k={q.kind === 'usenet' ? 'Failed today' : 'Errored'}>{q.errored.length ? q.errored.join(', ') : 'None'}</Row>
         </dl>
       </Section>
     );

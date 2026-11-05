@@ -36,7 +36,8 @@ an app, grouped by compose stack.
 ![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.png)
 
 Then add what you use, one block of `.env` at a time: Sonarr, Radarr,
-Plex through Tautulli, Jellyfin, Emby, qBittorrent, TrueNAS, weather and more. Settings, Connections lists
+Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
+SABnzbd, NZBGet, TrueNAS, weather and more. Settings, Connections lists
 each integration, whether it's on, and the variables that turn it on.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 

@@ -301,12 +301,13 @@ time,
   text-decoration: none;
 }
 
-.wordmark svg circle {
+/* The mark: four tiles, one lit. Everything's fine except the one thing that needs you. */
+.wordmark svg rect {
   fill: var(--ink);
 }
 
-.wordmark svg path {
-  stroke: var(--accent);
+.wordmark svg .mark-lit {
+  fill: var(--warn);
 }
 
 .nav {
@@ -1000,6 +1001,21 @@ a.jack:focus-visible {
   flex-shrink: 0;
   color: var(--ink-3);
   font-size: 13.5px;
+}
+
+.now-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.now-action {
+  margin-left: auto;
+  font-size: 13.5px;
+}
+
+.now-error {
+  font-size: 13px;
 }
 
 .now-foot {

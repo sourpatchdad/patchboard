@@ -6,7 +6,9 @@ they match the current code.
 ## Home
 
 The header tells you whether anything needs you. Below it sits a board of
-widgets on the columns you choose.
+widgets on the columns you choose. Right now shows who is watching Plex,
+Jellyfin or Emby and what each download client is doing, with a Pause button
+per client.
 
 ![Home](screenshots/home.png)
 

@@ -77,9 +77,10 @@ export function Shell() {
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label="Patchboard home">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-            <circle cx="6" cy="8" r="3" />
-            <circle cx="18" cy="8" r="3" />
-            <path d="M6 11v2a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5v-2" fill="none" strokeWidth="2.2" strokeLinecap="round" />
+            <rect x="3" y="3" width="8" height="8" rx="2.2" />
+            <rect x="13" y="3" width="8" height="8" rx="2.2" />
+            <rect className="mark-lit" x="3" y="13" width="8" height="8" rx="2.2" />
+            <rect x="13" y="13" width="8" height="8" rx="2.2" />
           </svg>
           <span>Patchboard</span>
         </NavLink>

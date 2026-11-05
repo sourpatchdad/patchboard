@@ -4,6 +4,7 @@
 // how long it has been up.
 
 import type {
+  SourceId,
   ArrData,
   ChecksData,
   Container,
@@ -48,10 +49,13 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
     if (a.problems.length) return `${a.problems.length} stuck`;
     return a.queueTotal ? `${a.queueTotal} queued` : 'Queue empty';
   }
-  if (c === 'qbittorrent') {
-    const q = data<QbitData>(snap, 'qbit');
+  const dl = { qbittorrent: 'qbit', transmission: 'transmission', deluge: 'deluge', sabnzbd: 'sabnzbd', nzbget: 'nzbget' }[c] as SourceId | undefined;
+  if (dl) {
+    const q = data<QbitData>(snap, dl);
     if (!q) return null;
-    return q.downloading ? `↓ ${speed(q.down)}` : `${q.seeding} seeding`;
+    if (q.paused) return 'Paused';
+    if (q.downloading) return `↓ ${speed(q.down)}`;
+    return q.kind === 'usenet' ? 'Queue empty' : `${q.seeding} seeding`;
   }
   if (c === 'miniflux') {
     const m = data<MinifluxData>(snap, 'miniflux');

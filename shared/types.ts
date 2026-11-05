@@ -11,6 +11,10 @@ export type SourceId =
   | 'jellyfin'
   | 'emby'
   | 'qbit'
+  | 'transmission'
+  | 'deluge'
+  | 'sabnzbd'
+  | 'nzbget'
   | 'miniflux'
   | 'fastmail'
   | 'trakt'
@@ -375,7 +379,13 @@ export interface ActiveTorrent {
   etaSec: number;
 }
 
+export type DownloadClientId = 'qbit' | 'transmission' | 'deluge' | 'sabnzbd' | 'nzbget';
+
+/** Any download client. Usenet clients report no seeding or upload. */
 export interface QbitData {
+  kind?: 'torrent' | 'usenet';
+  /** Everything is paused, by Patchboard or by hand. */
+  paused?: boolean;
   down: number;
   up: number;
   downloading: number;
