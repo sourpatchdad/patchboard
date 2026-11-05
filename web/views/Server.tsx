@@ -20,15 +20,15 @@ const DAY = 86_400_000;
 const MAIN = ['storage', 'datasets', 'backups'];
 const SIDE = ['resources', 'cpu', 'busiest', 'disks', 'alerts', 'cloudsync'];
 const SERVER_SECTIONS: SectionDef[] = [
-  { id: 'storage', label: 'Storage', group: 'Left column' },
-  { id: 'datasets', label: 'Datasets', group: 'Left column' },
-  { id: 'backups', label: 'Backups', group: 'Left column' },
-  { id: 'resources', label: 'Resources', group: 'Right column' },
-  { id: 'cpu', label: 'CPU by hour', group: 'Right column' },
-  { id: 'busiest', label: 'Busiest containers', group: 'Right column' },
-  { id: 'disks', label: 'Disks', group: 'Right column' },
-  { id: 'alerts', label: 'TrueNAS alerts', group: 'Right column' },
-  { id: 'cloudsync', label: 'Cloud sync', group: 'Right column' },
+  { id: 'storage', label: 'Storage', group: 'Storage and backups' },
+  { id: 'datasets', label: 'Datasets', group: 'Storage and backups' },
+  { id: 'backups', label: 'Backups', group: 'Storage and backups' },
+  { id: 'resources', label: 'Resources', group: 'The machine' },
+  { id: 'cpu', label: 'CPU by hour', group: 'The machine' },
+  { id: 'busiest', label: 'Busiest containers', group: 'The machine' },
+  { id: 'disks', label: 'Disks', group: 'The machine' },
+  { id: 'alerts', label: 'TrueNAS alerts', group: 'The machine' },
+  { id: 'cloudsync', label: 'Cloud sync', group: 'The machine' },
 ];
 
 export function Server() {
@@ -309,7 +309,7 @@ function Disks({ nas }: { nas: TruenasData }) {
           return (
             <li key={d.name}>
               <span className="ident">{d.name}</span>
-              <span className="disk-model">{d.model}</span>
+              <span className="disk-model" title={d.model}>{d.model}</span>
               <span className="mono disk-size">{d.sizeBytes ? size(d.sizeBytes) : ''}</span>
               <span className={`mono disk-temp ${hot ? 'warn-text' : ''}`}>{d.tempC != null ? temp(d.tempC, unit) : ''}</span>
               <span className="disk-pool">{d.pool ?? 'Not in a pool'}</span>

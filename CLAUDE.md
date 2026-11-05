@@ -29,6 +29,9 @@ changing behavior; it records the goal and the decisions that follow from it.
   `Co-Authored-By` lines or any other AI attribution in commit messages, tag
   messages or PR descriptions. When merging PRs, use a merge or rebase that
   keeps Nathan as the committer.
+- Releases follow docs/RELEASING.md: work lands on `main`, one tag per batch
+  of changes (not per commit), the version in package.json matches the tag,
+  and CHANGELOG.md has its section before the tag is pushed.
 - Docs move with the code, in the same commit. Any change a user or
   contributor would notice also updates README.md, the matching doc in
   docs/, CHANGELOG.md, env.example and the example compose files, and the

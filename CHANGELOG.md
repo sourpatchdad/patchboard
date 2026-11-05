@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.26.1 (2026-11-04)
+
+- **Weather's week fits again.** The Upcoming calendar's day boxes leaked
+  onto Weather's day names in 1.25.0 and made each day 150 pixels tall. The
+  page scrolled about 900 pixels on a laptop; now it's about 150.
+- **Logs fits one screen.** Each container takes one line with its status on
+  the right, and the sort buttons sit inside the list.
+- **Server balances its columns.** Sections flow into two columns on a laptop
+  and three on a large monitor, and disks take one line when there's room.
+- **Tighter detail rows** on the Server and container pages.
+- **Releases are organized.** `edge` builds from every push to `main`, tags
+  move `latest`, `1` and `1.26`, and pre-release tags never move `latest`.
+  docs/RELEASING.md lists which tag to pull.
+
 ## 1.26.0 (2026-11-04)
 
 - **Jellyfin and Emby.** Set `JELLYFIN_URL` and `JELLYFIN_KEY` (or the `EMBY_`

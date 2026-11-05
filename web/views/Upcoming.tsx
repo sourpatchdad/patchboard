@@ -115,9 +115,9 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
     byDate.set(k, [...(byDate.get(k) ?? []), it]);
   }
   return (
-    <div className="week-grid" role="grid" aria-label="Calendar">
+    <div className="cal-grid" role="grid" aria-label="Calendar">
       {days.slice(0, 7).map((d) => (
-        <span key={`h${d.getDay()}`} className="week-head" role="columnheader">
+        <span key={`h${d.getDay()}`} className="cal-head" role="columnheader">
           {d.toLocaleDateString(undefined, { weekday: 'short' })}
         </span>
       ))}
@@ -129,7 +129,7 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
             key={d.toDateString()}
             role="gridcell"
             aria-label={d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-            className={`week-day ${off === 0 ? 'is-today' : ''} ${off < 0 ? 'is-past' : ''} ${list.length ? '' : 'is-empty'}`}
+            className={`cal-day ${off === 0 ? 'is-today' : ''} ${off < 0 ? 'is-past' : ''} ${list.length ? '' : 'is-empty'}`}
           >
             <h3>
               <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>

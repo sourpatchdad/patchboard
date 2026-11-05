@@ -36,9 +36,13 @@ an app, grouped by compose stack.
 ![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.png)
 
 Then add what you use, one block of `.env` at a time: Sonarr, Radarr,
-Tautulli, qBittorrent, TrueNAS, weather and more. Settings, Connections lists
+Plex through Tautulli, Jellyfin, Emby, qBittorrent, TrueNAS, weather and more. Settings, Connections lists
 each integration, whether it's on, and the variables that turn it on.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
+
+`latest` follows releases. Pin `1` to stay on 1.x, or a version like
+`1.26.1` to stay put. `edge` tracks unreleased code.
+[docs/RELEASING.md](docs/RELEASING.md) lists every tag.
 
 Before you expose it anywhere, read [SECURITY.md](SECURITY.md). Sign-in is off
 by default, for a private address. Turn it on with `AUTH=password`, or
@@ -99,6 +103,7 @@ the phone views.
 - [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
 - [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
+- [RELEASING.md](docs/RELEASING.md): branches, tags, images and how a release ships.
 - [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
 
 ## Development
