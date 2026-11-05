@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.38.4 (2026-11-05)
+
+- **A solid status bar in the installed iPhone app:** black in dark mode,
+  light in light mode. The translucent bar let iOS blur the page under the
+  clock. The app picks the bar when it opens, so after you switch modes,
+  close and reopen it.
+- The Docker build no longer sends the artwork and docs to the builder.
+
 ## 1.38.3 (2026-11-05)
 
 - **Your look carries over.** Patchboard also saves the last look you chose

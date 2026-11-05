@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0b0c0e" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icon-180.png" />
@@ -24,9 +24,15 @@
           q('link[rel="apple-touch-icon"]').href = k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
           q('link[rel="manifest"]').href = k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
         }
-        if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; icons('auto', r.dataset.scheme); return; }
+        // An installed iPhone app gets a solid status bar in the mode's color.
+        // A translucent one lets iOS blur the page under the clock.
+        function statusBar(scheme) {
+          document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = scheme === 'light' ? 'default' : 'black';
+        }
+        if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; icons('auto', r.dataset.scheme); statusBar(r.dataset.scheme); return; }
         var scheme = v.scheme === 'auto' ? (light ? 'light' : 'dark') : v.scheme;
         icons(v.appIcon, scheme);
+        statusBar(scheme);
         var vars = v[scheme] || {};
         for (var k in vars) r.style.setProperty(k, vars[k]);
         r.dataset.scheme = scheme;

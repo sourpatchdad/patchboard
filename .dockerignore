@@ -7,3 +7,5 @@ config
 .git
 *.md
 data-*
+art
+docs
