@@ -631,10 +631,12 @@ function Integrations() {
             {su?.fromUi && <small> Set up here</small>}
             {locked && st.on && <small> From the environment</small>}
           </span>
-          {su && (
+          {su ? (
             <button type="button" className="text-button" aria-expanded={open === i.id} onClick={() => setOpen(open === i.id ? null : i.id)}>
               {open === i.id ? 'Close' : st.on ? 'Settings' : 'Set up'}
             </button>
+          ) : (
+            st.on && <span className="integration-slot" aria-hidden />
           )}
           {!su && !st.on && (
             <span className="integration-env">

@@ -86,26 +86,26 @@ export function Stacks() {
           lists={[{ key: 'hideStacks', title: 'Stacks', note: 'Tap a stack to hide it from this page. Its containers still raise alerts.', items: stackNames }]}
         />
       </div>
-      {Object.keys(snap.updates).length > 0 && (
-        <div className="stack-filters">
+      <div className="page-toolbar">
+        <div className="seg sort-seg" role="group" aria-label="Sort stacks">
+          {(
+            [
+              ['problems', 'Problems first'],
+              ['name', 'A to Z'],
+              ['cpu', 'Busiest CPU'],
+              ['memory', 'Most memory'],
+            ] as [SortKey, string][]
+          ).map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {Object.keys(snap.updates).length > 0 && (
           <button type="button" className="chip" aria-pressed={onlyUpdates} onClick={() => setParams(onlyUpdates ? {} : { updates: '1' })}>
             {onlyUpdates ? 'Showing' : 'Show'} {plural(Object.keys(snap.updates).length, 'image update')}
           </button>
-        </div>
-      )}
-      <div className="seg sort-seg" role="group" aria-label="Sort stacks">
-        {(
-          [
-            ['problems', 'Problems first'],
-            ['name', 'A to Z'],
-            ['cpu', 'Busiest CPU'],
-            ['memory', 'Most memory'],
-          ] as [SortKey, string][]
-        ).map(([v, label]) => (
-          <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
-            {label}
-          </button>
-        ))}
+        )}
       </div>
       <p className="page-lede">
         {plural(groups.size, 'stack')}, {running} of {all.length} containers running

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.30.1 (2026-11-04)
+
+- **Phones.** The tab bar has an icon over each label, and every label fits.
+  Settings tabs and sort choices stay on one line and scroll sideways
+  instead of wrapping. Customize sits in each page's top corner, level with
+  the title. Home opens with a compact clock, so what needs you and most of
+  your apps fit the first screen. Integration rows show the name and status
+  on one line with a two-line description.
+- **Touch targets.** On a touch screen every text button, link action,
+  chip, sort button, log row and checkbox gets at least a 40-pixel tap
+  area, without moving anything.
+- **One toolbar on Stacks and Apps:** sort choices on the left, the page's
+  other action (show image updates, Edit apps) on the right, with even
+  spacing. The chip no longer crowds the title.
+- **Settings, Connections on desktop:** one line per integration, with each
+  status lined up in one column.
+
 ## 1.30.0 (2026-11-04)
 
 - **Set up integrations from the UI.** Settings, Connections has **Set up**

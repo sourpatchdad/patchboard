@@ -121,7 +121,7 @@ export function Apps() {
           </span>
         </div>
       ) : (
-        <div className="sort-row">
+        <div className="page-toolbar">
           <div className="seg sort-seg" role="group" aria-label="Sort apps">
             {(
               [
