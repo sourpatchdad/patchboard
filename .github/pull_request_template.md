@@ -4,6 +4,6 @@
 
 - [ ] `npm run typecheck`, `npm test` and `npm run docs:check` pass
 - [ ] CHANGELOG.md has an entry
-- [ ] README, docs/, env.example and examples/ match the change
+- [ ] README, docs/ and examples/ match the change
 - [ ] `npm run screenshots` if it shows on screen
 - [ ] Demo mode (`npm run dev:demo`) still works

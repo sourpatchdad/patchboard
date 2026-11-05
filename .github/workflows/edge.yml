@@ -1,12 +1,12 @@
 name: Edge
 
-# Every push to main publishes ghcr.io/sourpatchdad/patchboard:edge, the
-# unreleased code, for testing a fix before it ships. latest only moves on a
-# version tag (release.yml).
+# Unreleased images, for testing before a release. A push to dev publishes
+# :dev (and dev-<sha>); a push to main publishes :edge (and edge-<sha>).
+# latest only moves on a version tag (release.yml).
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths-ignore: ['**.md', 'docs/**', 'examples/**']
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: edge
+  group: edge-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -35,8 +35,8 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: latest=false
           tags: |
-            type=raw,value=edge
-            type=sha,prefix=edge-
+            type=raw,value=${{ github.ref_name == 'main' && 'edge' || 'dev' }}
+            type=sha,prefix=${{ github.ref_name == 'main' && 'edge' || 'dev' }}-
       - uses: docker/build-push-action@v7
         with:
           context: .

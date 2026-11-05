@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A tidier repository.** The top level holds the code, the Dockerfile,
+  README, LICENSE, SECURITY and this changelog. The design notes, roadmap
+  and release guide moved to `docs/`; contributing and the code of conduct
+  to `.github/`. The plain compose file, the `.env` template, the
+  `services.yaml` example and the Caddyfile joined `examples/`, so the
+  install now fetches `examples/docker-compose.yml` and
+  `examples/env.example`. Screenshots are WebP, under half the size.
+- **Work lands on `dev` first,** which publishes a `:dev` image. `main`
+  publishes `:edge`, and releases are tags on `main`. docs/RELEASING.md has
+  the steps.
 - **Updates and restarts aren't outages.** A container that stops and runs
   again within two minutes shows once under Changes, as "updated" when its
   image changed and "restarted" otherwise, instead of "stopped" then

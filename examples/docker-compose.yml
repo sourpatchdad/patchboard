@@ -1,5 +1,5 @@
-# Copy to docker-compose.yml and env.example to .env, then run: docker compose up -d
-# Other setups (every optional mount, a hardened install, labels): examples/
+# Copy next to a .env made from env.example, then run: docker compose up -d
+# Other setups (every optional mount, a hardened install, labels): the folders here.
 
 services:
   patchboard:

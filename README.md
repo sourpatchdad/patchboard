@@ -4,7 +4,7 @@ A start page and control center for a home server. Open it and you know in
 five seconds whether anything is broken, what's new, and what's coming. Click
 anything and you land where you can fix it.
 
-![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, feeds and recently added](docs/screenshots/home.png)
+![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, feeds and recently added](docs/screenshots/home.webp)
 
 Healthy apps stay quiet. The space goes to what needs you: a stopped
 container, a full pool, a stuck import, tonight's episodes.
@@ -25,8 +25,8 @@ Open <http://localhost:3200>.
 ```sh
 mkdir patchboard && cd patchboard
 base=https://raw.githubusercontent.com/sourpatchdad/patchboard/main
-curl -fsSL $base/docker-compose.example.yml -o docker-compose.yml
-curl -fsSL $base/env.example -o .env
+curl -fsSL $base/examples/docker-compose.yml -o docker-compose.yml
+curl -fsSL $base/examples/env.example -o .env
 docker compose up -d
 ```
 
@@ -37,7 +37,7 @@ smaller. Either image idles at about 50 MB of memory.
 Open Patchboard and press **Add all**. It turns every running container into
 an app, grouped by compose stack.
 
-![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.png)
+![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.webp)
 
 Then add what you use from Settings, Connections: press **Set up**, paste
 the address and key, test, save. Or set them in `.env`. Sonarr, Radarr,
@@ -47,7 +47,8 @@ each integration, whether it's on, and the variables that turn it on.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
 `latest` follows releases. Pin `1` to stay on 1.x, or a version like
-`1.26.1` to stay put. `edge` tracks unreleased code.
+`1.2.0` to stay put. `edge` is the next release before it ships, and `dev`
+is work in progress.
 [docs/RELEASING.md](docs/RELEASING.md) lists every tag.
 
 Before you expose it anywhere, read [SECURITY.md](SECURITY.md). Sign-in is off
@@ -66,13 +67,13 @@ clears.
 runbook section, live logs, a 30-day health strip, and buttons to restart,
 update or roll back.
 
-![A container page: the alert, the runbook section with the fix, logs, update and start buttons](docs/screenshots/container.png)
+![A container page: the alert, the runbook section with the fix, logs, update and start buttons](docs/screenshots/container.webp)
 
 **It's yours without config files.** Drag apps between groups, rename groups,
 hide what you don't use, upload icons. Paste an API key and a tile shows
 "42,506 photos" or "3 queued". Sixteen apps have presets; any JSON API works.
 
-![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.png)
+![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.webp)
 
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
@@ -104,7 +105,7 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 
 | Server | Upcoming | Phone |
 |---|---|---|
-| ![Server page](docs/screenshots/server.png) | ![Upcoming calendar](docs/screenshots/upcoming.png) | ![Home on a phone](docs/screenshots/phone-home.png) |
+| ![Server page](docs/screenshots/server.webp) | ![Upcoming calendar](docs/screenshots/upcoming.webp) | ![Home on a phone](docs/screenshots/phone-home.webp) |
 
 **[Take the tour](docs/TOUR.md):** every page, every editor, every theme and
 the phone views.
@@ -117,8 +118,8 @@ the phone views.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
 - [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
 - [RELEASING.md](docs/RELEASING.md): branches, tags, images and how a release ships.
-- [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
-- [CONTRIBUTING.md](CONTRIBUTING.md): running it locally, and what a new integration or widget needs.
+- [ROADMAP.md](docs/ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](.github/CONTRIBUTING.md): running it locally, and what a new integration or widget needs.
 
 ## Development
 
@@ -131,7 +132,7 @@ npm run screenshots   # regenerate docs/screenshots from demo mode
 ```
 
 TypeScript on Node 24 without a build step for the server, Hono, React 19,
-Vite and SQLite. [DESIGN.md](DESIGN.md) records why.
+Vite and SQLite. [DESIGN.md](docs/DESIGN.md) records why.
 
 Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and
 Wikipedia and belong to their studios. Demo article photos come from

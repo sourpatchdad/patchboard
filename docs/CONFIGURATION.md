@@ -4,7 +4,7 @@ You configure Patchboard in three places:
 
 | Where | What | Applies to |
 |---|---|---|
-| `.env` (from `env.example`) | Addresses and keys for built-in integrations, sign-in, thresholds | The server |
+| `.env` (from `examples/env.example`) | Addresses and keys for built-in integrations, sign-in, thresholds | The server |
 | The UI | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
 | Settings, Look and Home | Theme, colors, type, density, units | This device only |
 
@@ -77,7 +77,7 @@ Each needs a read-only mount and its variable.
 ## The catalog file
 
 `config/services.yaml` lists apps in groups, plus bookmarks. Copy
-[config/services.example.yaml](../config/services.example.yaml) to start.
+[examples/services.example.yaml](../examples/services.example.yaml) to start.
 
 | Field | |
 |---|---|

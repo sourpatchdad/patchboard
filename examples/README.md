@@ -1,6 +1,10 @@
 # Examples
 
 Complete compose files. Copy one next to your `.env` as `docker-compose.yml`.
+[docker-compose.yml](docker-compose.yml) is the plain install, and
+[env.example](env.example) is the `.env` template for all of them.
+[services.example.yaml](services.example.yaml) starts a `services.yaml` if you
+keep your apps in a file.
 
 | Folder | For |
 |---|---|
@@ -10,4 +14,4 @@ Complete compose files. Copy one next to your `.env` as `docker-compose.yml`.
 | [wake-on-lan](wake-on-lan/docker-compose.yml) | Host networking, so the Wake widget's packets reach your LAN. |
 
 For HTTPS on a private network, which installing Patchboard as a phone app
-needs, see [deploy/Caddyfile.example](../deploy/Caddyfile.example).
+needs, see [Caddyfile](Caddyfile).

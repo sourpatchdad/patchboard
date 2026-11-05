@@ -1,4 +1,4 @@
-// Builds every otter image from the designed art in art/otter: the app
+// Builds every otter image from the designed art in scripts/otter: the app
 // icons home screens need, the tab icons, favicon.ico, and the per-mood
 // images the header and the mascot use.
 // Run: npm run icons (needs Chrome or Chromium, like npm run screenshots).
@@ -224,7 +224,7 @@ const jobs = (mood) => {
 
 const ico = [];
 for (const mood of MOODS) {
-  const src = `data:image/png;base64,${readFileSync(`art/otter/${mood}.png`).toString('base64')}`;
+  const src = `data:image/webp;base64,${readFileSync(`scripts/otter/${mood}.webp`).toString('base64')}`;
   const files = await page.evaluate(build, { src, jobs: jobs(mood) });
   for (const [name, url] of Object.entries(files)) {
     const buf = Buffer.from(url.split(',')[1], 'base64');

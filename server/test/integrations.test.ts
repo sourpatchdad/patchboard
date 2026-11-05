@@ -5,12 +5,12 @@ import { INTEGRATIONS } from '../../shared/integrations.ts';
 
 // The integrations list drives Settings and docs/INTEGRATIONS.md. Every
 // variable it names must be one the server reads and the template offers.
-const TEMPLATE = ['env', 'example'].join('.');
+const TEMPLATE = ['examples/env', 'example'].join('.');
 
 // Mount-related variables live in the example compose files next to their mounts.
 test('every integration variable is read by the server and offered in the env template or example compose file', () => {
   const config = readFileSync('server/config.ts', 'utf8');
-  const composeFiles = ['docker-compose.example.yml', ...readdirSync('examples').map((d) => `examples/${d}/docker-compose.yml`).filter((f) => existsSync(f))];
+  const composeFiles = ['examples/docker-compose.yml', ...readdirSync('examples').map((d) => `examples/${d}/docker-compose.yml`).filter((f) => existsSync(f))];
   const template = [readFileSync(TEMPLATE, 'utf8'), ...composeFiles.map((f) => readFileSync(f, 'utf8').replace(/^\s*-\s*/gm, ''))].join('\n');
   const missing: string[] = [];
   for (const i of INTEGRATIONS) {

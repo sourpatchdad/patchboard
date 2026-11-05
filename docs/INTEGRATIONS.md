@@ -30,7 +30,7 @@ never rewrite your files.
    labels work as they are. Patchboard ignores `homepage.widget.*`, which
    carry credentials.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
-   place. Start from [config/services.example.yaml](../config/services.example.yaml).
+   place. Start from [examples/services.example.yaml](../examples/services.example.yaml).
    Coming from Homepage? `npm run import-homepage -- /path/to/homepage/config`
    writes one from its `services.yaml` and `bookmarks.yaml` and leaves the
    credentials out.
@@ -138,7 +138,7 @@ or `items[0].total`.
 2. Add a fixture of the same shape to `server/demo.ts`, so demo mode and the
    screenshots keep working.
 3. Add an entry to [shared/integrations.ts](../shared/integrations.ts) and
-   its variables to `env.example`. A test checks both.
+   its variables to `examples/env.example`. A test checks both.
 4. Run `npm run docs`, and `npm run screenshots` if the change shows on
    screen.
 

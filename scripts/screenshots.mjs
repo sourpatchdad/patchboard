@@ -9,7 +9,7 @@
 // `npx playwright install chromium` once.
 
 import { execSync, spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
@@ -61,15 +61,31 @@ async function server(port, extra = {}) {
 
 const settle = (page, ms = 1600) => page.waitForTimeout(ms);
 
+/** Saves a PNG capture as WebP, about a quarter of the size, via Chrome's canvas. */
+let converter;
+async function save(png, name) {
+  converter ??= await browser.newPage();
+  const url = await converter.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.width;
+    c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    return c.toDataURL('image/webp', 0.9);
+  }, png.toString('base64'));
+  writeFileSync(join(OUT, `${name}.webp`), Buffer.from(url.split(',')[1], 'base64'));
+  console.log(`  ${name}.webp`);
+}
+
 async function shoot(page, name, opts = {}) {
-  await page.screenshot({ path: join(OUT, `${name}.png`), ...opts });
-  console.log(`  ${name}.png`);
+  await save(await page.screenshot(opts), name);
 }
 
 /** One element instead of the page. */
 async function shootEl(locator, name) {
-  await locator.screenshot({ path: join(OUT, `${name}.png`) });
-  console.log(`  ${name}.png`);
+  await save(await locator.screenshot(), name);
 }
 
 /** A browser context with a theme saved, as Settings would save it. */

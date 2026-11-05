@@ -9,3 +9,6 @@ data-*/
 config/services.yaml
 config/services.yaml.*
 config/*.bak*
+
+# Local working notes for AI tools
+CLAUDE.md
