@@ -687,6 +687,26 @@ app.post('/api/hooks/diun', async (c) => {
   return c.json({ ok: true, flagged });
 });
 
+// The last look saved on any device. A browser or home-screen app with no
+// saved look of its own starts from it (iOS keeps a home-screen app's
+// storage apart from Safari's, so without this a fresh install forgets).
+app.get('/api/appearance', (c) => c.json({ appearance: kvGet<unknown>('appearance') ?? null }));
+
+app.put('/api/appearance', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const text = await c.req.text();
+  if (text.length > 16_000) return c.json({ error: 'Too large' }, 413);
+  let v: unknown;
+  try {
+    v = JSON.parse(text);
+  } catch {
+    return c.json({ error: 'Not JSON' }, 400);
+  }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return c.json({ error: 'Expected an object' }, 400);
+  kvSet('appearance', v);
+  return c.json({ ok: true });
+});
+
 // The Home board. Stored on the server so every device shows the same one.
 app.get('/api/board', (c) => {
   const saved = kvGet<unknown>('board');

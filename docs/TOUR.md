@@ -103,6 +103,7 @@ apps.
 ![Customize a page](screenshots/page-customize.png)
 
 **Settings** has themes, colors, type, density and units, saved per device.
+A new browser or home-screen app starts from the last look you saved.
 
 ![Settings](screenshots/settings-look.png)
 

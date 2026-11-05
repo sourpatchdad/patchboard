@@ -2123,6 +2123,18 @@ a.app:hover {
     height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - env(safe-area-inset-top) - var(--tabbar-h));
   }
 
+  /* Feeds on a phone: the page scrolls like any other, so the list never
+     sits in a box of its own and the tab bar stays at the bottom. */
+  .reader-layout {
+    height: auto;
+    min-height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - env(safe-area-inset-top) - var(--tabbar-h));
+  }
+
+  .reader-list,
+  .reader {
+    overflow: visible;
+  }
+
   .reader-layout.has-selection .reader-list,
   .logs-layout.has-selection .logs-list,
   .reader-layout:not(.has-selection) .reader,
@@ -3666,6 +3678,12 @@ a.vitals:hover .vital-label {
 
   .topbar-end {
     gap: 4px;
+    flex: none;
+  }
+
+  .topbar-end .pill {
+    font-size: 10.5px;
+    padding: 4px 6px;
   }
 
   /* Search opens as a sheet at the top, clear of the keyboard. */
@@ -7407,19 +7425,18 @@ button.ha-act:hover {
     right: calc(50% - 24px);
   }
 
-  /* Settings tabs stay on one line and scroll sideways. */
+  /* Settings tabs share the width, each as wide as its label needs. */
   .settings-tabs {
+    display: flex;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-right: -16px;
-    padding-right: 16px;
-    scrollbar-width: none;
   }
 
   .settings-tabs button {
-    flex: none;
-    font-size: 14px;
-    padding: 8px 13px;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13.5px;
+    padding: 8px 6px;
+    white-space: nowrap;
   }
 
   /* Integrations: name and status on one line, the description under it. */
@@ -7537,17 +7554,21 @@ button.ha-act:hover {
     padding-right: 110px;
   }
 
-  /* Sort choices: one row that scrolls sideways, never two lines. */
+  /* Sort choices fill the row and share it, so every choice shows without
+     scrolling sideways. */
   .sort-seg {
+    display: flex;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-right: -16px;
-    padding-right: 16px;
-    scrollbar-width: none;
+    width: 100%;
   }
 
   .sort-seg button {
-    flex: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 6px;
+    font-size: 12.5px;
+    line-height: 1.15;
+    white-space: nowrap;
   }
 }
 
@@ -7574,16 +7595,9 @@ button.ha-act:hover {
 }
 
 @media (max-width: 760px) {
+  /* The sort choices take the full row; a secondary action wraps under. */
   .page-toolbar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-right: -16px;
-    padding-right: 16px;
-    scrollbar-width: none;
-  }
-
-  .page-toolbar > * {
-    flex: none;
+    flex-wrap: wrap;
   }
 
   .page-toolbar > :last-child:not(.sort-seg) {
@@ -7688,4 +7702,11 @@ button.ha-act:hover {
   margin: 14px 0 4px;
   padding: 0;
   text-align: center;
+}
+
+/* A narrow phone: the demo label gives way so the name and icons fit. */
+@media (max-width: 400px) {
+  .topbar-end .demo-pill {
+    display: none;
+  }
 }

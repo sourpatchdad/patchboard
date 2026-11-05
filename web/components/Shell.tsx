@@ -115,7 +115,7 @@ export function Shell() {
           ))}
         </nav>
         <div className="topbar-end">
-          {snap?.demo && <span className="pill">Demo data</span>}
+          {snap?.demo && <span className="pill demo-pill">Demo data</span>}
           {snap?.readOnly && (
             <span className="pill" title="READ_ONLY=1: nothing on this server can be changed from here">
               Read-only

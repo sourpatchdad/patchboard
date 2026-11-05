@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.38.3 (2026-11-05)
+
+- **Your look carries over.** Patchboard also saves the last look you chose
+  on the server, and a browser or home-screen app with nothing saved starts
+  from it. iOS keeps a home-screen app's storage apart from Safari's, so
+  before this a newly added app forgot your theme and mode.
+- **Feeds on a phone scrolls like every other page,** so the tab bar stays
+  at the bottom of the screen.
+- **Phone layouts fit without scrolling sideways.** The sort choices on
+  Stacks, Apps and Upcoming and the Settings tabs share the width. On
+  phones under 400 pixels the Demo data label gives way so the name and
+  icons fit. Checked at 360, 375, 390, 402 and 440 pixels, every density.
+
 ## 1.38.2 (2026-11-05)
 
 - **The next three days sit beside today's weather** on wide screens, with a

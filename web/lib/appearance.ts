@@ -77,9 +77,13 @@ export const HOME_SECTIONS: { id: HomeSection; label: string }[] = [
   { id: 'recent', label: 'Recently added' },
 ];
 
+let hadSaved = false;
+
 function read(): Appearance {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Appearance>;
+    const raw = localStorage.getItem(KEY);
+    hadSaved = raw !== null;
+    const saved = JSON.parse(raw ?? '{}') as Partial<Appearance>;
     return { ...DEFAULTS, ...saved, custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
   } catch {
     return DEFAULTS;
@@ -250,8 +254,20 @@ media?.addEventListener('change', () => {
   if (current.scheme === 'auto') apply(current);
 });
 
-export function setAppearance(patch: Partial<Appearance>): void {
+let pushTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Save the look on the server too, so a new browser or home-screen app starts from it. */
+function pushToServer(): void {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    void fetch('/api/appearance', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(current) }).catch(() => {});
+  }, 800);
+}
+
+export function setAppearance(patch: Partial<Appearance>, o: { push?: boolean } = {}): void {
   current = { ...current, ...patch };
+  hadSaved = true;
+  if (o.push !== false) pushToServer();
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
   } catch {
@@ -298,6 +314,14 @@ export function getAppearance(): Appearance {
 /** Called once at startup; the inline script already painted, this makes it exact. */
 export function initAppearance(): void {
   apply(current);
+  if (hadSaved) return;
+  // Nothing saved here yet: start from the last look saved on any device.
+  void fetch('/api/appearance')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j: { appearance?: Partial<Appearance> | null } | null) => {
+      if (j?.appearance && !hadSaved) setAppearance({ ...DEFAULTS, ...j.appearance, custom: { ...DEFAULTS.custom, ...(j.appearance.custom ?? {}) } }, { push: false });
+    })
+    .catch(() => {});
 }
 
 export { THEMES };

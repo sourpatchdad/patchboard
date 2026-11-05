@@ -126,6 +126,8 @@ export function Feeds() {
       setParams(next, { replace: !!selectedId });
       if (id) markRead([id]);
       readerRef.current?.scrollTo({ top: 0 });
+      // On a phone the page itself scrolls: open the article at its top.
+      if (matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0 });
     },
     [params, setParams, markRead, selectedId],
   );

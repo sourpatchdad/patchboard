@@ -27,7 +27,7 @@ import { agoLong } from '../lib/format.ts';
 
 type Tab = 'look' | 'home' | 'connections' | 'activity';
 const TABS: [Tab, string, string][] = [
-  ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ.'],
+  ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved.'],
   ['home', 'Home and units', 'Saved on this device. The Home board itself is the same everywhere: change it with Customize on Home.'],
   ['connections', 'Connections', 'Shared by every device.'],
   ['activity', 'Activity', 'Who changed what, newest first.'],
