@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.33.0",
+  "version": "1.34.0",
   "private": true,
   "description": "A control center and start page for a home server.",
   "license": "MIT",

@@ -1,7 +1,8 @@
 name: Release
 
 # A version tag publishes a release. v1.27.0 pushes the image for amd64 and
-# arm64 as 1.27.0, 1.27, 1 and latest, and opens a GitHub Release with that
+# arm64 as 1.27.0, 1.27, 1 and latest, the slim image as 1.27.0-slim,
+# 1.27-slim, 1-slim and latest-slim, and opens a GitHub Release with that
 # version's CHANGELOG section. A pre-release tag (v1.27.0-rc.1) pushes only
 # its own tag and never moves latest. docs/RELEASING.md has the steps.
 
@@ -43,6 +44,29 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # The slim image: no Docker CLI. onlatest=true matters: without it the
+      # suffix skips `latest`, and the slim build would overwrite it.
+      - id: meta-slim
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=auto
+            suffix=-slim,onlatest=true
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: slim
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta-slim.outputs.tags }}
+          labels: ${{ steps.meta-slim.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

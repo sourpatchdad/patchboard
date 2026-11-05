@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.34.0 (2026-11-05)
+
+- **A slim image.** Every release also ships as `-slim` (`latest-slim`,
+  `1.34-slim`): the same Patchboard without the Docker CLI, 262 MB instead
+  of 352 MB. Updating containers from the UI is off there, and Settings and
+  the container page say why. The hardened example uses it. Both images
+  idle at about 46 MB of memory.
+- **Settings, Connections:** the setup hint under an integration that is
+  off starts its own line instead of running into the description, and on
+  a phone a long status wraps instead of squeezing the name.
+
 ## 1.33.0 (2026-11-05)
 
 - **Speedtest Tracker.** An Internet widget shows the latest download,

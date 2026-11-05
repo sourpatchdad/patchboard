@@ -604,7 +604,9 @@ function Integrations() {
       .catch(() => setSetup({ integrations: [], demo: false }));
   }, []);
   if (!snap) return null;
-  const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off' } => {
+  const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
+    if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
+      return { on: false, text: 'Off', tone: 'off', why: 'This is the slim image, which has no Docker CLI. Use the full image to update containers from here.' };
     if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: 'On', tone: 'ok' } : { on: false, text: 'Off', tone: 'off' };
     const s = snap.sources[i.id as keyof typeof snap.sources];
     if (!s) return { on: false, text: 'Off', tone: 'off' };
@@ -619,11 +621,11 @@ function Integrations() {
     const su = setupOf(i.id);
     const locked = su ? su.fields.every((f) => f.locked) : false;
     return (
-      <li key={i.id} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''}`}>
+      <li key={i.id} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''} ${st.why ? 'has-why' : ''}`}>
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
           {i.adds}
-          {!su && !st.on && i.where && <small>{i.where}</small>}
+          {st.why ? <small>{st.why}</small> : !su && !st.on && i.where && <small>{i.where}</small>}
         </span>
         <span className="integration-end">
           <span className={`integration-status tone-${st.tone}`}>
@@ -638,7 +640,7 @@ function Integrations() {
           ) : (
             st.on && <span className="integration-slot" aria-hidden />
           )}
-          {!su && !st.on && (
+          {!su && !st.on && !st.why && (
             <span className="integration-env">
               {[...i.env, ...(i.optional ?? []).map((v) => `${v} (optional)`)].map((v) => (
                 <code key={v}>{v}</code>

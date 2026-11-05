@@ -30,6 +30,10 @@ curl -fsSL $base/env.example -o .env
 docker compose up -d
 ```
 
+For a read-only install or a small disk, use the `latest-slim` image. It
+skips the Docker CLI, so it can't update containers, and it is about 90 MB
+smaller. Either image idles at about 50 MB of memory.
+
 Open Patchboard and press **Add all**. It turns every running container into
 an app, grouped by compose stack.
 

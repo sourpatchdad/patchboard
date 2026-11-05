@@ -15,13 +15,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
-FROM node:26-alpine
+# Slim: everything except the Docker CLI. Updates from the UI are off;
+# reading Docker through its socket works the same. Build it with
+# --target slim, or pull the -slim tags.
+FROM node:26-alpine AS slim
 LABEL org.opencontainers.image.title="Patchboard" \
       org.opencontainers.image.description="A control center and start page for a home server." \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.source="https://github.com/sourpatchdad/patchboard"
-# The docker CLI and compose plugin run updates (pull, recreate one service).
-RUN apk add --no-cache docker-cli docker-cli-compose
 ENV NODE_ENV=production \
     PORT=3200 \
     DATA_DIR=/data \
@@ -41,3 +42,8 @@ EXPOSE 3200
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD wget -qO- http://127.0.0.1:3200/healthz || exit 1
 CMD ["node", "server/index.ts"]
+
+# Full, the default: adds the Docker CLI and compose plugin, which run
+# updates (pull, recreate one service).
+FROM slim AS full
+RUN apk add --no-cache docker-cli docker-cli-compose

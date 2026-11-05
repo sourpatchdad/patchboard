@@ -7219,6 +7219,12 @@ button.ha-act:hover {
     color: var(--ink-3);
   }
 
+  /* Clamped text flows inline, so the hint starts its own line. */
+  .integration-adds small {
+    display: block;
+    margin-top: 3px;
+  }
+
   .integration:not(.is-open) .integration-adds {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -7377,6 +7383,11 @@ button.ha-act:hover {
 
   .integration-status {
     font-size: 12px;
+  }
+
+  /* A long status ("Can't reach it: ...") wraps instead of squeezing the name. */
+  .integration-end {
+    max-width: 52vw;
   }
 
   .integration-adds {
@@ -7541,4 +7552,15 @@ button.ha-act:hover {
     height: min(420px, calc(100vh - 430px));
     min-height: 260px;
   }
+}
+
+/* A hint under an integration's description always starts its own line, and
+   a row that explains why it is off shows that reason whole. */
+.integration-adds small {
+  display: block;
+}
+
+.integration.has-why .integration-adds {
+  display: grid;
+  -webkit-line-clamp: unset;
 }

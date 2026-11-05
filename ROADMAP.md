@@ -42,7 +42,6 @@ files, and a non-root image.
 
 ### Running it anywhere
 
-- [ ] A slim image without the Docker CLI, for read-only installs
 - [ ] Unraid and TrueNAS app templates
 - [ ] A Proxmox LXC script, and running from Node without Docker
 

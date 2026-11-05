@@ -18,6 +18,7 @@ import type {
   TruenasData,
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
+import { dockerCli } from './cli.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
 import { firstEventAt, kvGet, kvSet, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
@@ -238,10 +239,12 @@ export class Hub {
       pages: kvGet('pages') ?? {},
       features: [
         'diun',
-        ...(config.composeRoot || config.demo ? ['updates'] : []),
+        ...((config.composeRoot && dockerCli) || config.demo ? ['updates'] : []),
         ...(config.docsPath || config.demo ? ['runbook'] : []),
         ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
         ...(config.wake.devices.length || config.demo ? ['wake'] : []),
+        // The slim image: Settings says why updates are off.
+        ...(!dockerCli && !config.demo ? ['no-docker-cli'] : []),
       ],
       wake: config.demo ? ['Desktop', 'Media PC', 'Backup NAS'] : config.wake.devices.map((d) => d.name),
       links: config.demo

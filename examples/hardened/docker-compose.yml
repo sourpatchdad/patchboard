@@ -2,11 +2,12 @@
 # user, reaches Docker through a socket proxy that allows reads only, refuses
 # every change including board edits (READ_ONLY), and listens on 127.0.0.1
 # for a reverse proxy that signs people in (AUTH=forward or AUTH=oidc in
-# .env). SECURITY.md explains each choice.
+# .env). It can't update containers, so it runs the slim image, which leaves
+# out the Docker CLI. SECURITY.md explains each choice.
 
 services:
   patchboard:
-    image: ghcr.io/sourpatchdad/patchboard:latest
+    image: ghcr.io/sourpatchdad/patchboard:latest-slim
     container_name: patchboard
     restart: unless-stopped
     user: node

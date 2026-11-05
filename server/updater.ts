@@ -18,6 +18,7 @@ import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import { isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../shared/types.ts';
+import { dockerCli } from './cli.ts';
 import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
 import { clearUpdate } from './updates.ts';
@@ -52,6 +53,7 @@ function under(root: string, p: string): boolean {
 /** Whether a container can be updated from Patchboard, and why not. */
 export async function eligibility(c: Container): Promise<UpdateEligibility> {
   if (!config.composeRoot) return { ok: false, reason: 'Updates are off. Mount the compose folder and set COMPOSE_ROOT to turn them on.' };
+  if (!dockerCli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
   if (c.name === 'patchboard') return { ok: false, reason: "Patchboard can't replace itself mid-update. Rebuild it from its folder." };
   let r: Inspect;
   try {
