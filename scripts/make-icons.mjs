@@ -13,11 +13,13 @@ const out = (name, body) => {
 
 // SVGs. The tab icon is the small drawing with no tile, so it sits on any
 // browser theme; the two fixed choices put it on a tile.
-out('icon.svg', otterSvg({ bg: 'dark' }));
-out('icon-light.svg', otterSvg({ bg: 'light' }));
-out('favicon.svg', otterSvg({ small: true, bg: 'none' }));
-out('favicon-dark.svg', otterSvg({ small: true, bg: 'dark' }));
-out('favicon-light.svg', otterSvg({ small: true, bg: 'light' }));
+// The app icon wears the hello face: open eyes read best at every size.
+const mood = 'hello';
+out('icon.svg', otterSvg({ mood, bg: 'dark' }));
+out('icon-light.svg', otterSvg({ mood, bg: 'light' }));
+out('favicon.svg', otterSvg({ mood, small: true, bg: 'none' }));
+out('favicon-dark.svg', otterSvg({ mood, small: true, bg: 'dark' }));
+out('favicon-light.svg', otterSvg({ mood, small: true, bg: 'light' }));
 
 const CHROME = process.env.CHROME_PATH ?? (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : '/usr/bin/chromium');
 const browser = await chromium.launch({ executablePath: CHROME });
@@ -36,18 +38,18 @@ for (const [bg, prefix] of [
   ['light', 'icon-light'],
 ]) {
   for (const size of [180, 192, 512]) {
-    writeFileSync(`web/public/${prefix}-${size}.png`, await png(otterSvg({ bg, square: true }), size, false));
+    writeFileSync(`web/public/${prefix}-${size}.png`, await png(otterSvg({ mood, bg, square: true }), size, false));
     console.log(`wrote web/public/${prefix}-${size}.png`);
   }
   // Android crops a maskable icon to a circle or squircle: keep the otter in the safe zone.
-  writeFileSync(`web/public/${prefix}-maskable-512.png`, await png(otterSvg({ bg, safe: true }), 512, false));
+  writeFileSync(`web/public/${prefix}-maskable-512.png`, await png(otterSvg({ mood, bg, safe: true }), 512, false));
   console.log(`wrote web/public/${prefix}-maskable-512.png`);
 }
 
 // favicon.ico, for browsers and bookmark bars that ask for it by name: the
 // small otter with no tile, as PNGs inside an ICO, 16, 32 and 48 pixels.
 const pngs = [];
-for (const size of [16, 32, 48]) pngs.push([size, await png(otterSvg({ small: true, bg: 'none' }), size)]);
+for (const size of [16, 32, 48]) pngs.push([size, await png(otterSvg({ mood, small: true, bg: 'none' }), size)]);
 const header = Buffer.alloc(6 + 16 * pngs.length);
 header.writeUInt16LE(0, 0);
 header.writeUInt16LE(1, 2);

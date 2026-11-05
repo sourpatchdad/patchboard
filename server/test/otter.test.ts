@@ -23,5 +23,9 @@ test('every variant is a single SVG; tiles clip, the plain otter sits in a pool'
 });
 
 test('the small drawing drops whiskers and the mouth so it reads at 16 pixels', () => {
-  assert.ok(otterSvg({ small: true }).length < otterSvg({}).length * 0.75);
+  // Whiskers are the stroked group; the calm mouth is the "w" path.
+  assert.match(otterSvg({}), /stroke-width="2.1"/);
+  assert.doesNotMatch(otterSvg({ small: true }), /stroke-width="2.1"/);
+  assert.match(otterSvg({ mood: 'hello' }), /q4.25 5.5 8.5 0/);
+  assert.doesNotMatch(otterSvg({ mood: 'hello', small: true }), /q4.25 5.5 8.5 0/);
 });

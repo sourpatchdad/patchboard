@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.37.2 (2026-11-05)
+
+- **The otter matches the designed icon set.** Traced in code from the final
+  artwork: the dome and ears, eyes on the brown, a wide "w" mouth, two
+  whiskers a side, water with rounded shoulders, and the zz, rays and
+  question mark centered above the head. The app icon and the plain tab icon
+  wear a new hello face: open eyes and the smile.
+
 ## 1.37.1 (2026-11-05)
 
 - **The otter, refined from a designed icon pack.** A wider, lower head with

@@ -75,12 +75,12 @@ An otter peeking over the edge of the water, keeping an eye on your server
 so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
-- **One drawing.** `shared/otter.ts` builds every otter from one shape
-  vocabulary on a 100 by 100 grid: a wide, low dome with round ears at its
-  top corners, a brown cap over cream cheeks that reach the edge of the head,
-  a rounded-triangle nose over a small "w" mouth, three whiskers a side, two
-  big paws on one line of water. The eyes sit on the cream, below the brown, so they
-  stay readable at any size.
+- **One drawing.** `shared/otter.ts` traces the designed icon set on a 100
+  by 100 grid: a brown dome with round ears, a cream face from the eyes
+  down, a rounded-triangle nose over a wide "w" mouth, two cream whiskers a
+  side, two paws on one band of water with rounded shoulders. The app icon
+  wears the hello face, open eyes and the smile, which reads best at every
+  size; the header and the tab follow the server's mood.
 - **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
   only on the alert otter and red only on the tab icon's dot, the same rule
   as the rest of the interface: color means trouble. Whiskers are cream on
