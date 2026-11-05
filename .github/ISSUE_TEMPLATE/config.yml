@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/sourpatchdad/patchboard/security/advisories/new
+    about: Privately. Please don't open a public issue for a vulnerability.
+  - name: Read the docs
+    url: https://github.com/sourpatchdad/patchboard/tree/main/docs
+    about: Setup, every setting, every integration and a tour of each screen.

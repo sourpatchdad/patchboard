@@ -16,6 +16,10 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
 FROM node:26-alpine
+LABEL org.opencontainers.image.title="Patchboard" \
+      org.opencontainers.image.description="A control center and start page for a home server." \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.source="https://github.com/sourpatchdad/patchboard"
 # The docker CLI and compose plugin run updates (pull, recreate one service).
 RUN apk add --no-cache docker-cli docker-cli-compose
 ENV NODE_ENV=production \
@@ -27,7 +31,7 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY package.json ./
+COPY package.json LICENSE ./
 COPY shared ./shared
 COPY server ./server
 # /data belongs to the node user, so a named volume there inherits that and

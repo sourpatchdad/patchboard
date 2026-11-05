@@ -1,11 +1,9 @@
 node_modules
 dist
 data
-data-demo
-data-real
 config
 .env
 .env.*
 .git
 *.md
-data-test
+data-*

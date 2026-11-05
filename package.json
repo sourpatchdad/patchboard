@@ -3,6 +3,15 @@
   "version": "1.31.0",
   "private": true,
   "description": "A control center and start page for a home server.",
+  "license": "MIT",
+  "author": "Nathan Nicholas <github@nbnstack.com>",
+  "homepage": "https://github.com/sourpatchdad/patchboard#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sourpatchdad/patchboard.git"
+  },
+  "bugs": "https://github.com/sourpatchdad/patchboard/issues",
+  "keywords": ["homelab", "self-hosted", "dashboard", "docker", "start-page"],
   "type": "module",
   "engines": {
     "node": ">=24"

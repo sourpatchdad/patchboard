@@ -107,6 +107,7 @@ the phone views.
 - [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
 - [RELEASING.md](docs/RELEASING.md): branches, tags, images and how a release ships.
 - [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md): running it locally, and what a new integration or widget needs.
 
 ## Development
 
@@ -124,3 +125,7 @@ Vite and SQLite. [DESIGN.md](DESIGN.md) records why.
 Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and
 Wikipedia and belong to their studios. Demo article photos come from
 Wikimedia Commons under the licenses credited in `server/demo.ts`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

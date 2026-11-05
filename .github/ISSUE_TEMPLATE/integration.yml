@@ -1,0 +1,30 @@
+name: Integration request
+description: An app you'd like Patchboard to read, or act on.
+labels: [integration]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App
+      placeholder: Speedtest Tracker
+    validations:
+      required: true
+  - type: textarea
+    id: show
+    attributes:
+      label: What should Patchboard show or do?
+      description: The numbers you'd glance at, what should count as trouble, and any button you'd want (Pause, Approve, Restart).
+    validations:
+      required: true
+  - type: input
+    id: api
+    attributes:
+      label: API docs
+      description: A link, if the app documents its API.
+  - type: dropdown
+    id: test
+    attributes:
+      label: Can you test it?
+      options:
+        - Yes, I run it and can try a build
+        - No
