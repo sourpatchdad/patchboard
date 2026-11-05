@@ -301,17 +301,22 @@ time,
   text-decoration: none;
 }
 
-/* The mark: four patches sewn into one board, one lit. Everything's fine except the one thing that needs you. */
-.wordmark svg rect {
-  fill: var(--ink);
+/* The otter: the mark and the mascot. Its face follows the server. */
+.otter {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+  color: var(--ink-3);
 }
 
-.wordmark svg .mark-lit {
-  fill: var(--warn);
+.otter svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.wordmark svg .mark-blue {
-  fill: var(--accent);
+.wordmark-otter {
+  margin: -3px 0;
 }
 
 .nav {
@@ -7563,4 +7568,62 @@ button.ha-act:hover {
 .integration.has-why .integration-adds {
   display: grid;
   -webkit-line-clamp: unset;
+}
+
+/* ---------- The otter's moments ---------- */
+
+.all-clear {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 0 2px;
+}
+
+.all-clear p {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.all-clear strong {
+  color: var(--head);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.welcome-head:has(.otter) {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.welcome-head:has(.otter) h2 {
+  margin: 0 auto 0 0;
+}
+
+.not-found {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: calc(100vh - var(--topbar-h) - 120px);
+  text-align: center;
+}
+
+.not-found p {
+  margin: 0;
+  max-width: 34em;
+  color: var(--ink-3);
+}
+
+.not-found .not-found-links {
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.not-found .page-title {
+  margin: 14px 0 4px;
+  padding: 0;
+  text-align: center;
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.36.0 (2026-11-05)
+
+- **Meet the otter.** Patchboard's new icon and mascot: an otter peeking
+  over the water. One drawing in code makes every icon, both themes and a
+  small version that reads at 16 pixels on a bookmark bar.
+- **The otter follows your server.** The header mark and the browser tab
+  turn alert with an amber dot when something needs you and worried with a
+  red one when something is down; on quiet nights the otter sleeps. The tab
+  title counts problems, as in "(2) Patchboard", and an installed app shows
+  the count as a badge where the platform allows it.
+- **Quiet moments.** Needs attention says "Nothing needs you" with the otter
+  keeping watch, instead of an empty card. First run gets a happy otter, and
+  a wrong address now gets a page of its own, with links back.
+- **Settings, Look, The otter** hides the mascot on this device. The header
+  mark stays.
+
 ## 1.35.0 (2026-11-05)
 
 - **Push notifications through ntfy or Gotify.** A problem in Needs

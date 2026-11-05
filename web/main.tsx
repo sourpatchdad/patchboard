@@ -14,6 +14,7 @@ import { initAppearance } from './lib/appearance.ts';
 import { Stacks } from './views/Stacks.tsx';
 import { Upcoming } from './views/Upcoming.tsx';
 import { Weather } from './views/Weather.tsx';
+import { NotFound } from './views/NotFound.tsx';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import '@fontsource-variable/dm-sans';
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: '/logs/:name', element: <Logs /> },
       { path: '/apps', element: <Apps /> },
       { path: '/settings', element: <Settings /> },
+      { path: '*', element: <NotFound /> },
     ],
   },
 ]);

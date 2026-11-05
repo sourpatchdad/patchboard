@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { moodFor } from '../../shared/otter.ts';
+import { setStatus } from '../lib/appearance.ts';
 import { useStore } from '../lib/store.tsx';
+import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 
@@ -47,6 +50,16 @@ export function Shell() {
   const gAt = useRef(0);
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
+  // The otter follows the server: the header mark, the tab icon, the title
+  // count and an installed app's badge. Quiet nights, it sleeps.
+  const serious = snap?.alerts.filter((a) => a.level !== 'info') ?? [];
+  const level = serious.some((a) => a.level === 'critical') ? 'critical' : serious.length ? 'warn' : null;
+  const hour = new Date().getHours();
+  const mood = moodFor(level, hour >= 23 || hour < 6);
+  useEffect(() => {
+    if (snap) setStatus(level, serious.length);
+  }, [snap, level, serious.length]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -85,12 +98,7 @@ export function Shell() {
     <div className="shell">
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label="Patchboard home">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-            <rect x="3" y="3" width="8" height="8" rx="2.2" />
-            <rect className="mark-blue" x="13" y="3" width="8" height="8" rx="2.2" />
-            <rect className="mark-lit" x="3" y="13" width="8" height="8" rx="2.2" />
-            <rect x="13" y="13" width="8" height="8" rx="2.2" />
-          </svg>
+          <Otter mood={mood} size={26} small className="wordmark-otter" />
           <span>Patchboard</span>
         </NavLink>
         <nav className="nav" aria-label="Views">

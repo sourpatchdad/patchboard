@@ -79,6 +79,11 @@ move, drag an edge to resize, rename any widget, choose how many items it
 shows. Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors.
 
+**An otter keeps watch.** The otter in the corner follows your server: calm
+when all is quiet, asleep at night, looking up with an amber dot when
+something needs you, worried with a red one when something is down. Your
+browser tab follows along, so a pinned tab tells you from across the room.
+
 **It's safe to run.** Keys stay on the server. Read-only mode, a Docker socket
 proxy, forward auth and an activity log let you decide how much it can do and
 see who did what.

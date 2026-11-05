@@ -5,6 +5,7 @@
 // between dark and light since the last visit. Keep KEY and VARS_KEY in step
 // with that script.
 
+import { moodFor, otterDataUrl } from '../../shared/otter.ts';
 import { useSyncExternalStore } from 'react';
 import { contrast, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
@@ -27,6 +28,8 @@ export interface Appearance {
   icons: IconMode;
   homeApps: HomeApps;
   appIcon: AppIcon;
+  /** The otter in empty and quiet moments. The header mark stays either way. */
+  otter: boolean;
   font: 'theme' | FontSet;
   density: Density;
   clock24: boolean;
@@ -47,6 +50,7 @@ export const DEFAULTS: Appearance = {
   icons: 'mono',
   homeApps: 'tiles',
   appIcon: 'auto',
+  otter: true,
   font: 'theme',
   density: 'comfortable',
   clock24: false,
@@ -182,8 +186,34 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
   };
 }
 
+/**
+ * The server's state, for the tab icon: the otter looks up with an amber dot
+ * when something needs you and worries with a red one when something is down.
+ * When all is quiet the tab shows the plain icon file.
+ */
+let status: { level: 'critical' | 'warn' | null; count: number } = { level: null, count: 0 };
+
+export function setStatus(level: 'critical' | 'warn' | null, count: number): void {
+  if (level === status.level && count === status.count) return;
+  status = { level, count };
+  applyIcon(current.appIcon, resolvedScheme(current));
+  if (typeof document !== 'undefined') document.title = count ? `(${count}) Patchboard` : 'Patchboard';
+  // An installed app shows the count on its icon where the platform allows it.
+  const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+  try {
+    if (count && nav.setAppBadge) void nav.setAppBadge(count).catch(() => {});
+    else if (!count && nav.clearAppBadge) void nav.clearAppBadge().catch(() => {});
+  } catch {
+    /* not supported here */
+  }
+}
+
 function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
   const f = iconFiles(choice, scheme);
+  if (status.level) {
+    const fixed = choice === 'dark' || choice === 'light';
+    f.favicon = otterDataUrl({ small: true, bg: fixed ? choice : 'none', mood: moodFor(status.level), badge: status.level === 'critical' ? 'crit' : 'warn' });
+  }
   const set = (sel: string, href: string) => {
     const el = document.querySelector<HTMLLinkElement>(sel);
     if (el && el.getAttribute('href') !== href) el.setAttribute('href', href);

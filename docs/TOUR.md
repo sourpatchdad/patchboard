@@ -14,6 +14,11 @@ name it a little differently.
 
 ![Home](screenshots/home.png)
 
+**The otter** follows the server in the header and the browser tab: calm,
+asleep on quiet nights, alert with an amber dot, worried with a red one. The
+tab title counts what needs you, as in "(2) Patchboard". When nothing does,
+Needs attention says so, and the otter keeps watch. Settings, Look hides it.
+
 ## Pages
 
 **Server:** pools, datasets, backups, disks, CPU by hour, and when the pool

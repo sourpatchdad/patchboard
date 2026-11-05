@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { Mascot } from '../components/Otter.tsx';
 import { STARTERS } from '../../shared/board.ts';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
@@ -160,7 +161,22 @@ function Overnight({ now }: { now: number }) {
 }
 
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
-  if (!alerts.length) return null;
+  if (!alerts.length) {
+    const h = new Date(now).getHours();
+    const night = h >= 23 || h < 6;
+    return (
+      <Section title="Needs attention" className="attention">
+        <div className="all-clear">
+          <Mascot mood={night ? 'asleep' : 'calm'} size={88} />
+          <p>
+            <strong>Nothing needs you.</strong>
+            <br />
+            {night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+          </p>
+        </div>
+      </Section>
+    );
+  }
   const serious = alerts.filter((a) => a.level !== 'info').length;
   return (
     <Section title="Needs attention" count={serious || undefined} className="attention">
@@ -578,6 +594,7 @@ function Welcome() {
   return (
     <section className="welcome" aria-label="Getting started">
       <header className="welcome-head">
+        <Mascot mood="happy" size={56} />
         <h2>Welcome to Patchboard.</h2>
         <button
           type="button"

@@ -111,8 +111,19 @@ export function Settings() {
         </div>
         <p className="settings-note">
           For this device: the browser tab, bookmarks, and the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick
-          first, then add.
+          first, then add. The tab icon follows your server: the otter looks up with an amber dot when something needs you, and worries with a red one when
+          something is down.
         </p>
+      </Section>
+
+      <Section title="The otter">
+        <div className="choice-row">
+          {seg('otter', [
+            [true, 'Show it'],
+            [false, 'Hide it'],
+          ])}
+        </div>
+        <p className="settings-note">The otter keeps you company when nothing needs you, on first run and on a wrong address. The header mark stays either way.</p>
       </Section>
 
       <Section title="Accent">
