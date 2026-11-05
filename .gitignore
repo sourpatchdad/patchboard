@@ -4,7 +4,8 @@ data/
 data-*/
 .env
 .env.*
-docker-compose.yml
+# Your own compose file; the ones in examples/ are part of the repo.
+/docker-compose.yml
 config/services.yaml
 config/services.yaml.*
 config/*.bak*

@@ -12,8 +12,7 @@ anything wrong, what's new, what's next" in about two seconds. Every glance
 links to a deeper view (Feeds reader, Upcoming calendar, Logs, Apps) instead of
 squeezing detail onto Home.
 
-**Exceptions and changes, not inventory.** Homepage gives every service a tile
-whether or not anything is happening. Here a healthy container gets no space of
+**Exceptions and changes, not inventory.** A healthy container gets no space of
 its own; it's a lit LED in the patch row and part of "All quiet. 38 containers
 running." Space goes to what's broken, new, in progress or upcoming.
 
@@ -39,8 +38,8 @@ another. It also makes demo mode a startup switch rather than a retrofit.
 **Polling on the server, push to the browser (SSE).** Every open tab gets
 updates without each one polling every integration.
 
-**Secrets come in through `env_file:` in compose, never from YAML.** Homepage
-kept keys in `services.yaml`. Here the catalog file is safe to commit or share.
+**Secrets come in through `env_file:` in compose, never from YAML.** The
+catalog file holds no keys, so you can commit or share it.
 
 ## Access
 
@@ -67,7 +66,7 @@ data.
   Logs are one click from an alert, without embedding another app.
 - **Weather moved to Open-Meteo**, which needs no key.
 - **Memory isn't shown.** On TrueNAS the ZFS ARC makes "used memory" look
-  alarming when it isn't, which is why the Homepage widget had it off too.
+  alarming when it isn't.
 - **Container control (restart/stop) is deliberately absent for now.** The
   socket is mounted read-only in intent, and a button that can restart Plex
   from a browser tab deserves its own decision.

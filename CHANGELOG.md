@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.20.1 (2026-11-04)
+
+- **Fix:** the three example compose files never reached the repo, because
+  `.gitignore` excluded every `docker-compose.yml`. It now excludes only the
+  root one, your own.
+- The docs describe Patchboard on its own terms, without comparisons to
+  other dashboards. docs/RESEARCH.md keeps what people ask for and drops
+  project names, links and CVEs; its backlog shows what has shipped since.
+
 ## 1.20.0 (2026-11-04)
 
 Docs you can trust, because the code writes part of them.
@@ -232,8 +241,7 @@ Safe to hand to someone else.
   measured heights through the density zoom; it now measures in layout pixels.
 - **DNS-rebinding protection.** The API answers only requests addressed to an
   IP address, localhost, or a hostname in `ALLOWED_HOSTS`, and refuses
-  cross-origin changes. This closes the class of attack behind Homepage's
-  CVE-2024-42364. If you put Patchboard behind a reverse proxy name, add that
+  cross-origin changes. If you put Patchboard behind a reverse proxy name, add that
   name to `ALLOWED_HOSTS`.
 - **Room to breathe.** Pages use the width from 1100px up. The board shows
   three columns only from 1680px; between 1100 and 1680px third-width widgets

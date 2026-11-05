@@ -12,8 +12,7 @@ fit a 1920px screen or a phone in their own way.
 
 ## What we keep, no matter what
 
-These are what make Patchboard different from Homepage, Homarr, Dashy and
-Glance. Customization must not dilute them.
+These define Patchboard. Customization must not dilute them.
 
 1. **Exceptions, not inventory.** Healthy things are quiet. Color means
    trouble. A customized board still obeys this: a widget is gray until its

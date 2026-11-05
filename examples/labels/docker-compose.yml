@@ -1,0 +1,30 @@
+# Your own apps can put themselves on Patchboard with labels, so the entry
+# lives in the app's compose file. Patchboard picks them up within a minute.
+# docs/INTEGRATIONS.md lists every label.
+
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./sonarr:/config
+    labels:
+      patchboard.name: Sonarr
+      patchboard.group: Media
+      patchboard.href: http://192.168.1.10:8989
+      patchboard.icon: sonarr.png
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    volumes:
+      - ./recyclarr:/config
+    labels:
+      patchboard.name: Recyclarr
+      patchboard.group: Media
+      patchboard.icon: recyclarr.png
+      # A job that runs and exits: its exit raises no alert.
+      patchboard.expect-stopped: "true"

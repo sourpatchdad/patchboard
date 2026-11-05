@@ -45,7 +45,7 @@ container creation, which comes close to full access.
 
 - **DNS rebinding:** the API answers only requests addressed to an IP
   address, `localhost` or a name in `ALLOWED_HOSTS`, and refuses cross-origin
-  changes. Homepage's CVE-2024-42364 used this attack.
+  changes.
 - **Changes need the `X-Patchboard: action` header.** A browser won't send it
   cross-origin without a CORS preflight, and Patchboard grants none.
 - **Activity log:** Settings, Activity records every change and who made it.

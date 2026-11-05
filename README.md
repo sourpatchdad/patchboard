@@ -6,8 +6,7 @@ anything and you land where you can fix it.
 
 ![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, feeds and recently added](docs/screenshots/home.png)
 
-Homepage and Glance show a tile for every service, broken or not. Patchboard
-keeps healthy apps quiet and gives the space to what needs you: a stopped
+Healthy apps stay quiet. The space goes to what needs you: a stopped
 container, a full pool, a stuck import, tonight's episodes.
 
 ## Try it

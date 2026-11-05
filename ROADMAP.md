@@ -13,7 +13,7 @@ yet a good tool for running HomeNAS. This is the plan to make it one.
 - **The patch row shows inventory.** Forty green LEDs say nothing. The colored
   icons turn the row into a sticker sheet, and the one thing that matters (a
   red LED) has to compete with them.
-- **It covers 33 of 60 containers.** The catalog only knows what Homepage knew.
+- **It covers 33 of 60 containers.** The catalog lists only the apps carried over at setup.
   Databases, `finance`, `acme`, `timesheet`, `jellyfin`, `seerr`, `notes-api`
   and `trivia-night` are invisible.
 - **Clicking a service leaves Patchboard.** There's nowhere to go *into*.

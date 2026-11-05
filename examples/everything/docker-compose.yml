@@ -1,0 +1,27 @@
+# Every optional mount, for a TrueNAS box with notes, backup logs and compose
+# projects under /mnt/tank. Change the host paths on the left to yours.
+# docs/CONFIGURATION.md, Mounts, says what each one adds.
+
+services:
+  patchboard:
+    image: ghcr.io/sourpatchdad/patchboard:latest
+    container_name: patchboard
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=${TZ:-UTC}
+      - POOL_PATH=/host/pool
+      - DOCS_PATH=/host/docs
+      - LOGS_PATH=/host/logs
+      - COMPOSE_ROOT=/mnt/tank/compose
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:3200:3200"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config:/config:ro
+      - ./data:/data
+      - /mnt/tank:/host/pool:ro
+      - /mnt/tank/notes:/host/docs:ro
+      - /mnt/tank/logs:/host/logs:ro
+      # Updates need the compose projects at the same path as on the host.
+      - /mnt/tank/compose:/mnt/tank/compose:ro

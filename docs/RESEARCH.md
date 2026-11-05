@@ -1,99 +1,85 @@
-# What self-hosters ask dashboards for
+# What self-hosters ask for
 
-Research, November 2026: GitHub feature requests and issues for Homepage,
-Glance, Homarr, Dashy, Heimdall, Homer and Dashdot; r/selfhosted, r/homelab
-and r/unRAID threads (via mirrors); comparison posts from 2024 to 2026. Vote
-and reaction counts are approximate. Sources are linked where it matters.
+Notes from November 2026: feature requests and issues across self-hosted
+dashboard projects, r/selfhosted and r/homelab threads, and comparison posts
+from 2024 to 2026. They shape the backlog below.
 
-## Why people leave a dashboard
+## Why people stop using a dashboard
 
-1. **YAML is tedious and brittle.** One bad indent and a widget silently
-   breaks ([homepage#3650](https://github.com/gethomepage/homepage/discussions/3650)).
-2. **Memory bloat.** Homarr at about 1 GB for "a mostly static page"
-   ([homarr#3759](https://github.com/homarr-labs/homarr/issues/3759)).
-3. **Upgrades that break things.** Homepage 1.0's host check, Homarr's
-   migration that emptied boards, Dashy 3.0 failing to start.
-4. **The novelty wears off.** It turns into "just bookmarks" the browser
-   already has, and stops being opened.
-5. **Stale data:** no live refresh (Glance).
-6. **Integrations removed or missing:** Homarr 1.0 dropped ping and Uptime
-   Kuma.
-7. **Bus factor:** projects that stall.
-8. **Config locked in a database,** so it can't be kept in git.
-9. **Layout jank:** items that move or overlap.
-10. **Auth that's fake or missing.**
+1. **Editing YAML by hand.** One bad indent and a widget breaks without a word.
+2. **Heavy memory use** for what is mostly a static page.
+3. **Upgrades that break** a working setup or empty a board.
+4. **It stops telling them anything.** It turns into bookmarks the browser
+   already has, and they stop opening it.
+5. **Stale data** that needs a reload.
+6. **Missing integrations,** or ones removed in an update.
+7. **Config locked in a database,** out of reach of git.
+8. **Items that move or overlap.**
+9. **Weak or missing sign-in.**
 
-Reason 4 is the one that matters most and is least addressed: people stop
-opening a dashboard that doesn't tell them anything. Patchboard's whole
-premise ("what needs you", root-cause folding, runbooks, the overnight line)
-answers it, and no other dashboard competes there.
+Patchboard answers 4 first: Needs attention, root causes, runbooks and the
+overnight line give you a reason to open it every day.
 
-## Security expectations
+## What engineers expect before they deploy one
 
-- **The Docker socket is root on the host.** `:ro` doesn't limit the API.
-  Engineers expect a [socket proxy](https://github.com/Tecnativa/docker-socket-proxy)
-  option with writes disabled.
-- **API proxies get attacked.** Homepage CVE-2024-42364 (DNS rebinding leaked
-  keys); Homarr CVE-2026-25123 (unauthenticated SSRF) and CVE-2026-27796
-  (unauthenticated listing of internal URLs).
-- **Client-side "auth" is worse than none** (Dashy's).
-- **Expected auth:** forward-auth headers (Authelia, Authentik, Cloudflare
-  Access) and OIDC, with built-in password as a fallback, rate-limited.
-- **Secrets stay out of config files.**
-- **Pinned, immutable image tags.** Running as non-root where possible.
+- A [socket proxy](https://github.com/Tecnativa/docker-socket-proxy) option,
+  because the Docker socket gives root and `:ro` doesn't limit the API.
+- Protection for API proxies against DNS rebinding and SSRF, the most
+  reported class of dashboard vulnerability.
+- Forward-auth headers (Authelia, Authentik, Cloudflare Access) and OIDC,
+  with a rate-limited built-in password as a fallback.
+- Keys out of config files, pinned image tags, and a non-root image.
 
-## Backlog, ranked
+## Backlog
 
-Done items are marked with the version they shipped in.
+Shipped items show their version.
 
-### Trust and safety (first, because they gate everything else)
-- [x] DNS-rebinding host check, cross-origin refusal (1.9.1)
+### Trust and safety
+
+- [x] DNS-rebinding host check and cross-origin refusal (1.9.1)
 - [x] Actions behind a custom header, every action recorded (1.4.0)
-- [x] Secrets only in the environment; inspect output never includes env (1.1.0)
-- [x] **Read-only mode** (1.10.0) (`READ_ONLY=1`): no actions, no updates, no board edits
-- [x] **Docker socket proxy support** (1.10.0) (`DOCKER_HOST=tcp://socket-proxy:2375`), documented with writes off for read-only installs
-- [x] **Authentication** (1.10.0): trusted forward-auth header, OIDC, or a built-in password with rate limiting; actions can require it even when viewing doesn't
-- [x] **Audit log** (1.10.0, Settings, Activity): every action, update, sign-in and board change, with who and when
-- [x] **Content-Security-Policy** and other security headers (1.10.0)
-- [ ] Non-root image variant (works with a socket proxy)
+- [x] Read-only mode, socket proxy support, sign-in, activity log, CSP (1.10.0)
+- [x] Keys pasted in the UI, kept on the server (1.15.0)
+- [ ] OIDC sign-in
+- [ ] Non-root image variant
 
-### Making it yours (the top capability asks)
+### Making it yours
+
 - [x] Docker-label discovery, Homepage labels included (1.8.0)
-- [x] Drag-and-drop board, widths, live refresh (1.9.0)
-- [x] **JSON widget** (1.10.0, "API numbers"): any API, up to four values, thresholds, test before saving (in progress)
-- [ ] **Board export and import** as one file, plus starter presets
-- [ ] **Catalog editor in the UI** that writes clean, diffable YAML (fixes reason 1 without giving up git)
-- [ ] **Homepage importer in the UI** (the CLI exists)
-- [ ] Search box that works like an address bar, with `!` shortcuts
-- [ ] iCal/CalDAV calendar widget
-- [ ] Wake-on-LAN for listed machines
-- [ ] Multiple Docker hosts (remote sockets or a small agent)
-- [ ] To-do / notes widget (local)
+- [x] API numbers widget (1.10.0)
+- [x] Board with columns, drag to move and resize, widget settings (1.13.0 to 1.17.0)
+- [x] Edit apps in the UI: add, hide, regroup, icons, live numbers (1.14.0, 1.15.0)
+- [x] Customize on every page (1.16.0)
+- [x] One-click first run (1.19.0)
+- [ ] Board export and import as one file, plus starter boards
+- [ ] Write UI changes back to services.yaml for people who keep it in git
+- [ ] Homepage import in the UI (the CLI exists)
+- [ ] A search box with `!` shortcuts
+- [ ] iCal and CalDAV calendar widget
+- [ ] Wake-on-LAN
+- [ ] Several Docker hosts
+- [ ] Notes and to-do widget
 
-### Integrations, by demand
-- [ ] Pi-hole, AdGuard Home, Technitium
-- [ ] Proxmox VMs and LXCs, with open-console links
-- [ ] Uptime Kuma, plus response-time history for Patchboard's own checks
-- [ ] Host metrics agents: Beszel, Glances, Netdata
-- [ ] Jellyfin and Emby sessions and recently added
-- [ ] Immich stats and "on this day"
-- [ ] Home Assistant entities
-- [ ] Unraid
-- [ ] UPS (NUT), Scrutiny (SMART), Speedtest Tracker
-- [ ] Ollama and Open WebUI
-- [ ] ntfy or Pushover for outgoing alerts (opt-in)
+### Integrations
+
+- [x] Live number presets: Jellyfin, Immich, Home Assistant, AdGuard Home, Pi-hole 5, Glances and more (1.15.0)
+- [ ] Pi-hole 6 (session sign-in)
+- [ ] Proxmox VMs and containers
+- [ ] Uptime Kuma, and history for Patchboard's own checks
+- [ ] Jellyfin and Emby sessions on Right now
+- [ ] Unraid, UPS (NUT), Scrutiny, Speedtest Tracker
+- [ ] Outgoing alerts through ntfy or Pushover, opt-in
 
 ### Polish
-- [ ] Accessibility audit (keyboard paths, screen-reader labels, contrast in every theme)
+
+- [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
 - [ ] Translations
-- [ ] A read-only API (and MCP) for AI tools, scoped to GET
+- [ ] A read-only API for scripts and AI tools
 
-## What nobody does well, and Patchboard should own
+## Where Patchboard should lead
 
-- **"What needs my attention"** as the product, not a widget.
-- **Safe write actions:** scoped, confirmed, audited container control and
-  updates with rollback. Others are either read-only or socket-root with no
-  guard rails.
-- **Hybrid config:** a GUI that writes back clean YAML, so people stop
-  running two dashboards.
-- **Version drift for services that aren't containers.**
+- **What needs you,** as the point of the whole app.
+- **Safe actions:** scoped, confirmed and recorded container control, and
+  updates with rollback.
+- **The UI and files together:** click to change things, and keep a file in
+  git if you want one.
