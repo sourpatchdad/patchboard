@@ -43,6 +43,7 @@ import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog, setCatalogOrder } from './catalog.ts';
+import { catalogYaml } from '../shared/catalog-yaml.ts';
 import { type AppOrder, validateOrder } from '../shared/order.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
@@ -418,6 +419,14 @@ app.put('/api/pages/:id', async (c) => {
   recordAudit(who(c), 'pages.save', id);
   return c.json({ ok: true });
 });
+
+// The catalog as arranged in the UI, as a services.yaml to keep in git.
+app.get('/api/catalog/yaml', (c) =>
+  c.body(catalogYaml(getCatalog()), 200, {
+    'Content-Type': 'text/yaml; charset=utf-8',
+    'Content-Disposition': 'attachment; filename="services.yaml"',
+  }),
+);
 
 // The whole setup as one file: board, app layout, page settings. Keys stay
 // out; setups refer to them by name, so you paste them again after a move.

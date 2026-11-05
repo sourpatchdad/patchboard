@@ -31,8 +31,6 @@ files, and a non-root image.
 
 ### Making it yours
 
-- [ ] Starter boards to import (the setup file shipped in 1.22.0)
-- [ ] Write UI changes back to services.yaml, for people who keep it in git
 - [ ] Homepage config import in the UI (the CLI exists)
 - [ ] A search box with `!` shortcuts
 - [ ] iCal and CalDAV calendar widget
@@ -42,7 +40,6 @@ files, and a non-root image.
 
 ### Integrations
 
-- [ ] Pi-hole 6 (session sign-in)
 - [ ] Proxmox VMs and containers
 - [ ] Uptime Kuma, and history for Patchboard's own checks
 - [ ] Jellyfin and Emby sessions on Right now

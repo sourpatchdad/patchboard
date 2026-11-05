@@ -193,3 +193,57 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
   if (info.options.names && c.names === 'show') out.names = 'show';
   return out;
 }
+
+/** Starting layouts, offered in Customize and on the first run. */
+export const STARTERS: { id: string; name: string; about: string; board: Board }[] = [
+  { id: 'everything', name: 'Everything', about: 'Every widget, three columns.', board: DEFAULT_BOARD },
+  {
+    id: 'media',
+    name: 'Media night',
+    about: "What's playing, what's coming, what's new.",
+    board: {
+      version: 1,
+      columns: 3,
+      widgets: [
+        { id: 'apps', type: 'apps', size: 'xl', span: 3, config: { style: 'patchbay' } },
+        { id: 'now', type: 'now', size: 'm', span: 1 },
+        { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { days: '14', limit: '14' } },
+        { id: 'attention', type: 'attention', size: 'm', span: 1 },
+        { id: 'recent', type: 'recent', size: 'xl', span: 3 },
+      ],
+    },
+  },
+  {
+    id: 'ops',
+    name: 'Server room',
+    about: 'Problems, resources and what changed, on four columns.',
+    board: {
+      version: 1,
+      columns: 4,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'l', span: 2 },
+        { id: 'vitals', type: 'vitals', size: 'l', span: 2 },
+        { id: 'changes', type: 'changes', size: 'l', span: 2, config: { limit: '12' } },
+        { id: 'now', type: 'now', size: 'm', span: 1 },
+        { id: 'weather', type: 'weather', size: 'm', span: 1 },
+        { id: 'apps', type: 'apps', size: 'xl', span: 4 },
+      ],
+    },
+  },
+  {
+    id: 'calm',
+    name: 'Calm',
+    about: 'Weather, the week, and only what needs you.',
+    board: {
+      version: 1,
+      columns: 2,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm', span: 1 },
+        { id: 'weather', type: 'weather', size: 'm', span: 1 },
+        { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
+        { id: 'feeds', type: 'feeds', size: 'm', span: 1, config: { limit: '4' } },
+        { id: 'apps', type: 'apps', size: 'xl', span: 2, config: { style: 'patchbay' } },
+      ],
+    },
+  },
+];

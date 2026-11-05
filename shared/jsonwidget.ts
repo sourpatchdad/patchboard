@@ -32,6 +32,8 @@ export interface JsonWidgetConfig {
   fields: JsonField[];
   /** Where clicking the title goes. */
   href?: string;
+  /** Sign in first and send a session id (Pi-hole 6), with the password saved under this key name. */
+  login?: { kind: 'pihole6'; secret: string };
 }
 
 export const FORMATS: FieldFormat[] = ['number', 'percent', 'bytes', 'duration', 'relative', 'text'];
@@ -70,7 +72,13 @@ export function validateJsonConfig(input: unknown): { config: JsonWidgetConfig }
   const interval = Math.min(Math.max(num(c.interval) ?? 60, 15), 86_400);
   const title = str(c.title, 60)?.trim() || 'API';
   const href = str(c.href, 500);
-  return { config: { title, url, headers, interval, fields, href: href && /^https?:\/\//.test(href) ? href : undefined } };
+  const lg = (c as { login?: { kind?: unknown; secret?: unknown } }).login;
+  let login: JsonWidgetConfig['login'];
+  if (lg != null) {
+    if (lg.kind !== 'pihole6' || typeof lg.secret !== 'string' || !/^[A-Z0-9_]{1,40}$/.test(lg.secret)) return { error: 'Bad sign-in settings' };
+    login = { kind: 'pihole6', secret: lg.secret };
+  }
+  return { config: { title, url, headers, interval, fields, href: href && /^https?:\/\//.test(href) ? href : undefined, ...(login ? { login } : {}) } };
 }
 
 /** Read a dot path such as "data.items[0].count" out of parsed JSON. */

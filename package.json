@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "private": true,
   "description": "A control center and start page for a home server.",
   "type": "module",
@@ -19,7 +19,7 @@
     "screenshots": "node scripts/screenshots.mjs",
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"require('fs').rmSync('data-test',{recursive:true,force:true})\"",
-    "test": "cross-env DATA_DIR=./data-test DOCS_PATH=server/test/fixtures LOGS_PATH=server/test/fixtures CHECK_DOMAINS=example.org node --disable-warning=ExperimentalWarning --test \"server/test/*.test.ts\""
+    "test": "cross-env DATA_DIR=./data-test DOCS_PATH=server/test/fixtures LOGS_PATH=server/test/fixtures CHECK_DOMAINS=example.org node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"server/test/*.test.ts\""
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

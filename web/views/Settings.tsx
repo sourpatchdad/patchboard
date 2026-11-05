@@ -388,6 +388,10 @@ function CatalogCheck() {
         <h2>Catalog</h2>
         <span className="section-count">config/services.yaml</span>
       </header>
+      <p className="settings-note">
+        Keep your catalog in git? <a href="/api/catalog/yaml" download>Download services.yaml</a> writes the apps as you arranged them here, with groups,
+        order, icons and apps you added. Hidden apps and live numbers stay in Patchboard.
+      </p>
       {clean && <p className="settings-note">Every catalog entry matches a container, and every running app is listed.</p>}
       {audit.missing.length > 0 && (
         <dl className="ledger">

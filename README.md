@@ -58,13 +58,14 @@ update or roll back.
 
 **It's yours without config files.** Drag apps between groups, rename groups,
 hide what you don't use, upload icons. Paste an API key and a tile shows
-"42,506 photos" or "3 queued". Fifteen apps have presets; any JSON API works.
+"42,506 photos" or "3 queued". Sixteen apps have presets; any JSON API works.
 
 ![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.png)
 
-Home is a board of widgets on 2 to 6 columns. Drag to move, drag an edge to
-resize, rename any widget, choose how many items it shows. Every other page
-has a Customize button too.
+Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
+move, drag an edge to resize, rename any widget, choose how many items it
+shows. Every other page has a Customize button too. Six themes, each dark and
+light, or build your own from three colors.
 
 **It's safe to run.** Keys stay on the server. Read-only mode, a Docker socket
 proxy, forward auth and an activity log let you decide how much it can do and
@@ -88,8 +89,12 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 |---|---|---|
 | ![Server page](docs/screenshots/server.png) | ![Upcoming calendar](docs/screenshots/upcoming.png) | ![Home on a phone](docs/screenshots/phone-home.png) |
 
+**[Take the tour](docs/TOUR.md):** every page, every editor, every theme and
+the phone views.
+
 ## Docs
 
+- [TOUR.md](docs/TOUR.md): every screen.
 - [INTEGRATIONS.md](docs/INTEGRATIONS.md): getting apps and numbers onto Patchboard.
 - [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.

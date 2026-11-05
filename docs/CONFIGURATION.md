@@ -83,7 +83,8 @@ Each needs a read-only mount and its variable.
 
 Patchboard reloads the file when you save it. Settings, Connections, Catalog
 lists entries that name a missing container and running apps the file doesn't
-list.
+list. **Download services.yaml** there writes the apps as you arranged them in
+the UI, ready to commit.
 
 ## Runbook format
 

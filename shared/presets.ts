@@ -21,7 +21,7 @@ export interface Preset {
   /** Lowercase words matched against an app's name, container and icon. */
   match: string[];
   path: string;
-  auth?: { kind: 'header'; header: string; value: string } | { kind: 'query'; param: string } | { kind: 'basic' };
+  auth?: { kind: 'header'; header: string; value: string } | { kind: 'query'; param: string } | { kind: 'basic' } | { kind: 'pihole6' };
   /** Where to find the key, in the app's own words. */
   keyHelp?: string;
   values: PresetValue[];
@@ -177,6 +177,20 @@ export const PRESETS: Preset[] = [
     ],
   },
   {
+    id: 'pihole6',
+    name: 'Pi-hole 6',
+    match: ['pihole', 'pi-hole'],
+    path: '/api/stats/summary',
+    auth: { kind: 'pihole6' },
+    keyHelp: 'Settings, Web interface / API, Configure app password (or your admin password)',
+    values: [
+      { label: 'blocked today', path: 'queries.blocked', format: 'number' },
+      { label: 'blocked', path: 'queries.percent_blocked', format: 'percent' },
+      { label: 'queries today', path: 'queries.total', format: 'number' },
+      { label: 'active clients', path: 'clients.active', format: 'number' },
+    ],
+  },
+  {
     id: 'pihole5',
     name: 'Pi-hole 5',
     match: ['pihole', 'pi-hole'],
@@ -215,11 +229,13 @@ export function presetFor(app: { name: string; container?: string; icon?: string
 }
 
 /** URL and headers for a preset, with the key as a server-side secret reference. */
-export function presetRequest(p: Preset, base: string, secret: string): { url: string; headers: Record<string, string> } {
+export function presetRequest(p: Preset, base: string, secret: string): { url: string; headers: Record<string, string>; login?: { kind: 'pihole6'; secret: string } } {
   const url = base.replace(/\/+$/, '') + p.path;
   const ref = `\${secret:${secret}}`;
   if (!p.auth) return { url, headers: {} };
+  if (p.auth.kind === 'pihole6') return { url, headers: {}, login: { kind: 'pihole6', secret } };
   if (p.auth.kind === 'query') return { url: `${url}${url.includes('?') ? '&' : '?'}${p.auth.param}=${ref}`, headers: {} };
   if (p.auth.kind === 'basic') return { url, headers: { Authorization: `Basic \${secret64:${secret}}` } };
-  return { url, headers: { [p.auth.header]: p.auth.value.replace('{key}', ref) } };
+  if (p.auth.kind === 'header') return { url, headers: { [p.auth.header]: p.auth.value.replace('{key}', ref) } };
+  return { url, headers: {} };
 }

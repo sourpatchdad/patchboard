@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.23.0 (2026-11-04)
+
+- **Pi-hole 6** live numbers: blocked today, percent blocked, queries,
+  active clients. Patchboard signs in with an app password, reuses one
+  session until it expires, signs in again at most once after a 401, and
+  waits five minutes after a refused password, so it never fills Pi-hole's
+  session limit or locks you out. Tested against a fake Pi-hole.
+- **Start from a layout:** Customize and the first run offer Everything,
+  Media night, Server room and Calm.
+- **Download services.yaml** (Settings, Connections, Catalog) writes the apps
+  as arranged in the UI, for people who keep their catalog in git.
+- **The tour:** docs/TOUR.md shows every page, editor and theme and five
+  phone views, 27 screenshots that `npm run screenshots` regenerates.
+- **Fix:** the demo listed Patchboard with another dashboard's logo. It now
+  uses its own.
+- Test files run one at a time, which fixes a rare failure from two files
+  sharing the test database. 51 tests.
+
 ## 1.22.0 (2026-11-04)
 
 - **Setup file:** Settings, Home and units downloads your board, apps

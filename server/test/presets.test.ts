@@ -22,8 +22,8 @@ test('every preset builds a config the validator accepts, with the key as a refe
     const v = validateJsonConfig({ title: p.id, ...req, interval: 60, fields: [{ ...p.values[0] }] });
     assert.ok('config' in v, `${p.id}: ${'error' in v ? v.error : ''}`);
     assert.ok(req.url.startsWith('http://10.0.0.5:8080/'), p.id);
-    const all = req.url + JSON.stringify(req.headers);
-    if (p.auth) assert.match(all, /\$\{secret(64)?:APP_X\}/, p.id);
+    const all = req.url + JSON.stringify(req.headers) + JSON.stringify(req.login ?? {});
+    if (p.auth) assert.match(all, /\$\{secret(64)?:APP_X\}|"secret":"APP_X"/, p.id);
   }
 });
 
@@ -39,4 +39,15 @@ test('unknown reference kinds are refused', () => {
   assert.ok('error' in v);
   const w = validateJsonConfig({ title: 'x', url: 'http://h/', headers: { A: '${secret:lower}' }, interval: 60, fields: [{ label: 'a', path: 'b' }] });
   assert.ok('config' in w); // lowercase doesn't match a reference, so it's sent literally
+});
+
+test('Pi-hole 6 signs in with a saved password and refuses odd sign-in settings', () => {
+  const p = PRESETS.find((x) => x.id === 'pihole6')!;
+  const req = presetRequest(p, 'http://pi.hole', 'APP_PIHOLE');
+  assert.deepEqual(req.login, { kind: 'pihole6', secret: 'APP_PIHOLE' });
+  assert.deepEqual(req.headers, {});
+  const ok = validateJsonConfig({ title: 'pihole6', ...req, interval: 60, fields: [{ label: 'blocked', path: 'queries.blocked' }] });
+  assert.ok('config' in ok && ok.config.login?.secret === 'APP_PIHOLE');
+  const bad = validateJsonConfig({ title: 'x', url: 'http://pi.hole/api', headers: {}, interval: 60, fields: [{ label: 'a', path: 'b' }], login: { kind: 'other', secret: 'X' } });
+  assert.ok('error' in bad);
 });

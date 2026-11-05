@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { STARTERS } from '../../shared/board.ts';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
@@ -583,7 +584,24 @@ function Welcome() {
           {err && <span className="crit-text"> {err}</span>}
         </li>
         <li>
-          <strong>Home.</strong> Press Customize (top right of the board) to choose widgets, their columns and order.
+          <strong>Home.</strong> Start from a layout:{' '}
+          {STARTERS.map((st, i) => (
+            <span key={st.id}>
+              {i > 0 && ', '}
+              <button
+                type="button"
+                className="text-button"
+                title={st.about}
+                onClick={async () => {
+                  await fetch('/api/board', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(st.board) });
+                  location.reload();
+                }}
+              >
+                {st.name}
+              </button>
+            </span>
+          ))}
+          . Customize, top right of the board, changes any of it.
         </li>
         <li>
           <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.

@@ -7,7 +7,7 @@
 
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
+import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, STARTERS, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -132,6 +132,24 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
             >
               Reset to default
             </button>
+            <select
+              className="field starter-pick"
+              aria-label="Start from a layout"
+              value=""
+              onChange={(e) => {
+                const st = STARTERS.find((x) => x.id === e.target.value);
+                if (st) setDraft(structuredClone(st.board));
+              }}
+            >
+              <option value="" disabled>
+                Start from a layout...
+              </option>
+              {STARTERS.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.name}: {st.about}
+                </option>
+              ))}
+            </select>
             <button type="button" className="text-button" onClick={() => setDraft(null)}>
               Cancel
             </button>

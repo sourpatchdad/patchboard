@@ -14,6 +14,7 @@ import { isIP } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import { ENV_REF, type JsonWidgetConfig, readPath, SECRET_REF } from '../shared/jsonwidget.ts';
 import { getSecret } from './secrets.ts';
+import { piholeSid } from './sessions.ts';
 
 const MAX_BYTES = 512 * 1024;
 const TIMEOUT = 8000;
@@ -61,7 +62,19 @@ export async function fetchJsonWidget(cfg: JsonWidgetConfig, withSample = false)
 
     const headers: Record<string, string> = { Accept: 'application/json', 'User-Agent': 'Patchboard/1 (json widget)' };
     for (const [k, v] of Object.entries(cfg.headers)) headers[k] = resolveEnv(v);
-    const res = await fetch(url, { headers, redirect: 'manual', signal: AbortSignal.timeout(TIMEOUT) });
+    const get = () => fetch(url, { headers, redirect: 'manual', signal: AbortSignal.timeout(TIMEOUT) });
+    let res: Response;
+    if (cfg.login?.kind === 'pihole6') {
+      headers['X-FTL-SID'] = await piholeSid(url.origin, cfg.login.secret);
+      res = await get();
+      // An expired or dropped session: sign in once more, then give up.
+      if (res.status === 401) {
+        headers['X-FTL-SID'] = await piholeSid(url.origin, cfg.login.secret, true);
+        res = await get();
+      }
+    } else {
+      res = await get();
+    }
     if (res.status >= 300 && res.status < 400) throw new Error(`Redirected (HTTP ${res.status}); use the final URL`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

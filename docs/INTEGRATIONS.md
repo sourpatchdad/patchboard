@@ -99,6 +99,7 @@ Patchboard suggests the preset that matches the app's name.
 | **Nextcloud** | files, active today | Set one with occ config:app:set serverinfo token --value <token> |
 | **Home Assistant** | entities | Your profile, Security, Long-lived access tokens, Create token |
 | **AdGuard Home** | blocked, queries | your login, typed as username:password |
+| **Pi-hole 6** | blocked today, blocked, queries today, active clients | Settings, Web interface / API, Configure app password (or your admin password) |
 | **Pi-hole 5** | blocked today, blocked, queries today | Settings, API, Show API token |
 | **Glances** | CPU, memory | none needed |
 <!-- /generated -->

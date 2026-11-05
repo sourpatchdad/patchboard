@@ -1,6 +1,7 @@
 // Regenerates docs/screenshots from demo mode: builds the UI, starts two
 // demo servers on spare ports (one set up, one a fresh install), drives a
-// browser through each page, and writes the PNGs the README shows.
+// browser through every page, theme and editor, and writes the PNGs that
+// README.md and docs/TOUR.md show.
 //
 //   npm run screenshots
 //
@@ -65,6 +66,13 @@ async function shoot(page, name, opts = {}) {
   console.log(`  ${name}.png`);
 }
 
+/** A browser context with a theme saved, as Settings would save it. */
+async function context(browser, opts, appearance) {
+  const ctx = await browser.newContext(opts);
+  if (appearance) await ctx.addInitScript((a) => localStorage.setItem('pb-appearance', JSON.stringify(a)), appearance);
+  return ctx;
+}
+
 console.log('Building the UI...');
 execSync('npx vite build', { stdio: 'ignore' });
 mkdirSync(OUT, { recursive: true });
@@ -74,27 +82,45 @@ const fresh = await server(3291, { DEMO_EMPTY: '1' });
 const browser = await launch();
 
 try {
-  const dark = await browser.newContext({ viewport: DESKTOP, colorScheme: 'dark' });
+  const dark = await context(browser, { viewport: DESKTOP, colorScheme: 'dark' });
   const page = await dark.newPage();
-  const go = async (path) => {
+  const go = async (path, ms) => {
     await page.goto(demo.base + path);
-    await settle(page);
+    await settle(page, ms);
   };
 
-  console.log('Desktop, dark');
+  console.log('Pages');
   await go('/');
   await shoot(page, 'home', { fullPage: true });
   await go('/server');
   await shoot(page, 'server', { fullPage: true });
+  await go('/stacks');
+  await shoot(page, 'stacks');
   await go('/c/unpackerr');
   await shoot(page, 'container');
   await go('/upcoming');
   await shoot(page, 'upcoming');
   await go('/weather');
   await shoot(page, 'weather');
-  await go('/settings?tab=connections');
-  await shoot(page, 'integrations', { fullPage: true });
+  await go('/feeds?e=1');
+  await shoot(page, 'feeds');
+  await go('/logs/plex', 2500);
+  await shoot(page, 'logs');
+  await go('/');
+  await page.keyboard.press('Control+k');
+  await page.keyboard.type('plex');
+  await settle(page, 500);
+  await shoot(page, 'jump-to');
+  await page.keyboard.press('Escape');
 
+  console.log('Making it yours');
+  await go('/');
+  await page.getByRole('button', { name: /Customize/ }).click();
+  await settle(page, 600);
+  await shoot(page, 'customize');
+  await page.getByRole('button', { name: 'Feeds settings' }).click();
+  await settle(page, 400);
+  await shoot(page, 'widget-settings');
   await go('/apps');
   await page.getByRole('button', { name: 'Edit apps' }).first().click();
   await settle(page, 600);
@@ -103,18 +129,31 @@ try {
   await page.getByRole('dialog').locator('.live-number select').first().selectOption('immich');
   await settle(page, 300);
   await shoot(page, 'live-number');
+  await go('/server');
+  await page.getByRole('button', { name: 'Customize' }).click();
+  await settle(page, 400);
+  await shoot(page, 'page-customize');
+  await go('/settings');
+  await shoot(page, 'settings-look', { fullPage: true });
+  await go('/settings?tab=connections');
+  await shoot(page, 'integrations', { fullPage: true });
 
-  await go('/');
-  await page.getByRole('button', { name: /Customize/ }).click();
-  await settle(page, 600);
-  await shoot(page, 'customize');
-
-  console.log('Desktop, light');
-  const light = await browser.newContext({ viewport: DESKTOP, colorScheme: 'light' });
-  const lp = await light.newPage();
-  await lp.goto(demo.base + '/');
-  await settle(lp);
-  await shoot(lp, 'home-light');
+  console.log('Themes');
+  const themes = [
+    ['graphite', 'light'],
+    ['midnight', 'dark'],
+    ['forest', 'dark'],
+    ['dusk', 'dark'],
+    ['paper', 'light'],
+  ];
+  for (const [theme, scheme] of themes) {
+    const ctx = await context(browser, { viewport: DESKTOP, colorScheme: scheme }, { theme, scheme });
+    const p = await ctx.newPage();
+    await p.goto(demo.base + '/');
+    await settle(p);
+    await shoot(p, `theme-${theme}-${scheme}`);
+    await ctx.close();
+  }
 
   console.log('First run');
   const fp = await dark.newPage();
@@ -123,14 +162,19 @@ try {
   await shoot(fp, 'first-run');
 
   console.log('Phone');
-  const phone = await browser.newContext({ viewport: PHONE, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+  const phone = await context(browser, { viewport: PHONE, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'dark' });
   const pp = await phone.newPage();
-  await pp.goto(demo.base + '/');
-  await settle(pp);
-  await shoot(pp, 'phone-home');
-  await pp.goto(demo.base + '/c/unpackerr');
-  await settle(pp);
-  await shoot(pp, 'phone-container');
+  for (const [path, name] of [
+    ['/', 'phone-home'],
+    ['/c/unpackerr', 'phone-container'],
+    ['/upcoming', 'phone-upcoming'],
+    ['/weather', 'phone-weather'],
+    ['/server', 'phone-server'],
+  ]) {
+    await pp.goto(demo.base + path);
+    await settle(pp);
+    await shoot(pp, name);
+  }
 } finally {
   await browser.close();
   await Promise.all([demo.stop(), fresh.stop()]);

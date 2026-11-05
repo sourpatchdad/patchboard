@@ -6227,3 +6227,10 @@ a.date:hover {
 .file-button {
   cursor: pointer;
 }
+
+.starter-pick {
+  width: auto;
+  max-width: 22em;
+  margin: 0;
+  font-size: 13px;
+}
