@@ -2,6 +2,7 @@
 // and pushed to every open browser over SSE. The browser never talks to an
 // integration directly, so no key ever leaves the server.
 
+import { emptyTrack, settle, type Track } from './transitions.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type {
   Alert,
@@ -22,7 +23,7 @@ import { dockerCli } from './cli.ts';
 import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
-import { firstEventAt, kvGet, kvSet, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
+import { firstEventAt, kvGet, kvSet, lastEventAt, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
 import { demoContainers, demoSampleHistory } from './demo.ts';
 import { seedPoolHistoryFromAudits } from './notes.ts';
 import { pendingUpdates, settleUpdates } from './updates.ts';
@@ -181,21 +182,16 @@ export class Hub {
   private trackContainers(containers: Container[]): void {
     // Health grids show days before this as "not watched yet".
     if (kvGet('tracking-since') === undefined) kvSet('tracking-since', Math.min(firstEventAt() ?? Date.now(), Date.now()));
-    const seen = kvGet<Record<string, string>>('container-states') ?? {};
-    const now: Record<string, string> = {};
-    let changed = false;
-    for (const c of containers) {
-      const state = c.state === 'running' ? (c.health === 'unhealthy' ? 'unhealthy' : 'running') : 'stopped';
-      now[c.name] = state;
-      const before = seen[c.name];
-      if (before === undefined || before === state) continue;
-      changed = true;
-      if (state === 'stopped') recordEvent('container.stopped', c.name, c.status);
-      else if (state === 'unhealthy') recordEvent('container.unhealthy', c.name, c.status);
-      else if (before === 'unhealthy') recordEvent('container.recovered', c.name);
-      else recordEvent('container.started', c.name, c.status);
+    // Brief stops (an update, a restart) settle into one event; see transitions.ts.
+    const prev = kvGet<Track>('container-track') ?? { ...emptyTrack(), states: kvGet<Track['states']>('container-states') ?? {} };
+    const { track, events } = settle(prev, containers, Date.now());
+    for (const e of events) {
+      // Restarted or updated from Patchboard: the command already says so.
+      if (e.kind === 'container.restarted' && e.at - (lastEventAt(e.subject, 'container.action') ?? 0) < 5 * 60_000) continue;
+      recordEvent(e.kind, e.subject, e.detail, e.at);
     }
-    kvSet('container-states', now);
+    const changed = events.length > 0;
+    kvSet('container-track', track);
     if (settleUpdates(containers)) this.emitUpdates();
     if (changed) {
       this.changes = listChanges(CHANGE_WINDOW);
@@ -281,6 +277,7 @@ export function seedDemoHistory(): void {
   const H = 3_600_000;
   const t = Date.now();
   recordEvent('container.started', 'plex', 'Up 4 hours', t - 4 * H);
+  recordEvent('container.restarted', 'sonarr', 'updated', t - 1.5 * H);
   recordEvent('container.stopped', 'plex', 'Exited (0)', t - 4 * H - 40_000);
   recordEvent('container.unhealthy', 'immich-server', 'Up 6 days (unhealthy)', t - 11 * H);
   recordEvent('container.recovered', 'immich-server', undefined, t - 10.6 * H);

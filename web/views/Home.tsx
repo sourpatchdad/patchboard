@@ -501,6 +501,7 @@ const sourceName = { sonarr: 'Sonarr', radarr: 'Radarr', trakt: 'Trakt' };
 const changeText: Record<ChangeEvent['kind'], string> = {
   'container.stopped': 'stopped',
   'container.started': 'started',
+  'container.restarted': 'restarted',
   'container.unhealthy': 'started failing its health check',
   'container.recovered': 'recovered',
   'container.action': 'was sent a command',
@@ -524,7 +525,7 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
           <li key={c.id} className={`change change-${c.kind.split('.')[1]}`}>
             <Link to={`/c/${c.subject}`}>
               <span className="change-text">
-                <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : changeText[c.kind]}
+                <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind]}
               </span>
               <time>{ago(c.at, now)}</time>
             </Link>

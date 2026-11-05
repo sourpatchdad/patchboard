@@ -598,7 +598,7 @@ export interface Alert {
 export interface ChangeEvent {
   id: number;
   at: number;
-  kind: 'container.stopped' | 'container.started' | 'container.unhealthy' | 'container.recovered' | 'container.action';
+  kind: 'container.stopped' | 'container.started' | 'container.restarted' | 'container.unhealthy' | 'container.recovered' | 'container.action';
   subject: string;
   detail?: string;
 }

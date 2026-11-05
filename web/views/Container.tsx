@@ -33,6 +33,7 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 const changeText = {
   'container.stopped': 'Stopped',
   'container.started': 'Started',
+  'container.restarted': 'Restarted',
   'container.unhealthy': 'Started failing its health check',
   'container.recovered': 'Recovered',
   'container.action': 'Command sent',
@@ -507,7 +508,7 @@ function History({ name, now }: { name: string; now: number }) {
       {events.map((c) => (
         <li key={c.id} className={`change change-${c.kind.split('.')[1]}`}>
           <div>
-            <span className="change-text">{c.kind === 'container.action' ? (actionWord[c.detail ?? ''] ?? changeText[c.kind]) : changeText[c.kind]}</span>
+            <span className="change-text">{c.kind === 'container.action' ? (actionWord[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'Updated' : changeText[c.kind]}</span>
             <time>{ago(c.at, now)}</time>
           </div>
         </li>

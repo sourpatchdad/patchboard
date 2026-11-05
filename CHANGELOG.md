@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Updates and restarts aren't outages.** A container that stops and runs
+  again within two minutes shows once under Changes, as "updated" when its
+  image changed and "restarted" otherwise, instead of "stopped" then
+  "started". It raises no "not running" alert and costs no uptime. A stop
+  that lasts past two minutes is reported, dated from when it began, and a
+  restart loop is reported at once. Updates run from Patchboard show only
+  their own line.
+
 ## 1.39.1 (2026-11-05)
 
 - **A restart isn't news.** Patchboard mentions an app it can't reach only

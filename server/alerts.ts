@@ -21,7 +21,8 @@ import type {
   SpeedData,
 } from '../shared/types.ts';
 import { config } from './config.ts';
-import { lastEventAt } from './db.ts';
+import { kvGet, lastEventAt } from './db.ts';
+import { settling, type Track } from './transitions.ts';
 
 type Sources = Partial<Record<SourceId, SourceState>>;
 
@@ -61,9 +62,12 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   }
   const foldedAway = new Set([...folded.values()].flat());
 
+  // A container stopped moments ago is probably being updated or restarted.
+  const track = kvGet<Track>('container-track');
   for (const c of containers) {
     const logs = `/c/${c.name}`;
     if (foldedAway.has(c.name)) continue;
+    if (c.state !== 'restarting' && track && settling(track, c.name, now)) continue;
     if (c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name)) {
       const dependents = folded.get(c.name);
       alerts.push({
@@ -74,7 +78,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         detail: dependents
           ? `${stoppedDetail(c.status, c.image)} Also down because of it: ${dependents.join(', ')}.`
           : stoppedDetail(c.status, c.image),
-        since: lastEventAt(c.name, 'container.stopped'),
+        since: track?.pending[c.name]?.at ?? lastEventAt(c.name, 'container.stopped'),
         href: logs,
         source: 'docker',
       });
