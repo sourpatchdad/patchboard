@@ -180,7 +180,7 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
   const fixed = choice === 'dark' || choice === 'light';
   const v = fixed ? choice : scheme;
   return {
-    favicon: `/favicon-${v}.png`,
+    favicon: '/favicon.png',
     touch: v === 'light' ? '/icon-light-180.png' : '/icon-180.png',
     manifest: v === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest',
   };
@@ -211,9 +211,9 @@ export function setStatus(level: 'critical' | 'warn' | null, count: number): voi
 let drawn = 0;
 
 /** The mood's tile with a status dot in the corner, as a data URL. */
-async function statusIcon(level: 'critical' | 'warn', light: boolean): Promise<string> {
+async function statusIcon(level: 'critical' | 'warn'): Promise<string> {
   const img = new Image();
-  img.src = otterSrc(moodFor(level), { tile: true, light });
+  img.src = otterSrc(moodFor(level), { mark: true });
   await img.decode();
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -223,10 +223,7 @@ async function statusIcon(level: 'critical' | 'warn', light: boolean): Promise<s
   g.beginPath();
   g.arc(51, 13, 11, 0, Math.PI * 2);
   g.fillStyle = level === 'critical' ? OTTER.crit : OTTER.warn;
-  g.strokeStyle = light ? OTTER.cream : OTTER.navy;
-  g.lineWidth = 4;
   g.fill();
-  g.stroke();
   return c.toDataURL('image/png');
 }
 
@@ -244,8 +241,7 @@ function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
     set('link[rel="icon"]', f.favicon);
     return;
   }
-  const light = (choice === 'dark' || choice === 'light' ? choice : scheme) === 'light';
-  statusIcon(level, light)
+  statusIcon(level)
     .then((url) => turn === drawn && set('link[rel="icon"]', url))
     .catch(() => turn === drawn && set('link[rel="icon"]', f.favicon));
 }

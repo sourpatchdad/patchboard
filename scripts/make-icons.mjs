@@ -6,9 +6,7 @@
 // The art is one 1254-pixel PNG per mood, the otter on a navy tile. Chrome's
 // canvas does the work: it lifts the otter off the navy (keeping the soft
 // edges), then places it on a navy tile, a cream tile, a full square for
-// home screens, or nothing at all for the mascot. On cream and on light
-// pages, whiskers turn brown and the marks above the head turn navy, so
-// nothing cream vanishes against a light background.
+// home screens, or nothing at all for the mascot. It never recolors the art.
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
@@ -86,7 +84,8 @@ const build = async ({ src, jobs }) => {
   }
 
   // 2. Lift the otter off: background clear, and each edge pixel split into
-  // the color it blends with navy and how much of it shows.
+  // the color it blends with navy and how much of it shows. The color comes
+  // from the solid stroke next to it, so a cream whisker keeps a cream edge.
   const near = (k, r) => {
     const x = k % S;
     const y = (k / S) | 0;
@@ -106,8 +105,18 @@ const build = async ({ src, jobs }) => {
       continue;
     }
     if (px[i + 3] < 250 || !near(k, 2)) continue;
+    const inner = [];
+    const x0 = k % S;
+    const y0 = (k / S) | 0;
+    for (const [dx, dy] of [[4, 0], [-4, 0], [0, 4], [0, -4], [3, 3], [-3, 3], [3, -3], [-3, -3]]) {
+      const xx = x0 + dx;
+      const yy = y0 + dy;
+      if (xx < 0 || yy < 0 || xx >= S || yy >= S) continue;
+      const kk = yy * S + xx;
+      if (!bg[kk] && !near(kk, 2)) inner.push([px[kk * 4], px[kk * 4 + 1], px[kk * 4 + 2]]);
+    }
     let best = null;
-    for (const c of [FUR, FACE, WATER, AMBER]) {
+    for (const c of inner.length ? inner : [FUR, FACE, WATER, AMBER]) {
       const d = [c[0] - NAVY[0], c[1] - NAVY[1], c[2] - NAVY[2]];
       const p = [px[i] - NAVY[0], px[i + 1] - NAVY[1], px[i + 2] - NAVY[2]];
       const a = Math.min(1, Math.max(0, (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) / (d[0] ** 2 + d[1] ** 2 + d[2] ** 2)));
@@ -118,51 +127,12 @@ const build = async ({ src, jobs }) => {
     clear[i + 3] = Math.round(best.a * 255);
   }
 
-  // 3. The light version: cream next to the background is a whisker (brown)
-  // or a mark above the head (navy).
-  const R = 16;
-  const reach = new Uint8Array(N);
-  {
-    const row = new Uint8Array(N);
-    for (let y = 0; y < S; y++) {
-      let last = -1e9;
-      for (let x = 0; x < S; x++) {
-        if (bg[y * S + x]) last = x;
-        if (x - last <= R) row[y * S + x] = 1;
-      }
-      last = 1e9;
-      for (let x = S - 1; x >= 0; x--) {
-        if (bg[y * S + x]) last = x;
-        if (last - x <= R) row[y * S + x] = 1;
-      }
-    }
-    for (let x = 0; x < S; x++) {
-      let last = -1e9;
-      for (let y = 0; y < S; y++) {
-        if (row[y * S + x]) last = y;
-        if (y - last <= R) reach[y * S + x] = 1;
-      }
-      last = 1e9;
-      for (let y = S - 1; y >= 0; y--) {
-        if (row[y * S + x]) last = y;
-        if (last - y <= R) reach[y * S + x] = 1;
-      }
-    }
-  }
-  const light = new Uint8ClampedArray(clear);
-  for (let k = 0; k < N; k++) {
-    const i = k * 4;
-    if (!light[i + 3] || !reach[k]) continue;
-    if (Math.hypot(light[i] - FACE[0], light[i + 1] - FACE[1], light[i + 2] - FACE[2]) > 45) continue;
-    light.set(((k / S) | 0) < S * 0.27 ? NAVY : FUR, i);
-  }
-
   const layer = (pixels) => {
     const c = canvas(S);
     c.getContext('2d').putImageData(new ImageData(pixels, S, S), 0, 0);
     return c;
   };
-  const otter = { dark: layer(clear), light: layer(light) };
+  const otter = layer(clear);
 
   // Shrink in halves so the small sizes stay crisp.
   const shrink = (c, size) => {
@@ -187,9 +157,15 @@ const build = async ({ src, jobs }) => {
     const c = canvas(S);
     const g = c.getContext('2d');
     const fill = tile === 'light' ? CREAM : NAVY;
-    const art = otter[tile === 'none-light' || tile === 'light' ? 'light' : 'dark'];
-    if (tile === 'none' || tile === 'none-light') {
+    const art = otter;
+    if (tile === 'none') {
       g.drawImage(art, 0, 0);
+      return c;
+    }
+    // The mark: no tile, cropped close so the otter fills a small square.
+    if (tile === 'mark') {
+      const m = S * 0.04;
+      g.drawImage(art, m, S * 0.08, S - 2 * m, S - 2 * m, 0, 0, S, S);
       return c;
     }
     if (shape === 'round') {
@@ -199,12 +175,21 @@ const build = async ({ src, jobs }) => {
     }
     g.fillStyle = rgb(fill);
     g.fillRect(0, 0, S, S);
-    // Water runs to the edge wherever the platform's mask leaves room.
+    // Square icons: one flat band of water from edge to edge, starting at
+    // the art's waterline, so the mask never shows a step. The rounded tile
+    // keeps the art's sloped shoulders.
     const k = safe ? 0.8 : 1;
     const off = (S * (1 - k)) / 2;
     g.fillStyle = rgb(WATER);
-    g.fillRect(0, off + S * k * 0.86, S, S);
+    g.fillRect(0, off + S * k * (shape === 'round' ? 0.86 : 0.79), S, S);
     g.drawImage(art, off, off, S * k, S * k);
+    // One blue below the waterline, so the pool's edge leaves no faint seam.
+    const top = Math.floor(off + S * k * 0.74);
+    const d = g.getImageData(0, top, S, S - top);
+    const p = d.data;
+    for (let i = 0; i < p.length; i += 4)
+      if (p[i + 3] === 255 && Math.hypot(p[i] - WATER[0], p[i + 1] - WATER[1], p[i + 2] - WATER[2]) < 70) p.set(WATER, i);
+    g.putImageData(d, 0, top);
     return c;
   };
 
@@ -218,7 +203,7 @@ const jobs = (mood) => {
     { name: `otter/${mood}.png`, tile: 'dark', shape: 'round', size: 160 },
     { name: `otter/${mood}-light.png`, tile: 'light', shape: 'round', size: 160 },
     { name: `otter/${mood}-clear.png`, tile: 'none', size: 280 },
-    { name: `otter/${mood}-clear-light.png`, tile: 'none-light', size: 280 },
+    { name: `otter/${mood}-mark.png`, tile: 'mark', size: 96 },
   ];
   if (mood !== 'hello') return list;
   return [
@@ -231,10 +216,9 @@ const jobs = (mood) => {
     // Android crops a maskable icon to a circle or squircle: keep the otter in the safe zone.
     { name: 'icon-maskable-512.png', tile: 'dark', shape: 'square', safe: true, size: 512 },
     { name: 'icon-light-maskable-512.png', tile: 'light', shape: 'square', safe: true, size: 512 },
-    // Tab icons, and the sizes inside favicon.ico.
-    { name: 'favicon-dark.png', tile: 'dark', shape: 'round', size: 64 },
-    { name: 'favicon-light.png', tile: 'light', shape: 'round', size: 64 },
-    ...[16, 32, 48].map((size) => ({ name: `ico-${size}`, tile: 'dark', shape: 'round', size })),
+    // The tab icon, and the sizes inside favicon.ico: the mark, no tile.
+    { name: 'favicon.png', tile: 'mark', size: 64 },
+    ...[16, 32, 48].map((size) => ({ name: `ico-${size}`, tile: 'mark', size })),
   ];
 };
 

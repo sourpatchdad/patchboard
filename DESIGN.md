@@ -83,10 +83,9 @@ something needs it, and Patchboard should feel the same.
 - **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
   only on the alert otter and red only on the tab icon's dot, the same rule
   as the rest of the interface: color means trouble.
-- **Light pages.** On the cream tile and with no tile on a light page,
-  whiskers turn brown and the marks above the head turn navy, so nothing
-  cream disappears. The page shows the dark or light image to match its
-  scheme.
+- **Never recolored.** The build lifts the otter off its tile and resizes
+  it; the pixels stay as drawn. On a light page the mascot sits on its navy
+  tile, so the cream whiskers show.
 - **Moods follow the server.** Calm when all is quiet, asleep on quiet
   nights, alert with an amber dot when something needs you, worried with a
   red dot when something is down. The header mark, the tab icon, the page
@@ -95,17 +94,17 @@ something needs it, and Patchboard should feel the same.
 - **Quiet by default.** Healthy stays neutral here too: the otter shows up in
   empty and quiet moments and never pops up uninvited. Settings, Look turns
   the mascot off per device; the header mark stays.
-- **The header mark** is the app icon at 28 pixels, on the tile that
-  matches the mode, wearing the server's mood.
-- **Files.** `npm run icons` reads `art/otter` and writes
+- **The header mark and the tab icon** are the otter with no tile, cropped
+  close, wearing the server's mood. The tab adds an amber or red dot.
+- **Files.** `npm run icons` reads `art/otter` and writes, per mood,
   `web/public/otter/<mood>.png` (navy tile), `<mood>-light.png` (cream
-  tile), `<mood>-clear.png` and `<mood>-clear-light.png` (no tile, for the
-  mascot), the home-screen PNGs with square corners (the platform rounds
-  them), maskable PNGs with the otter inside Android's safe zone,
-  `favicon-dark.png`, `favicon-light.png` and `favicon.ico`. To change the
-  otter, replace the art and run it again.
+  tile), `<mood>-clear.png` (no tile, for the mascot) and `<mood>-mark.png`
+  (no tile, cropped close, for the header). It also writes the home-screen
+  PNGs with square corners (the platform rounds them), maskable PNGs with
+  the otter inside Android's safe zone, `favicon.png` and `favicon.ico`. To
+  change the otter, replace the art and run it again.
 - **Per device.** Settings, Look, App icon picks match the mode, dark or
-  light. Patchboard points the tab icon, the Apple touch icon and the install
+  light. Patchboard points the Apple touch icon and the install
   manifest at the choice, and `index.html` does the same before the bundle
   loads. Browsers read those links when you add to a home screen or install,
   so the pick is what gets installed. A home-screen icon can't change after

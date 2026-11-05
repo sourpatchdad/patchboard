@@ -10,20 +10,19 @@ test('the otter follows the server: worried when down, alert when something need
   assert.equal(moodFor(null, true), 'asleep');
 });
 
-test('every mood has its art and all four built images', () => {
+test('every mood has its art and its built images', () => {
   for (const mood of OTTER_MOODS) {
     assert.ok(existsSync(`art/otter/${mood}.png`), `art/otter/${mood}.png`);
-    for (const tile of [true, false])
-      for (const light of [true, false]) {
-        const src = otterSrc(mood, { tile, light });
-        assert.ok(existsSync(`web/public${src}`), `${src}: run npm run icons`);
-      }
+    for (const o of [{ tile: true }, { tile: true, light: true }, {}, { mark: true }]) {
+      const src = otterSrc(mood, o);
+      assert.ok(existsSync(`web/public${src}`), `${src}: run npm run icons`);
+    }
   }
   assert.equal(otterSrc('calm'), '/otter/calm-clear.png');
   assert.equal(otterSrc('alert', { tile: true, light: true }), '/otter/alert-light.png');
 });
 
 test('the app icons the manifests and index.html name exist', () => {
-  for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'icon-light-180.png', 'icon-light-192.png', 'icon-light-512.png', 'icon-light-maskable-512.png', 'favicon-dark.png', 'favicon-light.png', 'favicon.ico'])
+  for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'icon-light-180.png', 'icon-light-192.png', 'icon-light-512.png', 'icon-light-maskable-512.png', 'favicon.png', 'favicon.ico'])
     assert.ok(existsSync(`web/public/${f}`), f);
 });

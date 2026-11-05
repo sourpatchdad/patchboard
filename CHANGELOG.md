@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.38.1 (2026-11-05)
+
+- **The art stays as drawn.** The icon build no longer recolors anything:
+  whiskers and marks keep their cream. Each soft edge takes the color of the
+  stroke it belongs to, so whiskers have no dark or brown fringe.
+- **The header and the tab show the otter with no tile,** cropped close so
+  it reads bigger. The status tab icon adds an amber or red dot to it.
+- **On light pages the mascot sits on its navy tile,** as in the artwork,
+  so the cream whiskers show.
+- **Cleaner home-screen icons.** One flat band of water runs edge to edge,
+  with no step at the sides and no seam where the art's pool ended.
+
 ## 1.38.0 (2026-11-05)
 
 - **The otter is the designed artwork.** The seven final images in

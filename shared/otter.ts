@@ -16,13 +16,15 @@ export const OTTER = {
 } as const;
 
 /**
- * The image for a mood. A tile is the otter on its navy (or, for light,
- * cream) square, as on the app icon. Without one the otter floats in its
- * pool; the light version has brown whiskers and navy marks so nothing cream
- * vanishes on a light page.
+ * The image for a mood: the otter on its navy tile (or, with light, the
+ * cream tile), or with no tile, floating in its pool. The art is never
+ * recolored; light pages show the navy tile so the cream whiskers show.
+ * The mark is the otter with no tile, cropped close, for the header and tab.
  */
-export function otterSrc(mood: OtterMood, o: { tile?: boolean; light?: boolean } = {}): string {
-  return `/otter/${mood}${o.tile ? '' : '-clear'}${o.light ? '-light' : ''}.png`;
+export function otterSrc(mood: OtterMood, o: { tile?: boolean; light?: boolean; mark?: boolean } = {}): string {
+  if (o.mark) return `/otter/${mood}-mark.png`;
+  if (!o.tile) return `/otter/${mood}-clear.png`;
+  return `/otter/${mood}${o.light ? '-light' : ''}.png`;
 }
 
 /** The otter's mood for a server's state: worst alert level, and whether it is night. */

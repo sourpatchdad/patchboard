@@ -3,10 +3,10 @@
 // dashboard showing stale numbers as if they were current is worse than one
 // that says it's offline.
 
-const CACHE = 'patchboard-v6';
+const CACHE = 'patchboard-v7';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/manifest-light.webmanifest', '/icon-192.png', '/icon-light-192.png', '/favicon-dark.png', '/favicon-light.png'])));
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/manifest-light.webmanifest', '/icon-192.png', '/icon-light-192.png', '/favicon.png'])));
   self.skipWaiting();
 });
 

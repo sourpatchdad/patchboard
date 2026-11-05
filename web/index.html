@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/favicon-dark.png" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icon-180.png" />
     <script>
       // Paint the saved theme before any bundle loads (mirrors web/lib/appearance.ts).
@@ -21,7 +21,6 @@
         // The app icon follows the mode unless this device picked one (Settings, Look).
         function icons(choice, scheme) {
           var fixed = choice === 'dark' || choice === 'light', k = fixed ? choice : scheme, q = function (s) { return document.querySelector(s); };
-          q('link[rel="icon"]').href = '/favicon-' + k + '.png';
           q('link[rel="apple-touch-icon"]').href = k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
           q('link[rel="manifest"]').href = k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
         }
