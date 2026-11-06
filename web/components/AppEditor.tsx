@@ -98,6 +98,23 @@ export function EditApps({
   initialForm?: { app: Service; group: string; isNew: boolean } | null;
 }) {
   const [form, setForm] = useState<{ app: Service; group: string; isNew: boolean } | null>(initialForm);
+  const [link, setLink] = useState({ name: '', href: '' });
+  const [linkErr, setLinkErr] = useState('');
+  const addLink = () => {
+    const name = link.name.trim();
+    let href = link.href.trim();
+    if (href && !/^https?:\/\//i.test(href)) href = `https://${href}`;
+    if (!name || !href) return setLinkErr('A link needs a name and an address.');
+    try {
+      new URL(href);
+    } catch {
+      return setLinkErr(`${link.href} isn't an address.`);
+    }
+    if ([...draft.dock, ...draft.hiddenDock].some((b) => b.name.toLowerCase() === name.toLowerCase())) return setLinkErr(`There's already a link called ${name}.`);
+    set({ dock: [...draft.dock, { name, href, source: 'ui' }] });
+    setLink({ name: '', href: '' });
+    setLinkErr('');
+  };
   const groups = draft.groups;
   const set = (patch: Partial<Draft>) => onChange({ ...draft, ...patch });
   const setGroups = (gs: EditGroup[]) => set({ groups: gs });
@@ -310,28 +327,43 @@ export function EditApps({
         </EditSection>
       )}
 
-      {(draft.dock.length > 0 || draft.hiddenDock.length > 0) && (
-        <EditSection title="Bookmarks" note="Links from the dock list in services.yaml. Hide any you don't want under Elsewhere.">
-          {draft.dock.map((b, i) => (
-            <li className="tile tile-arrange" data-tone="none" key={b.name}>
-              <span className="tile-main">
-                <span className="tile-icon">
-                  <Icon name={b.name} icon={b.icon} size={24} />
-                </span>
-                <span className="tile-name">{b.name}</span>
-                <span className="tile-stat">Bookmark</span>
+      <EditSection title="Links" note="Sites that aren't apps on this server: your router, a status page, the bank. They show under Elsewhere on Apps.">
+        {draft.dock.map((b, i) => (
+          <li className="tile tile-arrange" data-tone="none" key={b.name}>
+            <span className="tile-main">
+              <span className="tile-icon">
+                <Icon name={b.name} icon={b.icon} size={24} />
               </span>
-              <button
-                type="button"
-                className="cell-btn tile-add"
-                onClick={() => set({ dock: draft.dock.filter((_, k) => k !== i), hiddenDock: [...draft.hiddenDock, b] })}
-              >
-                Hide
-              </button>
-            </li>
-          ))}
-        </EditSection>
-      )}
+              <span className="tile-name">{b.name}</span>
+              <span className="tile-stat mono">{hostOf(b.href)}</span>
+            </span>
+            <button
+              type="button"
+              className="cell-btn tile-add"
+              onClick={() =>
+                set(b.source === 'ui' ? { dock: draft.dock.filter((_, k) => k !== i) } : { dock: draft.dock.filter((_, k) => k !== i), hiddenDock: [...draft.hiddenDock, b] })
+              }
+            >
+              {b.source === 'ui' ? 'Remove' : 'Hide'}
+            </button>
+          </li>
+        ))}
+        <li className="link-add">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              addLink();
+            }}
+          >
+            <input className="field" value={link.name} placeholder="Name" aria-label="Link name" onChange={(e) => setLink({ ...link, name: e.target.value })} />
+            <input className="field mono" value={link.href} placeholder="https://" aria-label="Link address" onChange={(e) => setLink({ ...link, href: e.target.value })} />
+            <button type="submit" className="button button-quiet" disabled={!link.name.trim() || !link.href.trim()}>
+              Add link
+            </button>
+            {linkErr && <span className="crit-text">{linkErr}</span>}
+          </form>
+        </li>
+      </EditSection>
 
       {(draft.hidden.length > 0 || draft.hiddenDock.length > 0) && (
         <EditSection title="Hidden" note="Not shown on Home, Apps or in search. A hidden app's container still raises an alert if it stops.">
@@ -414,6 +446,14 @@ export function EditApps({
     </div>
   );
 }
+
+const hostOf = (href: string) => {
+  try {
+    return new URL(href, location.href).hostname.replace(/^www\./, '');
+  } catch {
+    return href;
+  }
+};
 
 function EditSection({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
   return (

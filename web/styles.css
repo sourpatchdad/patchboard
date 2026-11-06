@@ -8646,6 +8646,24 @@ button.ha-act:hover {
   color: var(--ink-2);
 }
 
+/* Edit apps: add a link */
+.link-add {
+  grid-column: 1 / -1;
+  list-style: none;
+}
+
+.link-add form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.link-add .field {
+  flex: 1 1 180px;
+  max-width: 320px;
+}
+
 /* Sign-in */
 .signin-form {
   display: grid;
