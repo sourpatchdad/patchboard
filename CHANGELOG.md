@@ -59,7 +59,8 @@ The first public release, 1.0.0. What's in it:
   alert or worried when something needs you.
 - **Yours to style:** six themes plus your own colors, three type pairings,
   three densities, and light and dark, per device. Give it your own name,
-  with or without the otter. Works on a phone and installs as an app,
+  with or without the otter. Works on a phone, where healthy stacks fold
+  and the app rack packs tight, and installs as an app,
   with pull to refresh and room under the status bar.
 - **Safe to trust:** sign-in with a password, forward auth or OIDC, a read-only mode, a
   socket proxy example, an activity log, and keys that never reach the

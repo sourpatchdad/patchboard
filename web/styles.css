@@ -5696,6 +5696,18 @@ body.is-sorting * {
   transform: translate(-50%, 0);
 }
 
+/* Icons only on a phone: no label to make room for, so rows sit close. */
+@media (max-width: 760px) {
+  .patchrow.icons-only .bay-jacks {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 10px 0;
+  }
+
+  .patchrow.icons-only .jack {
+    min-height: 0;
+  }
+}
+
 /* ---------- Live number setup ---------- */
 
 .live-number {
@@ -9057,6 +9069,22 @@ button.ha-act:hover {
   margin: 40px 0 8px;
   font-size: 13px;
   color: var(--ink-3);
+}
+
+/* Stacks on a phone: a healthy stack folds to its header until tapped. */
+.stack-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .stack-toggle {
+    display: inline;
+    margin-left: auto;
+  }
+
+  .stack.is-quiet:not(.is-open) .stack-rows {
+    display: none;
+  }
 }
 
 /* Sign-in */
