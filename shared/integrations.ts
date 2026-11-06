@@ -394,6 +394,22 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'hardcover',
+    name: 'Hardcover',
+    adds: 'A Books widget with what you are reading now, covers included.',
+    env: ['HARDCOVER_TOKEN'],
+    where: 'hardcover.app: Settings, Hardcover API, copy the token.',
+    source: false,
+  },
+  {
+    id: 'goodreads',
+    name: 'Goodreads',
+    adds: "A Books widget from your currently-reading shelf. Goodreads closed its API, so this reads the shelf's public feed: the shelf must be visible to anyone.",
+    env: ['GOODREADS_USER'],
+    where: 'The number in your profile address, goodreads.com/user/show/12345678.',
+    source: false,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',

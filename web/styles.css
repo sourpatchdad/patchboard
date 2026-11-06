@@ -7251,6 +7251,48 @@ button.ha-act:hover {
   font-size: 12.5px;
 }
 
+/* ---------- Books ---------- */
+
+.book-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-list li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.book-cover {
+  width: 40px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+.book-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.book-title {
+  color: var(--head);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.book-author {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
 /* ---------- Notes ---------- */
 
 .notes-lines li {

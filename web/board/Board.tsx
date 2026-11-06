@@ -24,7 +24,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -453,6 +453,8 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
       return <CalendarWidget now={now} />;
     case 'notes':
       return <NotesWidget id={w.id} />;
+    case 'books':
+      return <BooksWidget />;
     case 'requests':
       return <RequestsWidget now={now} />;
     case 'container':
@@ -577,6 +579,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     dockerhosts: has('portainer'),
     network: has('unifi') || has('tailscale'),
     calendar: has('calendar'),
+    books: has('books'),
     requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),

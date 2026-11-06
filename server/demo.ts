@@ -30,6 +30,7 @@ import type {
   PaperlessData,
   ListeningData,
   CalendarData,
+  BooksData,
   TailnetData,
   KumaMonitor,
   UptimeKumaData,
@@ -637,6 +638,14 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
+    demo<BooksData>('books', 'Hardcover', 30 * MINUTE, () => ({
+      source: 'Hardcover',
+      webUrl: 'https://hardcover.app',
+      books: [
+        { title: 'Project Hail Mary', author: 'Andy Weir' },
+        { title: 'The Wind-Up Bird Chronicle', author: 'Haruki Murakami' },
+      ],
+    })),
     demo<CalendarData>('calendar', 'Calendar', 15 * MINUTE, () => {
       const day = new Date();
       day.setHours(0, 0, 0, 0);

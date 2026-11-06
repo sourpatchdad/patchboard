@@ -9,7 +9,7 @@
 
 import { config } from './config.ts';
 
-const PUBLIC = /^https:\/\/(image\.tmdb\.org|artworks\.thetvdb\.com|thetvdb\.com|assets\.fanart\.tv|static\.tvmaze\.com)\//;
+const PUBLIC = /^https:\/\/(image\.tmdb\.org|artworks\.thetvdb\.com|thetvdb\.com|assets\.fanart\.tv|static\.tvmaze\.com|assets\.hardcover\.app|storage\.googleapis\.com\/hardcover|i\.gr-assets\.com|images\.gr-assets\.com|m\.media-amazon\.com)\//;
 const remote = new Map<string, string>();
 
 /** Adapters tell us each item's public poster URL as they read the calendar. */
@@ -46,13 +46,13 @@ async function tvmaze(tvdb: string): Promise<{ type: string; body: Uint8Array<Ar
 
 /** A poster for sonarr/<seriesId>, radarr/<movieId> or tvmaze/<tvdbId>, or null. */
 export async function poster(src: string, id: string): Promise<{ type: string; body: Uint8Array<ArrayBuffer> } | null> {
-  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze', 'seerr'].includes(src)) return null;
+  if (!/^\d{1,9}$/.test(id) || !['sonarr', 'radarr', 'tvmaze', 'seerr', 'book'].includes(src)) return null;
   const key = `${src}:${id}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ('miss' in hit ? 3_600_000 : 86_400_000)) return 'miss' in hit ? null : hit;
   let got: { type: string; body: Uint8Array<ArrayBuffer> } | null = null;
   if (src === 'tvmaze') got = await tvmaze(id);
-  else if (src === 'seerr') {
+  else if (src === 'seerr' || src === 'book') {
     const url = remote.get(key);
     if (url) got = await image(url, {}, true);
   }

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -528,6 +528,33 @@ export function CalendarWidget({ now }: { now: number }) {
             </ul>
           </div>
         ))
+      )}
+    </Section>
+  );
+}
+
+// ---------- Books ----------
+
+export function BooksWidget() {
+  const { state, data } = useSource<BooksData>('books');
+  const { limit = 4 } = useWidget();
+  if (!state || !data) return null;
+  return (
+    <Section title="Books" source={state} className="books" count="reading now" action={{ label: `Open ${data.source}`, href: data.webUrl }}>
+      {!data.books.length ? (
+        <Empty>Nothing on the currently-reading shelf.</Empty>
+      ) : (
+        <ul className="book-list">
+          {data.books.slice(0, limit).map((b, i) => (
+            <li key={`${b.title}-${i}`}>
+              {b.cover ? <img className="book-cover" src={b.cover} alt="" loading="lazy" /> : <span className="book-cover book-blank" aria-hidden />}
+              <span className="book-text">
+                <span className="book-title">{b.title}</span>
+                {b.author && <span className="book-author">{b.author}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </Section>
   );

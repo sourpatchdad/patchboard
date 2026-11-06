@@ -33,6 +33,7 @@ export type WidgetType =
   | 'network'
   | 'calendar'
   | 'notes'
+  | 'books'
   | 'requests'
   | 'container'
   | 'json'
@@ -153,6 +154,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   dns: { name: 'Ad blocking', about: 'Pi-hole or AdGuard Home: what it blocked today, and Pause for 5, 30 or 60 minutes.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   speed: { name: 'Internet', about: 'Speedtest Tracker: the latest download, upload and ping, and the last day as a line.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   calendar: { name: 'Calendar', about: 'The days ahead from your iCal calendars: Google, iCloud, Outlook, Nextcloud and more.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
+  books: { name: 'Books', about: 'Hardcover or Goodreads: what you are reading now, with covers.', size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [4, 1, 12] } },
   notes: { name: 'Notes', about: 'A note or checklist the whole house shares. Lines starting with "- [ ]" become checkboxes.', size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
   network: { name: 'Network', about: 'UniFi and Tailscale: clients, devices online or offline, and tailnet keys about to expire.', size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 50] } },
   dockerhosts: { name: 'Docker hosts', about: 'Portainer: every Docker environment, up or down, with running, stopped and unhealthy containers.', size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 60] } },

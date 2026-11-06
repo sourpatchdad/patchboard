@@ -248,6 +248,7 @@ export class Hub {
         ...(config.notify.gotify ? ['gotify'] : []),
         ...(config.notify.pushover ? ['pushover'] : []),
         ...(config.notify.email ? ['email'] : []),
+        ...(config.books?.hardcoverToken ? ['hardcover'] : config.books?.goodreadsUser ? ['goodreads'] : []),
         // The slim image: Settings says why updates are off.
         ...(!dockerCli && !config.demo ? ['no-docker-cli'] : []),
       ],

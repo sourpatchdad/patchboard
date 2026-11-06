@@ -48,6 +48,7 @@ export type SourceId =
   | 'navidrome'
   | 'gitea'
   | 'calendar'
+  | 'books'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -771,6 +772,19 @@ export interface TailnetData {
 /** Who is listening: Audiobookshelf or Navidrome. Progress -1 means unknown. */
 export interface ListeningData {
   streams: Stream[];
+}
+
+export interface Book {
+  title: string;
+  author?: string;
+  /** Through Patchboard's image proxy. */
+  cover?: string;
+}
+
+export interface BooksData {
+  books: Book[];
+  source: 'Hardcover' | 'Goodreads';
+  webUrl: string;
 }
 
 export interface CalendarEvent {

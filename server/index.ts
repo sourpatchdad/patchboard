@@ -33,6 +33,7 @@ import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
 import { bazarrAdapter, giteaAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
 import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts';
 import { calendarAdapter } from './adapters/calendar.ts';
+import { booksAdapter } from './adapters/books.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -136,6 +137,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   nextcloud: () => (config.nextcloud ? { adapter: nextcloudAdapter() } : null),
   gitea: () => (config.gitea ? { adapter: giteaAdapter() } : null),
   calendar: () => (config.calendar?.urls.length ? { adapter: calendarAdapter() } : null),
+  books: () => (config.books ? { adapter: booksAdapter() } : null),
   audiobookshelf: () => (config.audiobookshelf ? { adapter: audiobookshelfAdapter() } : null),
   navidrome: () => (config.navidrome ? { adapter: navidromeAdapter() } : null),
   overseerr: () => {
@@ -621,7 +623,8 @@ async function testIntegration(id: string): Promise<string> {
     await request(config.dozzleUrl!, {}, 8000);
     return 'Dozzle answered.';
   }
-  const made = FACTORIES[id]?.();
+  // Hardcover and Goodreads share one source.
+  const made = FACTORIES[id === 'hardcover' || id === 'goodreads' ? 'books' : id]?.();
   if (!made) throw new Error('Those settings are incomplete.');
   const data = await Promise.race([
     made.adapter.fetch(),

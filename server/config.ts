@@ -196,6 +196,7 @@ function build(str: Lookup) {
     bazarr: pair('BAZARR_URL', 'BAZARR_KEY'),
     paperless: pair('PAPERLESS_URL', 'PAPERLESS_TOKEN'),
     gitea: pair('GITEA_URL', 'GITEA_TOKEN'),
+    books: str('HARDCOVER_TOKEN') || str('GOODREADS_USER') ? { hardcoverToken: str('HARDCOVER_TOKEN'), goodreadsUser: str('GOODREADS_USER') } : undefined,
     calendar: str('CALENDAR_URLS')
       ? { urls: str('CALENDAR_URLS')!.split(/[\s,]+/).map((u) => u.trim()).filter((u) => /^(https?|webcal):\/\//i.test(u)).slice(0, 20) }
       : undefined,
