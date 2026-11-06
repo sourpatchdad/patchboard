@@ -747,7 +747,7 @@ function Welcome() {
               </button>
             </span>
           ))}
-          . Customize, top right of the board, changes any of it.
+          . Customize, at the foot of the board, changes any of it.
         </li>
         <li>
           <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.

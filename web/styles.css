@@ -4512,6 +4512,12 @@ a.vitals:hover .vital-label {
   margin-bottom: 6px;
 }
 
+.board-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 .board-customize {
   font-size: 13.5px;
   color: var(--ink-3);

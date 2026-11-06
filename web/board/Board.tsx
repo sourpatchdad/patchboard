@@ -104,76 +104,72 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
 
   return (
     <div className={`board-wrap ${editing ? 'is-editing' : ''}`}>
-      <div className="board-bar">
-        {editing ? (
-          <>
-            <span className="board-bar-title">Arrange your board</span>
-            <span className="board-bar-hint">Drag a widget to move it, drag its right edge to widen it, Settings to rename it or choose what it shows.</span>
-            <span className="board-cols" role="group" aria-label="Columns">
-              <span>Columns</span>
-              <span className="seg">
-                {[2, 3, 4, 5, 6].map((n) => (
-                  <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
-                    {n}
-                  </button>
-                ))}
-              </span>
-              {cols < chosen && <small>{cols} fit in this window</small>}
-            </span>
-            <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
-              Add widget
-            </button>
-            <button
-              type="button"
-              className="text-button"
-              onClick={async () => {
-                const err = await save(null);
-                if (err) setError(err);
-                else setDraft(null);
-              }}
-            >
-              Reset to default
-            </button>
-            <select
-              className="field starter-pick"
-              aria-label="Start from a layout"
-              value=""
-              onChange={(e) => {
-                const st = STARTERS.find((x) => x.id === e.target.value);
-                if (st) setDraft(structuredClone(st.board));
-              }}
-            >
-              <option value="" disabled>
-                Start from a layout...
-              </option>
-              {STARTERS.map((st) => (
-                <option key={st.id} value={st.id}>
-                  {st.name}: {st.about}
-                </option>
+      {/* Editing pins the arrange bar to the top; otherwise Customize waits
+          at the foot of the board and the widgets start right under the masthead. */}
+      {editing && (
+        <div className="board-bar">
+          <span className="board-bar-title">Arrange your board</span>
+          <span className="board-bar-hint">Drag a widget to move it, drag its right edge to widen it, Settings to rename it or choose what it shows.</span>
+          <span className="board-cols" role="group" aria-label="Columns">
+            <span>Columns</span>
+            <span className="seg">
+              {[2, 3, 4, 5, 6].map((n) => (
+                <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
+                  {n}
+                </button>
               ))}
-            </select>
-            <button type="button" className="text-button" onClick={() => setDraft(null)}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="button board-save"
-              onClick={async () => {
-                const err = await save(draft);
-                if (err) setError(err);
-                else setDraft(null);
-              }}
-            >
-              Save
-            </button>
-            {error && <span className="crit-text">{error}</span>}
-          </>
-        ) : snap?.readOnly ? null : (
-          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setDraft(structuredClone(board!)))}>
-            {custom ? 'Customize' : 'Customize this board'}
+            </span>
+            {cols < chosen && <small>{cols} fit in this window</small>}
+          </span>
+          <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
+            Add widget
           </button>
-        )}
-      </div>
+          <button
+            type="button"
+            className="text-button"
+            onClick={async () => {
+              const err = await save(null);
+              if (err) setError(err);
+              else setDraft(null);
+            }}
+          >
+            Reset to default
+          </button>
+          <select
+            className="field starter-pick"
+            aria-label="Start from a layout"
+            value=""
+            onChange={(e) => {
+              const st = STARTERS.find((x) => x.id === e.target.value);
+              if (st) setDraft(structuredClone(st.board));
+            }}
+          >
+            <option value="" disabled>
+              Start from a layout...
+            </option>
+            {STARTERS.map((st) => (
+              <option key={st.id} value={st.id}>
+                {st.name}: {st.about}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="text-button" onClick={() => setDraft(null)}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="button board-save"
+            onClick={async () => {
+              const err = await save(draft);
+              if (err) setError(err);
+              else setDraft(null);
+            }}
+          >
+            Save
+          </button>
+          {error && <span className="crit-text">{error}</span>}
+        </div>
+      )}
 
       <div className="board" ref={measureRef} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card').map((w, i) => (
@@ -197,6 +193,14 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
           </Cell>
         ))}
       </div>
+
+      {!editing && !snap?.readOnly && (
+        <div className="board-foot">
+          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setDraft(structuredClone(board!)))}>
+            {custom ? 'Customize' : 'Customize this board'}
+          </button>
+        </div>
+      )}
 
       {adding && draft && (
         <AddDrawer

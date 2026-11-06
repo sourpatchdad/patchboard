@@ -214,6 +214,8 @@ try {
   console.log('Making it yours');
   await go('/');
   await page.getByRole('button', { name: /Customize/ }).click();
+  // Customize sits at the foot of the board; show the arrange bar over the top of it.
+  await page.evaluate(() => scrollTo(0, 0));
   await settle(page, 600);
   await shoot(page, 'customize');
   await page.getByRole('button', { name: 'Reading settings' }).click();
