@@ -520,7 +520,8 @@ export function CalendarWidget({ now }: { now: number }) {
       {!upcoming.length ? (
         <Empty>Nothing on the calendar.</Empty>
       ) : (
-        days.map((k) => (
+        <div className="calw-days">
+        {days.map((k) => (
           <div key={k} className="calw-day">
             <h3>{label(k)}</h3>
             <ul>
@@ -539,7 +540,8 @@ export function CalendarWidget({ now }: { now: number }) {
                 ))}
             </ul>
           </div>
-        ))
+        ))}
+        </div>
       )}
     </Section>
   );

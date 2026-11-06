@@ -5880,7 +5880,19 @@ body.is-sorting * {
   .feedlist,
   .mail,
   .changes,
-  .agenda-compact {
+  .agenda-compact,
+  .calw-days,
+  .cell .alerts,
+  .kuma-list,
+  .drive-list,
+  .host-list,
+  .pve-guests,
+  .ups-list,
+  .book-list,
+  .req-list,
+  .wake-list,
+  .nas-volumes,
+  .nas-disks {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     column-gap: 32px;
@@ -5889,6 +5901,24 @@ body.is-sorting * {
 
   .vw-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Right now: each server or client a block, side by side when there's room. */
+  .now-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  /* Sender and subject side by side need room of their own. */
+  .mail {
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  }
+
+  /* A host row carries four meters: it needs a wider column to stay whole. */
+  .host-list {
+    grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
   }
 }
 

@@ -354,6 +354,7 @@ export function NowPlaying() {
 
   return (
     <Section title="Right now" className="now">
+      <div className="now-grid">
       {idle.length > 0 && (
         <div className="now-block">
           <h3 className="now-idle">
@@ -477,7 +478,7 @@ export function NowPlaying() {
         </div>
         );
       })}
-
+      </div>
     </Section>
   );
 }

@@ -11,6 +11,8 @@ The first public release, 1.0.0. What's in it:
   The board starts right under the header; Customize waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing
   downloading.
+  A widget made wider flows its list into columns instead of stretching
+  one line across the screen.
   Recently added fills one row on a wide screen, each title once even when
   Plex and Jellyfin group a season differently.
   Each number in the Server widget opens the section that explains it,
