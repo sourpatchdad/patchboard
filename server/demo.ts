@@ -745,6 +745,21 @@ export function demoAdapters(): Adapter[] {
         ],
       };
     }),
+    // Beszel's systems join the Glances hosts in one widget.
+    demo<GlancesData>('beszel', 'Beszel', 30 * SECOND, () => ({
+      hosts: [
+        { url: 'http://beszel.local:8090/system/office-pc', ok: true, name: 'office-pc', os: 'Linux 6.8', cpuPct: 9 + 4 * Math.sin(Date.now() / 28_000), cores: 12, load: 0.8, memPct: 47, memUsed: 0, memTotal: 0, disks: [{ mount: '/', used: 0, size: 0, pct: 54 }], rx: 0.8e6, tx: 0, tempC: 44, uptime: '3d 6h' },
+      ],
+    })),
+    // Healthchecks.io: cron jobs beside the Uptime Kuma monitors. One runs late, which waits quietly.
+    demo<UptimeKumaData>('healthchecks', 'Healthchecks', 60 * SECOND, () => ({
+      link: 'https://healthchecks.io',
+      monitors: [
+        { id: 'hc-backup', name: 'Nightly backup', group: 'jobs', status: 'up', beats: [] },
+        { id: 'hc-certs', name: 'Certificate renewal', group: 'jobs', status: 'up', beats: [] },
+        { id: 'hc-photos', name: 'Photo sync', group: 'jobs', status: 'pending', beats: [] },
+      ],
+    })),
     demo<ScrutinyData>('scrutiny', 'Scrutiny', 5 * MINUTE, () => {
       const T = 1e12;
       const at = Date.now() - 40 * MINUTE;

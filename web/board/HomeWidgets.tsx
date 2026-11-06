@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, SourceState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -313,10 +313,16 @@ function Beats({ m }: { m: KumaMonitor }) {
   );
 }
 
+/** Uptime Kuma, Gatus and Healthchecks.io in one list; a link out only when there's one of them. */
+const MONITOR_SOURCES = ['uptimekuma', 'gatus', 'healthchecks'] as const;
+
 export function UptimeWidget({ now }: { now: number }) {
-  const { state, data } = useSource<UptimeKumaData>('uptimekuma');
+  const { snap } = useStore();
   const { limit = 8 } = useWidget();
-  if (!state || !data) return null;
+  const parts = MONITOR_SOURCES.map((id) => snap?.sources[id] as SourceState<UptimeKumaData> | undefined).filter((s): s is SourceState<UptimeKumaData> => !!s?.data);
+  if (!parts.length) return null;
+  const state = parts.find((s) => !s.ok) ?? parts[0];
+  const data = { link: parts.length === 1 ? parts[0].data!.link : '', monitors: parts.flatMap((s) => s.data!.monitors) };
   const sorted = [...data.monitors].sort((a, b) => KUMA_ORDER[a.status] - KUMA_ORDER[b.status] || a.name.localeCompare(b.name));
   const down = sorted.filter((m) => m.status === 'down').length;
   const up = sorted.filter((m) => m.status === 'up').length;
@@ -324,9 +330,9 @@ export function UptimeWidget({ now }: { now: number }) {
   const rest = sorted.slice(limit);
   const restDown = rest.filter((m) => m.status !== 'up').length;
   return (
-    <Section title="Uptime" count={down ? `${down} down` : `${up} of ${sorted.length} up`} source={state} action={{ label: 'Open', href: data.link }} className={`uptime ${down ? 'has-down' : ''}`}>
+    <Section title="Uptime" count={down ? `${down} down` : `${up} of ${sorted.length} up`} source={state} action={data.link ? { label: 'Open', href: data.link } : undefined} className={`uptime ${down ? 'has-down' : ''}`}>
       {sorted.length === 0 ? (
-        <Empty>This status page has no monitors. Add some in Uptime Kuma.</Empty>
+        <Empty>No monitors yet. Add some in Uptime Kuma, Gatus or Healthchecks.</Empty>
       ) : (
         <ul className="kuma-list">
           {shown.map((m) => (
@@ -336,7 +342,7 @@ export function UptimeWidget({ now }: { now: number }) {
               </span>
               <Beats m={m} />
               <span className="kuma-num">
-                {m.status === 'up' ? (m.uptime24 != null ? `${m.uptime24 % 1 ? m.uptime24.toFixed(1) : m.uptime24}%` : m.ping != null ? `${m.ping} ms` : 'Up') : KUMA_WORDS[m.status]}
+                {m.status === 'up' ? (m.uptime24 != null ? `${m.uptime24 % 1 ? m.uptime24.toFixed(1) : m.uptime24}%` : m.ping != null ? `${m.ping} ms` : 'Up') : String(m.id).startsWith('hc-') && m.status === 'pending' ? 'Late' : KUMA_WORDS[m.status]}
               </span>
               {m.status !== 'up' && (m.msg || m.since) && (
                 <span className="kuma-why">
@@ -349,11 +355,16 @@ export function UptimeWidget({ now }: { now: number }) {
           ))}
         </ul>
       )}
-      {rest.length > 0 && (
-        <a className="kuma-more" href={data.link} target="_blank" rel="noreferrer">
-          {rest.length} more{restDown ? `, ${restDown} not up` : ', all up'}
-        </a>
-      )}
+      {rest.length > 0 &&
+        (data.link ? (
+          <a className="kuma-more" href={data.link} target="_blank" rel="noreferrer">
+            {rest.length} more{restDown ? `, ${restDown} not up` : ', all up'}
+          </a>
+        ) : (
+          <span className="kuma-more">
+            {rest.length} more{restDown ? `, ${restDown} not up` : ', all up'}
+          </span>
+        ))}
     </Section>
   );
 }
@@ -824,10 +835,14 @@ export function PowerWidget() {
 
 /** Every host: CPU and memory meters, the fullest disk, network, the hottest sensor. Trouble first. */
 export function HostsWidget() {
-  const { state, data } = useSource<GlancesData>('glances');
+  const { snap } = useStore();
   const { limit = 6 } = useWidget();
   const { temp: unit } = useAppearance();
-  if (!state || !data) return null;
+  // Glances and Beszel hosts in one list.
+  const parts = (['glances', 'beszel'] as const).map((id) => snap?.sources[id] as SourceState<GlancesData> | undefined).filter((s): s is SourceState<GlancesData> => !!s?.data);
+  if (!parts.length) return null;
+  const state = parts.find((s) => !s.ok) ?? parts[0];
+  const data = { hosts: parts.flatMap((s) => s.data!.hosts) };
   const level = (p: number) => (p >= 90 ? 'crit' : p >= 75 ? 'warn' : 'ok');
   const worst = (h: GlancesData['hosts'][number]) => (h.ok ? Math.max(h.cpuPct, h.memPct, h.disks[0]?.pct ?? 0) : 999);
   const list = [...data.hosts].sort((a, b) => worst(b) - worst(a));

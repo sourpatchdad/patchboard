@@ -42,6 +42,13 @@ const data = <T>(s: Sources, id: SourceId) => (s[id]?.ok ? (s[id]!.data as T) : 
 /** How long an integration fails before Patchboard mentions it. */
 export const SOURCE_GRACE_MS = 2 * 60_000;
 
+/** Sources that report monitors in Uptime Kuma's shape, and how alerts name them. */
+const MONITORS = [
+  ['uptimekuma', 'Uptime Kuma'],
+  ['gatus', 'Gatus'],
+  ['healthchecks', 'Healthchecks.io'],
+] as const;
+
 export function computeAlerts(sources: Sources, catalog: Catalog, updates: Record<string, ImageUpdate> = {}, now = Date.now()): Alert[] {
   const alerts: Alert[] = [];
   const expectStopped = new Set(
@@ -152,23 +159,27 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     alerts.push({ id: 'speed-slow', level: 'warn', title: 'The internet is slower than your thresholds', detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: '/', source: 'speedtest' });
   }
 
-  // Uptime Kuma: a monitor that is down right now. Pending (Kuma's retry
-  // window) waits for Kuma to decide, so a single slow check stays quiet.
-  const kuma = data<UptimeKumaData>(sources, 'uptimekuma');
-  for (const m of kuma?.monitors ?? []) {
-    if (m.status !== 'down') continue;
-    // A stopped container with the same name already says why; one alert is enough.
-    if (alerts.some((a) => a.subject?.toLowerCase() === m.name.toLowerCase())) continue;
-    alerts.push({
-      id: `kuma-${m.id}`,
-      subject: m.name,
-      level: 'critical',
-      title: `${m.name} is down`,
-      detail: `${m.msg ? `${m.msg.replace(/\.$/, '')}. ` : ''}Seen by Uptime Kuma.`,
-      since: m.since,
-      href: kuma!.link,
-      source: 'uptimekuma',
-    });
+  // Monitors (Uptime Kuma, Gatus, Healthchecks.io): one that is down right
+  // now. Pending (a retry window, a job running late) waits for the monitor
+  // to decide, so a single slow check stays quiet.
+  for (const [src, label] of MONITORS) {
+    const mon = data<UptimeKumaData>(sources, src);
+    for (const m of mon?.monitors ?? []) {
+      if (m.status !== 'down') continue;
+      // A stopped container with the same name already says why; one alert is enough.
+      if (alerts.some((a) => a.subject?.toLowerCase() === m.name.toLowerCase())) continue;
+      const job = src === 'healthchecks';
+      alerts.push({
+        id: src === 'uptimekuma' ? `kuma-${m.id}` : String(m.id),
+        subject: m.name,
+        level: 'critical',
+        title: job ? `${m.name} missed its check-in` : `${m.name} is down`,
+        detail: `${m.msg && !job ? `${m.msg.replace(/\.$/, '')}. ` : ''}Seen by ${label}.`,
+        since: m.since,
+        href: mon!.link,
+        source: src,
+      });
+    }
   }
 
   // An app that doesn't answer while its container looks fine. Two misses in a
@@ -180,7 +191,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!ck || ck.ok || ck.fails < 2) continue;
     const ctr = s.container ? byName.get(s.container) : undefined;
     if (ctr && ctr.state !== 'running') continue; // the container alert covers it
-    if (alerts.some((a) => a.source === 'uptimekuma' && a.subject?.toLowerCase() === s.name.toLowerCase())) continue;
+    if (alerts.some((a) => MONITORS.some(([m]) => m === a.source) && a.subject?.toLowerCase() === s.name.toLowerCase())) continue;
     alerts.push({
       id: `check-${s.name}`,
       subject: s.name,
@@ -329,11 +340,12 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     }
   }
 
-  // Glances: a host that stops answering, and disks past the storage thresholds.
-  const glances = data<GlancesData>(sources, 'glances');
-  for (const h of glances?.hosts ?? []) {
+  // Hosts (Glances, Beszel): one that stops answering, and disks past the
+  // storage thresholds.
+  for (const src of ['glances', 'beszel'] as const)
+  for (const h of data<GlancesData>(sources, src)?.hosts ?? []) {
     if (!h.ok) {
-      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, source: 'glances' });
+      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, source: src });
       continue;
     }
     for (const d of h.disks) {
@@ -342,9 +354,9 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         id: `host-disk-${h.name}-${d.mount}`,
         level: d.pct >= config.poolCritPct ? 'critical' : 'warn',
         subject: h.name,
-        title: `${d.mount} on ${h.name} is ${Math.round(d.pct)}% full`,
-        detail: `${fmtTB(d.size - d.used)} free`,
-        source: 'glances',
+        title: `${d.mount === '/' && !d.size ? 'The disk' : d.mount} on ${h.name} is ${Math.round(d.pct)}% full`,
+        detail: d.size ? `${fmtTB(d.size - d.used)} free` : undefined,
+        source: src,
       });
     }
   }

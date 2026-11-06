@@ -22,6 +22,9 @@ export type SourceId =
   | 'trakt'
   | 'frigate'
   | 'uptimekuma'
+  | 'gatus'
+  | 'healthchecks'
+  | 'beszel'
   | 'pihole'
   | 'adguard'
   | 'speedtest'
@@ -535,7 +538,7 @@ export interface DnsData {
 export type KumaState = 'up' | 'down' | 'pending' | 'maintenance' | 'unknown';
 
 export interface KumaMonitor {
-  id: number;
+  id: number | string;
   name: string;
   group: string;
   status: KumaState;

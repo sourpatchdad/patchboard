@@ -426,6 +426,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'beszel',
+    name: 'Beszel',
+    adds: 'Every system Beszel watches joins the Hosts widget: CPU, memory, disk, network and temperature. A system whose agent goes quiet, or a disk past your storage thresholds, shows in Needs attention.',
+    env: ['BESZEL_URL', 'BESZEL_USERNAME', 'BESZEL_PASSWORD'],
+    where: 'A Beszel user that can see your systems; make one with the read-only role in Beszel’s user settings. The address is the hub, port 8090.',
+    source: true,
+  },
+  {
     id: 'scrutiny',
     name: 'Scrutiny',
     adds: "A Drives widget: every drive's SMART verdict, temperature and age. A drive that fails its SMART check, or Scrutiny's thresholds, shows in Needs attention before it dies.",
@@ -483,6 +491,23 @@ export const INTEGRATIONS: Integration[] = [
     env: ['UPTIME_KUMA_URL'],
     optional: ['UPTIME_KUMA_SLUG'],
     where: 'Uptime Kuma: Status Pages, New Status Page, then add the monitors you want. UPTIME_KUMA_SLUG is the end of its address. No key needed.',
+    source: true,
+  },
+  {
+    id: 'gatus',
+    name: 'Gatus',
+    adds: 'Its endpoints join the Uptime widget, each with its recent results. An endpoint that fails shows in Needs attention.',
+    env: ['GATUS_URL'],
+    where: 'The address of Gatus itself. No key needed.',
+    source: true,
+  },
+  {
+    id: 'healthchecks',
+    name: 'Healthchecks.io',
+    adds: 'Your cron jobs and backups join the Uptime widget. A job that misses its check-in shows in Needs attention.',
+    env: ['HEALTHCHECKS_KEY'],
+    optional: ['HEALTHCHECKS_URL'],
+    where: 'Healthchecks: a project, Settings, API Access, Create API key (the read-only one is enough). Leave the address empty for healthchecks.io.',
     source: true,
   },
   {

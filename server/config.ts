@@ -264,6 +264,12 @@ function build(str: Lookup) {
       /** Where a tap on a notification opens Patchboard. */
       publicUrl: str('PATCHBOARD_URL') ? trimSlash(str('PATCHBOARD_URL')!) : undefined,
     },
+    gatus: str('GATUS_URL') ? { url: trimSlash(str('GATUS_URL')!) } : undefined,
+    healthchecks: str('HEALTHCHECKS_KEY') ? { url: trimSlash(str('HEALTHCHECKS_URL') ?? 'https://healthchecks.io'), key: str('HEALTHCHECKS_KEY')! } : undefined,
+    beszel:
+      str('BESZEL_URL') && str('BESZEL_USERNAME') && str('BESZEL_PASSWORD')
+        ? { url: trimSlash(str('BESZEL_URL')!), username: str('BESZEL_USERNAME')!, password: str('BESZEL_PASSWORD')! }
+        : undefined,
     uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */
