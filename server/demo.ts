@@ -27,6 +27,7 @@ import type {
   PortainerData,
   MonitorData,
   UnifiData,
+  PaperlessData,
   TailnetData,
   KumaMonitor,
   UptimeKumaData,
@@ -633,6 +634,7 @@ export function demoAdapters(): Adapter[] {
       };
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
+    demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
     demo<UnifiData>('unifi', 'UniFi', MINUTE, () => ({
       clients: 37,
       sites: 1,

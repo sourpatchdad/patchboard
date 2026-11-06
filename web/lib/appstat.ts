@@ -11,6 +11,8 @@ import type {
   FrigateData,
   MinifluxData,
   ImmichData,
+  NextcloudData,
+  PaperlessData,
   QbitData,
   Service,
   Snapshot,
@@ -44,11 +46,29 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
     if (!p) return null;
     return p.streams.length ? plural(p.streams.length, 'stream') : 'Nobody watching';
   }
-  if (c === 'sonarr' || c === 'radarr') {
+  if (c === 'sonarr' || c === 'radarr' || c === 'lidarr' || c === 'readarr') {
     const a = data<ArrData>(snap, c);
     if (!a) return null;
     if (a.problems.length) return `${a.problems.length} stuck`;
     return a.queueTotal ? `${a.queueTotal} queued` : 'Queue empty';
+  }
+  if (c === 'prowlarr') {
+    const a = data<ArrData>(snap, 'prowlarr');
+    if (!a) return null;
+    const bad = a.health.filter((h) => h.level !== 'notice').length;
+    return bad ? `${bad} ${bad === 1 ? 'warning' : 'warnings'}` : 'Indexers OK';
+  }
+  if (c === 'bazarr') {
+    const a = data<ArrData>(snap, 'bazarr');
+    return a ? (a.queueTotal ? `${a.queueTotal.toLocaleString()} missing subs` : 'Subtitles complete') : null;
+  }
+  if (c === 'paperless' || c === 'paperless-ngx' || c === 'paperless-webserver') {
+    const p = data<PaperlessData>(snap, 'paperless');
+    return p ? (p.inbox ? `${p.inbox} in inbox` : `${p.total.toLocaleString()} documents`) : null;
+  }
+  if (c === 'nextcloud' || c === 'nextcloud-app') {
+    const n = data<NextcloudData>(snap, 'nextcloud');
+    return n ? (n.appUpdates ? `${n.appUpdates} app ${n.appUpdates === 1 ? 'update' : 'updates'}` : `${n.files.toLocaleString()} files`) : null;
   }
   const dl = { qbittorrent: 'qbit', transmission: 'transmission', deluge: 'deluge', sabnzbd: 'sabnzbd', nzbget: 'nzbget' }[c] as SourceId | undefined;
   if (dl) {

@@ -190,6 +190,15 @@ function build(str: Lookup) {
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
     portainer: pair('PORTAINER_URL', 'PORTAINER_KEY'),
+    lidarr: pair('LIDARR_URL', 'LIDARR_KEY'),
+    readarr: pair('READARR_URL', 'READARR_KEY'),
+    prowlarr: pair('PROWLARR_URL', 'PROWLARR_KEY'),
+    bazarr: pair('BAZARR_URL', 'BAZARR_KEY'),
+    paperless: pair('PAPERLESS_URL', 'PAPERLESS_TOKEN'),
+    nextcloud:
+      str('NEXTCLOUD_URL') && str('NEXTCLOUD_USERNAME') && str('NEXTCLOUD_PASSWORD')
+        ? { url: trimSlash(str('NEXTCLOUD_URL')!), username: str('NEXTCLOUD_USERNAME')!, password: str('NEXTCLOUD_PASSWORD')! }
+        : undefined,
     netdata: str('NETDATA_URL') ? { url: trimSlash(str('NETDATA_URL')!) } : undefined,
     unifi: str('UNIFI_URL') && str('UNIFI_KEY') ? { url: trimSlash(str('UNIFI_URL')!), key: str('UNIFI_KEY')!, verifyTls: str('UNIFI_VERIFY_TLS') === '1' } : undefined,
     tailscale: str('TAILSCALE_KEY') ? { key: str('TAILSCALE_KEY')!, tailnet: str('TAILSCALE_TAILNET') ?? '-' } : undefined,

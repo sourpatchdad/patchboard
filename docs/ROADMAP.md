@@ -14,7 +14,6 @@ What comes next. CHANGELOG.md has what has shipped.
 ### Integrations
 
 - [ ] TP-Link Omada
-- [ ] Nextcloud, Paperless-ngx, Lidarr, Readarr, Prowlarr, Bazarr
 - [ ] Audiobookshelf and Navidrome in Right now
 - [ ] Gitea and Forgejo, Vaultwarden
 - [ ] Start and stop for Proxmox guests

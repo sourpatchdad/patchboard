@@ -38,6 +38,12 @@ export type SourceId =
   | 'prometheus'
   | 'unifi'
   | 'tailscale'
+  | 'lidarr'
+  | 'readarr'
+  | 'prowlarr'
+  | 'bazarr'
+  | 'paperless'
+  | 'nextcloud'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -756,6 +762,23 @@ export interface TailnetDevice {
 
 export interface TailnetData {
   devices: TailnetDevice[];
+}
+
+export interface PaperlessData {
+  total: number;
+  /** Documents still carrying the inbox tag. */
+  inbox: number;
+  webUrl: string;
+}
+
+export interface NextcloudData {
+  version?: string;
+  files: number;
+  users: number;
+  activeToday?: number;
+  freeBytes?: number;
+  appUpdates: number;
+  webUrl: string;
 }
 
 export interface CarData {

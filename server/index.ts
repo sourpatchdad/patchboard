@@ -30,6 +30,7 @@ import { qnapAdapter } from './adapters/qnap.ts';
 import { portainerAdapter } from './adapters/portainer.ts';
 import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
+import { bazarrAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -125,6 +126,12 @@ const FACTORIES: Record<string, () => Made | null> = {
   prometheus: () => (config.prometheus ? { adapter: prometheusAdapter() } : null),
   unifi: () => (config.unifi ? { adapter: unifiAdapter() } : null),
   tailscale: () => (config.tailscale ? { adapter: tailscaleAdapter() } : null),
+  lidarr: () => (config.lidarr ? { adapter: starrAdapter('lidarr', 'Lidarr') } : null),
+  readarr: () => (config.readarr ? { adapter: starrAdapter('readarr', 'Readarr') } : null),
+  prowlarr: () => (config.prowlarr ? { adapter: starrAdapter('prowlarr', 'Prowlarr') } : null),
+  bazarr: () => (config.bazarr ? { adapter: bazarrAdapter() } : null),
+  paperless: () => (config.paperless ? { adapter: paperlessAdapter() } : null),
+  nextcloud: () => (config.nextcloud ? { adapter: nextcloudAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();

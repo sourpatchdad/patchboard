@@ -3,6 +3,7 @@
 
 import type {
   GlancesData,
+  NextcloudData,
   TailnetData,
   UnifiData,
   MonitorData,
@@ -223,10 +224,11 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     });
   }
 
-  for (const id of ['sonarr', 'radarr'] as const) {
+  const ARR_NAMES = { sonarr: 'Sonarr', radarr: 'Radarr', lidarr: 'Lidarr', readarr: 'Readarr', prowlarr: 'Prowlarr', bazarr: 'Bazarr' } as const;
+  for (const id of Object.keys(ARR_NAMES) as (keyof typeof ARR_NAMES)[]) {
     const arr = data<ArrData>(sources, id);
     if (!arr) continue;
-    const name = id === 'sonarr' ? 'Sonarr' : 'Radarr';
+    const name = ARR_NAMES[id];
     for (const p of arr.problems) {
       alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, source: id });
     }
@@ -246,6 +248,10 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
     }
   }
+
+  // Nextcloud: app updates waiting, as a quiet note.
+  const nc = data<NextcloudData>(sources, 'nextcloud');
+  if (nc?.appUpdates) alerts.push({ id: 'nc-apps', level: 'info', title: `${nc.appUpdates} Nextcloud ${nc.appUpdates === 1 ? 'app has an update' : 'apps have updates'}`, href: `${nc.webUrl}/settings/apps/updates`, source: 'nextcloud' });
 
   // UniFi: a device that drops off. Tailscale: keys expiring or expired.
   const unifi = data<UnifiData>(sources, 'unifi');

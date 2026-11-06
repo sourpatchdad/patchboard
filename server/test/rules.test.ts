@@ -356,3 +356,9 @@ test('UniFi and Tailscale: an offline device warns; a key expiring within a week
   const mine = alerts.filter((a) => a.source === 'unifi' || a.source === 'tailscale');
   assert.deepEqual(mine.map((a) => [a.subject, a.level]), [['pi', 'critical'], ['Garage AP', 'warn'], ['laptop', 'warn']]);
 });
+
+test('the whole *arr family raises stuck imports and health errors under its own name', () => {
+  const arr = (msg: string) => ({ upcoming: [], queueTotal: 1, problems: [{ title: 'X', message: msg }], health: [{ level: 'error', message: 'down' }] });
+  const alerts = computeAlerts(sources({ lidarr: arr('no files'), prowlarr: { upcoming: [], queueTotal: 0, problems: [], health: [{ level: 'error', message: 'Indexer failing' }] } }), catalog());
+  assert.deepEqual(alerts.filter((a) => a.source === 'lidarr' || a.source === 'prowlarr').map((a) => a.title), ["Lidarr can't import a download", 'Lidarr health check', 'Prowlarr health check']);
+});
