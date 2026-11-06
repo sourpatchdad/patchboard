@@ -227,6 +227,15 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'proxmox',
+    name: 'Proxmox VE',
+    adds: 'A Proxmox widget: each node with its CPU and memory, and every VM and LXC container, running or stopped. A node that goes offline shows in Needs attention.',
+    env: ['PROXMOX_URL', 'PROXMOX_TOKEN_ID', 'PROXMOX_SECRET'],
+    optional: ['PROXMOX_VERIFY_TLS'],
+    where: 'Datacenter, Permissions, API Tokens: add a token (untick Privilege Separation, or give the token the PVEAuditor role on /). The ID looks like patchboard@pve!dash.',
+    source: true,
+  },
+  {
     id: 'immich',
     name: 'Immich',
     adds: "A Photos widget: how many photos and videos, how much space they take, and what Immich is working on, such as thumbnails or face detection. The Immich tile shows the photo count, or what it's processing.",

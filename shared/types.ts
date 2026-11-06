@@ -26,6 +26,7 @@ export type SourceId =
   | 'adguard'
   | 'speedtest'
   | 'immich'
+  | 'proxmox'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -529,6 +530,36 @@ export interface UptimeKumaData {
   /** The status page, to open from the widget. */
   link: string;
   monitors: KumaMonitor[];
+}
+
+/** A Proxmox VE node. CPU is a 0 to 1 share of its cores. */
+export interface ProxmoxNode {
+  name: string;
+  online: boolean;
+  cpu: number;
+  cores: number;
+  mem: number;
+  maxmem: number;
+  uptime: number;
+}
+
+/** A VM or LXC container on Proxmox. */
+export interface ProxmoxGuest {
+  vmid: number;
+  name: string;
+  kind: 'vm' | 'lxc';
+  node: string;
+  running: boolean;
+  cpu: number;
+  mem: number;
+  maxmem: number;
+  uptime: number;
+}
+
+export interface ProxmoxData {
+  nodes: ProxmoxNode[];
+  guests: ProxmoxGuest[];
+  webUrl: string;
 }
 
 export interface CarData {

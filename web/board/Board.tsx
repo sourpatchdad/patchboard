@@ -23,7 +23,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -434,6 +434,8 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
       return <SpeedWidget now={now} />;
     case 'photos':
       return <PhotosWidget />;
+    case 'proxmox':
+      return <ProxmoxWidget now={now} />;
     case 'requests':
       return <RequestsWidget now={now} />;
     case 'container':
@@ -549,6 +551,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     dns: has('pihole') || has('adguard'),
     speed: has('speedtest'),
     photos: has('immich'),
+    proxmox: has('proxmox'),
     requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Proxmox VE.** A Proxmox widget shows each node's CPU and memory as
+  meters, then every VM and LXC container: running ones busiest first, with
+  CPU and memory, and stopped ones after. A node that drops out of the
+  cluster shows in Needs attention. Set it up in Settings, Connections with
+  an API token that has the PVEAuditor role; self-signed certificates work.
 - **The docs lead with the UI.** README, the configuration and integration
   guides, SECURITY.md and the `.env` template now set up integrations in
   Settings, Connections and apps in Edit apps. The `.env` is for server

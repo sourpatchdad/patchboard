@@ -7068,6 +7068,80 @@ button.ha-act:hover {
   justify-self: start;
 }
 
+/* ---------- Proxmox ---------- */
+
+.pve-nodes,
+.pve-guests {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pve-nodes {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pve-nodes li {
+  display: grid;
+  grid-template-columns: minmax(48px, auto) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+}
+
+.pve-node-name {
+  font-weight: 600;
+  color: var(--head);
+}
+
+.pve-node-stat {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.pve-guests li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+
+.pve-kind {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.pve-name {
+  color: var(--head);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pve-num {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.pve-guests .is-stopped .pve-name {
+  color: var(--ink-3);
+}
+
+.pve-off {
+  grid-column: span 2;
+  justify-self: end;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
 /* ---------- Photos (Immich) ---------- */
 
 .photo-queues {

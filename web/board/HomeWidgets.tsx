@@ -4,11 +4,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, HaEntity, ImmichData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, HaEntity, ImmichData, ProxmoxData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
-import { ago, agoLong, deg, size } from '../lib/format.ts';
+import { ago, agoLong, deg, pct, size, uptime } from '../lib/format.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
 
@@ -478,6 +478,71 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Proxmox ----------
+
+/** Nodes as meters, then guests: running ones busiest first, stopped ones after. */
+export function ProxmoxWidget({ now: _now }: { now: number }) {
+  const { state, data } = useSource<ProxmoxData>('proxmox');
+  const { limit = 8 } = useWidget();
+  if (!state || !data) return null;
+  const running = data.guests.filter((g) => g.running).sort((a, b) => b.cpu - a.cpu);
+  const stopped = data.guests.filter((g) => !g.running);
+  const shown = [...running, ...stopped].slice(0, limit);
+  const level = (v: number) => (v >= 0.9 ? 'crit' : v >= 0.75 ? 'warn' : 'ok');
+  return (
+    <Section
+      title="Proxmox"
+      source={state}
+      className="pve"
+      count={`${running.length} running${stopped.length ? `, ${stopped.length} stopped` : ''}`}
+      action={{ label: 'Open Proxmox', href: data.webUrl }}
+    >
+      <ul className="pve-nodes">
+        {data.nodes.map((n) => (
+          <li key={n.name} className={n.online ? undefined : 'is-off'}>
+            <span className="pve-node-name">{n.name}</span>
+            {n.online ? (
+              <>
+                <span className="pve-node-stat">
+                  <Meter value={n.cpu * 100} level={level(n.cpu)} />
+                  <span className="mono">{pct(n.cpu * 100)} CPU</span>
+                </span>
+                <span className="pve-node-stat">
+                  <Meter value={n.maxmem ? (n.mem / n.maxmem) * 100 : 0} level={level(n.maxmem ? n.mem / n.maxmem : 0)} />
+                  <span className="mono">
+                    {size(n.mem)} of {size(n.maxmem)}
+                  </span>
+                </span>
+              </>
+            ) : (
+              <span className="crit-text">Offline</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <ul className="pve-guests">
+        {shown.map((g) => (
+          <li key={g.vmid} className={g.running ? undefined : 'is-stopped'} title={g.running ? `Up ${uptime(g.uptime)} on ${g.node}` : `Stopped, on ${g.node}`}>
+            <span className="pve-kind mono">
+              {g.kind === 'lxc' ? 'CT' : 'VM'} {g.vmid}
+            </span>
+            <span className="pve-name">{g.name}</span>
+            {g.running ? (
+              <>
+                <span className="mono pve-num">{pct(g.cpu * 100)}</span>
+                <span className="mono pve-num">{size(g.mem)}</span>
+              </>
+            ) : (
+              <span className="pve-off">Stopped</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {data.guests.length > shown.length && <p className="speed-seen">{data.guests.length - shown.length} more in Proxmox.</p>}
     </Section>
   );
 }

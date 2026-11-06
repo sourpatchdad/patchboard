@@ -19,6 +19,7 @@ import type {
   SpeedData,
   FeedFilter,
   ImmichData,
+  ProxmoxData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -603,6 +604,25 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<ProxmoxData>('proxmox', 'Proxmox', 30 * SECOND, () => {
+      const wave = (base: number, amp: number, period: number) => Math.max(0.005, base + amp * Math.sin(Date.now() / period));
+      const G = 1024 ** 3;
+      return {
+        webUrl: 'https://pve.local:8006',
+        nodes: [
+          { name: 'pve1', online: true, cpu: wave(0.18, 0.06, 40_000), cores: 16, mem: 41 * G, maxmem: 64 * G, uptime: 34 * 86_400 },
+          { name: 'pve2', online: true, cpu: wave(0.07, 0.03, 55_000), cores: 8, mem: 12 * G, maxmem: 32 * G, uptime: 34 * 86_400 },
+        ],
+        guests: [
+          { vmid: 100, name: 'truenas', kind: 'vm', node: 'pve1', running: true, cpu: wave(0.09, 0.03, 30_000), mem: 24 * G, maxmem: 32 * G, uptime: 34 * 86_400 },
+          { vmid: 101, name: 'home-assistant', kind: 'vm', node: 'pve1', running: true, cpu: wave(0.04, 0.02, 25_000), mem: 3.1 * G, maxmem: 4 * G, uptime: 12 * 86_400 },
+          { vmid: 102, name: 'docker', kind: 'vm', node: 'pve1', running: true, cpu: wave(0.22, 0.08, 35_000), mem: 11 * G, maxmem: 16 * G, uptime: 6 * 86_400 },
+          { vmid: 200, name: 'pihole', kind: 'lxc', node: 'pve2', running: true, cpu: wave(0.01, 0.005, 20_000), mem: 0.2 * G, maxmem: 0.5 * G, uptime: 34 * 86_400 },
+          { vmid: 201, name: 'unifi', kind: 'lxc', node: 'pve2', running: true, cpu: wave(0.03, 0.01, 22_000), mem: 1.4 * G, maxmem: 2 * G, uptime: 9 * 86_400 },
+          { vmid: 202, name: 'windows-11', kind: 'vm', node: 'pve2', running: false, cpu: 0, mem: 0, maxmem: 8 * G, uptime: 0 },
+        ],
+      };
+    }),
     demo<ImmichData>('immich', 'Immich', MINUTE, () => ({
       photos: 48_213,
       videos: 2_311,

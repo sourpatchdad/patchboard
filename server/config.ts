@@ -186,6 +186,10 @@ function build(str: Lookup) {
       : undefined,
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
+    proxmox:
+      str('PROXMOX_URL') && str('PROXMOX_TOKEN_ID') && str('PROXMOX_SECRET')
+        ? { url: trimSlash(str('PROXMOX_URL')!), tokenId: str('PROXMOX_TOKEN_ID')!, secret: str('PROXMOX_SECRET')!, verifyTls: str('PROXMOX_VERIFY_TLS') === '1' }
+        : undefined,
     overseerr: pair('OVERSEERR_URL', 'OVERSEERR_KEY'),
     notify: {
       ntfy: str('NTFY_URL') ? { url: trimSlash(str('NTFY_URL')!), token: str('NTFY_TOKEN') } : undefined,

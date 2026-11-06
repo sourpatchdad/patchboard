@@ -2,6 +2,7 @@
 // rules decide what earns space on the page. Keep them few and specific.
 
 import type {
+  ProxmoxData,
   Alert,
   ArrData,
   BackupRun,
@@ -235,6 +236,11 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
     }
+  }
+
+  // Proxmox: a node that drops out of the cluster.
+  for (const n of data<ProxmoxData>(sources, 'proxmox')?.nodes ?? []) {
+    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, title: `Proxmox node ${n.name} is offline`, detail: 'The cluster can no longer reach it.', source: 'proxmox' });
   }
 
   // Image updates: one quiet line, not one per container.
