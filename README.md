@@ -1,5 +1,9 @@
 # Patchboard
 
+[![CI](https://img.shields.io/github/actions/workflow/status/sourpatchdad/patchboard/ci.yml?branch=main&label=CI)](https://github.com/sourpatchdad/patchboard/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/sourpatchdad/patchboard)](https://github.com/sourpatchdad/patchboard/releases)
+[![License: AGPL-3.0](https://img.shields.io/github/license/sourpatchdad/patchboard)](LICENSE)
+
 A start page and control center for a home server. Open it and you know in
 five seconds whether anything is broken, what's new, and what's coming. Click
 anything and you land where you can fix it.

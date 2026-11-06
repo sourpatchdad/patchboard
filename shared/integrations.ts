@@ -512,6 +512,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'tracearr',
+    name: 'Tracearr',
+    adds: 'Needs attention hears from Tracearr: a Plex, Jellyfin or Emby server it sees as down, and each violation nobody has handled yet, such as a shared account or impossible travel, linked to its page in Tracearr.',
+    env: ['TRACEARR_URL', 'TRACEARR_KEY'],
+    where: 'Tracearr: Settings, API, Generate key. The key starts with trr_pub_.',
+    source: true,
+  },
+  {
     id: 'syncthing',
     name: 'Syncthing',
     adds: 'A Sync widget: each folder up to date or how far along, and when each device last checked in. A folder with files it can’t sync, or a device quiet for over a day, shows in Needs attention.',

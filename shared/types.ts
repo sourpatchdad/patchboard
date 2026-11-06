@@ -26,6 +26,7 @@ export type SourceId =
   | 'healthchecks'
   | 'beszel'
   | 'syncthing'
+  | 'tracearr'
   | 'pihole'
   | 'adguard'
   | 'speedtest'
@@ -558,6 +559,13 @@ export interface UptimeKumaData {
   /** The status page, to open from the widget. */
   link: string;
   monitors: KumaMonitor[];
+}
+
+/** Tracearr: media servers it watches, and violations nobody has handled. */
+export interface TracearrData {
+  webUrl: string;
+  servers: { id: string; name: string; type: string; status: 'up' | 'down' | 'unknown'; reason?: string; streams: number }[];
+  violations: { id: string; severity: 'high' | 'warning'; rule: string; user: string; server: string; at: number }[];
 }
 
 /** A Syncthing folder. failing counts files it can't sync. */

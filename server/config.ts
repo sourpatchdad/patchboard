@@ -267,6 +267,7 @@ function build(str: Lookup) {
       /** Where a tap on a notification opens Patchboard. */
       publicUrl: str('PATCHBOARD_URL') ? trimSlash(str('PATCHBOARD_URL')!) : undefined,
     },
+    tracearr: pair('TRACEARR_URL', 'TRACEARR_KEY'),
     syncthing: str('SYNCTHING_URL') && str('SYNCTHING_KEY') ? { url: trimSlash(str('SYNCTHING_URL')!), key: str('SYNCTHING_KEY')!, verifyTls: str('SYNCTHING_VERIFY_TLS') === '1' } : undefined,
     gatus: str('GATUS_URL') ? { url: trimSlash(str('GATUS_URL')!) } : undefined,
     healthchecks: str('HEALTHCHECKS_KEY') ? { url: trimSlash(str('HEALTHCHECKS_URL') ?? 'https://healthchecks.io'), key: str('HEALTHCHECKS_KEY')! } : undefined,

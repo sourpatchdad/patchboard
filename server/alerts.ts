@@ -13,6 +13,7 @@ import type {
   ProxmoxData,
   ScrutinyData,
   SyncthingData,
+  TracearrData,
   Alert,
   ArrData,
   BackupRun,
@@ -360,6 +361,27 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         source: src,
       });
     }
+  }
+
+  // Tracearr: a media server it sees as down, and violations waiting on
+  // someone. High severity is a warning; the rest a quiet note.
+  const tr = data<TracearrData>(sources, 'tracearr');
+  for (const sv of tr?.servers ?? []) {
+    if (sv.status !== 'down') continue;
+    if (alerts.some((x) => x.subject?.toLowerCase() === sv.name.toLowerCase())) continue;
+    alerts.push({ id: `tracearr-server-${sv.id}`, level: 'warn', subject: sv.name, title: `${sv.name} is down`, detail: `${sv.reason ? `${sv.reason.replace(/\.$/, '')}. ` : ''}Seen by Tracearr.`, href: tr!.webUrl, source: 'tracearr' });
+  }
+  for (const v of tr?.violations ?? []) {
+    alerts.push({
+      id: `tracearr-${v.id}`,
+      level: v.severity === 'high' ? 'warn' : 'info',
+      subject: v.user,
+      title: `${v.rule}: ${v.user}`,
+      detail: `${v.server ? `On ${v.server}. ` : ''}Seen by Tracearr.`,
+      since: v.at,
+      href: `${tr!.webUrl}/violations/${encodeURIComponent(v.id)}`,
+      source: 'tracearr',
+    });
   }
 
   // Syncthing: a folder with files it can't sync, or stopped on an error; a
