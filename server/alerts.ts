@@ -3,6 +3,7 @@
 
 import type {
   GlancesData,
+  MonitorData,
   PortainerData,
   NasSystem,
   NutData,
@@ -241,6 +242,23 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
+    }
+  }
+
+  // Netdata and Prometheus: their firing alerts, as they rate them.
+  for (const id of ['netdata', 'prometheus'] as const) {
+    const m = data<MonitorData>(sources, id);
+    for (const a of m?.alerts ?? []) {
+      alerts.push({
+        id: `${id}-${a.id}`,
+        level: a.severity === 'critical' ? 'critical' : 'warn',
+        subject: a.instance,
+        title: a.instance && !a.name.includes(a.instance) ? `${a.name} on ${a.instance}` : a.name,
+        detail: a.detail,
+        since: a.since,
+        href: m!.webUrl,
+        source: id,
+      });
     }
   }
 

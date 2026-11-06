@@ -28,6 +28,7 @@ import { unraidAdapter } from './adapters/unraid.ts';
 import { synologyAdapter } from './adapters/synology.ts';
 import { qnapAdapter } from './adapters/qnap.ts';
 import { portainerAdapter } from './adapters/portainer.ts';
+import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -119,6 +120,8 @@ const FACTORIES: Record<string, () => Made | null> = {
   synology: () => (config.synology ? { adapter: synologyAdapter() } : null),
   qnap: () => (config.qnap ? { adapter: qnapAdapter() } : null),
   portainer: () => (config.portainer ? { adapter: portainerAdapter() } : null),
+  netdata: () => (config.netdata ? { adapter: netdataAdapter() } : null),
+  prometheus: () => (config.prometheus ? { adapter: prometheusAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();

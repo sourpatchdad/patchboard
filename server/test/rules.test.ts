@@ -331,3 +331,15 @@ test('Portainer: a down environment is critical; unhealthy containers warn', () 
   const alerts = computeAlerts(sources({ portainer: { webUrl: 'http://pt', envs: [env(1, 'local', true, 0), env(2, 'pi', true, 2), env(3, 'old', false, 0)] } }), catalog());
   assert.deepEqual(alerts.filter((a) => a.source === 'portainer').map((a) => [a.subject, a.level]), [['old', 'critical'], ['pi', 'warn']]);
 });
+
+test('Netdata and Prometheus: firing alerts join Needs attention at their own severity, linked back', () => {
+  const alerts = computeAlerts(
+    sources({
+      netdata: { webUrl: 'http://nd', alerts: [{ id: 'ram', name: 'System RAM usage', severity: 'warn', instance: 'nas' }] },
+      prometheus: { webUrl: 'http://prom', alerts: [{ id: 'hd', name: 'Host down', severity: 'critical', instance: 'pi:9100' }] },
+    }),
+    catalog(),
+  );
+  const mine = alerts.filter((a) => a.source === 'netdata' || a.source === 'prometheus');
+  assert.deepEqual(mine.map((a) => [a.title, a.level, a.href]), [['Host down on pi:9100', 'critical', 'http://prom'], ['System RAM usage on nas', 'warn', 'http://nd']]);
+});

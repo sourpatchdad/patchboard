@@ -25,6 +25,7 @@ import type {
   NutData,
   NasSystem,
   PortainerData,
+  MonitorData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -629,6 +630,7 @@ export function demoAdapters(): Adapter[] {
         ],
       };
     }),
+    demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PortainerData>('portainer', 'Portainer', MINUTE, () => ({
       webUrl: 'https://portainer.local:9443',
       envs: [

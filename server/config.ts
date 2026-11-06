@@ -190,6 +190,8 @@ function build(str: Lookup) {
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
     portainer: pair('PORTAINER_URL', 'PORTAINER_KEY'),
+    netdata: str('NETDATA_URL') ? { url: trimSlash(str('NETDATA_URL')!) } : undefined,
+    prometheus: str('PROMETHEUS_URL') ? { url: trimSlash(str('PROMETHEUS_URL')!), key: str('PROMETHEUS_TOKEN') } : undefined,
     synology:
       str('SYNOLOGY_URL') && str('SYNOLOGY_USERNAME') && str('SYNOLOGY_PASSWORD')
         ? { url: trimSlash(str('SYNOLOGY_URL')!), username: str('SYNOLOGY_USERNAME')!, password: str('SYNOLOGY_PASSWORD')!, verifyTls: str('SYNOLOGY_VERIFY_TLS') === '1' }

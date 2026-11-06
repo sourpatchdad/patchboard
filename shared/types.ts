@@ -34,6 +34,8 @@ export type SourceId =
   | 'synology'
   | 'qnap'
   | 'portainer'
+  | 'netdata'
+  | 'prometheus'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -706,6 +708,21 @@ export interface PortainerEnv {
 
 export interface PortainerData {
   envs: PortainerEnv[];
+  webUrl: string;
+}
+
+/** A firing alert from Netdata or Prometheus. */
+export interface MonitorAlert {
+  id: string;
+  name: string;
+  severity: 'critical' | 'warn';
+  detail?: string;
+  instance?: string;
+  since?: number;
+}
+
+export interface MonitorData {
+  alerts: MonitorAlert[];
   webUrl: string;
 }
 

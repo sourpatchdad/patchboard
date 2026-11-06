@@ -261,6 +261,23 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'netdata',
+    name: 'Netdata',
+    adds: "Netdata's raised alarms join Needs attention, warnings and criticals alike, with a link back to Netdata. Patchboard leaves the charts to Netdata.",
+    env: ['NETDATA_URL'],
+    where: "The Netdata agent's address, port 19999. One agent per address; a parent node covers its children.",
+    source: true,
+  },
+  {
+    id: 'prometheus',
+    name: 'Prometheus or Alertmanager',
+    adds: 'Firing alerts join Needs attention: severity critical, page or error as alarms, the rest as warnings. Pending and silenced alerts stay out.',
+    env: ['PROMETHEUS_URL'],
+    optional: ['PROMETHEUS_TOKEN'],
+    where: 'The Prometheus address (port 9090) or the Alertmanager address (port 9093). A bearer token only if a proxy in front asks for one.',
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',
