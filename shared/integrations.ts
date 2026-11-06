@@ -436,10 +436,10 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'proxmox',
     name: 'Proxmox VE',
-    adds: 'A Proxmox widget: each node with its CPU and memory, and every VM and LXC container, running or stopped. A node that goes offline shows in Needs attention.',
+    adds: 'A Proxmox widget: each node with its CPU and memory, and every VM and LXC container, running or stopped. Tap a guest to start, shut down or reboot it. A node that goes offline shows in Needs attention.',
     env: ['PROXMOX_URL', 'PROXMOX_TOKEN_ID', 'PROXMOX_SECRET'],
     optional: ['PROXMOX_VERIFY_TLS'],
-    where: 'Datacenter, Permissions, API Tokens: add a token (untick Privilege Separation, or give the token the PVEAuditor role on /). The ID looks like patchboard@pve!dash.',
+    where: 'Datacenter, Permissions, API Tokens: add a token and give it the PVEAuditor role on / to read. To start, shut down and reboot guests from Patchboard, give it PVEVMUser too. The ID looks like patchboard@pve!dash.',
     source: true,
   },
   {

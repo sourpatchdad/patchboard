@@ -1,9 +1,11 @@
 // Proxmox VE: each node, and every VM and LXC container with its state, CPU
 // and memory, from one call to /cluster/resources. An API token with the
-// PVEAuditor role is enough. Most installs use a self-signed certificate, so
+// PVEAuditor role is enough to read; starting and stopping guests needs
+// PVEVMUser (VM.PowerMgmt) too. Most installs use a self-signed certificate, so
 // verification is off unless PROXMOX_VERIFY_TLS=1.
 // https://pve.proxmox.com/pve-docs/api-viewer/
 
+import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import type { ProxmoxData, ProxmoxGuest, ProxmoxNode } from '../../shared/types.ts';
 import { config } from '../config.ts';
@@ -55,19 +57,22 @@ export function toProxmox(rows: PveResource[]): Omit<ProxmoxData, 'webUrl'> {
   return { nodes, guests };
 }
 
-/** GET a Proxmox API path, honoring the certificate setting. */
-function pveGet<T>(path: string): Promise<T> {
+/** Call a Proxmox API path, honoring the certificate setting. */
+function pve<T>(path: string, method: 'GET' | 'POST' = 'GET'): Promise<T> {
   const { url, tokenId, secret, verifyTls } = config.proxmox!;
   const target = new URL(`/api2/json${path}`, url);
+  // https is the norm; http covers Proxmox behind a plain reverse proxy.
+  const request = target.protocol === 'http:' ? httpRequest : httpsRequest;
   return new Promise((resolve, reject) => {
-    const req = httpsRequest(
+    const req = request(
       target,
-      { method: 'GET', headers: { Authorization: `PVEAPIToken=${tokenId}=${secret}`, Accept: 'application/json' }, rejectUnauthorized: verifyTls, timeout: 8000 },
+      { method, headers: { Authorization: `PVEAPIToken=${tokenId}=${secret}`, Accept: 'application/json' }, rejectUnauthorized: verifyTls, timeout: 8000 },
       (res) => {
         let body = '';
         res.setEncoding('utf8');
         res.on('data', (c) => (body += c));
         res.on('end', () => {
+          if (res.statusCode === 403) return reject(new Error('Proxmox refused: the token needs the VM.PowerMgmt permission for this (PVEVMUser role)'));
           if ((res.statusCode ?? 0) >= 400) return reject(new Error(`HTTP ${res.statusCode} ${res.statusMessage ?? ''}`.trim()));
           try {
             resolve((JSON.parse(body) as { data: T }).data);
@@ -90,8 +95,15 @@ export function proxmoxAdapter(): Adapter<ProxmoxData> {
     label: 'Proxmox',
     intervalMs: 30 * SECOND,
     async fetch() {
-      const rows = await pveGet<PveResource[]>('/cluster/resources');
+      const rows = await pve<PveResource[]>('/cluster/resources');
       return { ...toProxmox(rows), webUrl: config.proxmox!.url };
     },
   };
+}
+
+export type GuestAction = 'start' | 'shutdown' | 'reboot';
+
+/** Start, shut down (cleanly, through the guest) or reboot one VM or container. */
+export async function proxmoxControl(node: string, kind: 'vm' | 'lxc', vmid: number, action: GuestAction): Promise<void> {
+  await pve(`/nodes/${encodeURIComponent(node)}/${kind === 'lxc' ? 'lxc' : 'qemu'}/${vmid}/status/${action}`, 'POST');
 }

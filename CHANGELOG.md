@@ -10,7 +10,8 @@ The first public release, 1.0.0. What's in it:
   This week, Reading, mail, the server, changes, recently added and more.
 - **Every glance leads to an action.** A stopped container is two clicks
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
-  blocking pauses, requests approve, all from the widget.
+  blocking pauses, requests approve, Proxmox guests start and stop, all from
+  the widget.
 - **Set up in the UI.** Add every running container as an app in one click,
   arrange them in Edit apps, and connect integrations in Settings,
   Connections, with keys encrypted on the server. A `services.yaml`, Docker

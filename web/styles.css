@@ -7550,13 +7550,48 @@ button.ha-act:hover {
 }
 
 .pve-guests li {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* Each guest is a button: tap to see what you can do with it. */
+.pve-row {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto auto;
   align-items: baseline;
   gap: 12px;
+  width: 100%;
   padding: 6px 0;
-  border-top: 1px solid var(--line-soft);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pve-row:disabled {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .pve-row:not(:disabled):hover .pve-name {
+    color: var(--accent);
+  }
+}
+
+.pve-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding: 0 0 10px 76px;
+  font-size: 13.5px;
+}
+
+.pve-where {
+  color: var(--ink-3);
+  font-size: 12.5px;
 }
 
 .pve-kind {

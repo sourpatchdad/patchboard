@@ -544,6 +544,17 @@ function demo<T>(id: Adapter['id'], label: string, intervalMs: number, make: () 
   return { id, label, intervalMs, fetch: async () => make() };
 }
 
+const demoPower = new Map<number, boolean>();
+
+/** A demo guest changes state when asked, so the buttons visibly work. */
+export function demoProxmoxAct(vmid: number, action: 'start' | 'shutdown' | 'reboot'): void {
+  if (action !== 'reboot') demoPower.set(vmid, action === 'start');
+}
+
+function withPower(d: ProxmoxData): ProxmoxData {
+  return { ...d, guests: d.guests.map((g) => (demoPower.has(g.vmid) ? { ...g, running: demoPower.get(g.vmid)!, cpu: demoPower.get(g.vmid) ? g.cpu || 0.02 : 0, mem: demoPower.get(g.vmid) ? g.mem || g.maxmem / 3 : 0, uptime: demoPower.get(g.vmid) ? g.uptime || 60 : 0 } : g)) };
+}
+
 export function demoAdapters(): Adapter[] {
   return [
     demo<DockerData>('docker', 'Docker', 10 * SECOND, () => ({ containers: demoContainers() })),
@@ -748,7 +759,7 @@ export function demoAdapters(): Adapter[] {
         ],
       };
     }),
-    demo<ProxmoxData>('proxmox', 'Proxmox', 30 * SECOND, () => {
+    demo<ProxmoxData>('proxmox', 'Proxmox', 30 * SECOND, () => withPower((() => {
       const wave = (base: number, amp: number, period: number) => Math.max(0.005, base + amp * Math.sin(Date.now() / period));
       const G = 1024 ** 3;
       return {
@@ -766,7 +777,7 @@ export function demoAdapters(): Adapter[] {
           { vmid: 202, name: 'windows-11', kind: 'vm', node: 'pve2', running: false, cpu: 0, mem: 0, maxmem: 8 * G, uptime: 0 },
         ],
       };
-    }),
+    })())),
     demo<ImmichData>('immich', 'Immich', MINUTE, () => ({
       photos: 48_213,
       videos: 2_311,

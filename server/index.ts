@@ -8,7 +8,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
-import type { ContainerDetail } from '../shared/types.ts';
+import type { ContainerDetail, ProxmoxData } from '../shared/types.ts';
 import { radarrAdapter, sonarrAdapter } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
@@ -20,7 +20,7 @@ import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
 import { immichAdapter } from './adapters/immich.ts';
-import { proxmoxAdapter } from './adapters/proxmox.ts';
+import { type GuestAction, proxmoxAdapter, proxmoxControl } from './adapters/proxmox.ts';
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { glancesAdapter } from './adapters/glances.ts';
 import { nutAdapter } from './adapters/nut.ts';
@@ -54,7 +54,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -471,6 +471,25 @@ app.post('/api/requests/:id/:action', async (c) => {
   pendingIds.delete(id);
   recordAudit(who(c), `requests.${action}`, String(id));
   void hub.pollNow('overseerr');
+  return c.json({ ok: true });
+});
+
+// Proxmox: start, shut down or reboot a guest Proxmox itself reported.
+app.post('/api/proxmox/:vmid/:action', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const vmid = Number(c.req.param('vmid'));
+  const action = c.req.param('action') as GuestAction;
+  if (!['start', 'shutdown', 'reboot'].includes(action)) return c.json({ error: 'Unknown action' }, 400);
+  const guest = (hub.snapshot().sources.proxmox?.data as ProxmoxData | null)?.guests.find((g) => g.vmid === vmid);
+  if (!guest) return c.json({ error: 'Proxmox has no guest with that ID' }, 404);
+  try {
+    if (config.demo) demoProxmoxAct(vmid, action);
+    else await proxmoxControl(guest.node, guest.kind, vmid, action);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `proxmox.${action}`, `${guest.name} (${vmid})`);
+  setTimeout(() => void hub.pollNow('proxmox'), 3000);
   return c.json({ ok: true });
 });
 

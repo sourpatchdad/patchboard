@@ -914,8 +914,28 @@ export function DrivesWidget({ now }: { now: number }) {
 export function ProxmoxWidget({ now: _now }: { now: number }) {
   const { state, data } = useSource<ProxmoxData>('proxmox');
   const { limit = 8 } = useWidget();
+  const readOnly = !!useStore().snap?.readOnly;
+  // One guest open at a time; shut down and reboot ask twice.
+  const [open, setOpen] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState<'shutdown' | 'reboot' | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ vmid: number; text: string; bad?: boolean; was?: boolean } | null>(null);
   if (!state || !data) return null;
-  const running = data.guests.filter((g) => g.running).sort((a, b) => b.cpu - a.cpu);
+  const act = async (vmid: number, name: string, was: boolean, action: 'start' | 'shutdown' | 'reboot') => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await post(`/api/proxmox/${vmid}/${action}`);
+      setMsg({ vmid, was: action === 'reboot' ? undefined : was, text: action === 'start' ? `Starting ${name}.` : action === 'reboot' ? `Rebooting ${name}.` : `Shutting ${name} down.` });
+      setConfirm(null);
+    } catch (e) {
+      setMsg({ vmid, text: (e as Error).message, bad: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  // Guests keep their place (by ID) so a row never moves under your finger.
+  const running = data.guests.filter((g) => g.running);
   const stopped = data.guests.filter((g) => !g.running);
   const shown = [...running, ...stopped].slice(0, limit);
   const level = (v: number) => (v >= 0.9 ? 'crit' : v >= 0.75 ? 'warn' : 'ok');
@@ -952,18 +972,59 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
       </ul>
       <ul className="pve-guests">
         {shown.map((g) => (
-          <li key={g.vmid} className={g.running ? undefined : 'is-stopped'} title={g.running ? `Up ${uptime(g.uptime)} on ${g.node}` : `Stopped, on ${g.node}`}>
-            <span className="pve-kind mono">
-              {g.kind === 'lxc' ? 'CT' : 'VM'} {g.vmid}
-            </span>
-            <span className="pve-name">{g.name}</span>
-            {g.running ? (
-              <>
-                <span className="mono pve-num">{pct(g.cpu * 100)}</span>
-                <span className="mono pve-num">{size(g.mem)}</span>
-              </>
-            ) : (
-              <span className="pve-off">Stopped</span>
+          <li key={g.vmid} className={`${g.running ? '' : 'is-stopped'} ${open === g.vmid ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className="pve-row"
+              aria-expanded={open === g.vmid}
+              disabled={readOnly}
+              title={g.running ? `Up ${uptime(g.uptime)} on ${g.node}` : `Stopped, on ${g.node}`}
+              onClick={() => (setOpen(open === g.vmid ? null : g.vmid), setConfirm(null), setMsg(null))}
+            >
+              <span className="pve-kind mono">
+                {g.kind === 'lxc' ? 'CT' : 'VM'} {g.vmid}
+              </span>
+              <span className="pve-name">{g.name}</span>
+              {g.running ? (
+                <>
+                  <span className="mono pve-num">{pct(g.cpu * 100)}</span>
+                  <span className="mono pve-num">{size(g.mem)}</span>
+                </>
+              ) : (
+                <span className="pve-off">Stopped</span>
+              )}
+            </button>
+            {open === g.vmid && (
+              <div className="pve-actions">
+                <span className="pve-where">
+                  {g.running ? `Up ${uptime(g.uptime)}` : 'Stopped'} on {g.node}
+                </span>
+                {!g.running ? (
+                  <button type="button" className="text-button" disabled={busy} onClick={() => void act(g.vmid, g.name, g.running, 'start')}>
+                    Start
+                  </button>
+                ) : confirm ? (
+                  <>
+                    <button type="button" className="text-button req-decline" disabled={busy} onClick={() => void act(g.vmid, g.name, g.running, confirm)}>
+                      {confirm === 'shutdown' ? `Shut ${g.name} down` : `Reboot ${g.name}`}
+                    </button>
+                    <button type="button" className="text-button req-quiet" onClick={() => setConfirm(null)}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="text-button" disabled={busy} onClick={() => setConfirm('reboot')}>
+                      Reboot
+                    </button>
+                    <button type="button" className="text-button req-quiet" disabled={busy} onClick={() => setConfirm('shutdown')}>
+                      Shut down
+                    </button>
+                  </>
+                )}
+                {/* The note goes once Proxmox reports the new state. */}
+                {msg?.vmid === g.vmid && (msg.bad || msg.was === undefined || msg.was === g.running) && <span className={msg.bad ? 'warn-text' : 'pve-where'}>{msg.text}</span>}
+              </div>
             )}
           </li>
         ))}

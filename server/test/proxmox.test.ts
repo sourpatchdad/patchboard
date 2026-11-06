@@ -1,6 +1,9 @@
 import { strict as assert } from 'node:assert';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { test } from 'node:test';
-import { toProxmox } from '../adapters/proxmox.ts';
+import { proxmoxControl, toProxmox } from '../adapters/proxmox.ts';
+import { withConfig } from '../config.ts';
 
 test('Proxmox: nodes and guests from /cluster/resources, templates and storage left out', () => {
   const out = toProxmox([
@@ -13,4 +16,29 @@ test('Proxmox: nodes and guests from /cluster/resources, templates and storage l
   ]);
   assert.deepEqual(out.nodes.map((n) => [n.name, n.online, n.cores]), [['pve1', true, 16], ['pve2', false, 0]]);
   assert.deepEqual(out.guests.map((g) => [g.vmid, g.kind, g.running]), [[100, 'lxc', false], [101, 'vm', true]]);
+});
+
+test('Proxmox guest actions POST to the right guest, and a missing permission says which one', async () => {
+  const seen: string[] = [];
+  const server = createServer((req, res) => {
+    seen.push(`${req.method} ${req.url} ${req.headers.authorization}`);
+    if (req.url?.includes('/200/')) return res.writeHead(403).end();
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end('{"data":"UPID:pve1:0001"}');
+  });
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    await withConfig({ PROXMOX_URL: url, PROXMOX_TOKEN_ID: 'pb@pve!dash', PROXMOX_SECRET: 's3cret' }, async () => {
+      await proxmoxControl('pve1', 'vm', 101, 'shutdown');
+      await proxmoxControl('pve 2', 'lxc', 105, 'start');
+      await assert.rejects(proxmoxControl('pve1', 'lxc', 200, 'reboot'), /VM\.PowerMgmt/);
+    });
+  } finally {
+    server.close();
+  }
+  assert.deepEqual(seen, [
+    'POST /api2/json/nodes/pve1/qemu/101/status/shutdown PVEAPIToken=pb@pve!dash=s3cret',
+    'POST /api2/json/nodes/pve%202/lxc/105/status/start PVEAPIToken=pb@pve!dash=s3cret',
+    'POST /api2/json/nodes/pve1/lxc/200/status/reboot PVEAPIToken=pb@pve!dash=s3cret',
+  ]);
 });
