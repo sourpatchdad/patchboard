@@ -2,6 +2,7 @@
 // the next 24 hours as a strip, and the week as temperature ranges on one
 // shared scale so warm and cold days compare at a glance.
 
+import { Link } from 'react-router-dom';
 import type { WeatherData } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -19,7 +20,9 @@ export function Weather() {
     return (
       <div className="page">
         <h1 className="page-title">Weather</h1>
-        <Empty>Set WEATHER_LAT and WEATHER_LON (and WEATHER_LABEL for the place name) to turn on the forecast.</Empty>
+        <Empty>
+          No forecast yet. <Link to="/settings?tab=connections&setup=weather">Set your location</Link> to turn it on.
+        </Empty>
       </div>
     );
   }

@@ -7,6 +7,7 @@ import { Fragment } from 'react';
 import { arrange } from '../../shared/pages.ts';
 import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
 import { Link } from 'react-router-dom';
+import { useLanding } from '../lib/landing.ts';
 import type { BackupRun, BackupsData, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HourHeatmap } from '../components/Squares.tsx';
@@ -38,6 +39,7 @@ export function Server() {
   const { state: nasState, data: nas } = useSource<TruenasData>('truenas');
   const { data: sys } = useSource<SystemData>('system');
   const page = usePage('server');
+  useLanding(!!snap);
   if (!snap) return null;
 
   const part = (id: string) => {
@@ -101,7 +103,7 @@ function PoolSection({ pool, snapshots, now }: { pool: Pool; snapshots: number |
   const errors = pool.disks.reduce((n, d) => n + d.errors, 0);
   const scan = pool.scan;
   return (
-    <Section title="Storage" count={pool.name}>
+    <Section title="Storage" count={pool.name} id={`storage-${pool.name}`}>
       <div className="pool-figure">
         <span className="big-num">{Math.round(pool.usedPct)}%</span>
         <span className="pool-words">
@@ -194,7 +196,7 @@ function forecast(series: Series | undefined, pool: Pool, now: number): string {
 
 function FallbackStorage({ sys, configured, error }: { sys: SystemData | null; configured: boolean; error?: string }) {
   return (
-    <Section title="Storage">
+    <Section title="Storage" id="storage">
       {sys?.pool && (
         <div className="pool-figure">
           <span className="big-num">{Math.round(sys.pool.usedPct)}%</span>
@@ -204,7 +206,8 @@ function FallbackStorage({ sys, configured, error }: { sys: SystemData | null; c
       <p className="detail-note">
         {configured
           ? `Can't reach TrueNAS: ${error ?? 'no answer yet'}.`
-          : 'Connect TrueNAS for real pool capacity, health, scrubs, disks and alerts: create a read-only API key and set TRUENAS_API_KEY and TRUENAS_URL.'}
+          : 'Connect your NAS for real pool capacity, health, disks and alerts.'}{' '}
+        <Link to={configured ? '/settings?tab=connections&setup=truenas' : '/settings?tab=connections#integrations'}>{configured ? 'Check TrueNAS' : 'Connect it'}</Link>
       </p>
     </Section>
   );
@@ -217,7 +220,7 @@ function Datasets({ nas }: { nas: TruenasData }) {
   const top = nas.datasets.slice(0, 3);
   const rest = nas.datasets.slice(3).reduce((n, d) => n + d.usedBytes, 0);
   return (
-    <Section title="Datasets" count={`${nas.datasets.length} top-level`}>
+    <Section title="Datasets" count={`${nas.datasets.length} top-level`} id="datasets">
       <Split
         label="Space by dataset"
         parts={[
@@ -241,8 +244,7 @@ function Backups({ now }: { now: number }) {
   const { state, data } = useSource<BackupsData>('backups');
   if (!state) return null;
   return (
-    <Section title="Backups" count="nightly" source={state} className="backups-sec">
-      <span id="backups" />
+    <Section title="Backups" count="nightly" source={state} className="backups-sec" id="backups">
       {data ? (
         <>
           <BackupSet title="Databases" runs={data.db} now={now} />
@@ -305,7 +307,7 @@ function Disks({ nas }: { nas: TruenasData }) {
   const { temp: unit } = useAppearance();
   const limits = useLimits();
   return (
-    <Section title="Disks" count={plural(nas.disks.length, 'disk')}>
+    <Section title="Disks" count={plural(nas.disks.length, 'disk')} id="disks">
       <ul className="disks">
         {nas.disks.map((d) => {
           const hot = d.tempC != null && d.tempC >= limits.diskWarnC;
@@ -330,7 +332,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
   const m = sys.mem;
   const used = m ? Math.max(0, m.total - m.available - m.arc) : 0;
   return (
-    <Section title="Resources" count="last 24 hours">
+    <Section title="Resources" count="last 24 hours" id="resources">
       <div className="metric">
         <Roll className="metric-num" value={pct(sys.cpuPct)} />
         <span className="metric-label">
@@ -372,7 +374,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
 function CpuWeek() {
   const h = useHistory(['cpu'], 24 * 7, 1000, 10 * 60_000);
   return (
-    <Section title="CPU by hour" count="last 7 days">
+    <Section title="CPU by hour" count="last 7 days" id="cpu">
       <HourHeatmap series={h.cpu} label="CPU by hour over the last seven days" />
     </Section>
   );
@@ -386,7 +388,7 @@ function Busiest() {
   const byCpu = [...list].sort((a, b) => b[1].cpu - a[1].cpu).slice(0, 5);
   const byMem = [...list].sort((a, b) => b[1].memBytes - a[1].memBytes).slice(0, 5);
   return (
-    <Section title="Busiest containers" action={{ label: 'All stacks', to: '/stacks' }}>
+    <Section title="Busiest containers" action={{ label: 'All stacks', to: '/stacks' }} id="busiest">
       <div className="busiest">
         <div>
           <h3>CPU</h3>
@@ -419,7 +421,7 @@ const LEVEL_TONE: Record<string, string> = { WARNING: 'warn', ERROR: 'crit', CRI
 
 function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
   return (
-    <Section title="TrueNAS alerts" count={nas.alerts.length ? String(nas.alerts.length) : undefined}>
+    <Section title="TrueNAS alerts" count={nas.alerts.length ? String(nas.alerts.length) : undefined} id="nas-alerts">
       {nas.alerts.length ? (
         <ul className="nas-alerts">
           {nas.alerts.map((a) => (
@@ -439,7 +441,7 @@ function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
 
 function CloudSync({ nas, now }: { nas: TruenasData; now: number }) {
   return (
-    <Section title="Cloud sync">
+    <Section title="Cloud sync" id="cloudsync">
       <ul className="task-list">
         {nas.cloudSync.map((t) => {
           const bad = t.state === 'FAILED' || t.state === 'ERROR';

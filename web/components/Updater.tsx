@@ -2,6 +2,7 @@
 // a live panel that follows the job: pull, recreate, wait for healthy. A
 // failed update offers the previous image back.
 
+import { HoldButton } from './Hold.tsx';
 import { useCallback, useEffect, useState } from 'react';
 import type { UpdateJob } from '../../shared/types.ts';
 import { duration } from '../lib/format.ts';
@@ -58,26 +59,12 @@ export function useUpdateJob(name: string) {
   };
 }
 
-export function UpdateButton({ name, busy, onStart }: { name: string; busy: boolean; onStart: () => void }) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 4000);
-    return () => clearTimeout(t);
-  }, [armed]);
+export function UpdateButton({ busy, onStart }: { name: string; busy: boolean; onStart: () => void }) {
+  // Recreating the container takes it down for a moment, so it's a press and hold.
   return (
-    <button
-      type="button"
-      className={`button button-quiet ${armed ? 'is-armed' : ''}`}
-      disabled={busy}
-      onClick={() => {
-        if (!armed) return setArmed(true);
-        setArmed(false);
-        onStart();
-      }}
-    >
-      {busy ? 'Updating...' : armed ? `Update ${name}?` : 'Update'}
-    </button>
+    <HoldButton disabled={busy} hint="Hold to update" onConfirm={onStart}>
+      {busy ? 'Updating...' : 'Update'}
+    </HoldButton>
   );
 }
 

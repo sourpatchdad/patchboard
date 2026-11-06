@@ -471,7 +471,7 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
   }
 }
 
-/** The server at a glance, each number with its last 24 hours. */
+/** The server at a glance, each number with its last 24 hours, each leading to its own section. */
 function Vitals() {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
@@ -485,13 +485,13 @@ function Vitals() {
   return (
     <Section title="Server" action={{ label: 'Details', to: '/server' }} className="vitals-widget">
       <div className="vw-grid">
-        <Link to="/server" className="vw">
+        <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it">
           <Roll className="vw-num" value={pct(sys.cpuPct)} />
           <span className="vw-label">CPU</span>
           <Spark data={h.cpu} max={100} height={22} label="CPU, last 24 hours" />
         </Link>
         {m && (
-          <Link to="/server" className="vw">
+          <Link to="/server#resources" className="vw" title="What memory goes to">
             <Roll className="vw-num" value={size(used)} />
             <span className="vw-label">Memory in use</span>
             <Split
@@ -505,16 +505,17 @@ function Vitals() {
           </Link>
         )}
         {storage != null && (
-          <Link to="/server" className="vw">
+          <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots">
             <Roll className="vw-num" value={`${Math.round(storage)}%`} />
             <span className="vw-label">Storage{pool ? ` on ${pool.name}` : ''}</span>
             <Meter value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}
-        <Link to="/server" className="vw">
+        {/* Uptime has nowhere more to say, so it isn't a link. */}
+        <div className="vw" title={`Up since ${new Date(Date.now() - sys.uptimeSec * 1000).toLocaleString()}`}>
           <Roll className="vw-num" value={uptime(sys.uptimeSec)} />
           <span className="vw-label">Uptime</span>
-        </Link>
+        </div>
       </div>
     </Section>
   );

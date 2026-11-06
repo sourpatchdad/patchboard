@@ -12,13 +12,15 @@ export function Section(props: {
   action?: { label: string; to?: string; href?: string; onClick?: () => void };
   source?: SourceState;
   className?: string;
+  /** An anchor, so a link elsewhere can land on this section. */
+  id?: string;
   children: ReactNode;
 }) {
-  const { count, action, source, className, children } = props;
+  const { count, action, source, className, children, id } = props;
   // Inside a Home widget, the widget's own name (if someone renamed it) wins.
   const title = useContext(WidgetCtx)?.title || props.title;
   return (
-    <section className={`section ${className ?? ''}`}>
+    <section className={`section ${className ?? ''}`} id={id}>
       <header className="section-head">
         <h2>{title}</h2>
         {count != null && <span className="section-count">{count}</span>}

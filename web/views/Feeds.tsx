@@ -4,7 +4,7 @@
 
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { FeedEntry, FeedsResponse } from '../../shared/types.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { Empty } from '../components/ui.tsx';
@@ -202,7 +202,9 @@ export function Feeds() {
     return (
       <div className="page">
         <h1 className="page-title">Reading</h1>
-        <Empty>Feeds come from Miniflux. Set MINIFLUX_URL and MINIFLUX_TOKEN to turn this on.</Empty>
+        <Empty>
+          Reading comes from Miniflux. <Link to="/settings?tab=connections&setup=miniflux">Connect Miniflux</Link> to turn it on.
+        </Empty>
       </div>
     );
   }

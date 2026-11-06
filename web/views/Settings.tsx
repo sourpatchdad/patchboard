@@ -6,6 +6,7 @@ import { INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
+import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
@@ -45,6 +46,7 @@ export function Settings() {
   useEffect(() => {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
   }, [hash]);
+  useLanding(!!useStore().snap && tab === 'connections');
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
     <div className="seg" role="group">
       {options.map(([v, label]) => (
@@ -658,7 +660,9 @@ function Integrations() {
   const { snap } = useStore();
   const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
   const [adopting, setAdopting] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  // A link from elsewhere (an empty page, a storage note) opens one integration.
+  const wanted = new URLSearchParams(useLocation().search).get('setup');
+  const [open, setOpen] = useState<string | null>(wanted);
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string } | null>>({});
   useEffect(() => {
     fetch('/api/setup/integrations')
@@ -666,6 +670,9 @@ function Integrations() {
       .then((b) => setSetup(b as { integrations: SetupIntegration[]; demo: boolean }))
       .catch(() => setSetup({ integrations: [], demo: false }));
   }, []);
+  useEffect(() => {
+    if (setup && wanted) land(`int-${wanted}`);
+  }, [!!setup]);
   if (!snap) return null;
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
     if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
@@ -684,7 +691,7 @@ function Integrations() {
     const su = setupOf(i.id);
     const locked = su ? su.fields.every((f) => f.locked) : false;
     return (
-      <li key={i.id} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''} ${st.why ? 'has-why' : ''}`}>
+      <li key={i.id} id={`int-${i.id}`} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''} ${st.why ? 'has-why' : ''}`}>
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
           {i.adds}
@@ -745,7 +752,7 @@ function Integrations() {
     }
   };
   return (
-    <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all">
+    <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all" id="integrations">
       <p className="settings-note">
         Press Set up, paste the address and key, test and save. Keys are encrypted on this server and never sent back to a browser, not even
         this one. Keeping config in git? A variable in your environment file works too, wins over this page, and shows here as locked.
