@@ -189,6 +189,9 @@ function build(str: Lookup) {
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     scrutiny: str('SCRUTINY_URL') ? { url: trimSlash(str('SCRUTINY_URL')!) } : undefined,
+    nut: str('NUT_HOST')
+      ? { host: str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[0], port: Number(str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[1] ?? 3493) || 3493 }
+      : undefined,
     glances: str('GLANCES_URL')
       ? { urls: str('GLANCES_URL')!.split(',').map((u) => trimSlash(u.trim())).filter(Boolean).slice(0, 50) }
       : undefined,

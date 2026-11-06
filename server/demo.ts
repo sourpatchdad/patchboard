@@ -22,6 +22,7 @@ import type {
   ProxmoxData,
   ScrutinyData,
   GlancesData,
+  NutData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -606,6 +607,12 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<NutData>('nut', 'NUT', 15 * SECOND, () => ({
+      ups: [
+        { name: 'rack', model: 'CyberPower CP1500PFCLCD', onBattery: false, lowBattery: false, replaceBattery: false, charging: false, charge: 100, runtimeSec: 41 * 60, loadPct: 24, watts: 216, inputVolts: 121 },
+        { name: 'desk', model: 'APC Back-UPS 600', onBattery: false, lowBattery: false, replaceBattery: false, charging: true, charge: 87, runtimeSec: 18 * 60, loadPct: 31, watts: 99, inputVolts: 121 },
+      ],
+    })),
     demo<GlancesData>('glances', 'Glances', 15 * SECOND, () => {
       const wave = (base: number, amp: number, period: number) => Math.max(1, base + amp * Math.sin(Date.now() / period));
       const G = 1024 ** 3;

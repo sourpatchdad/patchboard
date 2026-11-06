@@ -27,6 +27,7 @@ export type WidgetType =
   | 'proxmox'
   | 'drives'
   | 'hosts'
+  | 'power'
   | 'requests'
   | 'container'
   | 'json'
@@ -146,6 +147,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   uptime: { name: 'Uptime', about: 'Uptime Kuma monitors: problems first, each with its last 30 checks and 24-hour uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
   dns: { name: 'Ad blocking', about: 'Pi-hole or AdGuard Home: what it blocked today, and Pause for 5, 30 or 60 minutes.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   speed: { name: 'Internet', about: 'Speedtest Tracker: the latest download, upload and ping, and the last day as a line.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  power: { name: 'Power', about: 'NUT: every UPS, on mains or on battery, with charge, runtime and load.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   hosts: { name: 'Hosts', about: 'Glances: CPU, memory, the fullest disk, network and temperature for every machine you list.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 50] } },
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },

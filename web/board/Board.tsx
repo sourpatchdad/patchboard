@@ -23,7 +23,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -440,6 +440,8 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
       return <DrivesWidget now={now} />;
     case 'hosts':
       return <HostsWidget />;
+    case 'power':
+      return <PowerWidget />;
     case 'requests':
       return <RequestsWidget now={now} />;
     case 'container':
@@ -558,6 +560,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     proxmox: has('proxmox'),
     drives: has('scrutiny'),
     hosts: has('glances'),
+    power: has('nut'),
     requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),

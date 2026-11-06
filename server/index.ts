@@ -23,6 +23,7 @@ import { immichAdapter } from './adapters/immich.ts';
 import { proxmoxAdapter } from './adapters/proxmox.ts';
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { glancesAdapter } from './adapters/glances.ts';
+import { nutAdapter } from './adapters/nut.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -109,6 +110,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   proxmox: () => (config.proxmox ? { adapter: proxmoxAdapter() } : null),
   scrutiny: () => (config.scrutiny ? { adapter: scrutinyAdapter() } : null),
   glances: () => (config.glances ? { adapter: glancesAdapter() } : null),
+  nut: () => (config.nut ? { adapter: nutAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();

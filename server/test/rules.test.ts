@@ -301,3 +301,11 @@ test('Glances: a host that stops answering warns; a disk past the storage thresh
     [['vm', 'critical'], ['nas', 'warn'], ['old', 'warn']],
   );
 });
+
+test('NUT: on battery is critical with the minutes left; a battery due for replacement warns', () => {
+  const ups = (name: string, f: Record<string, boolean>) => ({ name, model: 'UPS', onBattery: false, lowBattery: false, replaceBattery: false, charging: false, charge: 80, runtimeSec: 1200, ...f });
+  const alerts = computeAlerts(sources({ nut: { ups: [ups('rack', { onBattery: true }), ups('desk', { replaceBattery: true }), ups('fine', {})] } }), catalog());
+  const mine = alerts.filter((a) => a.source === 'nut');
+  assert.deepEqual(mine.map((a) => [a.subject, a.level]), [['rack', 'critical'], ['desk', 'warn']]);
+  assert.match(mine[0].detail ?? '', /20 minutes/);
+});

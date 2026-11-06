@@ -7068,6 +7068,45 @@ button.ha-act:hover {
   justify-self: start;
 }
 
+/* ---------- Power (NUT) ---------- */
+
+.ups-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ups-list li {
+  display: grid;
+  gap: 6px;
+}
+
+.ups-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.ups-name {
+  color: var(--head);
+  font-weight: 600;
+}
+
+.ups-state {
+  color: var(--ink-3);
+}
+
+.ups-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
 /* ---------- Hosts (Glances) ---------- */
 
 .host-list {

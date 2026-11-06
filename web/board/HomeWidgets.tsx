@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, GlancesData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, GlancesData, NutData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -477,6 +477,42 @@ export function SpeedWidget({ now }: { now: number }) {
             {l.loss ? `, ${l.loss}% packet loss` : ''}.
           </p>
         </>
+      )}
+    </Section>
+  );
+}
+
+// ---------- NUT ----------
+
+/** Each UPS: on mains or on battery, then charge, runtime and load. */
+export function PowerWidget() {
+  const { state, data } = useSource<NutData>('nut');
+  if (!state || !data) return null;
+  const out = data.ups.some((u) => u.onBattery);
+  const mins = (s?: number) => (s == null ? '' : s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round((s % 3600) / 60)} m` : `${Math.round(s / 60)} min`);
+  return (
+    <Section title="Power" source={state} className="power" count={out ? 'On battery' : 'On mains'}>
+      {!data.ups.length ? (
+        <Empty>NUT knows no UPS yet.</Empty>
+      ) : (
+        <ul className="ups-list">
+          {data.ups.map((u) => (
+            <li key={u.name} className={u.onBattery || u.lowBattery ? 'is-out' : undefined} title={u.model}>
+              <span className="ups-head">
+                <span className="ups-name">{u.name}</span>
+                <span className={u.onBattery || u.lowBattery ? 'crit-text' : u.replaceBattery ? 'warn-text' : 'ups-state'}>
+                  {u.lowBattery ? 'Battery nearly empty' : u.onBattery ? 'On battery' : u.replaceBattery ? 'Replace battery' : u.charging ? 'Charging' : 'On mains'}
+                </span>
+              </span>
+              {u.charge != null && <Meter value={u.charge} level={u.charge < 30 ? 'crit' : u.charge < 60 ? 'warn' : 'ok'} />}
+              <span className="ups-nums mono">
+                {u.charge != null && <span>{Math.round(u.charge)}%</span>}
+                {u.runtimeSec != null && <span>{mins(u.runtimeSec)} left</span>}
+                {u.loadPct != null && <span>{Math.round(u.loadPct)}% load{u.watts ? `, ${u.watts} W` : ''}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </Section>
   );

@@ -29,6 +29,7 @@ export type SourceId =
   | 'proxmox'
   | 'scrutiny'
   | 'glances'
+  | 'nut'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -618,6 +619,28 @@ export interface GlancesHost {
 
 export interface GlancesData {
   hosts: GlancesHost[];
+}
+
+/** One UPS from NUT. */
+export interface Ups {
+  name: string;
+  model: string;
+  /** The power is out and it runs on battery. */
+  onBattery: boolean;
+  lowBattery: boolean;
+  /** The UPS asks for a new battery. */
+  replaceBattery: boolean;
+  charging: boolean;
+  /** Percent. */
+  charge?: number;
+  runtimeSec?: number;
+  loadPct?: number;
+  watts?: number;
+  inputVolts?: number;
+}
+
+export interface NutData {
+  ups: Ups[];
 }
 
 export interface CarData {

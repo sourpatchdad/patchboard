@@ -227,6 +227,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'nut',
+    name: 'NUT (UPS)',
+    adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',
+    env: ['NUT_HOST'],
+    where: "The machine your UPS plugs into over USB runs the NUT server, port 3493: TrueNAS (Services, UPS), Unraid (UPS settings, NUT plugin), Synology (Hardware & Power, UPS, Enable network UPS server, and allow Patchboard's address), Proxmox or any Linux box with nut-server. Reading needs no login.",
+    source: true,
+  },
+  {
     id: 'glances',
     name: 'Glances',
     adds: 'A Hosts widget for any machine that runs Glances, from a mini PC or a Pi to a rack server: CPU, memory, the fullest disk, network and the hottest sensor. List several addresses to watch every machine at once. A disk past your storage thresholds, or a host that stops answering, shows in Needs attention.',

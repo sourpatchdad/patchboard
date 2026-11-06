@@ -3,6 +3,7 @@
 
 import type {
   GlancesData,
+  NutData,
   ProxmoxData,
   ScrutinyData,
   Alert,
@@ -237,6 +238,24 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
+    }
+  }
+
+  // NUT: the power is out, the battery is low, or it wants replacing.
+  for (const u of data<NutData>(sources, 'nut')?.ups ?? []) {
+    const left = u.runtimeSec != null ? `${Math.round(u.runtimeSec / 60)} minutes of battery left` : undefined;
+    if (u.onBattery || u.lowBattery) {
+      alerts.push({
+        id: `ups-power-${u.name}`,
+        level: 'critical',
+        subject: u.name,
+        title: u.lowBattery ? `${u.name}'s battery is nearly empty` : `The power is out: ${u.name} is on battery`,
+        detail: [left, u.charge != null ? `${Math.round(u.charge)}% charged` : undefined].filter(Boolean).join(', ') || undefined,
+        source: 'nut',
+      });
+    }
+    if (u.replaceBattery) {
+      alerts.push({ id: `ups-rb-${u.name}`, level: 'warn', subject: u.name, title: `${u.name} needs a new battery`, detail: u.model, source: 'nut' });
     }
   }
 
