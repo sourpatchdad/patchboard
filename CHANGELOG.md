@@ -35,3 +35,7 @@ The first public release, 1.0.0. What's in it:
 - **Safe to trust:** sign-in with forward auth or OIDC, a read-only mode, a
   socket proxy example, an activity log, and keys that never reach the
   browser. SECURITY.md has the details.
+
+For contributors: the otter artwork stays outside the repo. Build the icons
+with `npm run icons -- /path/to/otter-art`; the built images in `web/public`
+are what ship.
