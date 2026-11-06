@@ -19,6 +19,16 @@ import type {
   Snapshot,
   StatsData,
   TautulliData,
+  DnsData,
+  HomeAssistantData,
+  ListeningData,
+  PortainerData,
+  ScrutinyData,
+  SeerrData,
+  SpeedData,
+  SyncthingData,
+  TracearrData,
+  UptimeKumaData,
 } from '../../shared/types.ts';
 import { plural, speed } from './format.ts';
 import { shortStatus } from './services.ts';
@@ -92,6 +102,55 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   if (c === 'miniflux') {
     const m = data<MinifluxData>(snap, 'miniflux');
     return m ? (m.unread ? `${m.unread} unread` : 'All read') : null;
+  }
+  if (c === 'audiobookshelf' || c === 'navidrome') {
+    const l = data<ListeningData>(snap, c);
+    return l ? (l.streams.length ? `${l.streams.length} listening` : 'Nobody listening') : null;
+  }
+  if (c === 'overseerr' || c === 'jellyseerr' || c === 'seerr') {
+    const r = data<SeerrData>(snap, 'overseerr');
+    return r ? (r.pending ? `${r.pending} waiting` : r.processing ? `${r.processing} on the way` : 'Nothing waiting') : null;
+  }
+  if (c === 'homeassistant' || c === 'home-assistant') {
+    const h = data<HomeAssistantData>(snap, 'homeassistant');
+    return h ? `${h.total.toLocaleString()} entities` : null;
+  }
+  if (c === 'tracearr') {
+    const t = data<TracearrData>(snap, 'tracearr');
+    if (!t) return null;
+    const down = t.servers.filter((x) => x.status === 'down').length;
+    return down ? `${down} ${down === 1 ? 'server' : 'servers'} down` : t.violations.length ? `${t.violations.length} to review` : `${t.servers.reduce((n, x) => n + x.streams, 0)} streaming`;
+  }
+  if (c === 'uptime-kuma' || c === 'uptimekuma' || c === 'gatus') {
+    const u = data<UptimeKumaData>(snap, c === 'gatus' ? 'gatus' : 'uptimekuma');
+    if (!u) return null;
+    const down = u.monitors.filter((m) => m.status === 'down').length;
+    return down ? `${down} down` : `${u.monitors.filter((m) => m.status === 'up').length} up`;
+  }
+  if (c === 'pihole' || c === 'adguard' || c === 'adguardhome') {
+    const d = data<DnsData>(snap, c === 'pihole' ? 'pihole' : 'adguard');
+    return d ? (d.protecting ? `${d.pct.toFixed(1)}% blocked` : 'Blocking paused') : null;
+  }
+  if (c === 'speedtest-tracker' || c === 'speedtest') {
+    const sp = data<SpeedData>(snap, 'speedtest');
+    return sp?.latest ? `↓ ${Math.round(sp.latest.down)} Mbps` : null;
+  }
+  if (c === 'scrutiny') {
+    const sc = data<ScrutinyData>(snap, 'scrutiny');
+    if (!sc) return null;
+    const bad = sc.drives.filter((d) => d.status !== 'ok').length;
+    return bad ? `${bad} ${bad === 1 ? 'drive' : 'drives'} failing` : `${sc.drives.length} drives healthy`;
+  }
+  if (c === 'portainer') {
+    const pt = data<PortainerData>(snap, 'portainer');
+    return pt ? plural(pt.envs.reduce((n, e) => n + e.running, 0), 'container') + ' running' : null;
+  }
+  if (c === 'syncthing') {
+    const st = data<SyncthingData>(snap, 'syncthing');
+    if (!st) return null;
+    const bad = st.folders.filter((f) => f.state === 'error' || f.state === 'failing').length;
+    const busy = st.folders.filter((f) => f.state === 'syncing').length;
+    return bad ? `${bad} can't sync` : busy ? `${busy} syncing` : 'In sync';
   }
   if (c === 'frigate') {
     const f = data<FrigateData>(snap, 'frigate');

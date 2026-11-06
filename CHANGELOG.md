@@ -13,6 +13,8 @@ The first public release, 1.0.0. What's in it:
   downloading.
   A widget made wider flows its list into columns instead of stretching
   one line across the screen.
+  App tiles speak for more integrations: who's listening, requests waiting,
+  blocking, speed, drives, sync and Tracearr reviews.
   Recently added fills one row on a wide screen, each title once even when
   Plex and Jellyfin group a season differently.
   Each number in the Server widget opens the section that explains it,
