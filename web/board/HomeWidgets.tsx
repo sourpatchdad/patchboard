@@ -547,7 +547,7 @@ export function BooksWidget() {
         <ul className="book-list">
           {data.books.slice(0, limit).map((b, i) => (
             <li key={`${b.title}-${i}`}>
-              {b.cover ? <img className="book-cover" src={b.cover} alt="" loading="lazy" /> : <span className="book-cover book-blank" aria-hidden />}
+              {b.cover ? <img className="book-cover" src={b.cover} alt="" /> : <span className="book-cover book-blank" aria-hidden />}
               <span className="book-text">
                 <span className="book-title">{b.title}</span>
                 {b.author && <span className="book-author">{b.author}</span>}

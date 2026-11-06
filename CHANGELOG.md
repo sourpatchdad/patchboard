@@ -46,3 +46,6 @@ The first public release, 1.0.0. What's in it:
 For contributors: the otter artwork stays outside the repo. Build the icons
 with `npm run icons -- /path/to/otter-art`; the built images in `web/public`
 are what ship.
+
+The screenshots show the 1920 by 1080 desktop and an iPhone 17 Pro, with
+boards for your machines and your household and a sheet of the otter's moods.

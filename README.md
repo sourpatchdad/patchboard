@@ -85,9 +85,12 @@ shows. Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors.
 
 **An otter keeps watch.** The otter in the corner follows your server: calm
-when all is quiet, eyes open when updates wait, asleep at night, looking up with an amber dot when
-something needs you, worried with a red one when something is down. Your
-browser tab follows along, so a pinned tab tells you from across the room.
+when all is quiet, eyes open when updates wait, asleep at night, looking up
+with an amber dot when something needs you, worried with a red one when
+something is down. Your browser tab follows along, so a pinned tab tells you
+from across the room.
+
+![The otter's moods and what brings each one on](docs/screenshots/otter-moods.webp)
 
 **It's safe to run.** Keys stay on the server. Read-only mode, a Docker socket
 proxy, forward auth and an activity log let you decide how much it can do and
@@ -97,8 +100,8 @@ see who did what.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, This week, inbox, reading, server, weather, changes, recently added, Next up, any container or JSON API. |
-| **Server** | TrueNAS pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate. |
+| **Home** | The board: apps, Needs attention, Right now, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, calendar, notes, books, any container or JSON API. |
+| **Server** | Pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate (TrueNAS, or any mounted folder). |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |
 | **Upcoming** | Sonarr, Radarr and Trakt in one calendar, without doubles, with posters. |
@@ -110,6 +113,10 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 | Server | Upcoming | Phone |
 |---|---|---|
 | ![Server page](docs/screenshots/server.webp) | ![Upcoming calendar](docs/screenshots/upcoming.webp) | ![Home on a phone](docs/screenshots/phone-home.webp) |
+
+| Your machines | Your household |
+|---|---|
+| ![Hosts, storage, power, drives, Proxmox, Docker hosts and the network](docs/screenshots/machines.webp) | ![Calendar, notes, books and Right now](docs/screenshots/household.webp) |
 
 **[Take the tour](docs/TOUR.md):** every page, every editor, every theme and
 the phone views.

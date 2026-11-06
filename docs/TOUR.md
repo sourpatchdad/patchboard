@@ -14,6 +14,8 @@ name it a little differently.
 
 ![Home](screenshots/home.webp)
 
+![The otter's moods and what brings each one on](screenshots/otter-moods.webp)
+
 **The otter** follows the server in the header and the browser tab: calm,
 eyes open when image updates wait, asleep on quiet nights, alert with an
 amber dot, worried with a red one. The
@@ -56,9 +58,9 @@ newest from each category, with pictures. Filter by category, sort, or mark a
 category read. Open an article to read it here; `j` and `k` move, `o` opens
 the original.
 
-![Reading, the edition](screenshots/feeds-edition.webp)
+![Reading, the edition](screenshots/reading-edition.webp)
 
-![Reading, one article](screenshots/feeds.webp)
+![Reading, one article](screenshots/reading.webp)
 
 **The house:** Home Assistant lights, sensors and scenes, the car, and Wake
 buttons, on the Home board. Tap a light or a scene; a lock or a garage door
@@ -74,6 +76,22 @@ minutes; it turns itself back on when the time runs out. Requests lists
 what people asked for in Overseerr or Jellyseerr, with Approve and Decline.
 
 ![Requests, Internet, Uptime and ad blocking on the board](screenshots/network.webp)
+
+**The machines:** Hosts shows CPU, memory, the fullest disk, network and
+temperature for every machine running Glances. Storage covers Unraid,
+Synology and QNAP in one widget, volumes and every disk. Power shows each UPS
+through NUT, Drives each disk's health through Scrutiny, Proxmox its nodes and
+guests, Docker hosts every Portainer environment, Network your UniFi devices
+and Tailscale machines. Each one raises its own trouble in Needs attention,
+at the thresholds in Settings, Alerts.
+
+![Hosts, Power, Storage, Proxmox, Drives, Docker hosts, Network and Photos on the board](screenshots/machines.webp)
+
+**The household:** a Calendar from any iCal address, Notes with checklists
+the house shares, what you are reading on Hardcover or Goodreads, and who
+is listening on Audiobookshelf or Navidrome in Right now.
+
+![Calendar, Notes, Books, This week and Right now on the board](screenshots/household.webp)
 
 **Logs:** live from Docker.
 
@@ -116,6 +134,11 @@ A new browser or home-screen app starts from the last look you saved.
 **Connections** shows which integrations run. **Set up** takes an address and
 a key, tests the connection, and saves. Keys are encrypted on the server and
 never shown again; anything set in the environment file shows as locked.
+
+**Settings, Alerts** sets when storage counts as full and a drive as hot,
+with a warning and an alarm level for each, for every device at once.
+
+![Settings, Alerts](screenshots/settings-alerts.webp)
 
 ![Integrations](screenshots/integrations.webp)
 

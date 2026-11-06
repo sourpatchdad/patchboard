@@ -15,8 +15,9 @@ import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const OUT = 'docs/screenshots';
-const DESKTOP = { width: 1600, height: 1000 };
-const PHONE = { width: 390, height: 844 };
+// 1920x1080 is the showcase size; the phone is an iPhone 17 Pro.
+const DESKTOP = { width: 1920, height: 1080 };
+const PHONE = { width: 402, height: 874 };
 
 async function launch() {
   for (const channel of ['chrome', 'msedge', undefined]) {
@@ -125,9 +126,9 @@ try {
   await go('/weather');
   await shoot(page, 'weather');
   await go('/feeds');
-  await shoot(page, 'feeds-edition');
+  await shoot(page, 'reading-edition');
   await go('/feeds?e=1');
-  await shoot(page, 'feeds');
+  await shoot(page, 'reading');
 
   // The house, then the network, as boards of their own, then back to the default.
   const board = (method, body) =>
@@ -147,6 +148,46 @@ try {
   });
   await go('/', 1500);
   await shoot(page, 'house');
+
+  // The machines: hosts, storage, power, drives, Proxmox, Docker hosts, the network.
+  await board('PUT', {
+    columns: 3,
+    widgets: [
+      { id: 'hosts', type: 'hosts', size: 'l', span: 2 },
+      { id: 'power', type: 'power', size: 's', span: 1 },
+      { id: 'storage', type: 'storage', size: 'm', span: 1 },
+      { id: 'proxmox', type: 'proxmox', size: 'm', span: 1 },
+      { id: 'drives', type: 'drives', size: 's', span: 1 },
+      { id: 'dockerhosts', type: 'dockerhosts', size: 's', span: 1 },
+      { id: 'network', type: 'network', size: 's', span: 1 },
+      { id: 'photos', type: 'photos', size: 's', span: 1 },
+    ],
+  });
+  await go('/', 1500);
+  await shoot(page, 'machines', { fullPage: true });
+
+  // The household: calendar, a shared note, books and the house itself.
+  await page.evaluate(() =>
+    fetch('/api/notes/notes-1', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
+      body: JSON.stringify({ text: 'Groceries\n- [ ] oat milk\n- [x] coffee\n- [ ] dog food\n\nGuest Wi-Fi: otterhouse / riverstones' }),
+    }),
+  );
+  await board('PUT', {
+    columns: 3,
+    widgets: [
+      { id: 'calendar', type: 'calendar', size: 'm', span: 1 },
+      { id: 'notes-1', type: 'notes', size: 's', span: 1, config: { title: 'Kitchen' } },
+      { id: 'books', type: 'books', size: 's', span: 1 },
+      { id: 'upcoming', type: 'upcoming', size: 'm', span: 2 },
+      { id: 'now', type: 'now', size: 'm', span: 1 },
+    ],
+  });
+  await go('/', 1500);
+  // Book covers come from Open Library: wait until every image has loaded.
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15_000 }).catch(() => {});
+  await shoot(page, 'household', { fullPage: true });
 
   // The network: requests, speed tests, monitors and ad blocking.
   await board('PUT', {
@@ -192,6 +233,8 @@ try {
   await shoot(page, 'page-customize');
   await go('/settings');
   await shoot(page, 'settings-look', { fullPage: true });
+  await go('/settings?tab=alerts');
+  await shoot(page, 'settings-alerts');
   await go('/settings?tab=connections');
   await shoot(page, 'integrations', { fullPage: true });
   const emby = page.locator('.integration', { hasText: 'Emby' }).first();
@@ -218,6 +261,32 @@ try {
     await shoot(p, `theme-${theme}-${scheme}`);
     await ctx.close();
   }
+
+  console.log('The otter');
+  // Each mood and what brings it on, from the images the app itself uses.
+  const moods = [
+    ['calm', 'All quiet', 'Nothing needs you.'],
+    ['hello', 'Eyes open', 'Image updates or an app it can’t reach: worth a look, not a problem.'],
+    ['alert', 'Alert', 'Something needs you: a warning in Needs attention, an amber dot on the tab.'],
+    ['worried', 'Worried', 'Something is down: an alarm in Needs attention, a red dot on the tab.'],
+    ['asleep', 'Asleep', 'All quiet between 11 PM and 6 AM.'],
+    ['happy', 'Happy', 'Welcomes you on first run.'],
+    ['lost', 'Lost', 'An address Patchboard doesn’t know.'],
+  ];
+  const sheet = await dark.newPage();
+  await sheet.setViewportSize({ width: 1920, height: 440 });
+  await sheet.setContent(`<body style="margin:0;padding:56px 64px;background:#0e1114;color:#e8eaed;font:15px/1.45 system-ui,sans-serif">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:28px">
+    ${moods
+      .map(
+        ([m, t, d]) => `<figure style="margin:0;text-align:center"><img src="${demo.base}/otter/${m}-clear.png" style="width:210px;height:210px">
+        <figcaption><strong style="display:block;font-size:19px;margin:10px 0 6px">${t}</strong><span style="color:#9aa0a6">${d}</span></figcaption></figure>`,
+      )
+      .join('')}
+    </div></body>`);
+  await sheet.waitForLoadState('networkidle');
+  await shoot(sheet, 'otter-moods');
+  await sheet.close();
 
   console.log('First run');
   const fp = await dark.newPage();

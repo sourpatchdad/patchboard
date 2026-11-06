@@ -28,6 +28,7 @@ import type {
   MonitorData,
   UnifiData,
   PaperlessData,
+  NextcloudData,
   ListeningData,
   CalendarData,
   BooksData,
@@ -638,12 +639,20 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
+    demo<ArrData>('prowlarr', 'Prowlarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 0, problems: [], health: [] })),
+    demo<ArrData>('bazarr', 'Bazarr', 5 * MINUTE, () => ({ upcoming: [], queueTotal: 23, problems: [], health: [] })),
+    demo<NextcloudData>('nextcloud', 'Nextcloud', 5 * MINUTE, () => ({ version: '30.0.2', files: 128_403, users: 4, activeToday: 2, appUpdates: 0, webUrl: 'http://nextcloud.local' })),
+    demo<ListeningData>('navidrome', 'Navidrome', 20 * SECOND, () => ({
+      streams: [{ user: 'Jo', title: 'Nights', subtitle: 'Frank Ocean, Blonde', progress: -1, state: 'playing', transcode: false }],
+    })),
     demo<BooksData>('books', 'Hardcover', 30 * MINUTE, () => ({
       source: 'Hardcover',
       webUrl: 'https://hardcover.app',
+      // Covers from Open Library, by ISBN.
       books: [
-        { title: 'Project Hail Mary', author: 'Andy Weir' },
-        { title: 'The Wind-Up Bird Chronicle', author: 'Haruki Murakami' },
+        { title: 'Project Hail Mary', author: 'Andy Weir', cover: 'https://covers.openlibrary.org/b/isbn/9780593135204-M.jpg' },
+        { title: 'Piranesi', author: 'Susanna Clarke', cover: 'https://covers.openlibrary.org/b/isbn/9781635575637-M.jpg' },
+        { title: 'The Wind-Up Bird Chronicle', author: 'Haruki Murakami', cover: 'https://covers.openlibrary.org/b/isbn/9780679775430-M.jpg' },
       ],
     })),
     demo<CalendarData>('calendar', 'Calendar', 15 * MINUTE, () => {
