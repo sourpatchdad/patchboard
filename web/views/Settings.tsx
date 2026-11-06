@@ -698,6 +698,9 @@ function Integrations() {
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
     if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
       return { on: false, text: 'Off', tone: 'off', why: 'This is the slim image, which has no Docker CLI. Use the full image to update containers from here.' };
+    // Hardcover and Goodreads fill one Books widget; with both saved, Hardcover is the one used.
+    if (i.id === 'goodreads' && snap.features?.includes('hardcover') && setupOf('goodreads')?.fromUi)
+      return { on: false, text: 'Saved, Hardcover is in use', tone: 'off' };
     if (!i.source) return snap.features?.includes(i.id) ? { on: true, text: 'On', tone: 'ok' } : { on: false, text: 'Off', tone: 'off' };
     const s = snap.sources[i.id as keyof typeof snap.sources];
     if (!s) return { on: false, text: 'Off', tone: 'off' };

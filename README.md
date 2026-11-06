@@ -8,7 +8,7 @@ A start page and control center for a home server. Open it and you know in
 five seconds whether anything is broken, what's new, and what's coming. Click
 anything and you land where you can fix it.
 
-![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, reading and recently added](docs/screenshots/home.webp)
+![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the inbox, reading and the week's releases](docs/screenshots/home.webp)
 
 Healthy apps stay quiet. The space goes to what needs you: a stopped
 container, a full pool, a stuck import, tonight's episodes.
