@@ -628,6 +628,21 @@ export function demoAdapters(): Adapter[] {
         ],
       };
     }),
+    demo<NasSystem>('synology', 'Synology', 2 * MINUTE, () => {
+      const T = 1e12;
+      return {
+        platform: 'Synology',
+        name: 'DS923+',
+        webUrl: 'https://nas.local:5001',
+        volumes: [{ name: 'Volume 1', used: 9.8 * T, total: 21.8 * T, status: 'ok' }],
+        disks: [
+          { name: 'Drive 1', model: 'HAT5300-8T', status: 'ok', tempC: 38 },
+          { name: 'Drive 2', model: 'HAT5300-8T', status: 'ok', tempC: 39 },
+          { name: 'Drive 3', model: 'HAT5300-8T', status: 'ok', tempC: 39 },
+          { name: 'Drive 4', model: 'HAT5300-8T', status: 'ok', tempC: 37 },
+        ],
+      };
+    }),
     demo<NutData>('nut', 'NUT', 15 * SECOND, () => ({
       ups: [
         { name: 'rack', model: 'CyberPower CP1500PFCLCD', onBattery: false, lowBattery: false, replaceBattery: false, charging: false, charge: 100, runtimeSec: 41 * 60, loadPct: 24, watts: 216, inputVolts: 121 },

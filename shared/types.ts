@@ -31,6 +31,8 @@ export type SourceId =
   | 'glances'
   | 'nut'
   | 'unraid'
+  | 'synology'
+  | 'qnap'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -686,7 +688,7 @@ export interface Limits {
 }
 
 /** The sources that report a NasSystem. */
-export const NAS_SOURCES = ['unraid'] as const;
+export const NAS_SOURCES = ['unraid', 'synology', 'qnap'] as const;
 
 export interface CarData {
   cars: Car[];

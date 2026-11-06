@@ -13,7 +13,11 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Integrations
 
-- [ ] Unraid, Synology DSM, QNAP
+- [ ] Portainer (several Docker hosts), Netdata and Prometheus
+- [ ] UniFi and Omada, Tailscale
+- [ ] Nextcloud, Paperless-ngx, Lidarr, Readarr, Prowlarr, Bazarr
+- [ ] Audiobookshelf and Navidrome in Right now
+- [ ] Gitea and Forgejo, Vaultwarden
 - [ ] Start and stop for Proxmox guests
 - [ ] Links in the Elsewhere row added from the UI
 - [ ] Hardcover and Goodreads: what you are reading

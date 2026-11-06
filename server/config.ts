@@ -189,6 +189,14 @@ function build(str: Lookup) {
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
+    synology:
+      str('SYNOLOGY_URL') && str('SYNOLOGY_USERNAME') && str('SYNOLOGY_PASSWORD')
+        ? { url: trimSlash(str('SYNOLOGY_URL')!), username: str('SYNOLOGY_USERNAME')!, password: str('SYNOLOGY_PASSWORD')!, verifyTls: str('SYNOLOGY_VERIFY_TLS') === '1' }
+        : undefined,
+    qnap:
+      str('QNAP_URL') && str('QNAP_USERNAME') && str('QNAP_PASSWORD')
+        ? { url: trimSlash(str('QNAP_URL')!), username: str('QNAP_USERNAME')!, password: str('QNAP_PASSWORD')!, verifyTls: str('QNAP_VERIFY_TLS') === '1' }
+        : undefined,
     scrutiny: str('SCRUTINY_URL') ? { url: trimSlash(str('SCRUTINY_URL')!) } : undefined,
     nut: str('NUT_HOST')
       ? { host: str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[0], port: Number(str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[1] ?? 3493) || 3493 }

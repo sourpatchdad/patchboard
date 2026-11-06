@@ -25,6 +25,8 @@ import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { glancesAdapter } from './adapters/glances.ts';
 import { nutAdapter } from './adapters/nut.ts';
 import { unraidAdapter } from './adapters/unraid.ts';
+import { synologyAdapter } from './adapters/synology.ts';
+import { qnapAdapter } from './adapters/qnap.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -113,6 +115,8 @@ const FACTORIES: Record<string, () => Made | null> = {
   glances: () => (config.glances ? { adapter: glancesAdapter() } : null),
   nut: () => (config.nut ? { adapter: nutAdapter() } : null),
   unraid: () => (config.unraid ? { adapter: unraidAdapter() } : null),
+  synology: () => (config.synology ? { adapter: synologyAdapter() } : null),
+  qnap: () => (config.qnap ? { adapter: qnapAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();
