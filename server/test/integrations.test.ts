@@ -26,3 +26,11 @@ test('integration ids are unique', () => {
   const ids = INTEGRATIONS.map((i) => i.id);
   assert.equal(new Set(ids).size, ids.length);
 });
+
+test('every integration sits in exactly one Settings category', async () => {
+  const { CATEGORIES, INTEGRATIONS } = await import('../../shared/integrations.ts');
+  const placed = CATEGORIES.flatMap(([, ids]) => ids);
+  assert.deepEqual(placed.filter((id, i) => placed.indexOf(id) !== i), [], 'listed twice');
+  assert.deepEqual(INTEGRATIONS.map((i) => i.id).filter((id) => !placed.includes(id)), [], 'missing a category');
+  assert.deepEqual(placed.filter((id) => !INTEGRATIONS.some((i) => i.id === id)), [], 'no such integration');
+});

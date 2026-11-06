@@ -598,3 +598,14 @@ export const INTEGRATIONS: Integration[] = [
     source: false,
   },
 ];
+
+/** How Settings groups the list, in this order. Every integration sits in exactly one. */
+export const CATEGORIES: [name: string, ids: string[]][] = [
+  ['Media', ['tautulli', 'jellyfin', 'emby', 'trakt', 'overseerr', 'tracearr', 'immich', 'audiobookshelf', 'navidrome']],
+  ['Downloads', ['sonarr', 'radarr', 'lidarr', 'readarr', 'prowlarr', 'bazarr', 'qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget']],
+  ['Storage and servers', ['docker', 'system', 'truenas', 'unraid', 'synology', 'qnap', 'proxmox', 'portainer', 'glances', 'beszel', 'scrutiny', 'nut', 'syncthing']],
+  ['Monitoring', ['checks', 'uptimekuma', 'gatus', 'healthchecks', 'netdata', 'prometheus', 'speedtest', 'backups', 'diun', 'updates', 'runbook', 'dozzle']],
+  ['Network', ['unifi', 'tailscale', 'pihole', 'adguard', 'wake']],
+  ['Home and life', ['homeassistant', 'frigate', 'tessie', 'weather', 'calendar', 'fastmail', 'miniflux', 'hardcover', 'goodreads', 'paperless', 'nextcloud', 'gitea']],
+  ['Notifications', ['ntfy', 'gotify', 'pushover', 'discord', 'email', 'webhook']],
+];

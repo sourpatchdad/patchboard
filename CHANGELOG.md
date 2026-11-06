@@ -20,7 +20,8 @@ The first public release, 1.0.0. What's in it:
 - **One compose file, no config files.** Add every running container as an
   app in one click, arrange them and add links in Edit apps, connect integrations and turn
   on a password in Settings, with keys encrypted on the server. Mounts at
-  /pool, /docs and /logs turn on by being there. A `services.yaml`, Docker
+  /pool, /docs and /logs turn on by being there. Integrations sit in
+  categories, A to Z, with a search and On or Not set up. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
   in so the files can go. Coming from Homepage, paste its `services.yaml`
   and the apps come over.

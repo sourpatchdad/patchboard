@@ -6514,6 +6514,29 @@ a.date:hover {
   padding: 0;
 }
 
+/* Find and filter, above the categories. */
+.int-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.int-tools .field {
+  flex: 0 1 300px;
+}
+
+.integrations-divider {
+  padding-top: 18px;
+}
+
+.int-cat-count {
+  margin-left: 6px;
+  font: 400 12px var(--f-mono);
+  color: var(--ink-3);
+}
+
 .integration {
   display: grid;
   grid-template-columns: minmax(8em, 11em) minmax(0, 1fr) minmax(0, auto);

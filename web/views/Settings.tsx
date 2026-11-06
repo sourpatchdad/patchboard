@@ -2,7 +2,7 @@
 // every device; everything else is a per-device preference (appearance.ts).
 // Themes are data in themes.ts, so this page renders whatever is there.
 
-import { INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
+import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
@@ -660,6 +660,8 @@ function Integrations() {
   const { snap } = useStore();
   const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
   const [adopting, setAdopting] = useState(false);
+  const [find, setFind] = useState('');
+  const [show, setShow] = useState<'all' | 'on' | 'off'>('all');
   // A link from elsewhere (an empty page, a storage note) opens one integration.
   const wanted = new URLSearchParams(useLocation().search).get('setup');
   const [open, setOpen] = useState<string | null>(wanted);
@@ -774,22 +776,44 @@ function Integrations() {
           remove them.
         </p>
       )}
-      {/* One list, so a row that turns on moves without its open form starting over. */}
+      <div className="int-tools">
+        <input className="field" type="search" value={find} placeholder="Find an integration" aria-label="Find an integration" onChange={(e) => setFind(e.target.value)} />
+        <span className="seg" role="group" aria-label="Show">
+          {(
+            [
+              ['all', `All ${rows.length}`],
+              ['on', `On ${on.length}`],
+              ['off', `Not set up ${off.length}`],
+            ] as const
+          ).map(([k, label]) => (
+            <button key={k} type="button" aria-pressed={show === k} onClick={() => setShow(k)}>
+              {label}
+            </button>
+          ))}
+        </span>
+      </div>
+      {/* One list, so a row that turns on keeps its open form. Categories in a set order, A to Z inside. */}
       <ul className="integrations">
-        {on.map(row)}
-        {off.length > 0 && (
-          <li key="available" className="integrations-divider" aria-hidden>
-            <h3 className="jw-sub">Available to turn on</h3>
-          </li>
-        )}
-        {off.map(row)}
+        {CATEGORIES.map(([cat, ids]) => {
+          const q = find.trim().toLowerCase();
+          const list = rows
+            .filter((r) => ids.includes(r.i.id))
+            .filter((r) => (show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true))
+            .filter((r) => !q || `${r.i.name} ${r.i.adds}`.toLowerCase().includes(q) || open === r.i.id)
+            .sort((a, b) => a.i.name.localeCompare(b.i.name));
+          if (!list.length) return null;
+          return [
+            <li key={`cat-${cat}`} className="integrations-divider">
+              <h3 className="jw-sub">
+                {cat} <span className="int-cat-count">{list.filter((r) => r.st.on).length} on</span>
+              </h3>
+            </li>,
+            ...list.map(row),
+          ];
+        })}
       </ul>
-      {off.length > 0 && (
-        <>
-          <p className="settings-note">
-            The rest read folders, so they need a mount in compose and their variable there. App numbers on tiles need nothing here: set them up in Apps, Edit apps.
-          </p>
-        </>
+      {find.trim() && !rows.some((r) => `${r.i.name} ${r.i.adds}`.toLowerCase().includes(find.trim().toLowerCase())) && (
+        <p className="settings-note">Nothing called that. App numbers on tiles work for any app with a JSON API: Apps, Edit apps.</p>
       )}
       <p className="settings-note">
         More on each: <a href="https://github.com/sourpatchdad/patchboard/blob/main/docs/INTEGRATIONS.md" target="_blank" rel="noreferrer">docs/INTEGRATIONS.md</a>.

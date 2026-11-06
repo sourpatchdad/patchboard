@@ -61,7 +61,12 @@ export function securityHeaders(indexHtml: string | null): MiddlewareHandler {
     // Links out to your apps shouldn't carry Patchboard's address with them.
     c.header('Referrer-Policy', 'no-referrer');
     c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
-    c.header('Cross-Origin-Opener-Policy', 'same-origin');
+    // Browsers honor this only on a secure origin; over plain http on a LAN
+    // address it does nothing but print a warning in every console.
+    const host = (c.req.header('host') ?? '').replace(/:\d+$/, '');
+    if (c.req.url.startsWith('https:') || c.req.header('x-forwarded-proto') === 'https' || host === 'localhost' || host === '127.0.0.1') {
+      c.header('Cross-Origin-Opener-Policy', 'same-origin');
+    }
   };
 }
 
