@@ -55,7 +55,8 @@ export function Shell() {
   const serious = snap?.alerts.filter((a) => a.level !== 'info') ?? [];
   const level = serious.some((a) => a.level === 'critical') ? 'critical' : serious.length ? 'warn' : null;
   const hour = new Date().getHours();
-  const mood = moodFor(level, hour >= 23 || hour < 6);
+  const notes = snap?.alerts.filter((a) => a.level === 'info').length ?? 0;
+  const mood = moodFor(level, hour >= 23 || hour < 6, notes);
   useEffect(() => {
     if (snap) setStatus(level, serious.length);
   }, [snap, level, serious.length]);

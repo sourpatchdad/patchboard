@@ -175,7 +175,7 @@ try {
   await page.getByRole('button', { name: /Customize/ }).click();
   await settle(page, 600);
   await shoot(page, 'customize');
-  await page.getByRole('button', { name: 'Feeds settings' }).click();
+  await page.getByRole('button', { name: 'Reading settings' }).click();
   await settle(page, 400);
   await shoot(page, 'widget-settings');
   await go('/apps');

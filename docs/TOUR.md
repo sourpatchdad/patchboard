@@ -15,7 +15,8 @@ name it a little differently.
 ![Home](screenshots/home.webp)
 
 **The otter** follows the server in the header and the browser tab: calm,
-asleep on quiet nights, alert with an amber dot, worried with a red one. The
+eyes open when image updates wait, asleep on quiet nights, alert with an
+amber dot, worried with a red one. The
 tab title counts what needs you, as in "(2) Patchboard". When nothing does,
 it sits beside "All quiet" and keeps watch. Settings, Look hides it.
 

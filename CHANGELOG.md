@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **The otter notices quiet notes.** With image updates waiting, or an app
+  it can't reach, it opens its eyes (the hello face) instead of resting
+  calm. No amber and no tab dot: these aren't problems. At night it sleeps
+  through them.
 - **Feeds is now Reading,** in the top bar, the Home widget, Jump to and
   Settings. The address stays /feeds, so bookmarks keep working.
 - **Quiet notes in Home's header lose their rule.** "15 containers have

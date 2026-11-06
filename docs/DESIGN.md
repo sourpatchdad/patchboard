@@ -86,7 +86,8 @@ something needs it, and Patchboard should feel the same.
 - **Never recolored.** The build lifts the otter off its tile and resizes
   it; the pixels stay as drawn. On a light page the mascot sits on its navy
   tile, so the cream whiskers show.
-- **Moods follow the server.** Calm when all is quiet, asleep on quiet
+- **Moods follow the server.** Calm when all is quiet, eyes open when
+  quiet notes wait (image updates, an app it can't reach), asleep on quiet
   nights, alert with an amber dot when something needs you, worried with a
   red dot when something is down. The header mark, the tab icon, the page
   title count and an installed app's badge all follow. Happy greets you on

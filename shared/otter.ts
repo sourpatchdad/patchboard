@@ -27,9 +27,15 @@ export function otterSrc(mood: OtterMood, o: { tile?: boolean; light?: boolean; 
   return `/otter/${mood}${o.light ? '-light' : ''}.png`;
 }
 
-/** The otter's mood for a server's state: worst alert level, and whether it is night. */
-export function moodFor(level: 'critical' | 'warn' | null, night = false): OtterMood {
+/**
+ * The otter's mood for a server's state: worst alert level, whether it is
+ * night, and how many quiet notes (image updates, an app it can't reach)
+ * are waiting. Notes wake it, eyes open, without the alarm of a problem;
+ * at night they can wait until morning.
+ */
+export function moodFor(level: 'critical' | 'warn' | null, night = false, notes = 0): OtterMood {
   if (level === 'critical') return 'worried';
   if (level === 'warn') return 'alert';
-  return night ? 'asleep' : 'calm';
+  if (night) return 'asleep';
+  return notes ? 'hello' : 'calm';
 }

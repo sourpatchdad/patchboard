@@ -8,6 +8,9 @@ test('the otter follows the server: worried when down, alert when something need
   assert.equal(moodFor('warn', true), 'alert', 'trouble wakes it');
   assert.equal(moodFor(null), 'calm');
   assert.equal(moodFor(null, true), 'asleep');
+  assert.equal(moodFor(null, false, 15), 'hello', 'image updates wake it, eyes open');
+  assert.equal(moodFor(null, true, 15), 'asleep', 'but they can wait until morning');
+  assert.equal(moodFor('warn', false, 15), 'alert');
 });
 
 test('every mood has its art and its built images', () => {

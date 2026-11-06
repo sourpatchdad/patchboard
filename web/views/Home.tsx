@@ -1,6 +1,7 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
+import { moodFor } from '../../shared/otter.ts';
 import { Mascot } from '../components/Otter.tsx';
 import { STARTERS } from '../../shared/board.ts';
 import { useJson } from '../lib/api.ts';
@@ -126,7 +127,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
       <div className={`masthead-status tone-${status.tone}`}>
         {!attentionCard && !alerts.length ? (
           <Link className="status-line is-quiet" to="/stacks">
-            <Mascot mood={night ? 'asleep' : 'calm'} size={40} />
+            <Mascot mood={moodFor(null, night, snap!.alerts.length)} size={40} />
             <span>{status.text}</span>
           </Link>
         ) : attentionCard || !alerts.length ? (
@@ -221,7 +222,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   // The otter stays whenever nothing is wrong, even with a quiet note below.
   const clear = serious === 0 && (
     <div className="all-clear">
-      <Mascot mood={night ? 'asleep' : 'calm'} size={88} />
+      <Mascot mood={moodFor(null, night, alerts.length)} size={88} />
       <p>
         <strong>Nothing needs you.</strong>
         <br />
