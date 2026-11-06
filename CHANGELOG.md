@@ -16,7 +16,8 @@ The first public release, 1.0.0. What's in it:
   App tiles speak for more integrations: who's listening, requests waiting,
   blocking, speed, drives, sync and Tracearr reviews.
   Recently added fills one row on a wide screen, each title once even when
-  Plex and Jellyfin group a season differently.
+  Plex and Jellyfin group a season differently, and each poster opens that
+  title, on Plex too.
   Each number in the Server widget opens the section that explains it,
   and an empty page links straight to the setting that fills it.
   Add as many boards as you like (twelve), each with its own name, widgets

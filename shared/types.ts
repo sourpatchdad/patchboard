@@ -411,6 +411,8 @@ export interface RecentItem {
 export interface TautulliData {
   streams: Stream[];
   recent: RecentItem[];
+  /** Plex: after the web app's address, then the item id, opens that title. Missing until Plex's server id is known. */
+  itemPath?: string;
 }
 
 /** Jellyfin and Emby: the Plex shape plus the episodes you watch next. */

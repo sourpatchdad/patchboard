@@ -55,15 +55,35 @@ const img = (path?: string) => (path ? `/api/img/tautulli?path=${encodeURICompon
 const sxe = (s?: string, e?: string) =>
   s && e ? `S${s.padStart(2, '0')}E${e.padStart(2, '0')}` : undefined;
 
+/**
+ * Where a title opens in Plex's web app, after its address and before the
+ * item's rating key. Plex addresses items by its server's machine id.
+ */
+export const plexItemPath = (machineId: string): string => `#!/server/${encodeURIComponent(machineId)}/details?key=%2Flibrary%2Fmetadata%2F`;
+
+/** Plex's machine id, asked of Tautulli once; null when it can't say. */
+let machineId: string | null | undefined;
+async function serverId(): Promise<string | null> {
+  if (machineId !== undefined) return machineId;
+  try {
+    machineId = (await call<{ machine_identifier?: string }>('get_server_identity')).machine_identifier || null;
+  } catch {
+    // Asked again next poll; posters open Plex itself meanwhile.
+    return null;
+  }
+  return machineId;
+}
+
 export function tautulliAdapter(): Adapter<TautulliData> {
   return {
     id: 'tautulli',
     label: 'Plex',
     intervalMs: 15 * SECOND,
     async fetch() {
-      const [activity, added] = await Promise.all([
+      const [activity, added, id] = await Promise.all([
         call<{ sessions: Session[] }>('get_activity'),
         call<{ recently_added: Added[] }>('get_recently_added', '&count=30'),
+        serverId(),
       ]);
       const streams: Stream[] = activity.sessions.map((s) => {
         const ep = s.media_type === 'episode';
@@ -93,7 +113,7 @@ export function tautulliAdapter(): Adapter<TautulliData> {
           thumb: img(ep ? a.grandparent_thumb : season ? (a.parent_thumb ?? a.thumb) : a.thumb),
         };
       });
-      return { streams, recent };
+      return { streams, recent, ...(id ? { itemPath: plexItemPath(id) } : {}) };
     },
   };
 }

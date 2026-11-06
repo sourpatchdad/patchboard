@@ -40,11 +40,17 @@ export function useMediaServers(): { servers: MediaServer[]; configured: boolean
   return { servers, configured: states.some((s) => s.state) };
 }
 
-/** Where a poster opens: the item itself on Jellyfin and Emby, the app on Plex. */
+/**
+ * Where a poster opens: the title itself, in the server's web app. Plex's
+ * app lives at /web on the server, or at app.plex.tv. Without an item path
+ * yet, the app.
+ */
 export function itemHref(server: MediaServer, id: string): string | undefined {
   if (!server.href) return undefined;
-  const path = (server.data as MediaServerData).itemPath;
-  return path ? `${server.href}${path}${encodeURIComponent(id)}` : server.href;
+  const path = server.data.itemPath;
+  if (!path) return server.href;
+  const base = server.id === 'tautulli' && !/plex\.tv|\/web(\/index\.html)?$/.test(server.href) ? `${server.href}/web/index.html` : server.href;
+  return `${base}${path}${encodeURIComponent(id)}`;
 }
 
 export interface MergedItem extends RecentItem {
