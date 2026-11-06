@@ -84,13 +84,19 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
-shows, or turn on Fit the window and the lists trim themselves to one
-screen. Add more boards and name them: one for the TV, one for the rack.
+shows, or turn on Fit the window to trim lists to one screen. Recently
+added keeps its whole poster row; if the board still runs over, Customize
+says by how much. Add more boards and name them: one for the TV, one for the rack.
 Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors. Call it whatever your household
 calls it.
 
-**An otter keeps watch.** The otter in the corner follows your server: calm
+**The header starts with what needs you.** The otter sits beside the whole
+status summary. Settings, Home and units lets this device choose the status
+size, clock size or no clock, and a weather summary or the next 12 hours of
+temperature and rain.
+
+**An otter keeps watch.** The otter beside the status follows your server: calm
 when all is quiet, eyes open when updates wait, asleep at night, looking up
 with an amber dot when something needs you, worried with a red one when
 something is down. Your browser tab follows along, so a pinned tab tells you

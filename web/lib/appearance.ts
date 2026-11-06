@@ -32,6 +32,9 @@ export interface Appearance {
   otter: boolean;
   font: 'theme' | FontSet;
   density: Density;
+  homeClockSize: 'hidden' | 'small' | 'medium' | 'large';
+  homeStatusSize: 'small' | 'medium' | 'large';
+  homeWeather: 'hidden' | 'summary' | 'hourly';
   clock24: boolean;
   temp: TempUnit;
   hidden: HomeSection[];
@@ -53,6 +56,9 @@ export const DEFAULTS: Appearance = {
   otter: true,
   font: 'theme',
   density: 'comfortable',
+  homeClockSize: 'medium',
+  homeStatusSize: 'medium',
+  homeWeather: 'hourly',
   clock24: false,
   temp: usesFahrenheit ? 'f' : 'c',
   hidden: [],

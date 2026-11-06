@@ -4,9 +4,14 @@
 
 The first public release, 1.0.0. What's in it:
 
-- **Home** answers before you ask: the time, today's weather and the week,
-  and "All quiet" or "4 things need you" with each problem linked to its
-  fix. Below it, a board you arrange: apps with live numbers, Right now,
+- **Home** starts with the otter beside "All quiet" or "4 things need you",
+  with each problem linked to its fix, then weather and the clock.
+  Settings, Home and units offers Small, Medium and Large status sizes,
+  clock sizes from Small to Large or Hide (Medium by default), and Hide,
+  Summary or Hourly chart weather on this device.
+  The default chart shows the next 12 hours of temperature and rain, with
+  daily forecasts when hourly data is unavailable. Below it, a board you
+  arrange: apps with live numbers, Right now,
   This week, Reading, mail, the server, changes, recently added and more.
   The board starts right under the header; Customize waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing
@@ -24,9 +29,10 @@ The first public release, 1.0.0. What's in it:
   and columns, switched by tabs over the board. A new board starts empty or
   from a layout, and a layout leaves out widgets for integrations you
   haven't set up. Fit the window trims each board's lists to one screen,
-  keeping only cuts that save room, so a poster row never loses posters;
-  when lists alone can't do it, Customize says what to move. Right now
-  takes an item count like the other lists.
+  keeping only cuts that save room, so a poster row never loses posters.
+  Fit recalculates when the window width or header height changes. When
+  lists alone cannot fit the board, Customize says how far it runs over
+  and what to move. Right now takes an item count like the other lists.
   A fresh install's Home is one screen at 1920 by 1080: the server, Right
   now, apps as icons, the week, reading and changes, fit to the window, with
   Customize in view. The old everything-board is the Everything layout.

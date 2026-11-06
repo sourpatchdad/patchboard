@@ -183,6 +183,15 @@ export function Settings() {
         </p>
       </Section>
 
+      <Section title="Home header">
+        <div className="header-options">
+          <div><span>Status size</span>{seg('homeStatusSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
+          <div><span>Clock size</span>{seg('homeClockSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
+          <div><span>Weather</span>{seg('homeWeather', [['hidden', 'Hide'], ['summary', 'Summary'], ['hourly', 'Hourly chart']])}</div>
+        </div>
+        <p className="settings-note">Status comes first. Pick a smaller clock or an hourly temperature and rain chart. Saved on this device.</p>
+      </Section>
+
       <Section title="Units and time">
         <div className="choice-row">
           {seg('clock24', [

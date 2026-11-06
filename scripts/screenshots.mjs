@@ -240,6 +240,8 @@ try {
   await shoot(page, 'page-customize');
   await go('/settings');
   await shoot(page, 'settings-look', { fullPage: true });
+  await go('/settings?tab=home');
+  await shoot(page, 'settings-home', { fullPage: true });
   await go('/settings?tab=alerts');
   await shoot(page, 'settings-alerts');
   await go('/settings?tab=connections');

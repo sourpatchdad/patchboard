@@ -26,6 +26,7 @@ import {
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
+import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
@@ -96,16 +97,16 @@ function useBoard(id: string) {
 /**
  * Fit the screen: while the board runs past the bottom of the window, take
  * items off the list widget doing the most to push it there, a few at a time,
- * until it fits or nothing more can go. Starts over when the window's height
+ * until it fits or nothing more can go. Starts over when the window's size
  * changes or the board is saved.
  */
 function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; over: number } {
   const [trim, setTrim] = useState<Record<string, number>>({});
   /** Pixels still past the window once nothing more can be trimmed. */
   const [over, setOver] = useState(0);
-  const [height, setHeight] = useState(() => window.innerHeight);
+  const [viewport, setViewport] = useState(() => `${window.innerWidth}:${window.innerHeight}`);
   useEffect(() => {
-    const onResize = () => setHeight(window.innerHeight);
+    const onResize = () => setViewport(`${window.innerWidth}:${window.innerHeight}`);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -118,7 +119,23 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     setOver(0);
     lastCut.current = null;
     noGain.current = new Set();
-  }, [on, height, widgets]);
+  }, [on, viewport, widgets]);
+  useEffect(() => {
+    if (!on || !el) return;
+    const masthead = el.closest('.home')?.querySelector('.masthead');
+    if (!masthead) return;
+    // Header preferences and live alerts can change the available room
+    // without changing the board's own width or height. Start over so a
+    // smaller header also restores rows that previously needed trimming.
+    const ro = new ResizeObserver(() => {
+      setTrim({});
+      setOver(0);
+      lastCut.current = null;
+      noGain.current = new Set();
+    });
+    ro.observe(masthead);
+    return () => ro.disconnect();
+  }, [on, el]);
   useEffect(() => {
     if (!on || !el) return;
     let timer = 0;
@@ -152,6 +169,9 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
         // instead of leaving one widget with a single row.
         const pick = cells
           .filter((x) => x.w && !noGain.current.has(x.w.id) && x.r.top <= low.r.top && x.r.left < low.r.right - 1 && x.r.right > low.r.left + 1)
+          // Poster shelves use a horizontal row. Removing their posters
+          // leaves the same height and only creates empty space.
+          .filter((x) => canTrimHeight([...x.c.querySelectorAll('li')].map((item) => item.getBoundingClientRect().top)))
           .map((x) => {
             const lim = WIDGET_INFO[x.w!.type].options.limit;
             const now = shown(x.w!);

@@ -5,8 +5,12 @@ they match the current code.
 
 ## Home
 
-The header tells you whether anything needs you. Below it sits a board of
-widgets on the columns you choose. Right now shows who is watching Plex,
+The header starts with the otter beside the status summary and anything
+that needs you, then weather and the clock. Settings, Home and units changes
+these on this device: Small, Medium or Large status, Hide, Small, Medium or
+Large clock, and Hide, Summary or Hourly chart weather. The default chart shows temperature and
+rain for the next 12 hours, with daily forecasts when hourly data is absent.
+Below it sits a board of widgets on the columns you choose. Right now shows who is watching Plex,
 Jellyfin or Emby and what each download client is doing, with a Pause button
 per client. Recently added merges every server newest first. A file Plex and
 Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
@@ -106,8 +110,11 @@ message.
 
 **Customize the board.** Drag widgets, drag an edge to resize, choose the
 columns, or start over from a layout. Fit the window trims lists until the
-board ends at the bottom of the screen, and Customize says what to move when lists
-alone can't do it. New board, at the foot of any board, adds another with
+board ends at the bottom of the screen. Recently added keeps every selected
+poster in one horizontal row, rather than losing titles to fit. If lists
+alone cannot fit the board, Customize reports how far it runs over. Fit
+recalculates when the window width or header height changes. New board,
+at the foot of any board, adds another with
 its own name, starting empty or from a layout; tabs over the board switch
 between them.
 
@@ -134,6 +141,8 @@ apps.
 A new browser or home-screen app starts from the last look you saved.
 
 ![Settings](screenshots/settings-look.webp)
+
+![Header sizes and weather choices](screenshots/settings-home.webp)
 
 **Connections** shows which integrations run. **Set up** takes an address and
 a key, tests the connection, and saves. Keys are encrypted on the server and

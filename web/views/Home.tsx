@@ -93,7 +93,7 @@ function HomeSkeleton() {
 function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weatherOnBoard: boolean; attentionCard: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
-  const { clock24, temp: unit } = useAppearance();
+  const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather } = useAppearance();
   const d = new Date(now);
   const time = d
     .toLocaleTimeString(undefined, { hour: clock24 ? '2-digit' : 'numeric', minute: '2-digit', hour12: !clock24 })
@@ -120,62 +120,83 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
   const mood = moodFor(status.tone === 'crit' ? 'critical' : status.tone === 'warn' ? 'warn' : null, night, snap!.alerts.length);
 
   return (
-    <header className="masthead">
-      <div className="masthead-time">
-        <span className="clock">
-          {time}
-          {meridiem && <small>{meridiem}</small>}
-        </span>
-        <Link to="/upcoming" className="date" title="What's coming this week">
-          {date}
-        </Link>
-      </div>
-      {weather && !weatherOnBoard && (
-        <Link to="/weather" className="masthead-weather" title="Hourly, the week, sunrise and alerts">
-          <span className="temp">{deg(weather.tempNow, unit)}°</span>
-          <span className="weather-text">
-            {weatherText(weather.codeNow)} in {weather.label}.
-            <br />
-            High {deg(weather.days[0]?.high ?? 0, unit)}°, low {deg(weather.days[0]?.low ?? 0, unit)}°
-            {(weather.days[0]?.precipPct ?? 0) >= 30 && `, ${weather.days[0].precipPct}% chance of rain`}.
-          </span>
-          <ol className="forecast" aria-label="Next three days">
-            {weather.days.slice(1, 4).map((w) => (
-              <li key={w.date}>
-                <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
-                <strong>{deg(w.high, unit)}°</strong>
-                <span className="forecast-cond">{weatherText(w.code)}</span>
-              </li>
-            ))}
-          </ol>
-          {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
-        </Link>
-      )}
+    <header className={`masthead home-header status-${homeStatusSize} clock-${homeClockSize}`}>
       <div className={`masthead-status tone-${status.tone}`}>
-        {!attentionCard && !alerts.length ? (
-          <Link className="status-line is-quiet" to={quietTo}>
-            <Mascot mood={mood} size={40} />
-            <span>{status.text}</span>
-          </Link>
-        ) : attentionCard || !alerts.length ? (
-          <a className="status-line" href={alerts.length ? '#w-attention' : quietTo} onClick={(e) => {
+        <Mascot mood={mood} size={homeStatusSize === 'large' ? 88 : homeStatusSize === 'small' ? 56 : 72} className="status-mascot" />
+        <div className="status-copy">
+          {!attentionCard && !alerts.length ? (
+            <Link className="status-line is-quiet" to={quietTo}>{status.text}</Link>
+          ) : attentionCard || !alerts.length ? (
+            <a className="status-line" href={alerts.length ? '#w-attention' : quietTo} onClick={(e) => {
               if (!alerts.length) return;
               e.preventDefault();
               document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}>
-            <Mascot mood={mood} size={40} />
-            <span>{status.text}</span>
-          </a>
-        ) : (
-          <h2 className="status-line">
-            <Mascot mood={mood} size={40} />
-            <span>{status.text}</span>
-          </h2>
-        )}
-        {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
-        <Overnight now={now} />
+            }}>{status.text}</a>
+          ) : (
+            <h2 className="status-line">{status.text}</h2>
+          )}
+          {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
+          <Overnight now={now} />
+        </div>
       </div>
+      {weather && !weatherOnBoard && homeWeather !== 'hidden' && (
+        <Link to="/weather" className={`masthead-weather header-weather is-${homeWeather}`} title="Open the hourly forecast and weather alerts">
+          <div className="header-weather-now">
+            <span className="temp">{deg(weather.tempNow, unit)}°</span>
+            <span className="weather-text">
+              <strong>{weather.label}</strong>
+              <span>{weatherText(weather.codeNow)}</span>
+              <small>High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}° · Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</small>
+            </span>
+          </div>
+          {homeWeather === 'hourly' && (weather.hours?.length ?? 0) > 1 ? (
+            <HeaderWeatherChart weather={weather} clock24={clock24} unit={unit} />
+          ) : (
+            <ol className="header-forecast" aria-label="Next three days">
+              {weather.days.slice(1, 4).map((w) => (
+                <li key={w.date}>
+                  <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                  <strong>{deg(w.high, unit)}°</strong>
+                  <span>{weatherText(w.code)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
+        </Link>
+      )}
+      {homeClockSize !== 'hidden' && (
+        <div className="masthead-time">
+          <span className="clock">{time}{meridiem && <small>{meridiem}</small>}</span>
+          <Link to="/upcoming" className="date" title="What's coming this week">{date}</Link>
+        </div>
+      )}
     </header>
+  );
+}
+
+/** The next twelve hours: temperature above the chance-of-rain bars. */
+function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; clock24: boolean; unit: 'f' | 'c' | 'both' }) {
+  const hours = (weather.hours ?? []).slice(0, 12);
+  const low = Math.min(...hours.map((h) => h.temp));
+  const high = Math.max(...hours.map((h) => h.temp));
+  const y = (v: number) => 29 - ((v - low) / Math.max(2, high - low)) * 24;
+  const x = (i: number) => 4 + (i / Math.max(1, hours.length - 1)) * 192;
+  const points = hours.map((h, i) => `${x(i)},${y(h.temp)}`).join(' ');
+  const rain = Math.max(...hours.map((h) => h.precipPct));
+  return (
+    <span className="header-weather-chart">
+      <span className="header-chart-caption"><span>Next {hours.length} hours · °{unit === 'c' ? 'C' : 'F'}</span><span>Rain {rain}%</span></span>
+      <svg viewBox="0 0 200 50" preserveAspectRatio="none" role="img" aria-label={`Temperature ${deg(low, unit)} to ${deg(high, unit)} degrees. Chance of rain up to ${rain} percent.`}>
+        {hours.map((h, i) => <rect key={h.time} className="header-rain" x={x(i) - 2} y={49 - h.precipPct * 0.16} width="4" height={Math.max(0.5, h.precipPct * 0.16)} />)}
+        <polyline className="header-temperature" points={points} vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span className="header-hour-labels">
+        {hours.filter((_, i) => i === 0 || i === Math.floor(hours.length / 2) || i === hours.length - 1).map((h, i) => (
+          <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 })}</span>
+        ))}
+      </span>
+    </span>
   );
 }
 
@@ -667,6 +688,8 @@ export function RecentlyAdded({ now }: { now: number }) {
   const { limit = 24 } = useWidget();
   const [fit, setFit] = useState<number | null>(null);
   const shelf = useRef<HTMLDivElement>(null);
+  const items = mergeRecent(servers);
+  const hasItems = items.length > 0;
   useEffect(() => {
     const el = shelf.current;
     if (!el) return;
@@ -680,8 +703,7 @@ export function RecentlyAdded({ now }: { now: number }) {
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
-  const items = mergeRecent(servers);
+  }, [hasItems]);
   if (!items.length) return null;
   const title = servers.length === 1 ? `Recently added to ${servers[0].label}` : 'Recently added';
   return (
