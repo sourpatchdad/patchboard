@@ -4,7 +4,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Making it yours
 
-- [ ] Homepage config import in the UI (the CLI exists)
 - [ ] A setup file in YAML, to export and import everything at once
 - [ ] A search box with `!` shortcuts
 - [ ] Several Docker hosts

@@ -9,6 +9,7 @@ import { useUrlChoice } from '../lib/url.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
+import { HomepageImport } from '../components/HomepageImport.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -414,6 +415,9 @@ function CatalogCheck() {
   const [copied, setCopied] = useState(false);
   const readOnly = !!useStore().snap?.readOnly;
   const [adoptState, setAdoptState] = useState<'idle' | 'busy' | 'done'>('idle');
+  // First run links here with ?import=homepage to open the import straight away.
+  const { search } = useLocation();
+  const [importing, setImporting] = useState(() => new URLSearchParams(search).get('import') === 'homepage');
   const adoptYaml = async () => {
     setAdoptState('busy');
     try {
@@ -457,6 +461,18 @@ function CatalogCheck() {
           </button>
         </div>
       )}
+      {!readOnly && (
+        <div className="adopt">
+          <p>
+            <strong>Coming from Homepage?</strong> Paste its services.yaml and bookmarks.yaml, and the apps, groups, icons and links come over beside what you
+            already have.
+          </p>
+          <button type="button" className="button button-quiet" onClick={() => setImporting(true)}>
+            Import from Homepage
+          </button>
+        </div>
+      )}
+      {importing && <HomepageImport onClose={() => setImporting(false)} />}
       {clean && <p className="settings-note">Every catalog entry matches a container, and every running app is listed.</p>}
       {audit.missing.length > 0 && (
         <dl className="ledger">

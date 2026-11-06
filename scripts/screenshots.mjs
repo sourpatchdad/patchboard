@@ -247,6 +247,16 @@ try {
   await settle(page, 800);
   await shootEl(emby, 'integration-setup');
 
+  // Coming from Homepage: its services.yaml pasted in, previewed.
+  await go('/settings?tab=connections&import=homepage');
+  const homepage = page.getByRole('dialog', { name: 'Import from Homepage' });
+  await homepage.locator('textarea').first().fill(
+    ['- Media:', '    - Plex:', '        href: http://192.168.1.10:32400/web', '        icon: plex.png', '        widget:', '          type: plex', '    - Sonarr:', '        href: http://192.168.1.10:8989', '        icon: sonarr.png', '        widget:', '          type: sonarr', '- Home:', '    - Home Assistant:', '        href: http://192.168.1.30:8123', '        icon: home-assistant.png', '    - Immich:', '        href: http://192.168.1.10:2283', '        icon: immich.png', '        widget:', '          type: immich'].join('\n'),
+  );
+  await homepage.locator('textarea').nth(1).fill(['- Links:', '    - r/selfhosted:', '        - href: https://reddit.com/r/selfhosted'].join('\n'));
+  await settle(page, 900);
+  await shootEl(homepage, 'import-homepage');
+
   console.log('Themes');
   const themes = [
     ['graphite', 'light'],

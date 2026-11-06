@@ -78,6 +78,7 @@ import { catalogYaml } from '../shared/catalog-yaml.ts';
 import { poster } from './art.ts';
 import { clearUpdate } from './updates.ts';
 import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
+import { fromHomepage } from './homepage.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
 /** Pause and resume for each configured download client. */
@@ -612,6 +613,36 @@ app.post('/api/catalog/adopt', (c) => {
   const n = getYamlCatalog().groups.reduce((k, g) => k + g.services.length, 0);
   recordAudit(who(c), 'apps.adopt-yaml', 'apps', `${n} apps, ${getYamlCatalog().dock.length} links`);
   return c.json({ apps: n, links: getYamlCatalog().dock.length });
+});
+
+// Homepage's services.yaml and bookmarks.yaml, pasted in: preview what would
+// come over, then add it beside the apps already saved. Nothing saved is replaced.
+app.post('/api/catalog/import-homepage', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (Number(c.req.header('content-length') ?? 0) > 1_000_000) return c.json({ error: 'That is more than 1 MB of YAML.' }, 413);
+  const body = (await c.req.json().catch(() => null)) as { services?: unknown; bookmarks?: unknown; apply?: unknown } | null;
+  if (typeof body?.services !== 'string' || !body.services.trim()) return c.json({ error: "Paste Homepage's services.yaml first." }, 400);
+  let found;
+  try {
+    found = fromHomepage(body.services, typeof body.bookmarks === 'string' ? body.bookmarks : '');
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 400);
+  }
+  const prev = kvGet<AppOrder>('app-order');
+  const next = adoptYaml(found.catalog, prev);
+  const apps = (next.added?.length ?? 0) - (prev?.added?.length ?? 0);
+  const links = (next.addedLinks?.length ?? 0) - (prev?.addedLinks?.length ?? 0);
+  const all = found.catalog.groups.reduce((k, g) => k + g.services.length, 0);
+  const summary = { groups: found.catalog.groups.map((g) => g.name), apps, links, already: all - apps, integrations: found.integrations };
+  if (body.apply !== true) return c.json(summary);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save apps." }, 400);
+  const v = validateOrder(next);
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  kvSet('app-order', v.order);
+  setCatalogOrder(v.order);
+  hub.emitCatalog();
+  recordAudit(who(c), 'apps.import-homepage', 'apps', `${apps} apps, ${links} links`);
+  return c.json({ ...summary, saved: true });
 });
 
 app.delete('/api/setup/integrations/:id', (c) => {

@@ -16,7 +16,8 @@ The first public release, 1.0.0. What's in it:
   arrange them in Edit apps, and connect integrations in Settings,
   Connections, with keys encrypted on the server. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
-  in so the files can go.
+  in so the files can go. Coming from Homepage, paste its `services.yaml`
+  and the apps come over.
 - **58 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
   Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Hardcover, Goodreads, Home
   Assistant, Frigate, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker,

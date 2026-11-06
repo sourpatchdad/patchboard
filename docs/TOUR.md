@@ -167,3 +167,9 @@ Patchboard finds your running containers and adds them all in one click,
 grouped by compose stack.
 
 ![First run](screenshots/first-run.webp)
+
+Coming from Homepage? Paste its `services.yaml` in Settings, Connections,
+and your apps, groups, icons and links come over. Its widget keys stay
+behind; Patchboard names the integrations worth connecting instead.
+
+![Import from Homepage](screenshots/import-homepage.webp)

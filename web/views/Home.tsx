@@ -754,7 +754,8 @@ function Welcome() {
         </li>
       </ol>
       <p className="settings-note">
-        Prefer files? A <code>services.yaml</code> or <code>patchboard.*</code> Docker labels work too, and so do Homepage's labels.
+        Coming from Homepage? <Link to="/settings?tab=connections&import=homepage">Import its services.yaml</Link> in Settings. Prefer files? A{' '}
+        <code>services.yaml</code> or <code>patchboard.*</code> Docker labels work too, and so do Homepage's labels.
       </p>
     </section>
   );

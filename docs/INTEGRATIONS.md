@@ -31,9 +31,10 @@ never rewrite your files.
    carry credentials.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
    place. Start from [examples/services.example.yaml](../examples/services.example.yaml).
-   Coming from Homepage? `npm run import-homepage -- /path/to/homepage/config`
-   writes one from its `services.yaml` and `bookmarks.yaml` and leaves the
-   credentials out.
+   Coming from Homepage? Settings, Connections, Import from Homepage takes
+   its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard.
+   To keep a file instead, `npm run import-homepage -- /path/to/homepage/config`
+   writes one. Both leave the credentials out.
 
 Patchboard finds icons by name in [dashboard icons](https://dashboardicons.com),
 which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or

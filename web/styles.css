@@ -8647,6 +8647,42 @@ button.ha-act:hover {
   color: var(--ink-2);
 }
 
+/* Import from Homepage */
+.hp-import .field-label {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.hp-import textarea {
+  /* YAML is all indentation: keep it monospaced. */
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.hp-files {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+
+.hp-files input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.hp-files:focus-within .text-button {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Settings, Alerts: a label, an input with its unit, a hint under. */
 .thresholds {
   display: grid;
