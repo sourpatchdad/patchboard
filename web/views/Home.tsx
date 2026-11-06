@@ -345,10 +345,30 @@ export function NowPlaying() {
     { id: 'navidrome', label: 'Navidrome', data: navi.data },
   ].filter((l) => l.data?.streams.length);
   if (!configured && !anyClient && !abs.state && !navi.state) return null;
+  // Quiet sources share one line, so an idle evening takes two lines, not six.
+  const watching = servers.filter((m) => m.data.streams.length);
+  const idle = servers.filter((m) => !m.data.streams.length);
+  const isQuiet = (d: (typeof clients)[number]) => !d.data.paused && !d.data.downloading && !d.data.errored.length;
+  const quietClients = clients.filter(isQuiet);
+  const busyClients = clients.filter((d) => !isQuiet(d));
 
   return (
     <Section title="Right now" className="now">
-      {servers.map((m) => (
+      {idle.length > 0 && (
+        <div className="now-block">
+          <h3 className="now-idle">
+            Nobody is watching{' '}
+            {idle.map((m, i) => (
+              <span key={m.id}>
+                {i > 0 && (i === idle.length - 1 ? ' or ' : ', ')}
+                <Link to={`/c/${m.container}`}>{m.label}</Link>
+              </span>
+            ))}
+            .
+          </h3>
+        </div>
+      )}
+      {watching.map((m) => (
         <div className="now-block" key={m.id}>
           <h3>
             <Link to={`/c/${m.container}`}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</Link>
@@ -397,7 +417,35 @@ export function NowPlaying() {
         </div>
       ))}
 
-      {clients.map((d) => (
+      {quietClients.length > 0 && (
+        <div className="now-block">
+          <h3 className="now-idle">
+            Nothing downloading in{' '}
+            {quietClients.map((d, i) => (
+              <span key={d.id}>
+                {i > 0 && (i === quietClients.length - 1 ? ' or ' : ', ')}
+                <Link to={`/c/${d.container}`}>{d.label}</Link>
+              </span>
+            ))}
+            .
+          </h3>
+          {/* Seeding still uses the line, so its Pause stays. */}
+          {quietClients
+            .filter((d) => d.data.kind !== 'usenet' && d.data.seeding > 0)
+            .map((d) => (
+              <p className="now-foot now-seed" key={d.id}>
+                <span>
+                  {d.label} seeding {d.data.seeding}
+                  {d.data.up ? ` at ${speed(d.data.up)}` : ''}
+                  {d.data.stalled ? `, ${d.data.stalled} stalled` : ''}
+                </span>
+                <PauseButton client={d} />
+              </p>
+            ))}
+        </div>
+      )}
+      {busyClients.map((d) => {
+        return (
         <div className="now-block" key={d.id}>
           <h3 className="now-head">
             <Link to={`/c/${d.container}`}>
@@ -427,7 +475,8 @@ export function NowPlaying() {
           )}
           {d.data.errored.length > 0 && <p className="now-foot crit-text">{plural(d.data.errored.length, 'download')} failed: {d.data.errored.slice(0, 2).join(', ')}</p>}
         </div>
-      ))}
+        );
+      })}
 
     </Section>
   );

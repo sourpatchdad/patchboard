@@ -1126,6 +1126,23 @@ a.jack:focus-visible {
   font-weight: 400;
 }
 
+/* Idle sources: one quiet line each, whatever sits under them. */
+.now-block h3.now-idle {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.now-block h3.now-idle:not(:only-child) {
+  margin-bottom: 4px;
+}
+
+.now-seed {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .stream {
   display: grid;
   gap: 6px;
