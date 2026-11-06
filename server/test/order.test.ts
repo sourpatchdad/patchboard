@@ -135,3 +135,16 @@ test('services.yaml copied in: every app keeps its group, order, label, icon and
   // Copying again adds nothing.
   assert.equal(adoptYaml(cat, order).added!.length, 3);
 });
+
+test('icons can be site paths; one the layout cannot hold is dropped on copy instead of failing it', async () => {
+  const { adoptYaml, okIcon, validateOrder } = await import('../../shared/order.ts');
+  assert.ok(okIcon('/icon.svg'));
+  assert.ok(okIcon('/icons/plex.png'));
+  assert.ok(!okIcon('/../etc/passwd.png'));
+  assert.ok(!okIcon('javascript:alert(1)'));
+  const cat = { groups: [{ name: 'G', services: [{ name: 'A', icon: '/icon.svg' }, { name: 'B', icon: 'bad icon with spaces' }] }], dock: [] };
+  const v = validateOrder(adoptYaml(cat, null));
+  assert.ok('order' in v, 'error' in v ? v.error : '');
+  assert.equal(v.order.added!.find((a) => a.name === 'A')!.icon, '/icon.svg');
+  assert.equal(v.order.added!.find((a) => a.name === 'B')!.icon, undefined);
+});

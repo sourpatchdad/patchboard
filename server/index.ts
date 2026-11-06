@@ -1039,6 +1039,11 @@ app.get('/healthz', (c) => c.text('ok'));
 
 // Static client and SPA fallback.
 const indexPath = join(config.staticDir, 'index.html');
+// Icon files from before the otter art, still named in older services.yaml
+// files and bookmarks.
+const MOVED_ICONS: Record<string, string> = { '/icon.svg': '/icon-192.png', '/icon-light.svg': '/icon-light-192.png', '/favicon.svg': '/favicon.png', '/favicon-dark.svg': '/favicon.png', '/favicon-light.svg': '/favicon.png' };
+for (const [from, to] of Object.entries(MOVED_ICONS)) app.get(from, (c) => c.redirect(to, 301));
+
 app.use('/*', serveStatic({ root: config.staticDir }));
 app.get('*', (c) => {
   if (c.req.path.startsWith('/api/')) return c.json({ error: 'Not found' }, 404);

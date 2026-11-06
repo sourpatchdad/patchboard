@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Copy into Patchboard accepts every icon services.yaml can hold,**
+  including paths on this site such as `/icon-192.png`. An icon it can't
+  keep is dropped from that one app instead of stopping the copy.
+- **Old icon addresses still work.** `/icon.svg`, `/icon-light.svg` and the
+  old SVG tab icons redirect to the PNG art.
 - **Move off files in two clicks.** Settings, Connections has Save them in
   Patchboard, which copies every integration value from your `.env` into
   the encrypted store, and Copy into Patchboard, which turns `services.yaml`

@@ -44,7 +44,12 @@ export interface AppOrder {
 
 const NAME_MAX = 120;
 const isName = (s: unknown): s is string => typeof s === 'string' && s.trim().length > 0 && s.length <= NAME_MAX;
-const ICON = /^(https?:\/\/[^\s"'<>]{1,400}|\/api\/icons\/[a-f0-9]{16}\.(png|jpg|webp|svg|gif|ico)|[a-z0-9][a-z0-9._-]{0,80})$/i;
+// An icon: a URL, an uploaded icon, a path on this site (/icon-192.png), or
+// a dashboard-icons name. Paths can't climb out with "..".
+const ICON = /^(https?:\/\/[^\s"'<>]{1,400}|\/api\/icons\/[a-f0-9]{16}\.(png|jpg|webp|svg|gif|ico)|\/(?!.*\.\.)[\w./-]{1,200}\.(png|jpg|jpeg|webp|svg|gif|ico)|[a-z0-9][a-z0-9._-]{0,80})$/i;
+
+/** True when an icon would pass the layout check. */
+export const okIcon = (s: string): boolean => ICON.test(s);
 const CONTAINER = /^[\w.-]{1,128}$/;
 const isUrl = (s: unknown) => {
   if (typeof s !== 'string' || s.length > 500) return false;
@@ -77,9 +82,10 @@ export function adoptYaml(cat: Catalog, prev: AppOrder | null | undefined): AppO
         group,
         ...(s.label ? { label: s.label } : {}),
         ...(s.href ? { href: s.href } : {}),
-        ...(s.icon ? { icon: s.icon } : {}),
+        // An icon the layout can't hold is dropped, not a reason to fail the copy.
+        ...(s.icon && ICON.test(s.icon) ? { icon: s.icon } : {}),
         ...(s.container ? { container: s.container } : {}),
-        ...(s.description ? { description: s.description } : {}),
+        ...(s.description ? { description: s.description.slice(0, 200) } : {}),
         ...(s.expectStopped ? { expectStopped: true } : {}),
         ...(s.check != null ? { check: s.check } : {}),
       });
@@ -88,7 +94,7 @@ export function adoptYaml(cat: Catalog, prev: AppOrder | null | undefined): AppO
     }
   }
   const links = [...(p.addedLinks ?? [])];
-  for (const b of cat.dock) if (!links.some((l) => l.name === b.name)) links.push({ name: b.name, href: b.href, ...(b.icon ? { icon: b.icon } : {}) });
+  for (const b of cat.dock) if (!links.some((l) => l.name === b.name)) links.push({ name: b.name, href: b.href, ...(b.icon && ICON.test(b.icon) ? { icon: b.icon } : {}) });
   return { ...p, groups, apps, added, ...(links.length ? { addedLinks: links } : {}) };
 }
 
