@@ -7155,6 +7155,22 @@ button.ha-act:hover {
   color: var(--crit);
 }
 
+.pt-list li {
+  grid-template-columns: 8px minmax(0, 1.1fr) minmax(0, 1fr) auto auto;
+}
+
+.pt-list .drive-name {
+  font: 600 13.5px var(--f-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-list .drive-num {
+  white-space: nowrap;
+}
+
 /* ---------- Power (NUT) ---------- */
 
 .ups-list {

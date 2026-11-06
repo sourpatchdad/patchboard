@@ -33,6 +33,7 @@ export type SourceId =
   | 'unraid'
   | 'synology'
   | 'qnap'
+  | 'portainer'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -689,6 +690,24 @@ export interface Limits {
 
 /** The sources that report a NasSystem. */
 export const NAS_SOURCES = ['unraid', 'synology', 'qnap'] as const;
+
+/** One Docker environment in Portainer. */
+export interface PortainerEnv {
+  id: number;
+  name: string;
+  up: boolean;
+  running: number;
+  stopped: number;
+  unhealthy: number;
+  stacks: number;
+  docker?: string;
+  snapshotAt?: number;
+}
+
+export interface PortainerData {
+  envs: PortainerEnv[];
+  webUrl: string;
+}
 
 export interface CarData {
   cars: Car[];

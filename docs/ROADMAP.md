@@ -13,7 +13,7 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Integrations
 
-- [ ] Portainer (several Docker hosts), Netdata and Prometheus
+- [ ] Netdata and Prometheus
 - [ ] UniFi and Omada, Tailscale
 - [ ] Nextcloud, Paperless-ngx, Lidarr, Readarr, Prowlarr, Bazarr
 - [ ] Audiobookshelf and Navidrome in Right now

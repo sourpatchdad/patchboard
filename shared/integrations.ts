@@ -253,6 +253,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'portainer',
+    name: 'Portainer',
+    adds: "A Docker hosts widget for every environment Portainer manages: up or down, with running, stopped and unhealthy containers and stacks. An environment that goes down, or unhealthy containers on any host, show in Needs attention. Patchboard's own pages keep using the Docker socket it is given.",
+    env: ['PORTAINER_URL', 'PORTAINER_KEY'],
+    where: 'In Portainer: your account (top right), Access tokens, Add access token.',
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',

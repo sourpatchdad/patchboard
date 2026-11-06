@@ -189,6 +189,7 @@ function build(str: Lookup) {
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
+    portainer: pair('PORTAINER_URL', 'PORTAINER_KEY'),
     synology:
       str('SYNOLOGY_URL') && str('SYNOLOGY_USERNAME') && str('SYNOLOGY_PASSWORD')
         ? { url: trimSlash(str('SYNOLOGY_URL')!), username: str('SYNOLOGY_USERNAME')!, password: str('SYNOLOGY_PASSWORD')!, verifyTls: str('SYNOLOGY_VERIFY_TLS') === '1' }

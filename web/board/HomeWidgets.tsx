@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { CarData, DnsData, GlancesData, NasSystem, NutData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -479,6 +479,34 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Portainer ----------
+
+/** Every Docker environment: down and unhealthy first, then counts. */
+export function DockerHostsWidget() {
+  const { state, data } = useSource<PortainerData>('portainer');
+  const { limit = 8 } = useWidget();
+  if (!state || !data) return null;
+  const total = data.envs.reduce((n, e) => n + e.running, 0);
+  return (
+    <Section title="Docker hosts" source={state} className="pt" count={`${total} running`} action={{ label: 'Open Portainer', href: data.webUrl }}>
+      <ul className="drive-list pt-list">
+        {data.envs.slice(0, limit).map((e) => (
+          <li key={e.id} className={!e.up ? 'drive-failed' : e.unhealthy ? 'drive-warn' : 'drive-ok'} title={e.docker ? `Docker ${e.docker}` : undefined}>
+            <span className="drive-dot" aria-hidden />
+            <span className="drive-name">{e.name}</span>
+            <span className="drive-model">
+              {!e.up ? 'Down' : e.unhealthy ? `${e.unhealthy} unhealthy` : `${e.stacks} ${e.stacks === 1 ? 'stack' : 'stacks'}`}
+            </span>
+            <span className="mono drive-num">{e.up ? `${e.running} up` : ''}</span>
+            <span className="mono drive-num">{e.up && e.stopped ? `${e.stopped} off` : ''}</span>
+          </li>
+        ))}
+      </ul>
+      {data.envs.length > limit && <p className="speed-seen">{data.envs.length - limit} more in Portainer.</p>}
     </Section>
   );
 }

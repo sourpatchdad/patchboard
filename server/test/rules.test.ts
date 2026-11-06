@@ -325,3 +325,9 @@ test('storage systems: one rule set for Unraid, Synology and QNAP, following the
     [['tower', 'critical'], ['Array', 'critical'], ['disk1', 'critical'], ['disk2', 'warn']],
   );
 });
+
+test('Portainer: a down environment is critical; unhealthy containers warn', () => {
+  const env = (id: number, name: string, up: boolean, unhealthy: number) => ({ id, name, up, running: 3, stopped: 0, unhealthy, stacks: 1 });
+  const alerts = computeAlerts(sources({ portainer: { webUrl: 'http://pt', envs: [env(1, 'local', true, 0), env(2, 'pi', true, 2), env(3, 'old', false, 0)] } }), catalog());
+  assert.deepEqual(alerts.filter((a) => a.source === 'portainer').map((a) => [a.subject, a.level]), [['old', 'critical'], ['pi', 'warn']]);
+});

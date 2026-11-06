@@ -3,6 +3,7 @@
 
 import type {
   GlancesData,
+  PortainerData,
   NasSystem,
   NutData,
   ProxmoxData,
@@ -241,6 +242,13 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
     }
+  }
+
+  // Portainer: an environment that goes down, or unhealthy containers on one.
+  const portainer = data<PortainerData>(sources, 'portainer');
+  for (const e of portainer?.envs ?? []) {
+    if (!e.up) alerts.push({ id: `pt-down-${e.id}`, level: 'critical', subject: e.name, title: `Docker host ${e.name} is down`, detail: 'Portainer can no longer reach it.', href: portainer!.webUrl, source: 'portainer' });
+    else if (e.unhealthy) alerts.push({ id: `pt-sick-${e.id}`, level: 'warn', subject: e.name, title: `${e.unhealthy} unhealthy ${e.unhealthy === 1 ? 'container' : 'containers'} on ${e.name}`, href: portainer!.webUrl, source: 'portainer' });
   }
 
   // Unraid, Synology, QNAP: one set of rules for every storage system.

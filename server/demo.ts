@@ -24,6 +24,7 @@ import type {
   GlancesData,
   NutData,
   NasSystem,
+  PortainerData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -628,6 +629,14 @@ export function demoAdapters(): Adapter[] {
         ],
       };
     }),
+    demo<PortainerData>('portainer', 'Portainer', MINUTE, () => ({
+      webUrl: 'https://portainer.local:9443',
+      envs: [
+        { id: 1, name: 'local', up: true, running: 28, stopped: 2, unhealthy: 0, stacks: 9, docker: '27.3.1' },
+        { id: 2, name: 'beelink', up: true, running: 11, stopped: 0, unhealthy: 0, stacks: 4, docker: '27.3.1' },
+        { id: 3, name: 'raspberrypi', up: true, running: 5, stopped: 1, unhealthy: 0, stacks: 2, docker: '26.1.4' },
+      ],
+    })),
     demo<NasSystem>('synology', 'Synology', 2 * MINUTE, () => {
       const T = 1e12;
       return {

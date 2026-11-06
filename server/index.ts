@@ -27,6 +27,7 @@ import { nutAdapter } from './adapters/nut.ts';
 import { unraidAdapter } from './adapters/unraid.ts';
 import { synologyAdapter } from './adapters/synology.ts';
 import { qnapAdapter } from './adapters/qnap.ts';
+import { portainerAdapter } from './adapters/portainer.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -117,6 +118,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   unraid: () => (config.unraid ? { adapter: unraidAdapter() } : null),
   synology: () => (config.synology ? { adapter: synologyAdapter() } : null),
   qnap: () => (config.qnap ? { adapter: qnapAdapter() } : null),
+  portainer: () => (config.portainer ? { adapter: portainerAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();
