@@ -23,9 +23,10 @@ The first public release, 1.0.0. What's in it:
   Add as many boards as you like (twelve), each with its own name, widgets
   and columns, switched by tabs over the board. A new board starts empty or
   from a layout, and a layout leaves out widgets for integrations you
-  haven't set up. Fit the window trims each board's lists to one screen and
-  says what to move when it can't. Right now takes an item count like the
-  other lists.
+  haven't set up. Fit the window trims each board's lists to one screen,
+  keeping only cuts that save room, so a poster row never loses posters;
+  when lists alone can't do it, Customize says what to move. Right now
+  takes an item count like the other lists.
   A fresh install's Home is one screen at 1920 by 1080: the server, Right
   now, apps as icons, the week, reading and changes, fit to the window, with
   Customize in view. The old everything-board is the Everything layout.

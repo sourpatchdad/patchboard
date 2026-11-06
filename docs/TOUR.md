@@ -106,7 +106,7 @@ message.
 
 **Customize the board.** Drag widgets, drag an edge to resize, choose the
 columns, or start over from a layout. Fit the window trims lists until the
-board ends at the bottom of the screen, and says what to move when lists
+board ends at the bottom of the screen, and Customize says what to move when lists
 alone can't do it. New board, at the foot of any board, adds another with
 its own name, starting empty or from a layout; tabs over the board switch
 between them.

@@ -109,9 +109,15 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+  /** The last cut, to check it bought room: the widget, its count before, its height before. */
+  const lastCut = useRef<{ id: string; before?: number; height: number; expect: number } | null>(null);
+  /** Widgets whose cuts bought nothing (a poster row, a list already shorter than its count). */
+  const noGain = useRef(new Set<string>());
   useEffect(() => {
     setTrim({});
     setOver(0);
+    lastCut.current = null;
+    noGain.current = new Set();
   }, [on, height, widgets]);
   useEffect(() => {
     if (!on || !el) return;
@@ -122,24 +128,47 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       const floor = window.innerHeight - 48 - window.scrollY;
       const cells = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((c) => ({ c, r: c.getBoundingClientRect(), w: widgets.find((x) => `w-${x.id}` === c.id) }));
       const shown = (x: Widget) => trim[x.id] ?? Number(x.config?.limit ?? WIDGET_INFO[x.type].options.limit?.[0] ?? 0);
+      // A cut that saved far less than the rows it took (a poster row loses posters, not
+      // height) only hid things: put them back and leave that widget alone.
+      const cut = lastCut.current;
+      if (cut) {
+        lastCut.current = null;
+        const now = cells.find((x) => x.w?.id === cut.id);
+        if (now && cut.height - now.r.height < cut.expect * 0.4) {
+          noGain.current.add(cut.id);
+          setTrim((t) => {
+            const next = { ...t };
+            if (cut.before === undefined) delete next[cut.id];
+            else next[cut.id] = cut.before;
+            return next;
+          });
+          return;
+        }
+      }
       const over = cells.filter((x) => x.r.bottom > floor).sort((a, b) => b.r.bottom - a.r.bottom);
       for (const low of over) {
         // Anything sharing its columns, at or above it, can make room. The
         // list with the most to spare goes first, so cuts spread evenly
         // instead of leaving one widget with a single row.
         const pick = cells
-          .filter((x) => x.w && x.r.top <= low.r.top && x.r.left < low.r.right - 1 && x.r.right > low.r.left + 1)
+          .filter((x) => x.w && !noGain.current.has(x.w.id) && x.r.top <= low.r.top && x.r.left < low.r.right - 1 && x.r.right > low.r.left + 1)
           .map((x) => {
             const lim = WIDGET_INFO[x.w!.type].options.limit;
             const now = shown(x.w!);
-            const items = Math.max(1, Math.min(now, x.c.querySelectorAll('li').length || now));
-            return { ...x, w: x.w!, now, items, min: lim?.[1] ?? Infinity };
+            // Rows actually shown: list items, or for Right now the longest server or client's rows.
+            const blocks = [...x.c.querySelectorAll('.now-block')].map((b) => b.querySelectorAll('.stream').length);
+            const rows = blocks.length ? Math.max(...blocks) : x.c.querySelectorAll('li').length;
+            const items = Math.max(1, Math.min(now, rows || now));
+            // Height per row across the whole widget, for what a cut should save.
+            const perRow = x.r.height / Math.max(1, blocks.length ? blocks.reduce((a, b) => a + b, 0) : rows || items);
+            return { ...x, w: x.w!, now, items, perRow, min: lim?.[1] ?? Infinity };
           })
           .filter((x) => x.items > x.min)
           .sort((a, b) => b.items - b.min - (a.items - a.min) || b.r.height - a.r.height)[0];
         if (!pick) continue;
-        const need = Math.ceil((low.r.bottom - floor) / (pick.r.height / pick.items));
+        const need = Math.ceil((low.r.bottom - floor) / pick.perRow);
         const step = Math.max(1, Math.min(need, Math.ceil((pick.items - pick.min) / 2)));
+        lastCut.current = { id: pick.w.id, before: trim[pick.w.id], height: pick.r.height, expect: step * pick.perRow };
         setTrim((t) => ({ ...t, [pick.w.id]: Math.max(pick.min, pick.items - step) }));
         return;
       }
@@ -201,6 +230,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
   const { trim, over } = useFit(!!board?.fit && !editing && cols > 1, boardEl, board?.widgets ?? NONE);
+  // What fit couldn't place, kept from the board as last shown, for Customize to mention.
+  const [short, setShort] = useState(0);
+  useEffect(() => {
+    if (!editing) setShort(over);
+  }, [over, editing]);
   const sort = useDragSort('cell', (drag, over) => {
     const ws = draft?.widgets ?? [];
     move(
@@ -281,6 +315,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
             </label>
+            {draft.fit && short > 40 && (
+              <span className="drawer-note">
+                {short} px past the window with lists at their shortest. {tiles ? 'Apps as icons, or a widget on another board, would make room.' : 'A widget on another board would make room.'}
+              </span>
+            )}
             <select
               className="field starter-pick"
               aria-label="Start over from a layout"
@@ -359,12 +398,6 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
 
       {!editing && !snap?.readOnly && (
         <div className="board-foot">
-          {over > 40 && (
-            <span className="board-over">
-              Still {over} px past the window with every list at its shortest.{' '}
-              {tiles ? 'Apps as icons, or a widget moved to another board, would make room.' : 'Moving a widget to another board would make room.'}
-            </span>
-          )}
           <button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             {custom ? 'Customize' : 'Customize this board'}
           </button>

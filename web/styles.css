@@ -9309,12 +9309,6 @@ button.ha-act:hover {
   padding-top: 12px;
 }
 
-.board-over {
-  margin-right: auto;
-  font-size: 13px;
-  color: var(--ink-3);
-}
-
 /* A phone shows one column and scrolls, so columns and fit stay on wider screens. */
 @media (max-width: 760px) {
   .is-editing .board-bar .board-bar-hint,
