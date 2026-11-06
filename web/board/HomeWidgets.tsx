@@ -1093,7 +1093,7 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
 // ---------- Immich ----------
 
 /** Immich's queue names, as people say them. */
-const QUEUE_NAMES: Record<string, string> = {
+export const QUEUE_NAMES: Record<string, string> = {
   thumbnailGeneration: 'thumbnails',
   metadataExtraction: 'metadata',
   videoConversion: 'video encoding',

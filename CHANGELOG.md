@@ -43,7 +43,9 @@ The first public release, 1.0.0. What's in it:
 - **Pages:** Server (pools, disks, backups, CPU by hour; four columns that fit
   one 1920 by 1080 screen), Stacks, Logs (opens on whatever is in trouble), Reading,
   Upcoming (a calendar that fits one screen), Apps, Weather and a
-  page for every container.
+  page for every container, with what that app itself says: Sonarr's
+  queue, Immich's jobs, Nextcloud's updates, who's listening, Tracearr's
+  servers and more.
 - **Alerts you tune:** Settings, Alerts sets when storage counts as nearly
   full, when a drive is running hot, and which of your domains get link
   checks, with a warning and an alarm level for each. Meters everywhere turn

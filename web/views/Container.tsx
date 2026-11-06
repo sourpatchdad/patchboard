@@ -3,6 +3,7 @@
 // When something is wrong, the runbook moves to the top.
 
 import { Attention } from './Home.tsx';
+import { QUEUE_NAMES } from '../board/HomeWidgets.tsx';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
@@ -14,7 +15,12 @@ import type {
   ArrData,
   ContainerDetail,
   FrigateData,
+  ImmichData,
+  ListeningData,
   MinifluxData,
+  NextcloudData,
+  SeerrData,
+  TracearrData,
   RunbookSection,
   StatsData,
   UptimeData,
@@ -541,6 +547,14 @@ function AppPanel({ name }: { name: string }) {
   const { clients } = useDownloadClients();
   const frigate = useSource<FrigateData>('frigate').data;
   const feeds = useSource<MinifluxData>('miniflux').data;
+  const immich = useSource<ImmichData>('immich').data;
+  const nextcloud = useSource<NextcloudData>('nextcloud').data;
+  const bazarr = useSource<ArrData>('bazarr').data;
+  const prowlarr = useSource<ArrData>('prowlarr').data;
+  const abs = useSource<ListeningData>('audiobookshelf').data;
+  const navi = useSource<ListeningData>('navidrome').data;
+  const seerr = useSource<SeerrData>('overseerr').data;
+  const tracearr = useSource<TracearrData>('tracearr').data;
 
   const arr = name === 'sonarr' ? sonarr : name === 'radarr' ? radarr : null;
   if (arr) {
@@ -607,6 +621,90 @@ function AppPanel({ name }: { name: string }) {
               {c.online ? `${c.fps} fps` : <span className="crit-text">Offline</span>}
             </Row>
           ))}
+        </dl>
+      </Section>
+    );
+  }
+  if ((name === 'immich-server' || name === 'immich') && immich) {
+    const busy = immich.queues.filter((q) => q.active + q.waiting > 0);
+    const failed = immich.queues.reduce((n, q) => n + q.failed, 0);
+    return (
+      <Section title="In Immich" action={{ label: 'Open Immich', href: immich.webUrl }}>
+        <dl className="ledger">
+          <Row k="Library">
+            {immich.photos.toLocaleString()} photos, {immich.videos.toLocaleString()} videos <span className="ledger-aside">{size(immich.usage)}</span>
+          </Row>
+          <Row k="Working on">{busy.length ? busy.map((q) => `${QUEUE_NAMES[q.name] ?? q.name} ${(q.active + q.waiting).toLocaleString()}`).join(', ') : 'Nothing'}</Row>
+          {failed > 0 && <Row k="Failed jobs"><span className="warn-text">{failed}</span></Row>}
+          {immich.version && <Row k="Version">{immich.version}</Row>}
+        </dl>
+      </Section>
+    );
+  }
+  if ((name === 'nextcloud' || name === 'nextcloud-app') && nextcloud) {
+    return (
+      <Section title="In Nextcloud" action={{ label: 'Open Nextcloud', href: nextcloud.webUrl }}>
+        <dl className="ledger">
+          <Row k="Files">{nextcloud.files.toLocaleString()}</Row>
+          <Row k="Users">
+            {nextcloud.users} {nextcloud.activeToday != null && <span className="ledger-aside">{nextcloud.activeToday} active today</span>}
+          </Row>
+          {nextcloud.freeBytes != null && <Row k="Free space">{size(nextcloud.freeBytes)}</Row>}
+          <Row k="App updates">{nextcloud.appUpdates ? <a href={`${nextcloud.webUrl}/settings/apps/updates`} target="_blank" rel="noreferrer">{nextcloud.appUpdates}</a> : 'None'}</Row>
+          {nextcloud.version && <Row k="Version">{nextcloud.version}</Row>}
+        </dl>
+      </Section>
+    );
+  }
+  const other = name === 'bazarr' ? bazarr : name === 'prowlarr' ? prowlarr : null;
+  if (other) {
+    return (
+      <Section title={name === 'bazarr' ? 'In Bazarr' : 'In Prowlarr'}>
+        <dl className="ledger">
+          {name === 'bazarr' && <Row k="Missing subtitles">{other.queueTotal ? other.queueTotal.toLocaleString() : 'None'}</Row>}
+          <Row k="Health">{other.health.length ? other.health.map((h) => h.message).join(' ') : 'No warnings'}</Row>
+        </dl>
+      </Section>
+    );
+  }
+  const listening = name === 'audiobookshelf' ? { label: 'Audiobookshelf', d: abs } : name === 'navidrome' ? { label: 'Navidrome', d: navi } : null;
+  if (listening?.d) {
+    return (
+      <Section title={`In ${listening.label}`}>
+        <dl className="ledger">
+          <Row k="Listening">{listening.d.streams.length ? listening.d.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody right now'}</Row>
+        </dl>
+      </Section>
+    );
+  }
+  if (['overseerr', 'jellyseerr', 'seerr'].includes(name) && seerr) {
+    return (
+      <Section title="Requests">
+        <dl className="ledger">
+          <Row k="Waiting">{seerr.pending ? seerr.requests.slice(0, 5).map((r) => r.title).join(', ') : 'Nothing'}</Row>
+          <Row k="On the way">{seerr.processing || 'None'}</Row>
+        </dl>
+      </Section>
+    );
+  }
+  if (name === 'tracearr' && tracearr) {
+    return (
+      <Section title="In Tracearr" action={{ label: 'Open Tracearr', href: tracearr.webUrl }}>
+        <dl className="ledger">
+          {tracearr.servers.map((s) => (
+            <Row key={s.id} k={s.name}>
+              {s.status === 'down' ? <span className="crit-text">Down{s.reason ? `: ${s.reason}` : ''}</span> : s.status === 'up' ? `Up, ${plural(s.streams, 'stream')}` : 'Unknown'}
+            </Row>
+          ))}
+          <Row k="To review">
+            {tracearr.violations.length ? (
+              <a href={`${tracearr.webUrl}/violations`} target="_blank" rel="noreferrer">
+                {plural(tracearr.violations.length, 'violation')}
+              </a>
+            ) : (
+              'Nothing'
+            )}
+          </Row>
         </dl>
       </Section>
     );
