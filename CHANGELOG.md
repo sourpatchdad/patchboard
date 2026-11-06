@@ -9,6 +9,8 @@ The first public release, 1.0.0. What's in it:
   fix. Below it, a board you arrange: apps with live numbers, Right now,
   This week, Reading, mail, the server, changes, recently added and more.
   The board starts right under the header; Customize waits at its foot.
+  Recently added fills one row on a wide screen, each title once even when
+  Plex and Jellyfin group a season differently.
   Each number in the Server widget opens the section that explains it,
   and an empty page links straight to the setting that fills it.
 - **Every glance leads to an action.** A stopped container is two clicks

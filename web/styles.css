@@ -1360,10 +1360,17 @@ a.jack:focus-visible {
 
 /* Recently added */
 
+/* Fitted to one row: the posters share the width, so the row ends flush. */
+.posters.is-fit {
+  grid-auto-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
 .posters {
+  --poster-w: 138px;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 138px;
+  grid-auto-columns: var(--poster-w);
   gap: 20px;
   overflow-x: auto;
   padding: 18px 0 8px;
@@ -5885,7 +5892,7 @@ body.is-sorting * {
   }
 
   .posters {
-    grid-auto-columns: 112px;
+    --poster-w: 112px;
     gap: 14px;
   }
 }

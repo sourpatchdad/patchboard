@@ -63,7 +63,7 @@ export function tautulliAdapter(): Adapter<TautulliData> {
     async fetch() {
       const [activity, added] = await Promise.all([
         call<{ sessions: Session[] }>('get_activity'),
-        call<{ recently_added: Added[] }>('get_recently_added', '&count=14'),
+        call<{ recently_added: Added[] }>('get_recently_added', '&count=30'),
       ]);
       const streams: Stream[] = activity.sessions.map((s) => {
         const ep = s.media_type === 'episode';

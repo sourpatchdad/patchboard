@@ -17,18 +17,33 @@ export function titleWords(title: string): string {
     .replace(/^(the|a|an) /, '');
 }
 
-/** What tells two releases of a title apart: the episode code, or the year. */
-function marker(r: RecentItem): string {
+/**
+ * What tells two releases of a title apart: the episode code, the year, or
+ * neither, for a batch ("13 new", "Season 1") that a server groups its own way.
+ */
+function marker(r: RecentItem): { kind: 'ep' | 'year' | 'batch'; key: string } {
   const sub = r.subtitle ?? '';
   const ep = /S(\d+)E(\d+)/i.exec(sub);
-  if (ep) return `e${Number(ep[1])}x${Number(ep[2])}`;
+  if (ep) return { kind: 'ep', key: `${Number(ep[1])}x${Number(ep[2])}` };
   const year = /\b(19|20)\d{2}\b/.exec(sub);
-  return year ? `y${year[0]}` : `s${titleWords(sub)}`;
+  return year ? { kind: 'year', key: year[0] } : { kind: 'batch', key: '' };
 }
 
-/** Two servers added the same thing: same episode or year, and one title holds the other. */
+/** A batch matches what lands from the same show within three days. */
+const BATCH_WINDOW = 3 * 86_400_000;
+
+/**
+ * Two servers added the same thing: one title holds the other, and the same
+ * episode, the same year, or a batch of that show close in time to the other
+ * copy, whether that copy is a batch or a single episode.
+ */
 export function sameRelease(a: RecentItem, b: RecentItem): boolean {
-  if (marker(a) !== marker(b)) return false;
+  const ma = marker(a);
+  const mb = marker(b);
+  if (ma.kind === 'batch' || mb.kind === 'batch') {
+    if (ma.kind === 'year' || mb.kind === 'year' || a.type === 'movie' || b.type === 'movie') return false;
+    if (Math.abs(a.addedAt - b.addedAt) > BATCH_WINDOW) return false;
+  } else if (ma.kind !== mb.kind || ma.key !== mb.key) return false;
   const x = titleWords(a.title);
   const y = titleWords(b.title);
   if (!x || !y) return false;

@@ -7,7 +7,7 @@ import { STARTERS } from '../../shared/board.ts';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
@@ -565,15 +565,38 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
   );
 }
 
+/**
+ * Newest first, one copy of each. On a wide screen the shelf shows exactly
+ * the posters that fit one row, so it never scrolls or ends half empty; the
+ * widget's limit caps it. On a phone it's a shelf to swipe, up to the limit.
+ */
 export function RecentlyAdded({ now }: { now: number }) {
   const { servers } = useMediaServers();
-  const { limit = 12 } = useWidget();
+  const { limit = 24 } = useWidget();
+  const [fit, setFit] = useState<number | null>(null);
+  const shelf = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = shelf.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.getBoundingClientRect().width / (parseFloat(getComputedStyle(document.body).zoom) || 1);
+      // A poster column and its gap, as the stylesheet sets them.
+      const col = parseFloat(getComputedStyle(el.querySelector('.posters') ?? el).getPropertyValue('--poster-w')) || 138;
+      setFit(window.innerWidth > 760 ? Math.max(1, Math.floor((w + 20) / (col + 20))) : null);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const items = mergeRecent(servers);
   if (!items.length) return null;
   const title = servers.length === 1 ? `Recently added to ${servers[0].label}` : 'Recently added';
   return (
     <Section title={title} className="recent">
-      <PosterShelf items={items.slice(0, limit)} now={now} showServer={servers.length > 1} />
+      <div ref={shelf} className="shelf-measure">
+        <PosterShelf items={items.slice(0, fit ? Math.min(fit, limit) : limit)} now={now} showServer={servers.length > 1} fit={!!fit && fit <= limit} />
+      </div>
     </Section>
   );
 }
@@ -593,9 +616,9 @@ export function NextUp() {
   );
 }
 
-function PosterShelf({ items, now, showServer }: { items: MergedItem[]; now?: number; showServer: boolean }) {
+function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now?: number; showServer: boolean; fit?: boolean }) {
   return (
-    <ul className="posters">
+    <ul className={`posters ${fit ? 'is-fit' : ''}`}>
       {items.map((r) => {
         const href = itemHref(r.server, r.id);
         return (

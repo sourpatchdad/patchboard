@@ -113,7 +113,7 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
 
   /** Jellyfin 10.9 moved Latest to /Items/Latest; Emby and older Jellyfin keep the per-user route. */
   async function latest(uid: string): Promise<Item[]> {
-    const q = 'Limit=16&Fields=DateCreated,ProductionYear,ChildCount&GroupItems=true';
+    const q = 'Limit=30&Fields=DateCreated,ProductionYear,ChildCount&GroupItems=true';
     if (kind === 'jellyfin') {
       try {
         return await get<Item[]>(kind, `/Items/Latest?userId=${uid}&${q}`);
