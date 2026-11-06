@@ -52,6 +52,15 @@ export function Logs() {
           : RANK[stateOf(a)] - RANK[stateOf(b)] || a.name.localeCompare(b.name),
     );
 
+  // Something in trouble and nothing picked: on a wide screen, open its logs
+  // straight away. A phone keeps the list first; a quiet server, the prompt.
+  const trouble = containers
+    .filter((c) => stateOf(c) === 'down' || stateOf(c) === 'warn')
+    .sort((a, b) => RANK[stateOf(a)] - RANK[stateOf(b)] || a.name.localeCompare(b.name))[0];
+  useEffect(() => {
+    if (!name && trouble && window.innerWidth > 760) navigate(`/logs/${encodeURIComponent(trouble.name)}`, { replace: true });
+  }, [name, trouble?.name]);
+
   return (
     <div className={`logs-layout ${name ? 'has-selection' : ''}`}>
       <aside className="logs-list" aria-label="Containers">

@@ -41,8 +41,8 @@ The first public release, 1.0.0. What's in it:
   Assistant, Frigate, Uptime Kuma, Gatus, Healthchecks.io, Pi-hole, AdGuard Home, Speedtest Tracker,
   Overseerr, Tracearr, Miniflux and Trakt, plus a live number from any JSON API.
 - **Pages:** Server (pools, disks, backups, CPU by hour; four columns that fit
-  one 1920 by 1080 screen), Stacks, Reading,
-  Upcoming (a calendar that fits one screen), Logs, Apps, Weather and a
+  one 1920 by 1080 screen), Stacks, Logs (opens on whatever is in trouble), Reading,
+  Upcoming (a calendar that fits one screen), Apps, Weather and a
   page for every container.
 - **Alerts you tune:** Settings, Alerts sets when storage counts as nearly
   full, when a drive is running hot, and which of your domains get link
