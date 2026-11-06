@@ -1,0 +1,10 @@
+# The default rules, plus one exception: in the env template an empty line
+# such as PROXMOX_SECRET= is followed by the next variable, which the generic
+# rule reads as its value. A "secret" that starts with a variable name is that.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "An empty template variable followed by the next one"
+regexTarget = "secret"
+regexes = ['''^[A-Z][A-Z0-9_]*=''']
