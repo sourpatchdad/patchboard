@@ -12,6 +12,7 @@ import type {
   MinifluxData,
   ImmichData,
   NextcloudData,
+  GiteaData,
   PaperlessData,
   QbitData,
   Service,
@@ -65,6 +66,10 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   if (c === 'paperless' || c === 'paperless-ngx' || c === 'paperless-webserver') {
     const p = data<PaperlessData>(snap, 'paperless');
     return p ? (p.inbox ? `${p.inbox} in inbox` : `${p.total.toLocaleString()} documents`) : null;
+  }
+  if (c === 'gitea' || c === 'forgejo') {
+    const g = data<GiteaData>(snap, 'gitea');
+    return g ? (g.unread ? `${g.unread} unread` : `${g.repos} repos`) : null;
   }
   if (c === 'nextcloud' || c === 'nextcloud-app') {
     const n = data<NextcloudData>(snap, 'nextcloud');

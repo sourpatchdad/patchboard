@@ -46,6 +46,7 @@ export type SourceId =
   | 'nextcloud'
   | 'audiobookshelf'
   | 'navidrome'
+  | 'gitea'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -769,6 +770,12 @@ export interface TailnetData {
 /** Who is listening: Audiobookshelf or Navidrome. Progress -1 means unknown. */
 export interface ListeningData {
   streams: Stream[];
+}
+
+export interface GiteaData {
+  unread: number;
+  repos: number;
+  webUrl: string;
 }
 
 export interface PaperlessData {

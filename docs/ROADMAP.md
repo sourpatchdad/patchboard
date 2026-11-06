@@ -14,7 +14,6 @@ What comes next. CHANGELOG.md has what has shipped.
 ### Integrations
 
 - [ ] TP-Link Omada
-- [ ] Gitea and Forgejo, Vaultwarden
 - [ ] Start and stop for Proxmox guests
 - [ ] Links in the Elsewhere row added from the UI
 - [ ] Hardcover and Goodreads: what you are reading

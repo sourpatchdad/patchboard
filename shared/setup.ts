@@ -53,6 +53,7 @@ export const UI_SETUP = new Set([
   'nextcloud',
   'audiobookshelf',
   'navidrome',
+  'gitea',
   'overseerr',
   'ntfy',
   'gotify',

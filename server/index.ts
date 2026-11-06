@@ -30,7 +30,7 @@ import { qnapAdapter } from './adapters/qnap.ts';
 import { portainerAdapter } from './adapters/portainer.ts';
 import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
-import { bazarrAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
+import { bazarrAdapter, giteaAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
 import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
@@ -133,6 +133,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   bazarr: () => (config.bazarr ? { adapter: bazarrAdapter() } : null),
   paperless: () => (config.paperless ? { adapter: paperlessAdapter() } : null),
   nextcloud: () => (config.nextcloud ? { adapter: nextcloudAdapter() } : null),
+  gitea: () => (config.gitea ? { adapter: giteaAdapter() } : null),
   audiobookshelf: () => (config.audiobookshelf ? { adapter: audiobookshelfAdapter() } : null),
   navidrome: () => (config.navidrome ? { adapter: navidromeAdapter() } : null),
   overseerr: () => {

@@ -195,6 +195,7 @@ function build(str: Lookup) {
     prowlarr: pair('PROWLARR_URL', 'PROWLARR_KEY'),
     bazarr: pair('BAZARR_URL', 'BAZARR_KEY'),
     paperless: pair('PAPERLESS_URL', 'PAPERLESS_TOKEN'),
+    gitea: pair('GITEA_URL', 'GITEA_TOKEN'),
     audiobookshelf: pair('AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'),
     navidrome:
       str('NAVIDROME_URL') && str('NAVIDROME_USERNAME') && str('NAVIDROME_PASSWORD')

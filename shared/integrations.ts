@@ -360,6 +360,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'gitea',
+    name: 'Gitea or Forgejo',
+    adds: 'Unread notifications (review requests, mentions, issues you follow) on the tile, or how many repositories there are when you are caught up.',
+    env: ['GITEA_URL', 'GITEA_TOKEN'],
+    where: 'Settings, Applications, Generate New Token, with read access to notifications and repositories.',
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',

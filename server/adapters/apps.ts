@@ -1,9 +1,9 @@
 // Apps that mostly need a number on their tile and a word when something is
 // wrong: the rest of the *arr family, Bazarr, Paperless-ngx and Nextcloud.
 
-import type { ArrData, ArrProblem, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import type { ArrData, ArrProblem, GiteaData, NextcloudData, PaperlessData } from '../../shared/types.ts';
 import { config } from '../config.ts';
-import { getJson } from '../http.ts';
+import { getJson, request } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 
 type Health = { type?: string; message?: string };
@@ -102,6 +102,24 @@ export function nextcloudAdapter(): Adapter<NextcloudData> {
       const auth = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
       const r = await getJson<ServerInfo>(`${url}/ocs/v2.php/apps/serverinfo/api/v1/info?format=json&skipApps=false`, { headers: { Authorization: auth, 'OCS-APIRequest': 'true', Accept: 'application/json' } });
       return toNextcloud(r, url);
+    },
+  };
+}
+
+/** Gitea and Forgejo: unread notifications and how many repositories there are. */
+export function giteaAdapter(): Adapter<GiteaData> {
+  const { url, key } = config.gitea!;
+  const headers = { Authorization: `token ${key}`, Accept: 'application/json' };
+  return {
+    id: 'gitea',
+    label: 'Gitea',
+    intervalMs: 2 * MINUTE,
+    async fetch() {
+      const [unread, repos] = await Promise.all([
+        getJson<{ new?: number }>(`${url}/api/v1/notifications/new`, { headers }),
+        request(`${url}/api/v1/repos/search?limit=1`, { headers }),
+      ]);
+      return { unread: unread.new ?? 0, repos: Number(repos.headers.get('x-total-count') ?? 0), webUrl: url };
     },
   };
 }
