@@ -5,7 +5,7 @@ import { moodFor } from '../../shared/otter.ts';
 import { Mascot } from '../components/Otter.tsx';
 import { STARTERS } from '../../shared/board.ts';
 import { useJson } from '../lib/api.ts';
-import type { CatalogAudit } from '../../shared/types.ts';
+import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
 import { useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
@@ -336,7 +336,13 @@ export function FeedsBrief({ now }: { now: number }) {
 export function NowPlaying() {
   const { servers, configured } = useMediaServers();
   const { clients, configured: anyClient } = useDownloadClients();
-  if (!configured && !anyClient) return null;
+  const abs = useSource<ListeningData>('audiobookshelf');
+  const navi = useSource<ListeningData>('navidrome');
+  const listening = [
+    { id: 'audiobookshelf', label: 'Audiobookshelf', data: abs.data },
+    { id: 'navidrome', label: 'Navidrome', data: navi.data },
+  ].filter((l) => l.data?.streams.length);
+  if (!configured && !anyClient && !abs.state && !navi.state) return null;
 
   return (
     <Section title="Right now" className="now">
@@ -364,6 +370,26 @@ export function NowPlaying() {
                 </span>
               </div>
               <Meter value={s.progress} level={s.state === 'paused' ? 'warn' : 'ok'} />
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {listening.map((l) => (
+        <div className="now-block" key={l.id}>
+          <h3>
+            {l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}
+          </h3>
+          {l.data!.streams.map((s, i) => (
+            <div className="stream" key={i}>
+              <div className="stream-line">
+                <span className="stream-title">
+                  {s.title}
+                  {s.subtitle && <span className="stream-sub"> {s.subtitle}</span>}
+                </span>
+                <span className="stream-user">{s.user}</span>
+              </div>
+              {s.progress >= 0 && <Meter value={s.progress} level="ok" />}
             </div>
           ))}
         </div>

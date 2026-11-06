@@ -51,6 +51,8 @@ export const UI_SETUP = new Set([
   'bazarr',
   'paperless',
   'nextcloud',
+  'audiobookshelf',
+  'navidrome',
   'overseerr',
   'ntfy',
   'gotify',

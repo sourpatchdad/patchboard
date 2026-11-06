@@ -44,6 +44,8 @@ export type SourceId =
   | 'bazarr'
   | 'paperless'
   | 'nextcloud'
+  | 'audiobookshelf'
+  | 'navidrome'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -762,6 +764,11 @@ export interface TailnetDevice {
 
 export interface TailnetData {
   devices: TailnetDevice[];
+}
+
+/** Who is listening: Audiobookshelf or Navidrome. Progress -1 means unknown. */
+export interface ListeningData {
+  streams: Stream[];
 }
 
 export interface PaperlessData {

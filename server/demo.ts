@@ -28,6 +28,7 @@ import type {
   MonitorData,
   UnifiData,
   PaperlessData,
+  ListeningData,
   TailnetData,
   KumaMonitor,
   UptimeKumaData,
@@ -635,6 +636,9 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
+    demo<ListeningData>('audiobookshelf', 'Audiobookshelf', 20 * SECOND, () => ({
+      streams: [{ user: 'Sam', title: 'Project Hail Mary', subtitle: 'Andy Weir', progress: 62 + ((Date.now() / 60_000) % 5), state: 'playing', transcode: false }],
+    })),
     demo<UnifiData>('unifi', 'UniFi', MINUTE, () => ({
       clients: 37,
       sites: 1,

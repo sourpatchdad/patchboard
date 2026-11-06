@@ -31,6 +31,7 @@ import { portainerAdapter } from './adapters/portainer.ts';
 import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
 import { bazarrAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
+import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -132,6 +133,8 @@ const FACTORIES: Record<string, () => Made | null> = {
   bazarr: () => (config.bazarr ? { adapter: bazarrAdapter() } : null),
   paperless: () => (config.paperless ? { adapter: paperlessAdapter() } : null),
   nextcloud: () => (config.nextcloud ? { adapter: nextcloudAdapter() } : null),
+  audiobookshelf: () => (config.audiobookshelf ? { adapter: audiobookshelfAdapter() } : null),
+  navidrome: () => (config.navidrome ? { adapter: navidromeAdapter() } : null),
   overseerr: () => {
     if (!config.overseerr) return null;
     const c = seerrClient();

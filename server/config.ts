@@ -195,6 +195,11 @@ function build(str: Lookup) {
     prowlarr: pair('PROWLARR_URL', 'PROWLARR_KEY'),
     bazarr: pair('BAZARR_URL', 'BAZARR_KEY'),
     paperless: pair('PAPERLESS_URL', 'PAPERLESS_TOKEN'),
+    audiobookshelf: pair('AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'),
+    navidrome:
+      str('NAVIDROME_URL') && str('NAVIDROME_USERNAME') && str('NAVIDROME_PASSWORD')
+        ? { url: trimSlash(str('NAVIDROME_URL')!), username: str('NAVIDROME_USERNAME')!, password: str('NAVIDROME_PASSWORD')! }
+        : undefined,
     nextcloud:
       str('NEXTCLOUD_URL') && str('NEXTCLOUD_USERNAME') && str('NEXTCLOUD_PASSWORD')
         ? { url: trimSlash(str('NEXTCLOUD_URL')!), username: str('NEXTCLOUD_USERNAME')!, password: str('NEXTCLOUD_PASSWORD')! }

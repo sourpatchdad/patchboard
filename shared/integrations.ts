@@ -344,6 +344,22 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'audiobookshelf',
+    name: 'Audiobookshelf',
+    adds: 'Who is listening, to what, and how far through, in Right now.',
+    env: ['AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'],
+    where: 'Signed in as an admin: Settings, Users, your user, API token (or Settings, API Keys on newer versions).',
+    source: true,
+  },
+  {
+    id: 'navidrome',
+    name: 'Navidrome',
+    adds: 'Who is listening and to which track, in Right now. Other Subsonic-compatible servers work the same way.',
+    env: ['NAVIDROME_URL', 'NAVIDROME_USERNAME', 'NAVIDROME_PASSWORD'],
+    where: 'Any Navidrome user; an admin sees everyone who is listening.',
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',
