@@ -9,7 +9,7 @@ import { useUrlChoice } from '../lib/url.ts';
 import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
-import type { SetupIntegration } from '../../shared/setup.ts';
+import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
   type Appearance,
@@ -25,17 +25,18 @@ import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
 import { useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 
-type Tab = 'look' | 'home' | 'connections' | 'activity';
+type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
 const TABS: [Tab, string, string][] = [
   ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved.'],
   ['home', 'Home and units', 'Saved on this device. The Home board itself is the same everywhere: change it with Customize on Home.'],
+  ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],
   ['connections', 'Connections', 'Shared by every device.'],
   ['activity', 'Activity', 'Who changed what, newest first.'],
 ];
 
 export function Settings() {
   const a = useAppearance();
-  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'connections', 'activity'], 'look');
+  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look');
   const { hash } = useLocation();
   // Older links point at #catalog.
   useEffect(() => {
@@ -212,6 +213,7 @@ export function Settings() {
           <CatalogCheck />
         </>
       )}
+      {tab === 'alerts' && <Alerts />}
       {tab === 'activity' && <Activity />}
       </div>
     </div>
@@ -811,5 +813,103 @@ function SetupFile() {
       {msg && <p className="settings-note">{msg}</p>}
       {err && <p className="crit-text">{err}</p>}
     </Section>
+  );
+}
+
+/** Settings, Alerts: thresholds with sensible defaults, one form, saved together. */
+function Alerts() {
+  const readOnly = !!useStore().snap?.readOnly;
+  const { temp: unit } = useAppearance();
+  const [state, setState] = useState<ThresholdState[] | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const take = (list: ThresholdState[]) => {
+    setState(list);
+    setValues(Object.fromEntries(list.map((t) => [t.name, t.value])));
+  };
+  useEffect(() => {
+    void fetch('/api/setup/thresholds')
+      .then((r) => r.json())
+      .then((b) => take(b.thresholds as ThresholdState[]));
+  }, []);
+  if (!state) return null;
+  const changed = state.some((t) => !t.locked && (values[t.name] ?? '') !== t.value);
+  const save = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const body = Object.fromEntries(state.filter((t) => !t.locked).map((t) => [t.name, values[t.name] ?? '']));
+      const res = await fetch('/api/setup/thresholds', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(body) });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      take(j.thresholds);
+      setMsg({ ok: true, text: 'Saved. Needs attention uses the new numbers now.' });
+    } catch (e) {
+      setMsg({ ok: false, text: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+  // Drive temperatures are stored in °C; show the °F equivalent beside them.
+  const asF = (c: string) => (c && Number.isFinite(Number(c)) ? `${Math.round(Number(c) * 1.8 + 32)}°F` : '');
+  const groups = [...new Set(THRESHOLDS.map((t) => t.group))];
+  return (
+    <>
+      {groups.map((g) => (
+        <Section key={g} title={g}>
+          <div className="thresholds">
+            {THRESHOLDS.filter((t) => t.group === g).map((t) => {
+              const st = state.find((x) => x.name === t.name)!;
+              return (
+                <label key={t.name} className="threshold">
+                  <span className="threshold-label">{t.label}</span>
+                  <span className="threshold-input">
+                    {st.locked ? (
+                      <span className="setup-locked">
+                        {st.value || 'none'} {t.unit} (set in the environment, {t.name})
+                      </span>
+                    ) : (
+                      <>
+                        <input
+                          className={`field ${t.kind === 'number' ? 'field-num' : ''}`}
+                          type={t.kind === 'number' ? 'number' : 'text'}
+                          inputMode={t.kind === 'number' ? 'numeric' : undefined}
+                          min={t.min}
+                          max={t.max}
+                          placeholder={t.kind === 'list' ? 'example.com' : t.default}
+                          value={values[t.name] ?? ''}
+                          disabled={readOnly}
+                          onChange={(e) => setValues({ ...values, [t.name]: e.target.value })}
+                        />
+                        {t.unit && <span className="threshold-unit">{t.unit}</span>}
+                        {t.unit === '°C' && unit === 'f' && <span className="threshold-unit">{asF(values[t.name] ?? '')}</span>}
+                      </>
+                    )}
+                  </span>
+                  <small className="threshold-hint">
+                    {t.hint}
+                    {t.kind === 'number' && !st.locked && ` Default ${t.default}${t.unit === '°C' ? '°C' : t.unit?.startsWith('%') ? '%' : ''}.`}
+                  </small>
+                </label>
+              );
+            })}
+          </div>
+        </Section>
+      ))}
+      {!readOnly && (
+        <div className="thresholds-save">
+          <button type="button" className="button" disabled={!changed || busy} onClick={() => void save()}>
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+          {changed && (
+            <button type="button" className="text-button" onClick={() => take(state)}>
+              Undo changes
+            </button>
+          )}
+          {msg && <span className={msg.ok ? 'settings-note' : 'warn-text'}>{msg.text}</span>}
+        </div>
+      )}
+    </>
   );
 }

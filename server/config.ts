@@ -100,8 +100,10 @@ function build(str: Lookup) {
     dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
 
     poolPath: str('POOL_PATH'),
-    poolWarnPct: Number(env.POOL_WARN_PCT ?? 85),
-    diskWarnC: Number(env.DISK_WARN_C ?? 50),
+    poolWarnPct: Number(str('POOL_WARN_PCT') ?? 85),
+    poolCritPct: Number(str('POOL_CRIT_PCT') ?? 95),
+    diskWarnC: Number(str('DISK_WARN_C') ?? 50),
+    diskCritC: Number(str('DISK_CRIT_C') ?? 58),
 
     /**
      * Hostnames the API answers to besides IP addresses and localhost, e.g. the
@@ -202,7 +204,7 @@ function build(str: Lookup) {
     uptimekuma: str('UPTIME_KUMA_URL') ? { url: trimSlash(str('UPTIME_KUMA_URL')!), slug: str('UPTIME_KUMA_SLUG') ?? 'default' } : undefined,
 
     /** Days of releases to show in Upcoming. */
-    upcomingDays: Number(env.UPCOMING_DAYS ?? 14),
+    upcomingDays: Number(str('UPCOMING_DAYS') ?? 14),
   };
 }
 

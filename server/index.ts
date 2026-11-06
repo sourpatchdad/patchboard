@@ -26,7 +26,7 @@ import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
-import { adoptEnvironment, candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
+import { adoptEnvironment, candidate, describeThresholds, saveThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { withConfig } from './config.ts';
 import { haActionFor, pinnedEntities } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
@@ -826,6 +826,19 @@ app.get('/api/catalog/yaml', (c) =>
 
 // The whole setup as one file: board, app layout, page settings. Keys stay
 // out; setups refer to them by name, so you paste them again after a move.
+// Alert thresholds, shared by every device.
+app.get('/api/setup/thresholds', (c) => c.json({ thresholds: describeThresholds() }));
+
+app.put('/api/setup/thresholds', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save settings." }, 400);
+  const r = saveThresholds(await c.req.json().catch(() => null));
+  if ('error' in r) return c.json({ error: r.error }, 400);
+  recordAudit(who(c), 'setup.thresholds', 'alerts');
+  hub.refreshAlerts();
+  return c.json({ thresholds: describeThresholds() });
+});
+
 app.get('/api/setup', (c) => {
   const body = {
     patchboard: 'setup',

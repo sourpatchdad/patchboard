@@ -8223,3 +8223,59 @@ button.ha-act:hover {
 .adopt-done {
   color: var(--ink-2);
 }
+
+/* Settings, Alerts: a label, an input with its unit, a hint under. */
+.thresholds {
+  display: grid;
+  gap: 18px;
+}
+
+.threshold {
+  display: grid;
+  gap: 6px;
+}
+
+.threshold-label {
+  color: var(--head);
+  font-size: 14.5px;
+}
+
+.threshold-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.threshold-input .field {
+  width: auto;
+}
+
+.threshold-input .field-num {
+  width: 90px;
+}
+
+.threshold-input .field:not(.field-num) {
+  width: min(420px, 100%);
+}
+
+.threshold-unit {
+  color: var(--ink-3);
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.threshold-hint {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.thresholds-save {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 8px;
+}
+

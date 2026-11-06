@@ -4,7 +4,7 @@
 // anything saved here.
 
 import { INTEGRATIONS, type Integration } from '../shared/integrations.ts';
-import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP, CHOICES } from '../shared/setup.ts';
+import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP, CHOICES, THRESHOLDS, type ThresholdState } from '../shared/setup.ts';
 import { envHas, envValue, setSavedSettings } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
 import { seal, unseal } from './vault.ts';
@@ -125,6 +125,46 @@ export function adoptEnvironment(): string[] {
   if (copied.length) write(s);
   loadSavedSettings();
   return copied;
+}
+
+/** Each threshold with the value in effect. */
+export function describeThresholds(): ThresholdState[] {
+  const stored = read();
+  return THRESHOLDS.map((t) => {
+    const locked = envHas(t.name);
+    const saved = stored[t.name]?.value;
+    return { name: t.name, value: (locked ? envValue(t.name) : saved) ?? t.default, locked, saved: !locked && saved !== undefined };
+  });
+}
+
+/** Check and save thresholds. An empty value goes back to the default. */
+export function saveThresholds(input: unknown): { error: string } | { ok: true } {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { error: 'Expected a map of settings' };
+  const values: Record<string, string | null> = {};
+  for (const [name, raw] of Object.entries(input as Record<string, unknown>)) {
+    const t = THRESHOLDS.find((x) => x.name === name);
+    if (!t) return { error: `${name} isn't an alert setting` };
+    if (envHas(name)) return { error: `${t.label} is set in the environment, which wins. Change it there.` };
+    const v = typeof raw === 'string' ? raw.trim() : raw == null ? '' : String(raw);
+    if (!v || v === t.default) {
+      values[name] = null;
+      continue;
+    }
+    if (t.kind === 'number') {
+      const n = Number(v);
+      if (!Number.isFinite(n) || (t.min != null && n < t.min) || (t.max != null && n > t.max)) return { error: `${t.label} must be between ${t.min} and ${t.max}` };
+      values[name] = String(n);
+    } else {
+      const list = v.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean);
+      if (list.length > 50 || !list.every((d) => /^[a-z0-9.-]{1,253}$/.test(d))) return { error: 'Domains are names like example.com, comma-separated' };
+      values[name] = list.join(',');
+    }
+  }
+  const merged = { ...Object.fromEntries(describeThresholds().map((t) => [t.name, t.value])), ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v ?? THRESHOLDS.find((t) => t.name === k)!.default])) };
+  if (Number(merged.POOL_CRIT_PCT) <= Number(merged.POOL_WARN_PCT)) return { error: 'The storage alarm must be higher than the warning' };
+  if (Number(merged.DISK_CRIT_C) <= Number(merged.DISK_WARN_C)) return { error: 'The drive alarm must be higher than the warning' };
+  saveValues(values);
+  return { ok: true };
 }
 
 /** Forget everything saved for one integration. */

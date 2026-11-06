@@ -109,12 +109,12 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       alerts.push({ id: `pool-scrub-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} scrub found ${p.scan.errors} errors`, href: '/server', source: 'truenas' });
     }
     if (p.usedPct >= config.poolWarnPct) {
-      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= 95 ? 'critical' : 'warn', title: `Storage is ${Math.round(p.usedPct)}% full`, detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: '/server', source: 'truenas' });
+      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= config.poolCritPct ? 'critical' : 'warn', title: `Storage is ${Math.round(p.usedPct)}% full`, detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: '/server', source: 'truenas' });
     }
   }
   for (const d of nas?.disks ?? []) {
     if (d.tempC != null && d.tempC >= config.diskWarnC) {
-      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskWarnC + 8 ? 'critical' : 'warn', title: `${d.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: '/server', source: 'truenas' });
+      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', title: `${d.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: '/server', source: 'truenas' });
     }
   }
   for (const a of nas?.alerts ?? []) {
@@ -208,7 +208,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   if (!nas && sys?.pool && sys.pool.usedPct >= config.poolWarnPct) {
     alerts.push({
       id: 'pool-full',
-      level: sys.pool.usedPct >= 95 ? 'critical' : 'warn',
+      level: sys.pool.usedPct >= config.poolCritPct ? 'critical' : 'warn',
       title: `Storage is ${Math.round(sys.pool.usedPct)}% full`,
       detail: `${fmtTB(sys.pool.totalBytes - sys.pool.usedBytes)} free on ${sys.pool.path}`,
       source: 'system',

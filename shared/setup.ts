@@ -127,3 +127,39 @@ export interface SetupIntegration {
   fromUi: boolean;
   fields: SetupField[];
 }
+
+/**
+ * Alert thresholds and other server-wide numbers, set in Settings, Alerts.
+ * Every one has a default that suits most setups; a variable of the same
+ * name in the environment wins and shows as locked.
+ */
+export interface Threshold {
+  name: string;
+  label: string;
+  hint: string;
+  kind: 'number' | 'list';
+  default: string;
+  unit?: string;
+  min?: number;
+  max?: number;
+  group: 'Storage' | 'Drives' | 'Checks' | 'Calendar';
+}
+
+export const THRESHOLDS: Threshold[] = [
+  { name: 'POOL_WARN_PCT', group: 'Storage', label: 'Warn when storage is', unit: '% full', kind: 'number', default: '85', min: 50, max: 99, hint: 'For every pool, volume or array.' },
+  { name: 'POOL_CRIT_PCT', group: 'Storage', label: 'Alarm when storage is', unit: '% full', kind: 'number', default: '95', min: 50, max: 100, hint: 'Shown in red, and sent as an outage if you get notifications.' },
+  { name: 'DISK_WARN_C', group: 'Drives', label: 'Warn when a drive reaches', unit: '°C', kind: 'number', default: '50', min: 30, max: 90, hint: 'Hard drives run cooler than SSDs; 45 to 50 suits most hard drives.' },
+  { name: 'DISK_CRIT_C', group: 'Drives', label: 'Alarm when a drive reaches', unit: '°C', kind: 'number', default: '58', min: 30, max: 100, hint: 'Above this, drives wear fast. Check the airflow.' },
+  { name: 'CHECK_DOMAINS', group: 'Checks', label: 'Also check links on', kind: 'list', default: '', hint: 'Your own domains, comma-separated, e.g. example.com. Links on private and Tailscale addresses are always checked.' },
+  { name: 'UPCOMING_DAYS', group: 'Calendar', label: 'Look ahead', unit: 'days', kind: 'number', default: '14', min: 7, max: 60, hint: 'How far Upcoming and This week fetch releases.' },
+];
+
+export interface ThresholdState {
+  name: string;
+  /** The value in effect: saved, from the environment, or the default. */
+  value: string;
+  /** Set in the environment, so it can't change here. */
+  locked: boolean;
+  /** Saved in Patchboard (not the default). */
+  saved: boolean;
+}

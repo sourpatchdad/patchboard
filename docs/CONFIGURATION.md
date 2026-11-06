@@ -6,8 +6,9 @@ You configure almost everything in the UI:
 |---|---|---|
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
 | Apps, Edit apps, and Customize on each page | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
+| Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Look and Home | Theme, colors, type, density, units | This device only |
-| `.env` (from `examples/env.example`) | Server settings: the listen address, time zone, sign-in, thresholds, folder paths | The server |
+| `.env` (from `examples/env.example`) | Server settings: the listen address, time zone, sign-in, folder paths | The server |
 
 Files still work for anyone who keeps config in git. Integration variables
 in `.env` win over the UI and show there as locked; `config/services.yaml`
@@ -77,13 +78,19 @@ services.yaml.
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
 
-## Thresholds
+## Alerts
 
-| Variable | Default | |
+Settings, Alerts sets when storage, drives and links count as trouble, for
+every device. Each has a default that suits most setups. The same names work
+as environment variables, which win and show there as locked.
+
+| Setting | Default | |
 |---|---|---|
+| `POOL_WARN_PCT` | `85` | Storage use that raises a warning, for every pool, volume or array. |
+| `POOL_CRIT_PCT` | `95` | Storage use that raises an alarm. |
+| `DISK_WARN_C` | `50` | Drive temperature, in Celsius, that raises a warning. |
+| `DISK_CRIT_C` | `58` | Drive temperature that raises an alarm. |
 | `CHECK_DOMAINS` | empty | Your own domains, comma-separated. Patchboard checks app links on them, as well as private and Tailscale addresses. |
-| `POOL_WARN_PCT` | `85` | Storage use that raises an alert. |
-| `DISK_WARN_C` | `50` | Disk temperature, in Celsius, that raises an alert. |
 | `UPCOMING_DAYS` | `14` | How far ahead the calendar looks. |
 
 ## Mounts

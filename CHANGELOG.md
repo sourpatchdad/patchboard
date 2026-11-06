@@ -23,6 +23,9 @@ The first public release, 1.0.0. What's in it:
 - **Pages:** Server (pools, disks, backups, CPU by hour), Stacks, Reading,
   Upcoming (a calendar that fits one screen), Logs, Apps, Weather and a
   page for every container.
+- **Alerts you tune:** Settings, Alerts sets when storage counts as nearly
+  full, when a drive is running hot, and which of your domains get link
+  checks, with a warning and an alarm level for each.
 - **Notifications** through ntfy or Gotify for problems that last two
   minutes, and again when they clear. Updates and restarts never count as
   outages.

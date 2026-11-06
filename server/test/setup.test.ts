@@ -5,6 +5,7 @@ import { test } from 'node:test';
 
 // The environment sets Radarr's address, so the UI must treat it as locked.
 process.env.RADARR_URL = 'http://radarr.env:7878';
+process.env.UPCOMING_DAYS = '21';
 
 const { config, withConfig } = await import('../config.ts');
 const setup = await import('../setup.ts');
@@ -93,4 +94,29 @@ test('moving the environment in: values are copied sealed, marked safe to remove
   assert.equal(field.locked, true);
   assert.equal(field.savedToo, true);
   assert.deepEqual(setup.adoptEnvironment(), [], 'a second run copies nothing new');
+});
+
+test('alert thresholds: defaults until saved, checked ranges, the alarm above the warning, and the environment wins', () => {
+  const val = (n: string) => setup.describeThresholds().find((t) => t.name === n)!;
+  assert.equal(val('POOL_WARN_PCT').value, '85');
+  assert.equal(config.poolCritPct, 95);
+
+  assert.deepEqual(setup.saveThresholds({ POOL_WARN_PCT: '80', DISK_WARN_C: '45' }), { ok: true });
+  assert.equal(config.poolWarnPct, 80);
+  assert.equal(config.diskWarnC, 45);
+  assert.equal(val('POOL_WARN_PCT').saved, true);
+
+  assert.match((setup.saveThresholds({ POOL_WARN_PCT: '120' }) as { error: string }).error, /between/);
+  assert.match((setup.saveThresholds({ POOL_CRIT_PCT: '70' }) as { error: string }).error, /higher than the warning/);
+  // The test run sets CHECK_DOMAINS in the environment, so it is locked here.
+  assert.equal(val('CHECK_DOMAINS').locked, true);
+  assert.match((setup.saveThresholds({ CHECK_DOMAINS: 'home.lan' }) as { error: string }).error, /environment/);
+  assert.match((setup.saveThresholds({ UPCOMING_DAYS: '30' }) as { error: string }).error, /environment/);
+  assert.equal(val('UPCOMING_DAYS').locked, true);
+  assert.equal(val('UPCOMING_DAYS').value, '21');
+
+  // Empty goes back to the default.
+  assert.deepEqual(setup.saveThresholds({ POOL_WARN_PCT: '' }), { ok: true });
+  assert.equal(config.poolWarnPct, 85);
+  assert.equal(val('POOL_WARN_PCT').saved, false);
 });
