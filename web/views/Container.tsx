@@ -168,7 +168,13 @@ export function ContainerPage() {
                 {svc && checkFor(snap, svc.name) && <AnswersRow name={svc.name} now={now} />}
                 <Row k="Image">
                   <span className="mono wrap">{d.image}</span>
-                  {snap.updates[name] && (
+                  {ctr.staleImage && (
+                    <span className="update-note">
+                      A newer copy is already downloaded and this container still runs the old one.
+                      {!snap.readOnly && ' Update switches it over.'}
+                    </span>
+                  )}
+                  {snap.updates[name] && !ctr.staleImage && (
                     <span className="update-note">
                       Update available, found {ago(snap.updates[name].at, now)}
                       {!snap.readOnly && (

@@ -159,6 +159,8 @@ export function demoContainers(): Container[] {
         state: 'running',
         status: `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,
         health: healthy ? ('healthy' as const) : null,
+        // Pulled last night, never recreated: still on the old copy.
+        ...(name === 'immich-postgres' ? { staleImage: true } : {}),
         ...meta,
       };
     })

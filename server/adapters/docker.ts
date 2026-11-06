@@ -61,8 +61,30 @@ function parseHealth(status: string): Container['health'] {
   return m[1] === 'health: starting' ? 'starting' : (m[1] as 'healthy' | 'unhealthy');
 }
 
+/**
+ * Docker names a container's image by its id once the tag has moved on to a
+ * newer pull. The name it was started from never changes, so it's looked up
+ * once per container and kept.
+ */
+const startedFrom = new Map<string, string>();
+
+async function imageName(c: RawContainer): Promise<string | null> {
+  if (!c.Image.startsWith('sha256:')) return null;
+  if (!startedFrom.has(c.Id)) {
+    try {
+      startedFrom.set(c.Id, (await dockerJson<{ Config: { Image: string } }>(`/containers/${c.Id}/json`)).Config.Image);
+    } catch {
+      return null;
+    }
+  }
+  const name = startedFrom.get(c.Id)!;
+  return name.startsWith('sha256:') ? null : name;
+}
+
 export async function listContainers(): Promise<Container[]> {
   const raw = await dockerJson<RawContainer[]>('/containers/json?all=1');
+  const names = new Map(await Promise.all(raw.filter((c) => c.Image.startsWith('sha256:')).map(async (c) => [c.Id, await imageName(c)] as const)));
+  for (const id of startedFrom.keys()) if (!raw.some((c) => c.Id === id)) startedFrom.delete(id);
   const nameOf = (c: RawContainer) => (c.Names[0] ?? c.Id).replace(/^\//, '');
   // depends_on names compose services; resolve them to container names in the same project.
   const byService = new Map(raw.map((c) => [`${c.Labels?.[PROJECT]}/${c.Labels?.[SERVICE]}`, nameOf(c)]));
@@ -75,7 +97,8 @@ export async function listContainers(): Promise<Container[]> {
       return {
         id: c.Id.slice(0, 12),
         name: nameOf(c),
-        image: c.Image,
+        image: names.get(c.Id) ?? c.Image,
+        ...(names.get(c.Id) ? { staleImage: true } : {}),
         imageId: c.ImageID?.replace(/^sha256:/, '').slice(0, 12),
         state: c.State,
         status: c.Status,

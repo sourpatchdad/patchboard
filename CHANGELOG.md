@@ -15,6 +15,8 @@ The first public release, 1.0.0. What's in it:
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
   blocking pauses, requests approve, Proxmox guests start and stop, all from
   the widget. Anything that takes something down asks for a press and hold.
+  A container still running the old copy of an image you already pulled
+  says so, by name, and Update switches it over.
 - **One compose file, no config files.** Add every running container as an
   app in one click, arrange them and add links in Edit apps, connect integrations and turn
   on a password in Settings, with keys encrypted on the server. Mounts at
