@@ -3,6 +3,7 @@
 
 import type {
   GlancesData,
+  NasSystem,
   NutData,
   ProxmoxData,
   ScrutinyData,
@@ -25,6 +26,7 @@ import type {
   SpeedData,
 } from '../shared/types.ts';
 import { config } from './config.ts';
+import { NAS_SOURCES } from '../shared/types.ts';
 import { kvGet, lastEventAt } from './db.ts';
 import { settling, type Track } from './transitions.ts';
 
@@ -238,6 +240,28 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
+    }
+  }
+
+  // Unraid, Synology, QNAP: one set of rules for every storage system.
+  for (const id of NAS_SOURCES) {
+    const n = data<NasSystem>(sources, id);
+    if (!n) continue;
+    if (n.state) alerts.push({ id: `nas-state-${id}`, level: 'critical', subject: n.name, title: `${n.state} on ${n.name}`, href: n.webUrl, source: id });
+    for (const v of n.volumes) {
+      const pct = v.total ? (v.used / v.total) * 100 : 0;
+      if (v.status && v.status !== 'ok') {
+        alerts.push({ id: `nas-vol-${id}-${v.name}`, level: v.status === 'failed' ? 'critical' : 'warn', subject: v.name, title: `${v.name} on ${n.name} is ${v.detail ?? (v.status === 'failed' ? 'failing' : 'degraded')}`, href: n.webUrl, source: id });
+      } else if (pct >= config.poolWarnPct) {
+        alerts.push({ id: `nas-full-${id}-${v.name}`, level: pct >= config.poolCritPct ? 'critical' : 'warn', subject: v.name, title: `${v.name} on ${n.name} is ${Math.round(pct)}% full`, detail: `${fmtTB(v.total - v.used)} free`, href: n.webUrl, source: id });
+      }
+    }
+    for (const d of n.disks) {
+      if (d.status !== 'ok') {
+        alerts.push({ id: `nas-disk-${id}-${d.name}`, level: d.status === 'failed' ? 'critical' : 'warn', subject: d.name, title: `Disk ${d.name} on ${n.name} is ${d.detail ?? (d.status === 'failed' ? 'failing' : 'reporting trouble')}`, detail: d.model, href: n.webUrl, source: id });
+      } else if (d.tempC != null && d.tempC >= config.diskWarnC) {
+        alerts.push({ id: `nas-temp-${id}-${d.name}`, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', subject: d.name, title: `Disk ${d.name} on ${n.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: n.webUrl, source: id });
+      }
     }
   }
 

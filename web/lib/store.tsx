@@ -79,6 +79,15 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={{ snap, live, failed, auth }}>{children}</Ctx.Provider>;
 }
 
+/** Settings, Alerts thresholds, with the defaults until the snapshot arrives. */
+export function useLimits(): import('../../shared/types.ts').Limits {
+  const { snap } = useStore();
+  return snap?.limits ?? { poolWarnPct: 85, poolCritPct: 95, diskWarnC: 50, diskCritC: 58 };
+}
+
+/** A meter's color for a fill percentage against the storage thresholds. */
+export const storageLevel = (pct: number, l: import('../../shared/types.ts').Limits): 'ok' | 'warn' | 'crit' => (pct >= l.poolCritPct ? 'crit' : pct >= l.poolWarnPct ? 'warn' : 'ok');
+
 export function useStore(): Store {
   return useContext(Ctx);
 }

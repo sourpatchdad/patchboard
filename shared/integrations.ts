@@ -227,6 +227,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'unraid',
+    name: 'Unraid',
+    adds: 'A Storage widget: the array and each cache pool with how full they are, and every parity, data and cache disk with its state and temperature. A stopped array, a disabled or missing disk, a full pool or a hot disk shows in Needs attention, by your Settings, Alerts thresholds.',
+    env: ['UNRAID_URL', 'UNRAID_KEY'],
+    where: 'Unraid 7.2 or newer (or the Unraid Connect plugin on older versions): Settings, Management Access, API Keys, create a key with read access.',
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',

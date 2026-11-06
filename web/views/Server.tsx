@@ -12,7 +12,7 @@ import { HourHeatmap } from '../components/Squares.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useHistory } from '../lib/api.ts';
 import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
-import { useNow, useSource, useStore } from '../lib/store.tsx';
+import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 
 const DAY = 86_400_000;
@@ -94,8 +94,9 @@ export function Server() {
 }
 
 function PoolSection({ pool, snapshots, now }: { pool: Pool; snapshots: number | null; now: number }) {
+  const limits = useLimits();
   const h = useHistory(['pool.used', 'pool.size'], 24 * 90, 120, 15 * 60_000);
-  const level = pool.usedPct >= 95 ? 'crit' : pool.usedPct >= 85 ? 'warn' : 'ok';
+  const level = storageLevel(pool.usedPct, limits);
   const errors = pool.disks.reduce((n, d) => n + d.errors, 0);
   const scan = pool.scan;
   return (
@@ -301,11 +302,12 @@ function dayWord(t: number, now: number): string {
 
 function Disks({ nas }: { nas: TruenasData }) {
   const { temp: unit } = useAppearance();
+  const limits = useLimits();
   return (
     <Section title="Disks" count={plural(nas.disks.length, 'disk')}>
       <ul className="disks">
         {nas.disks.map((d) => {
-          const hot = d.tempC != null && d.tempC >= 50;
+          const hot = d.tempC != null && d.tempC >= limits.diskWarnC;
           return (
             <li key={d.name}>
               <span className="ident">{d.name}</span>

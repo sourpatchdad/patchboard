@@ -236,6 +236,7 @@ export class Hub {
       catalog: getCatalog(),
       updates: pendingUpdates(),
       readOnly: config.readOnly,
+      limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
       features: [
         'diun',

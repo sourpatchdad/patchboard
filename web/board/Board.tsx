@@ -11,6 +11,7 @@ import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX,
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import { NAS_SOURCES } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -20,10 +21,10 @@ import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
-import { useSource, useStore } from '../lib/store.tsx';
+import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, StorageWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -442,6 +443,8 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
       return <HostsWidget />;
     case 'power':
       return <PowerWidget />;
+    case 'storage':
+      return <StorageWidget />;
     case 'requests':
       return <RequestsWidget now={now} />;
     case 'container':
@@ -455,6 +458,7 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
 
 /** The server at a glance, each number with its last 24 hours. */
 function Vitals() {
+  const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
   const { data: nas } = useSource<TruenasData>('truenas');
   const h = useHistory(['cpu', 'mem.used'], 24, 120);
@@ -489,7 +493,7 @@ function Vitals() {
           <Link to="/server" className="vw">
             <span className="vw-num">{Math.round(storage)}%</span>
             <span className="vw-label">Storage{pool ? ` on ${pool.name}` : ''}</span>
-            <Meter value={storage} level={storage >= 95 ? 'crit' : storage >= 85 ? 'warn' : 'ok'} />
+            <Meter value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}
         <Link to="/server" className="vw">
@@ -561,6 +565,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     drives: has('scrutiny'),
     hosts: has('glances'),
     power: has('nut'),
+    storage: NAS_SOURCES.some(has),
     requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),

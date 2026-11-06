@@ -7068,6 +7068,93 @@ button.ha-act:hover {
   justify-self: start;
 }
 
+/* ---------- Storage (Unraid, Synology, QNAP) ---------- */
+
+.nas-system + .nas-system {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.nas-name {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nas-name a {
+  color: var(--head);
+  text-decoration: none;
+}
+
+.nas-name span {
+  font: 400 12px var(--f-mono);
+  color: var(--ink-3);
+}
+
+.nas-state {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+}
+
+.nas-volumes,
+.nas-disks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nas-volumes {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.nas-volumes li {
+  display: grid;
+  grid-template-columns: minmax(60px, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+.nas-vol-name {
+  color: var(--head);
+}
+
+.nas-vol-num {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.nas-disks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px 16px;
+}
+
+.nas-disks li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--head);
+}
+
+.nas-disk-temp {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.nas-disks .drive-warn .nas-disk-temp {
+  color: var(--warn);
+}
+
+.nas-disks .drive-failed .nas-disk-temp {
+  color: var(--crit);
+}
+
 /* ---------- Power (NUT) ---------- */
 
 .ups-list {

@@ -30,6 +30,7 @@ export type SourceId =
   | 'scrutiny'
   | 'glances'
   | 'nut'
+  | 'unraid'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -643,6 +644,50 @@ export interface NutData {
   ups: Ups[];
 }
 
+/**
+ * A storage system in one shape, whatever runs it: Unraid, Synology or QNAP.
+ * One Storage widget and one set of alert rules read them all.
+ */
+export interface NasVolume {
+  name: string;
+  used: number;
+  total: number;
+  /** A volume the system itself reports as degraded or crashed. */
+  status?: 'ok' | 'warn' | 'failed';
+  detail?: string;
+}
+
+export interface NasDisk {
+  name: string;
+  model?: string;
+  role?: 'parity' | 'data' | 'cache';
+  status: 'ok' | 'warn' | 'failed';
+  /** The system's own word for a problem, when there is one. */
+  detail?: string;
+  /** Missing while a disk is spun down. */
+  tempC?: number;
+}
+
+export interface NasSystem {
+  platform: 'Unraid' | 'Synology' | 'QNAP';
+  name: string;
+  webUrl: string;
+  /** Set when the system as a whole is not in service, e.g. a stopped array. */
+  state?: string;
+  volumes: NasVolume[];
+  disks: NasDisk[];
+}
+
+export interface Limits {
+  poolWarnPct: number;
+  poolCritPct: number;
+  diskWarnC: number;
+  diskCritC: number;
+}
+
+/** The sources that report a NasSystem. */
+export const NAS_SOURCES = ['unraid'] as const;
+
 export interface CarData {
   cars: Car[];
 }
@@ -815,6 +860,8 @@ export interface Snapshot {
   updates: Record<string, ImageUpdate>;
   /** READ_ONLY=1: the UI hides every control that changes something. */
   readOnly: boolean;
+  /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
+  limits?: Limits;
   /** What each page shows (its Customize button). */
   pages?: import('./pages.ts').Pages;
   /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */

@@ -188,6 +188,7 @@ function build(str: Lookup) {
       : undefined,
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
+    unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
     scrutiny: str('SCRUTINY_URL') ? { url: trimSlash(str('SCRUTINY_URL')!) } : undefined,
     nut: str('NUT_HOST')
       ? { host: str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[0], port: Number(str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[1] ?? 3493) || 3493 }

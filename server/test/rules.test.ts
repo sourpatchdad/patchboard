@@ -309,3 +309,19 @@ test('NUT: on battery is critical with the minutes left; a battery due for repla
   assert.deepEqual(mine.map((a) => [a.subject, a.level]), [['rack', 'critical'], ['desk', 'warn']]);
   assert.match(mine[0].detail ?? '', /20 minutes/);
 });
+
+test('storage systems: one rule set for Unraid, Synology and QNAP, following the Settings, Alerts thresholds', () => {
+  const nas = {
+    platform: 'Unraid',
+    name: 'tower',
+    webUrl: 'http://tower',
+    state: 'The array is stopped',
+    volumes: [{ name: 'Array', used: 96, total: 100 }, { name: 'cache', used: 10, total: 100 }],
+    disks: [{ name: 'disk1', status: 'failed', detail: 'dsbl' }, { name: 'disk2', status: 'ok', tempC: 52 }, { name: 'disk3', status: 'ok', tempC: 30 }],
+  };
+  const mine = computeAlerts(sources({ unraid: nas }), catalog()).filter((a) => a.source === 'unraid');
+  assert.deepEqual(
+    mine.map((a) => [a.subject, a.level]),
+    [['tower', 'critical'], ['Array', 'critical'], ['disk1', 'critical'], ['disk2', 'warn']],
+  );
+});

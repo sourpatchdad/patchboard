@@ -16,8 +16,8 @@ The first public release, 1.0.0. What's in it:
   Connections, with keys encrypted on the server. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
   in so the files can go.
-- **38 integrations,** among them Sonarr, Radarr, Plex through Tautulli,
-  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Proxmox, Glances, NUT, Scrutiny, Immich, Home
+- **39 integrations,** among them Sonarr, Radarr, Plex through Tautulli,
+  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Proxmox, Glances, NUT, Scrutiny, Immich, Home
   Assistant, Frigate, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker,
   Overseerr, Miniflux and Trakt, plus a live number from any JSON API.
 - **Pages:** Server (pools, disks, backups, CPU by hour), Stacks, Reading,
@@ -25,7 +25,8 @@ The first public release, 1.0.0. What's in it:
   page for every container.
 - **Alerts you tune:** Settings, Alerts sets when storage counts as nearly
   full, when a drive is running hot, and which of your domains get link
-  checks, with a warning and an alarm level for each.
+  checks, with a warning and an alarm level for each. Meters everywhere turn
+  amber and red at the same numbers.
 - **Notifications** through ntfy or Gotify for problems that last two
   minutes, and again when they clear. Updates and restarts never count as
   outages.

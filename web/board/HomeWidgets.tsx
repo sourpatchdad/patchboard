@@ -4,12 +4,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, GlancesData, NutData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import { NAS_SOURCES } from '../../shared/types.ts';
+import type { CarData, DnsData, GlancesData, NasSystem, NutData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg, pct, size, uptime } from '../lib/format.ts';
-import { useSource, useStore } from '../lib/store.tsx';
+import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
 
 async function post(url: string): Promise<void> {
@@ -478,6 +479,67 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Storage: Unraid, Synology, QNAP ----------
+
+/** Every storage system: volumes as meters, then disks, trouble first. */
+export function StorageWidget() {
+  const { snap } = useStore();
+  const { limit = 10 } = useWidget();
+  const { temp: unit } = useAppearance();
+  const limits = useLimits();
+  if (!snap) return null;
+  const systems = NAS_SOURCES.map((id) => ({ id, state: snap.sources[id] })).filter((x) => x.state);
+  if (!systems.length) return null;
+  const rank = { failed: 0, warn: 1, ok: 2 } as const;
+  return (
+    <Section title="Storage" className="nas" source={systems[0].state}>
+      {systems.map(({ id, state }) => {
+        const n = state!.data as NasSystem | null;
+        if (!n) return <Empty key={id}>Connecting to {state!.label}.</Empty>;
+        const level = (p: number) => storageLevel(p, limits);
+        const disks = [...n.disks].sort((a, b) => rank[a.status] - rank[b.status]);
+        return (
+          <div key={id} className="nas-system">
+            {systems.length > 1 && (
+              <h3 className="nas-name">
+                <a href={n.webUrl} target="_blank" rel="noreferrer">
+                  {n.name}
+                </a>{' '}
+                <span>{n.platform}</span>
+              </h3>
+            )}
+            {n.state && <p className="crit-text nas-state">{n.state}.</p>}
+            <ul className="nas-volumes">
+              {n.volumes.map((v) => {
+                const pct = v.total ? (v.used / v.total) * 100 : 0;
+                return (
+                  <li key={v.name}>
+                    <span className="nas-vol-name">{v.name}</span>
+                    <Meter value={pct} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : level(pct)} />
+                    <span className="mono nas-vol-num">
+                      {Math.round(pct)}% of {size(v.total)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <ul className="nas-disks">
+              {disks.slice(0, limit).map((d) => (
+                <li key={d.name} className={`drive-${d.status}`} title={[d.model, d.detail].filter(Boolean).join(', ')}>
+                  <span className="drive-dot" aria-hidden />
+                  <span className="mono">{d.name}</span>
+                  <span className="nas-disk-temp mono">{d.status !== 'ok' ? (d.detail ?? 'trouble') : d.tempC != null ? `${deg(d.tempC, unit)}°` : 'spun down'}</span>
+                </li>
+              ))}
+            </ul>
+            {disks.length > limit && <p className="speed-seen">{disks.length - limit} more disks.</p>}
+          </div>
+        );
+      })}
     </Section>
   );
 }

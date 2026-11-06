@@ -23,6 +23,7 @@ import type {
   ScrutinyData,
   GlancesData,
   NutData,
+  NasSystem,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -607,6 +608,26 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<NasSystem>('unraid', 'Unraid', MINUTE, () => {
+      const T = 1e12;
+      return {
+        platform: 'Unraid',
+        name: 'tower',
+        webUrl: 'http://tower.local',
+        volumes: [
+          { name: 'Array', used: 31.2 * T, total: 48 * T },
+          { name: 'cache', used: 0.42 * T, total: 1 * T },
+        ],
+        disks: [
+          { name: 'parity', role: 'parity', status: 'ok', tempC: 34 },
+          { name: 'disk1', role: 'data', status: 'ok', tempC: 36 },
+          { name: 'disk2', role: 'data', status: 'ok', tempC: 37 },
+          { name: 'disk3', role: 'data', status: 'ok' },
+          { name: 'disk4', role: 'data', status: 'ok', tempC: 38 },
+          { name: 'cache', role: 'cache', status: 'ok', tempC: 44 },
+        ],
+      };
+    }),
     demo<NutData>('nut', 'NUT', 15 * SECOND, () => ({
       ups: [
         { name: 'rack', model: 'CyberPower CP1500PFCLCD', onBattery: false, lowBattery: false, replaceBattery: false, charging: false, charge: 100, runtimeSec: 41 * 60, loadPct: 24, watts: 216, inputVolts: 121 },
