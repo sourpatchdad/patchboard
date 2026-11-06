@@ -47,6 +47,7 @@ export type SourceId =
   | 'audiobookshelf'
   | 'navidrome'
   | 'gitea'
+  | 'calendar'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -770,6 +771,23 @@ export interface TailnetData {
 /** Who is listening: Audiobookshelf or Navidrome. Progress -1 means unknown. */
 export interface ListeningData {
   streams: Stream[];
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: number;
+  end?: number;
+  allDay: boolean;
+  location?: string;
+  /** The calendar's own name, when it gives one. */
+  calendar?: string;
+}
+
+export interface CalendarData {
+  events: CalendarEvent[];
+  /** Calendar addresses that could not be read this time. */
+  failed: number;
 }
 
 export interface GiteaData {

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -478,6 +478,125 @@ export function SpeedWidget({ now }: { now: number }) {
             {l.loss ? `, ${l.loss}% packet loss` : ''}.
           </p>
         </>
+      )}
+    </Section>
+  );
+}
+
+// ---------- Calendar ----------
+
+/** The days ahead, grouped by day; all-day events first in each. */
+export function CalendarWidget({ now }: { now: number }) {
+  const { state, data } = useSource<CalendarData>('calendar');
+  const { limit = 8 } = useWidget();
+  const { clock24 } = useAppearance();
+  if (!state || !data) return null;
+  const upcoming = data.events.filter((e) => (e.end ?? e.start + (e.allDay ? 86_400_000 : 0)) > now || e.start > now).slice(0, limit);
+  const calendars = new Set(data.events.map((e) => e.calendar).filter(Boolean));
+  const dayKey = (t: number) => new Date(t).toDateString();
+  const days = [...new Set(upcoming.map((e) => dayKey(Math.max(e.start, now - (e.allDay ? 0 : 0)))))];
+  const time = (t: number) => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: !clock24 }).replace(':00', '');
+  const label = (k: string) => {
+    const d = new Date(k);
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+    return diff <= 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  };
+  return (
+    <Section title="Calendar" source={state} className="cal-widget" count={data.failed ? `${data.failed} calendar${data.failed === 1 ? '' : 's'} unreachable` : undefined}>
+      {!upcoming.length ? (
+        <Empty>Nothing on the calendar.</Empty>
+      ) : (
+        days.map((k) => (
+          <div key={k} className="calw-day">
+            <h3>{label(k)}</h3>
+            <ul>
+              {upcoming
+                .filter((e) => dayKey(e.start) === k)
+                .sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start - b.start)
+                .map((e) => (
+                  <li key={e.id}>
+                    <span className="calw-time mono">{e.allDay ? 'All day' : time(e.start)}</span>
+                    <span className="calw-title">
+                      {e.title}
+                      {e.location && <span className="calw-where"> {e.location}</span>}
+                    </span>
+                    {calendars.size > 1 && e.calendar && <span className="calw-cal">{e.calendar}</span>}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))
+      )}
+    </Section>
+  );
+}
+
+// ---------- Notes ----------
+
+/** A shared note. Lines starting "- [ ]" or "- [x]" are checkboxes you can tick. */
+export function NotesWidget({ id }: { id: string }) {
+  const readOnly = !!useStore().snap?.readOnly;
+  const [text, setText] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [err, setErr] = useState('');
+  const load = () =>
+    void fetch('/api/notes')
+      .then((r) => r.json())
+      .then((all: Record<string, { text: string }>) => setText(all[id]?.text ?? ''))
+      .catch(() => setText(''));
+  useEffect(() => {
+    load();
+    const t = setInterval(() => !editing && load(), 30_000);
+    return () => clearInterval(t);
+  }, [id, editing]);
+  const save = async (next: string) => {
+    setErr('');
+    const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify({ text: next }) });
+    if (!res.ok) return setErr((await res.json().catch(() => ({}))).error ?? 'Could not save');
+    setText(next);
+  };
+  if (text === null) return null;
+  const toggle = (i: number) => {
+    const ls = text.split('\n');
+    ls[i] = ls[i].replace(/^(\s*- \[)( |x)(\])/i, (_, a, b, c) => `${a}${b === ' ' ? 'x' : ' '}${c}`);
+    void save(ls.join('\n'));
+  };
+  return (
+    <Section title="Notes" className="notes" action={readOnly || editing ? undefined : { label: text ? 'Edit' : 'Write', onClick: () => (setDraft(text), setEditing(true)) }}>
+      {editing ? (
+        <div className="notes-edit">
+          <textarea className="field" value={draft} rows={Math.min(14, Math.max(4, draft.split('\n').length + 1))} onChange={(e) => setDraft(e.target.value)} placeholder={'Groceries\n- [ ] milk\n- [ ] coffee'} autoFocus />
+          <div className="notes-actions">
+            <button type="button" className="button" onClick={() => void save(draft).then(() => setEditing(false))}>
+              Save
+            </button>
+            <button type="button" className="text-button" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            {err && <span className="warn-text">{err}</span>}
+          </div>
+        </div>
+      ) : !text.trim() ? (
+        <Empty>Nothing here yet. A shopping list, the Wi-Fi password for guests, who feeds the cat.</Empty>
+      ) : (
+        <ul className="notes-lines">
+          {text.split('\n').map((l, i) => {
+            const box = /^\s*- \[( |x)\]\s?(.*)$/i.exec(l);
+            if (box)
+              return (
+                <li key={i} className={`notes-check ${box[1].toLowerCase() === 'x' ? 'is-done' : ''}`}>
+                  <label>
+                    <input type="checkbox" checked={box[1].toLowerCase() === 'x'} disabled={readOnly} onChange={() => toggle(i)} />
+                    <span>{box[2]}</span>
+                  </label>
+                </li>
+              );
+            return <li key={i}>{l.replace(/^\s*[-*]\s/, '• ') || '\u00a0'}</li>;
+          })}
+        </ul>
       )}
     </Section>
   );

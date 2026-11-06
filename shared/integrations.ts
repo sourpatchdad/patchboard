@@ -368,6 +368,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'calendar',
+    name: 'Calendars (iCal)',
+    adds: 'A Calendar widget: the days ahead from every calendar you add, recurring events included. Google, iCloud, Outlook, Nextcloud, Proton and Fastmail all give an iCal address.',
+    env: ['CALENDAR_URLS'],
+    where: "Google: calendar Settings, Integrate calendar, Secret address in iCal format. iCloud: share the calendar as Public and copy the link. Outlook: Settings, Shared calendars, Publish, ICS. Nextcloud: the calendar's menu, Copy subscription link. Several calendars: separate the addresses with commas. They are stored encrypted, since they work like passwords.",
+    source: true,
+  },
+  {
     id: 'nut',
     name: 'NUT (UPS)',
     adds: 'A Power widget for every UPS your NUT server knows: on mains or on battery, charge, runtime left and load. When the power goes out it shows in Needs attention at once, with the minutes left; a low battery or one due for replacement does too.',

@@ -16,8 +16,8 @@ The first public release, 1.0.0. What's in it:
   Connections, with keys encrypted on the server. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
   in so the files can go.
-- **55 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
-  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, Home
+- **56 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
+  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Home
   Assistant, Frigate, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker,
   Overseerr, Miniflux and Trakt, plus a live number from any JSON API.
 - **Pages:** Server (pools, disks, backups, CPU by hour), Stacks, Reading,
@@ -27,6 +27,9 @@ The first public release, 1.0.0. What's in it:
   full, when a drive is running hot, and which of your domains get link
   checks, with a warning and an alarm level for each. Meters everywhere turn
   amber and red at the same numbers.
+- **For the household:** a Calendar widget from any iCal address (Google,
+  iCloud, Outlook, Nextcloud), and Notes the house shares, with checklists
+  you tick right on the board.
 - **Notifications** through ntfy or Gotify for problems that last two
   minutes, and again when they clear. Updates and restarts never count as
   outages.

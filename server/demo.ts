@@ -29,6 +29,7 @@ import type {
   UnifiData,
   PaperlessData,
   ListeningData,
+  CalendarData,
   TailnetData,
   KumaMonitor,
   UptimeKumaData,
@@ -636,6 +637,22 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
+    demo<CalendarData>('calendar', 'Calendar', 15 * MINUTE, () => {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      const at = (d: number, h: number, m = 0) => day.getTime() + d * 86_400_000 + (h * 60 + m) * 60_000;
+      return {
+        failed: 0,
+        events: [
+          { id: '1', title: 'Trash and recycling', start: at(0, 0), allDay: true, calendar: 'Home' },
+          { id: '2', title: 'Dentist', start: at(0, 15, 30), end: at(0, 16, 30), allDay: false, location: 'Main St Dental', calendar: 'Family' },
+          { id: '3', title: 'Soccer practice', start: at(1, 17, 30), end: at(1, 19), allDay: false, location: 'North Field', calendar: 'Family' },
+          { id: '4', title: 'Replace furnace filter', start: at(2, 0), allDay: true, calendar: 'Home' },
+          { id: '5', title: 'Dinner with the Riveras', start: at(3, 19), end: at(3, 21), allDay: false, calendar: 'Family' },
+          { id: '6', title: 'NAS scrub (monthly)', start: at(5, 2), end: at(5, 6), allDay: false, calendar: 'Home' },
+        ],
+      };
+    }),
     demo<ListeningData>('audiobookshelf', 'Audiobookshelf', 20 * SECOND, () => ({
       streams: [{ user: 'Sam', title: 'Project Hail Mary', subtitle: 'Andy Weir', progress: 62 + ((Date.now() / 60_000) % 5), state: 'playing', transcode: false }],
     })),

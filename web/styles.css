@@ -7207,6 +7207,84 @@ button.ha-act:hover {
   white-space: nowrap;
 }
 
+/* ---------- Calendar ---------- */
+
+.calw-day + .calw-day {
+  margin-top: 12px;
+}
+
+.calw-day h3 {
+  margin: 0 0 4px;
+  font: 400 12px var(--f-mono);
+  color: var(--ink-3);
+}
+
+.calw-day ul,
+.notes-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calw-day li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.calw-time {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.calw-title {
+  color: var(--head);
+  min-width: 0;
+}
+
+.calw-where,
+.calw-cal {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Notes ---------- */
+
+.notes-lines li {
+  padding: 2px 0;
+  font-size: 14px;
+  color: var(--head);
+  overflow-wrap: anywhere;
+}
+
+.notes-check label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.notes-check.is-done span {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.notes-edit textarea {
+  width: 100%;
+  font: 400 14px/1.5 var(--f-body);
+  resize: vertical;
+}
+
+.notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
 /* ---------- Power (NUT) ---------- */
 
 .ups-list {

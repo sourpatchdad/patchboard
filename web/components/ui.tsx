@@ -9,7 +9,7 @@ import { iconUrl } from '../lib/services.ts';
 export function Section(props: {
   title: string;
   count?: ReactNode;
-  action?: { label: string; to?: string; href?: string };
+  action?: { label: string; to?: string; href?: string; onClick?: () => void };
   source?: SourceState;
   className?: string;
   children: ReactNode;
@@ -28,7 +28,11 @@ export function Section(props: {
           </span>
         )}
         {action &&
-          (action.to ? (
+          (action.onClick ? (
+            <button type="button" className="section-action text-button" onClick={action.onClick}>
+              {action.label}
+            </button>
+          ) : action.to ? (
             <Link className="section-action" to={action.to}>
               {action.label}
             </Link>

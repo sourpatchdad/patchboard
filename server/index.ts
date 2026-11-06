@@ -32,6 +32,7 @@ import { netdataAdapter, prometheusAdapter } from './adapters/monitoring.ts';
 import { tailscaleAdapter, unifiAdapter } from './adapters/network.ts';
 import { bazarrAdapter, giteaAdapter, nextcloudAdapter, paperlessAdapter, starrAdapter } from './adapters/apps.ts';
 import { audiobookshelfAdapter, navidromeAdapter } from './adapters/listening.ts';
+import { calendarAdapter } from './adapters/calendar.ts';
 import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
@@ -134,6 +135,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   paperless: () => (config.paperless ? { adapter: paperlessAdapter() } : null),
   nextcloud: () => (config.nextcloud ? { adapter: nextcloudAdapter() } : null),
   gitea: () => (config.gitea ? { adapter: giteaAdapter() } : null),
+  calendar: () => (config.calendar?.urls.length ? { adapter: calendarAdapter() } : null),
   audiobookshelf: () => (config.audiobookshelf ? { adapter: audiobookshelfAdapter() } : null),
   navidrome: () => (config.navidrome ? { adapter: navidromeAdapter() } : null),
   overseerr: () => {
@@ -855,6 +857,21 @@ app.get('/api/catalog/yaml', (c) =>
 
 // The whole setup as one file: board, app layout, page settings. Keys stay
 // out; setups refer to them by name, so you paste them again after a move.
+// Notes widgets: one shared text per widget id.
+app.get('/api/notes', (c) => c.json(kvGet<Record<string, { text: string; at: number }>>('board-notes') ?? {}));
+
+app.put('/api/notes/:id', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const id = c.req.param('id');
+  if (!/^[\w-]{1,64}$/.test(id)) return c.json({ error: 'Bad note id' }, 400);
+  const body = await c.req.json<{ text?: unknown }>().catch(() => ({}) as { text?: unknown });
+  if (typeof body.text !== 'string' || body.text.length > 20_000) return c.json({ error: 'A note is text, up to 20,000 characters' }, 400);
+  const all = kvGet<Record<string, { text: string; at: number }>>('board-notes') ?? {};
+  all[id] = { text: body.text, at: Date.now() };
+  kvSet('board-notes', all);
+  return c.json(all[id]);
+});
+
 // Alert thresholds, shared by every device.
 app.get('/api/setup/thresholds', (c) => c.json({ thresholds: describeThresholds() }));
 

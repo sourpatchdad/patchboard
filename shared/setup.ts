@@ -54,6 +54,7 @@ export const UI_SETUP = new Set([
   'audiobookshelf',
   'navidrome',
   'gitea',
+  'calendar',
   'overseerr',
   'ntfy',
   'gotify',
@@ -72,7 +73,8 @@ export const CHOICES: Record<string, [value: string, label: string][]> = {
 
 export function fieldKind(name: string): FieldKind {
   if (CHOICES[name]) return 'choice';
-  if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name)) return 'secret';
+  // Calendar addresses carry private keys (Google's secret address), so they are secrets too.
+  if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name) || name === 'CALENDAR_URLS') return 'secret';
   if (/VERIFY_TLS$/.test(name)) return 'flag';
   if (/_URL$/.test(name)) return 'url';
   return 'text';
@@ -83,6 +85,7 @@ const LABELS: [RegExp, string][] = [
   [/^PATCHBOARD_URL$/, 'Patchboard address'],
   [/^GLANCES_URL$/, 'Addresses'],
   [/^NUT_HOST$/, 'NUT server'],
+  [/^CALENDAR_URLS$/, 'Calendar addresses'],
   [/WEB_URL$/, 'Web address'],
   [/_URL$/, 'Address'],
   [/API_KEY$|_KEY$/, 'API key'],

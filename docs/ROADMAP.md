@@ -7,8 +7,6 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] Homepage config import in the UI (the CLI exists)
 - [ ] A setup file in YAML, to export and import everything at once
 - [ ] A search box with `!` shortcuts
-- [ ] iCal and CalDAV calendar widget
-- [ ] Notes and to-do widget
 - [ ] Several Docker hosts
 
 ### Integrations

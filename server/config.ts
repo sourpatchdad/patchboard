@@ -196,6 +196,9 @@ function build(str: Lookup) {
     bazarr: pair('BAZARR_URL', 'BAZARR_KEY'),
     paperless: pair('PAPERLESS_URL', 'PAPERLESS_TOKEN'),
     gitea: pair('GITEA_URL', 'GITEA_TOKEN'),
+    calendar: str('CALENDAR_URLS')
+      ? { urls: str('CALENDAR_URLS')!.split(/[\s,]+/).map((u) => u.trim()).filter((u) => /^(https?|webcal):\/\//i.test(u)).slice(0, 20) }
+      : undefined,
     audiobookshelf: pair('AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'),
     navidrome:
       str('NAVIDROME_URL') && str('NAVIDROME_USERNAME') && str('NAVIDROME_PASSWORD')
