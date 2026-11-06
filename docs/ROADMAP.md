@@ -15,7 +15,6 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] Start and stop for Proxmox guests
 - [ ] Links in the Elsewhere row added from the UI
 - [ ] Hardcover and Goodreads: what you are reading
-- [ ] Pushover and email notifications
 
 ### Running it anywhere
 

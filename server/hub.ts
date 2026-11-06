@@ -246,6 +246,8 @@ export class Hub {
         ...(config.wake.devices.length || config.demo ? ['wake'] : []),
         ...(config.notify.ntfy || config.demo ? ['ntfy'] : []),
         ...(config.notify.gotify ? ['gotify'] : []),
+        ...(config.notify.pushover ? ['pushover'] : []),
+        ...(config.notify.email ? ['email'] : []),
         // The slim image: Settings says why updates are off.
         ...(!dockerCli && !config.demo ? ['no-docker-cli'] : []),
       ],

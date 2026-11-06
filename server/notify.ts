@@ -1,4 +1,4 @@
-// Push notifications through ntfy or Gotify, opt-in. A problem in Needs
+// Notifications through ntfy, Gotify, Pushover or email, opt-in. A problem in Needs
 // attention is sent once it has lasted two minutes, so a container that
 // restarts on its own never buzzes a phone, and once more when it clears.
 // What was sent is remembered across restarts, so a restart doesn't resend
@@ -8,6 +8,7 @@ import type { Alert } from '../shared/types.ts';
 import { config } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
 import { request } from './http.ts';
+import { sendMail } from './smtp.ts';
 
 /** How long a problem lasts before it is worth a notification. */
 export const SETTLE_MS = 2 * 60_000;
@@ -23,6 +24,9 @@ export interface Message {
 const NTFY_PRIORITY = { critical: 5, warn: 4, resolved: 2, test: 3 } as const;
 const NTFY_TAGS = { critical: ['rotating_light'], warn: ['warning'], resolved: ['white_check_mark'], test: ['wave'] } as const;
 const GOTIFY_PRIORITY = { critical: 8, warn: 5, resolved: 2, test: 4 } as const;
+const PUSHOVER_PRIORITY = { critical: 1, warn: 0, resolved: -1, test: 0 } as const;
+
+export type Channel = 'ntfy' | 'gotify' | 'pushover' | 'email';
 
 function clickUrl(href: string | undefined): string | undefined {
   if (!href) return config.notify.publicUrl;
@@ -31,9 +35,12 @@ function clickUrl(href: string | undefined): string | undefined {
 }
 
 /** Send one message to every notifier that is set up, or only `only`. Throws if any fails. */
-export async function send(m: Message, only?: 'ntfy' | 'gotify'): Promise<void> {
-  const ntfy = only === 'gotify' ? undefined : config.notify.ntfy;
-  const gotify = only === 'ntfy' ? undefined : config.notify.gotify;
+export async function send(m: Message, only?: Channel): Promise<void> {
+  const use = (c: Channel) => !only || only === c;
+  const ntfy = use('ntfy') ? config.notify.ntfy : undefined;
+  const gotify = use('gotify') ? config.notify.gotify : undefined;
+  const pushover = use('pushover') ? config.notify.pushover : undefined;
+  const email = use('email') ? config.notify.email : undefined;
   const click = clickUrl(m.href);
   const jobs: Promise<unknown>[] = [];
   if (ntfy) {
@@ -63,6 +70,19 @@ export async function send(m: Message, only?: 'ntfy' | 'gotify'): Promise<void> 
         }),
       }),
     );
+  }
+  if (pushover) {
+    jobs.push(
+      request('https://api.pushover.net/1/messages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: pushover.token, user: pushover.user, title: m.title, message: m.body || m.title, priority: PUSHOVER_PRIORITY[m.level], ...(click ? { url: click, url_title: 'Open in Patchboard' } : {}) }),
+      }),
+    );
+  }
+  if (email) {
+    const prefix = m.level === 'critical' ? '[Down] ' : m.level === 'warn' ? '[Warning] ' : m.level === 'resolved' ? '[Fixed] ' : '';
+    jobs.push(sendMail(email, `${prefix}${m.title}`, [m.body, click ? `\n${click}` : ''].filter(Boolean).join('\n')));
   }
   if (!jobs.length) throw new Error('No notifier is set up');
   await Promise.all(jobs);
@@ -114,7 +134,8 @@ let sending = false;
 
 /** Called whenever alerts change and every 30 seconds, so a settled alert goes out on time. */
 export async function notifyAlerts(alerts: Alert[]): Promise<void> {
-  if (config.demo || (!config.notify.ntfy && !config.notify.gotify) || sending) return;
+  const n = config.notify;
+  if (config.demo || (!n.ntfy && !n.gotify && !n.pushover && !n.email) || sending) return;
   sending = true;
   try {
     for (const m of plan(alerts, Date.now(), state, config.notify.level)) {

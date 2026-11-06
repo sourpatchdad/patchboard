@@ -235,6 +235,19 @@ function build(str: Lookup) {
     notify: {
       ntfy: str('NTFY_URL') ? { url: trimSlash(str('NTFY_URL')!), token: str('NTFY_TOKEN') } : undefined,
       gotify: str('GOTIFY_URL') && str('GOTIFY_TOKEN') ? { url: trimSlash(str('GOTIFY_URL')!), token: str('GOTIFY_TOKEN')! } : undefined,
+      pushover: str('PUSHOVER_TOKEN') && str('PUSHOVER_USER_KEY') ? { token: str('PUSHOVER_TOKEN')!, user: str('PUSHOVER_USER_KEY')! } : undefined,
+      email:
+        str('SMTP_HOST') && str('SMTP_FROM') && str('SMTP_TO')
+          ? {
+              host: str('SMTP_HOST')!.split(':')[0],
+              port: Number(str('SMTP_HOST')!.split(':')[1] ?? 587) || 587,
+              username: str('SMTP_USERNAME'),
+              password: str('SMTP_PASSWORD'),
+              from: str('SMTP_FROM')!,
+              to: str('SMTP_TO')!.split(',').map((a) => a.trim()).filter(Boolean),
+              verifyTls: str('SMTP_VERIFY_TLS') !== '0',
+            }
+          : undefined,
       level: (str('NOTIFY_LEVEL') === 'critical' ? 'critical' : 'warn') as 'critical' | 'warn',
       /** Where a tap on a notification opens Patchboard. */
       publicUrl: str('PATCHBOARD_URL') ? trimSlash(str('PATCHBOARD_URL')!) : undefined,

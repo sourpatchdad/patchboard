@@ -611,11 +611,11 @@ async function testIntegration(id: string): Promise<string> {
     if (!n) throw new Error('No machine parsed. Use Name=aa:bb:cc:dd:ee:ff, comma-separated.');
     return `${n} machine${n === 1 ? '' : 's'} ready: ${config.wake.devices.map((d) => d.name).join(', ')}.`;
   }
-  if (id === 'ntfy' || id === 'gotify') {
-    if (!(id === 'ntfy' ? config.notify.ntfy : config.notify.gotify)) throw new Error('Those settings are incomplete.');
+  if (id === 'ntfy' || id === 'gotify' || id === 'pushover' || id === 'email') {
+    if (!config.notify[id]) throw new Error('Those settings are incomplete.');
     // Only the one being tested, so a broken Gotify doesn't fail an ntfy test.
     await send({ title: 'Patchboard can reach you here', body: 'Problems that last two minutes will show up like this, and again when they clear.', level: 'test' }, id);
-    return 'Sent a test notification. Check your phone.';
+    return id === 'email' ? 'Sent a test email. Check your inbox (and spam).' : 'Sent a test notification. Check your phone.';
   }
   if (id === 'dozzle') {
     await request(config.dozzleUrl!, {}, 8000);
