@@ -6743,6 +6743,22 @@ a.date:hover {
   }
 }
 
+/* A 1920 screen holds four columns, so the whole page fits without scrolling. */
+@media (min-width: 1800px) {
+  .server .detail-grid {
+    column-count: 4;
+    column-gap: 36px;
+  }
+
+  .server .detail-grid .section {
+    margin-bottom: 28px;
+  }
+
+  .server.page {
+    padding-bottom: 24px;
+  }
+}
+
 /* A wide Disks section puts the model on the same line. */
 .disks {
   container-type: inline-size;

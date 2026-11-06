@@ -20,7 +20,8 @@ The first public release, 1.0.0. What's in it:
   Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Hardcover, Goodreads, Home
   Assistant, Frigate, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker,
   Overseerr, Miniflux and Trakt, plus a live number from any JSON API.
-- **Pages:** Server (pools, disks, backups, CPU by hour), Stacks, Reading,
+- **Pages:** Server (pools, disks, backups, CPU by hour; four columns that fit
+  one 1920 by 1080 screen), Stacks, Reading,
   Upcoming (a calendar that fits one screen), Logs, Apps, Weather and a
   page for every container.
 - **Alerts you tune:** Settings, Alerts sets when storage counts as nearly

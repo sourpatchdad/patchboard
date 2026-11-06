@@ -17,8 +17,8 @@ import { useAppearance } from '../lib/appearance.ts';
 
 const DAY = 86_400_000;
 
-const MAIN = ['storage', 'datasets', 'backups'];
-const SIDE = ['resources', 'cpu', 'busiest', 'disks', 'alerts', 'cloudsync'];
+const MAIN = ['storage', 'datasets', 'alerts', 'cloudsync', 'backups'];
+const SIDE = ['resources', 'cpu', 'busiest', 'disks'];
 const SERVER_SECTIONS: SectionDef[] = [
   { id: 'storage', label: 'Storage', group: 'Storage and backups' },
   { id: 'datasets', label: 'Datasets', group: 'Storage and backups' },
