@@ -152,3 +152,14 @@ Wikimedia Commons under the licenses credited in `server/demo.ts`.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Star history
+
+<a href="https://www.star-history.com/?repos=sourpatchdad%2Fpatchboard&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=date&legend=top-left" />
+   <img alt="Star history for Patchboard" src="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=date&legend=top-left" />
+ </picture>
+</a>
+

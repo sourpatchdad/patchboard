@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { moodFor } from '../../shared/otter.ts';
 import { setAppName, setStatus } from '../lib/appearance.ts';
+import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
 import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
@@ -99,6 +100,7 @@ export function Shell() {
 
   return (
     <div className="shell">
+      <PullRefresh />
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
           {snap?.brand?.otter !== false && <Otter mood={mood} size={32} mark className="wordmark-otter" />}

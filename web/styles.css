@@ -2024,6 +2024,24 @@ a.app:hover {
 
 /* ---------- Phone ---------- */
 
+/* The top inset: the status bar, plus a little room in an installed app,
+   where iOS softens the edge under the clock and would blur the header. */
+:root {
+  --safe-top: env(safe-area-inset-top);
+}
+
+@media (display-mode: standalone) and (max-width: 760px) {
+  :root {
+    --safe-top: calc(env(safe-area-inset-top) + 10px);
+  }
+}
+
+@media (max-width: 760px) {
+  :root.is-installed {
+    --safe-top: calc(env(safe-area-inset-top) + 10px);
+  }
+}
+
 @media (max-width: 760px) {
   :root {
     --tabbar-h: calc(60px + env(safe-area-inset-bottom));
@@ -2033,8 +2051,8 @@ a.app:hover {
      for the fixed tab bar inside it, pinning the tabs to the top. */
   .topbar {
     padding: 0 16px;
-    padding-top: env(safe-area-inset-top);
-    height: calc(var(--topbar-h) + env(safe-area-inset-top));
+    padding-top: var(--safe-top);
+    height: calc(var(--topbar-h) + var(--safe-top));
     backdrop-filter: none;
     background: var(--bg);
   }
@@ -2261,14 +2279,14 @@ a.app:hover {
   .reader-layout,
   .logs-layout {
     grid-template-columns: 1fr;
-    height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - env(safe-area-inset-top) - var(--tabbar-h));
+    height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - var(--safe-top) - var(--tabbar-h));
   }
 
   /* Feeds on a phone: the page scrolls like any other, so the list never
      sits in a box of its own and the tab bar stays at the bottom. */
   .reader-layout {
     height: auto;
-    min-height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - env(safe-area-inset-top) - var(--tabbar-h));
+    min-height: calc(calc(100dvh / var(--zoom)) - var(--topbar-h) - var(--safe-top) - var(--tabbar-h));
   }
 
   .reader-list,
@@ -2339,7 +2357,7 @@ a.app:hover {
   }
 
   .palette {
-    margin-top: calc(env(safe-area-inset-top) + 12px);
+    margin-top: calc(var(--safe-top) + 12px);
   }
 }
 
@@ -3903,7 +3921,7 @@ a.vitals:hover .vital-label {
   /* Search opens as a sheet at the top, clear of the keyboard. */
   .palette {
     width: auto;
-    margin: calc(env(safe-area-inset-top) + 10px) 10px 0;
+    margin: calc(var(--safe-top) + 10px) 10px 0;
   }
 }
 
@@ -8784,6 +8802,48 @@ button.ha-act:hover {
 @media (prefers-reduced-motion: reduce) {
   .section.is-landing,
   .integration.is-landing {
+    animation: none;
+  }
+}
+
+/* Pull to refresh, in the installed app: a ring slides out from under the
+   header and fills; full means let go. */
+.ptr {
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--safe-top) - 40px);
+  left: 50%;
+  z-index: 19;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--raised);
+  box-shadow: 0 0 0 1px var(--line), 0 4px 14px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+}
+
+.ptr-ring {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 360deg), var(--line) 0);
+  mask: radial-gradient(circle, transparent 6px, #000 6.5px);
+}
+
+.ptr-ring.is-going {
+  background: conic-gradient(var(--accent) 0 270deg, var(--line) 0);
+  animation: ptr-spin 0.8s linear infinite;
+}
+
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr-ring.is-going {
     animation: none;
   }
 }
