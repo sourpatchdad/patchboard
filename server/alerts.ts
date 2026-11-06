@@ -3,6 +3,8 @@
 
 import type {
   GlancesData,
+  TailnetData,
+  UnifiData,
   MonitorData,
   PortainerData,
   NasSystem,
@@ -243,6 +245,18 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
     }
+  }
+
+  // UniFi: a device that drops off. Tailscale: keys expiring or expired.
+  const unifi = data<UnifiData>(sources, 'unifi');
+  for (const d of unifi?.devices ?? []) {
+    if (!d.online) alerts.push({ id: `unifi-${d.id}`, level: 'warn', subject: d.name, title: `${d.name} is offline`, detail: [d.model, unifi!.sites > 1 ? d.site : undefined].filter(Boolean).join(', ') || undefined, href: unifi!.webUrl, source: 'unifi' });
+  }
+  for (const d of data<TailnetData>(sources, 'tailscale')?.devices ?? []) {
+    if (d.keyExpires == null) continue;
+    const days = (d.keyExpires - now) / 86_400_000;
+    if (days < 0) alerts.push({ id: `ts-exp-${d.id}`, level: 'critical', subject: d.name, title: `${d.name}'s Tailscale key has expired`, detail: 'It is off the tailnet until someone signs it in again.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
+    else if (days < 7) alerts.push({ id: `ts-soon-${d.id}`, level: 'warn', subject: d.name, title: `${d.name}'s Tailscale key expires in ${Math.max(1, Math.round(days))} ${Math.round(days) === 1 ? 'day' : 'days'}`, detail: 'Renew it, or turn off key expiry for this machine.', href: 'https://login.tailscale.com/admin/machines', source: 'tailscale' });
   }
 
   // Netdata and Prometheus: their firing alerts, as they rate them.

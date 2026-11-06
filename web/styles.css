@@ -7155,6 +7155,42 @@ button.ha-act:hover {
   color: var(--crit);
 }
 
+.net-block + .net-block {
+  margin-top: 14px;
+}
+
+.net-sub {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--head);
+}
+
+.net-sub span {
+  margin-left: 6px;
+  font: 400 12px var(--f-mono);
+  color: var(--ink-3);
+}
+
+.net .drive-list li {
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+}
+
+.net .drive-list li > span:nth-child(n + 4) {
+  display: none;
+}
+
+.net .drive-name {
+  font: 500 13.5px var(--f-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.net .drive-model {
+  text-align: right;
+}
+
 .pt-list li {
   grid-template-columns: 8px minmax(0, 1.1fr) minmax(0, 1fr) auto auto;
 }

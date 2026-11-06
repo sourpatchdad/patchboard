@@ -33,12 +33,12 @@ export async function getJson<T>(url: string, init: RequestInit = {}, timeoutMs?
  * GET a page as text. With verifyTls false, a self-signed HTTPS certificate is
  * accepted (most NAS boxes ship one); the message never carries the URL.
  */
-export function fetchText(url: string, o: { verifyTls?: boolean; timeoutMs?: number } = {}): Promise<string> {
+export function fetchText(url: string, o: { verifyTls?: boolean; timeoutMs?: number; headers?: Record<string, string> } = {}): Promise<string> {
   const u = new URL(url);
   const lib = u.protocol === 'https:' ? httpsRequest : httpRequest;
   const timeoutMs = o.timeoutMs ?? 8000;
   return new Promise((resolve, reject) => {
-    const req = lib(u, { method: 'GET', rejectUnauthorized: o.verifyTls ?? true, timeout: timeoutMs }, (res) => {
+    const req = lib(u, { method: 'GET', headers: o.headers, rejectUnauthorized: o.verifyTls ?? true, timeout: timeoutMs }, (res) => {
       let body = '';
       res.setEncoding('utf8');
       res.on('data', (c) => (body += c));

@@ -191,6 +191,8 @@ function build(str: Lookup) {
     unraid: pair('UNRAID_URL', 'UNRAID_KEY'),
     portainer: pair('PORTAINER_URL', 'PORTAINER_KEY'),
     netdata: str('NETDATA_URL') ? { url: trimSlash(str('NETDATA_URL')!) } : undefined,
+    unifi: str('UNIFI_URL') && str('UNIFI_KEY') ? { url: trimSlash(str('UNIFI_URL')!), key: str('UNIFI_KEY')!, verifyTls: str('UNIFI_VERIFY_TLS') === '1' } : undefined,
+    tailscale: str('TAILSCALE_KEY') ? { key: str('TAILSCALE_KEY')!, tailnet: str('TAILSCALE_TAILNET') ?? '-' } : undefined,
     prometheus: str('PROMETHEUS_URL') ? { url: trimSlash(str('PROMETHEUS_URL')!), key: str('PROMETHEUS_TOKEN') } : undefined,
     synology:
       str('SYNOLOGY_URL') && str('SYNOLOGY_USERNAME') && str('SYNOLOGY_PASSWORD')

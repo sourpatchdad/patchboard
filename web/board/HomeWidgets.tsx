@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -478,6 +478,72 @@ export function SpeedWidget({ now }: { now: number }) {
             {l.loss ? `, ${l.loss}% packet loss` : ''}.
           </p>
         </>
+      )}
+    </Section>
+  );
+}
+
+// ---------- Network: UniFi, Tailscale ----------
+
+/** Clients and devices from UniFi, machines from Tailscale; trouble first. */
+export function NetworkWidget({ now }: { now: number }) {
+  const unifi = useSource<UnifiData>('unifi');
+  const ts = useSource<TailnetData>('tailscale');
+  const { limit = 6 } = useWidget();
+  const state = unifi.state ?? ts.state;
+  if (!state) return null;
+  const off = unifi.data?.devices.filter((d) => !d.online) ?? [];
+  const soon = (d: TailnetData['devices'][number]) => d.keyExpires != null && d.keyExpires - now < 7 * 86_400_000;
+  const machines = [...(ts.data?.devices ?? [])].sort((a, b) => Number(soon(b)) - Number(soon(a)) || Number(b.online) - Number(a.online));
+  return (
+    <Section title="Network" source={state} className="net">
+      {unifi.data && (
+        <div className="net-block">
+          <p className="speed-nums">
+            <span className="speed-big">{unifi.data.clients}</span>
+            <span className="speed-unit">clients</span>
+            <span className="speed-mid">
+              {unifi.data.devices.length - off.length}/{unifi.data.devices.length}
+            </span>
+            <span className="speed-unit">devices online</span>
+          </p>
+          {off.length > 0 && (
+            <ul className="drive-list">
+              {off.slice(0, limit).map((d) => (
+                <li key={d.id} className="drive-warn">
+                  <span className="drive-dot" aria-hidden />
+                  <span className="drive-name">{d.name}</span>
+                  <span className="drive-model">Offline</span>
+                  <span />
+                  <span />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {ts.data && (
+        <div className="net-block">
+          <h3 className="net-sub">
+            Tailscale <span>{ts.data.devices.filter((d) => d.online).length} of {ts.data.devices.length} online</span>
+          </h3>
+          <ul className="drive-list">
+            {machines.slice(0, limit).map((d) => {
+              const days = d.keyExpires != null ? Math.round((d.keyExpires - now) / 86_400_000) : null;
+              const expired = days != null && days < 0;
+              return (
+                <li key={d.id} className={expired ? 'drive-failed' : soon(d) ? 'drive-warn' : 'drive-ok'} title={d.os}>
+                  <span className="drive-dot" aria-hidden style={d.online || expired || soon(d) ? undefined : { opacity: 0.35 }} />
+                  <span className="drive-name">{d.name}</span>
+                  <span className="drive-model">{expired ? 'Key expired' : soon(d) ? `Key expires in ${Math.max(1, days!)} d` : d.online ? (d.update ? 'Update available' : 'Online') : `Seen ${d.lastSeen ? ago(d.lastSeen, now) : 'a while'} ago`}</span>
+                  <span />
+                  <span />
+                </li>
+              );
+            })}
+          </ul>
+          {machines.length > limit && <p className="speed-seen">{machines.length - limit} more machines.</p>}
+        </div>
       )}
     </Section>
   );

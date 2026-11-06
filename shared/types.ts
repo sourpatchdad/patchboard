@@ -36,6 +36,8 @@ export type SourceId =
   | 'portainer'
   | 'netdata'
   | 'prometheus'
+  | 'unifi'
+  | 'tailscale'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -724,6 +726,36 @@ export interface MonitorAlert {
 export interface MonitorData {
   alerts: MonitorAlert[];
   webUrl: string;
+}
+
+export interface UnifiDevice {
+  id: string;
+  name: string;
+  model?: string;
+  online: boolean;
+  site: string;
+}
+
+export interface UnifiData {
+  clients: number;
+  devices: UnifiDevice[];
+  sites: number;
+  webUrl: string;
+}
+
+export interface TailnetDevice {
+  id: string;
+  name: string;
+  os?: string;
+  online: boolean;
+  lastSeen?: number;
+  /** When its node key expires; missing when expiry is off. */
+  keyExpires?: number;
+  update: boolean;
+}
+
+export interface TailnetData {
+  devices: TailnetDevice[];
 }
 
 export interface CarData {

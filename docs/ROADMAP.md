@@ -13,7 +13,7 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Integrations
 
-- [ ] UniFi and Omada, Tailscale
+- [ ] TP-Link Omada
 - [ ] Nextcloud, Paperless-ngx, Lidarr, Readarr, Prowlarr, Bazarr
 - [ ] Audiobookshelf and Navidrome in Right now
 - [ ] Gitea and Forgejo, Vaultwarden

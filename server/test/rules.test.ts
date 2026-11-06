@@ -343,3 +343,16 @@ test('Netdata and Prometheus: firing alerts join Needs attention at their own se
   const mine = alerts.filter((a) => a.source === 'netdata' || a.source === 'prometheus');
   assert.deepEqual(mine.map((a) => [a.title, a.level, a.href]), [['Host down on pi:9100', 'critical', 'http://prom'], ['System RAM usage on nas', 'warn', 'http://nd']]);
 });
+
+test('UniFi and Tailscale: an offline device warns; a key expiring within a week warns, an expired one alarms', () => {
+  const day = 86_400_000;
+  const alerts = computeAlerts(
+    sources({
+      unifi: { clients: 3, sites: 1, webUrl: 'http://u', devices: [{ id: 'a', name: 'Garage AP', online: false, site: 'Default' }, { id: 'b', name: 'Switch', online: true, site: 'Default' }] },
+      tailscale: { devices: [{ id: '1', name: 'pi', online: false, update: false, keyExpires: Date.now() - day }, { id: '2', name: 'laptop', online: true, update: false, keyExpires: Date.now() + 3 * day }, { id: '3', name: 'nas', online: true, update: false }] },
+    }),
+    catalog(),
+  );
+  const mine = alerts.filter((a) => a.source === 'unifi' || a.source === 'tailscale');
+  assert.deepEqual(mine.map((a) => [a.subject, a.level]), [['pi', 'critical'], ['Garage AP', 'warn'], ['laptop', 'warn']]);
+});

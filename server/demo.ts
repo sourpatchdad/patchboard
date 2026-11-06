@@ -26,6 +26,8 @@ import type {
   NasSystem,
   PortainerData,
   MonitorData,
+  UnifiData,
+  TailnetData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -631,6 +633,25 @@ export function demoAdapters(): Adapter[] {
       };
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
+    demo<UnifiData>('unifi', 'UniFi', MINUTE, () => ({
+      clients: 37,
+      sites: 1,
+      webUrl: 'https://unifi.local',
+      devices: [
+        { id: 'g', name: 'Cloud Gateway', model: 'UCG-Ultra', online: true, site: 'Default' },
+        { id: 's', name: 'Office switch', model: 'USW-Lite-8-PoE', online: true, site: 'Default' },
+        { id: 'a1', name: 'Living room AP', model: 'U6-Lite', online: true, site: 'Default' },
+        { id: 'a2', name: 'Garage AP', model: 'U6-Mesh', online: true, site: 'Default' },
+      ],
+    })),
+    demo<TailnetData>('tailscale', 'Tailscale', 2 * MINUTE, () => ({
+      devices: [
+        { id: '1', name: 'nas', os: 'linux', online: true, update: false },
+        { id: '2', name: 'iphone', os: 'iOS', online: true, update: false, keyExpires: Date.now() + 120 * 86_400_000 },
+        { id: '3', name: 'laptop', os: 'macOS', online: true, update: true, keyExpires: Date.now() + 40 * 86_400_000 },
+        { id: '4', name: 'parents-pi', os: 'linux', online: false, lastSeen: Date.now() - 3 * 3_600_000, update: false },
+      ],
+    })),
     demo<PortainerData>('portainer', 'Portainer', MINUTE, () => ({
       webUrl: 'https://portainer.local:9443',
       envs: [
