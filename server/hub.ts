@@ -20,6 +20,7 @@ import type {
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
+import { composeMounted } from './updater.ts';
 import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
@@ -240,7 +241,7 @@ export class Hub {
       pages: kvGet('pages') ?? {},
       features: [
         'diun',
-        ...((config.composeRoot && dockerCli) || config.demo ? ['updates'] : []),
+        ...((dockerCli && composeMounted(this.containers())) || config.demo ? ['updates'] : []),
         ...(config.docsPath || config.demo ? ['runbook'] : []),
         ...(config.dozzleUrl || config.demo ? ['dozzle'] : []),
         ...(config.wake.devices.length || config.demo ? ['wake'] : []),

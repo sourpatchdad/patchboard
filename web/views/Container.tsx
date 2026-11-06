@@ -152,7 +152,7 @@ export function ContainerPage() {
           {ctr.state === 'running' && <Resources name={name} cpu={live?.cpu} mem={live?.memBytes} />}
           {!problem && sections.length > 0 && <Runbook sections={sections} />}
           {runbook.data && !runbook.data.available && sections.length === 0 && problem && (
-            <p className="detail-note">Mount your system docs at DOCS_PATH and the matching runbook section shows up here.</p>
+            <p className="detail-note">Mount the folder holding RUNBOOK.md at /docs and the matching section shows up here.</p>
           )}
         </div>
 

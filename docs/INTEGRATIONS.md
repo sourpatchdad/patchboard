@@ -70,7 +70,7 @@ from `.env` into Patchboard later, see
 | Integration | What it adds | Turn on with | Where to find it |
 |---|---|---|---|
 | **Docker** | Required. Containers, stacks, logs, stats, health, actions and updates. | nothing to set; optional `DOCKER_SOCKET`, `DOCKER_HOST` | Mount /var/run/docker.sock (read-only is fine), or point DOCKER_HOST at a socket proxy. |
-| **This host** | CPU, memory and uptime with 24 hours of history. | nothing to set; optional `POOL_PATH` | POOL_PATH shows a disk or pool’s usage when TrueNAS isn’t connected. |
+| **This host** | CPU, memory and uptime with 24 hours of history. | nothing to set; optional `POOL_PATH` | Mount a disk or pool at /pool to show its usage when TrueNAS isn’t connected. |
 | **Service checks** | Asks every app with a link once a minute; flags one that stops answering though its container runs. | nothing to set; optional `CHECK_DOMAINS` | Runs for links on private and Tailscale addresses. CHECK_DOMAINS adds your own domains. |
 | **TrueNAS** | Pools, datasets, disks and temperatures, scrubs, snapshots, TrueNAS alerts, cloud sync, a forecast of when the pool fills. | `TRUENAS_API_KEY`; optional `TRUENAS_URL`, `TRUENAS_VERIFY_TLS` | In TrueNAS, create a user with the Read-Only Administrator role and an API key for it. Use wss://: TrueNAS revokes a key sent over ws://. |
 | **Weather** | Now, the next 24 hours, the week, sunrise and sunset; US weather alerts. Free, no key. | `WEATHER_LAT`, `WEATHER_LON`; optional `WEATHER_LABEL` | Your latitude and longitude. Open-Meteo provides the forecast and the National Weather Service the alerts. |
@@ -125,10 +125,10 @@ from `.env` into Patchboard later, see
 | **AdGuard Home** | The Ad blocking widget for AdGuard Home: queries and blocks, and Pause for 5, 30 or 60 minutes. | `ADGUARD_URL`; optional `ADGUARD_USERNAME`, `ADGUARD_PASSWORD` | The username and password you sign in to AdGuard Home with. |
 | **Uptime Kuma** | An Uptime widget: each monitor with its last 30 checks and 24-hour uptime. A monitor that goes down shows in Needs attention. | `UPTIME_KUMA_URL`; optional `UPTIME_KUMA_SLUG` | Uptime Kuma: Status Pages, New Status Page, then add the monitors you want. UPTIME_KUMA_SLUG is the end of its address. No key needed. |
 | **Frigate** | Cameras online and offline. | `FRIGATE_URL` | Frigate’s address; its API needs no key on the local network. |
-| **Backup logs** | Nightly backups as a grid of nights per job, and a one-line overnight summary on Home. | `LOGS_PATH` | A read-only mount of the folder your backup scripts log to (see docs/CONFIGURATION.md for the format). |
-| **Diun** | Marks containers with a newer image; the mark clears once the container runs it. | nothing to set; optional `HOOK_TOKEN` | Point Diun’s webhook notifier at http://<patchboard>/api/hooks/diun. With sign-in on, send HOOK_TOKEN. |
-| **Updates from the UI** | Pull and recreate one compose service from its page, watch each step, roll back if it fails. | `COMPOSE_ROOT` | Mount your compose folders read-only at the same path as on the host. |
-| **Runbook** | The matching section of your RUNBOOK.md on each container page, moved to the top when it’s in trouble. | `DOCS_PATH` | A read-only mount of the folder holding RUNBOOK.md. |
+| **Backup logs** | Nightly backups as a grid of nights per job, and a one-line overnight summary on Home. | nothing to set; optional `LOGS_PATH` | Mount the folder your backup scripts log to at /logs, read-only (docs/CONFIGURATION.md has the format). |
+| **Diun** | Marks containers with a newer image; the mark clears once the container runs it. | nothing to set; optional `HOOK_TOKEN` | Point Diun’s webhook notifier at http://<patchboard>/api/hooks/diun. With a password on, Settings, Sign-in shows the address with its token. |
+| **Updates from the UI** | Pull and recreate one compose service from its page, watch each step, roll back if it fails. | nothing to set; optional `COMPOSE_ROOT` | Mount your compose folders read-only at the same path as on the host. |
+| **Runbook** | The matching section of your RUNBOOK.md on each container page, moved to the top when it’s in trouble. | nothing to set; optional `DOCS_PATH` | Mount the folder holding RUNBOOK.md at /docs, read-only. |
 | **Dozzle** | An “Open in Dozzle” hand-off from logs, for searching across containers. | `DOZZLE_URL` | Dozzle’s address. |
 <!-- /generated -->
 

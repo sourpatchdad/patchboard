@@ -80,6 +80,8 @@ export interface Container {
   /** Compose project and service, from Docker's own labels. */
   project?: string;
   service?: string;
+  /** The compose project's folder on the host. */
+  workingDir?: string;
   /** Container names this one depends on, resolved from compose's depends_on label. */
   dependsOn?: string[];
   /** patchboard.* and homepage.* catalog labels (name, group, href, icon...), prefix dropped. */

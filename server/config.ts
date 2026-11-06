@@ -8,6 +8,7 @@
 // polling never sees values that haven't been saved.
 
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { existsSync } from 'node:fs';
 import { parseDevices } from './wake.ts';
 
 const env = process.env;
@@ -29,8 +30,14 @@ function lookup(overlay: Record<string, string> = {}): Lookup {
 /** The environment's value, for copying it into Patchboard's own store. Server side only. */
 export const envValue = (key: string): string | undefined => fromEnv(key);
 
+/** Sign-in comes from the environment, so Settings shows it and can't change it. */
+export const authLocked = (): boolean => fromEnv('AUTH') !== undefined || fromEnv('PATCHBOARD_PASSWORD') !== undefined;
+
 /** True when the environment sets this variable, so the UI can't change it. */
 export const envHas = (key: string): boolean => fromEnv(key) !== undefined;
+
+/** A folder mounted at its usual place inside the container, or nothing. */
+const mounted = (path: string): string | undefined => (process.platform !== 'win32' && existsSync(path) ? path : undefined);
 
 function build(str: Lookup) {
 
@@ -84,6 +91,8 @@ function build(str: Lookup) {
       mode: (['forward', 'password', 'oidc'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password' | 'oidc',
       userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
       password: str('PATCHBOARD_PASSWORD'),
+      /** A password set in Settings, stored as an scrypt hash, never in the clear. */
+      passwordHash: str('PATCHBOARD_PASSWORD_HASH'),
       hookToken: str('HOOK_TOKEN'),
       oidc: {
         issuer: str('OIDC_ISSUER') ?? '',
@@ -99,7 +108,9 @@ function build(str: Lookup) {
     },
     dozzleUrl: str('DOZZLE_URL') && trimSlash(str('DOZZLE_URL')!),
 
-    poolPath: str('POOL_PATH'),
+    // Each folder turns on when it's mounted at its usual place; a variable
+    // points somewhere else.
+    poolPath: str('POOL_PATH') ?? mounted('/pool'),
     poolWarnPct: Number(str('POOL_WARN_PCT') ?? 85),
     poolCritPct: Number(str('POOL_CRIT_PCT') ?? 95),
     diskWarnC: Number(str('DISK_WARN_C') ?? 50),
@@ -128,8 +139,8 @@ function build(str: Lookup) {
     composeRoot: str('COMPOSE_ROOT'),
 
     /** Read-only mounts of the server's own notes and logs (see docker-compose). */
-    docsPath: str('DOCS_PATH'),
-    logsPath: str('LOGS_PATH'),
+    docsPath: str('DOCS_PATH') ?? mounted('/docs'),
+    logsPath: str('LOGS_PATH') ?? mounted('/logs'),
 
     // TrueNAS 25.04+ revokes an API key that is ever sent over plain ws://, so
     // only wss:// is accepted. Its certificate is self-signed by default.

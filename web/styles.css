@@ -8646,6 +8646,49 @@ button.ha-act:hover {
   color: var(--ink-2);
 }
 
+/* Sign-in */
+.signin-form {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.signin-field {
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.signin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.signin-hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 14px;
+  margin-top: 18px;
+}
+
+.signin-hosts .signin-field {
+  flex: 1 1 320px;
+  max-width: 520px;
+}
+
+.signin-saved {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.signin-hook code {
+  overflow-wrap: anywhere;
+}
+
 /* Import from Homepage */
 .hp-import .field-label {
   display: grid;

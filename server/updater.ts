@@ -4,8 +4,9 @@
 // previous image is one click away.
 //
 // Safety rules, all enforced here rather than in the browser:
-// - Only compose services whose project folder is under COMPOSE_ROOT. TrueNAS
-//   apps (/mnt/.ix-apps) and anything else are refused.
+// - Only compose services whose compose files Patchboard can read at the
+//   host's own path, which means you mounted that folder for it. COMPOSE_ROOT
+//   narrows that to one folder. TrueNAS apps (/mnt/.ix-apps) are refused.
 // - Locally built images (no registry to pull from) are refused.
 // - One job at a time, server-wide.
 // - Compose runs with a minimal environment (PATH and HOME only). Patchboard's
@@ -16,6 +17,7 @@
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import http from 'node:http';
+import { existsSync } from 'node:fs';
 import { isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../shared/types.ts';
 import { dockerCli } from './cli.ts';
@@ -50,9 +52,15 @@ function under(root: string, p: string): boolean {
   return normalize(resolve(p)).startsWith(r);
 }
 
+/** Some compose folder is mounted where Docker says it is, so updates can run. */
+export function composeMounted(containers: Container[]): boolean {
+  if (config.composeRoot) return true;
+  const dirs = new Set(containers.map((c) => c.workingDir).filter((d): d is string => !!d && isAbsolute(d) && !d.startsWith('/mnt/.ix-apps')));
+  return [...dirs].some((d) => existsSync(d));
+}
+
 /** Whether a container can be updated from Patchboard, and why not. */
 export async function eligibility(c: Container): Promise<UpdateEligibility> {
-  if (!config.composeRoot) return { ok: false, reason: 'Updates are off. Mount the compose folder and set COMPOSE_ROOT to turn them on.' };
   if (!dockerCli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
   if (c.name === 'patchboard') return { ok: false, reason: "Patchboard can't replace itself mid-update. Rebuild it from its folder." };
   let r: Inspect;
@@ -66,8 +74,12 @@ export async function eligibility(c: Container): Promise<UpdateEligibility> {
   const files = (labels['com.docker.compose.project.config_files'] ?? '').split(',').filter(Boolean);
   if (!labels['com.docker.compose.service'] || !dir) return { ok: false, reason: 'Not started by Docker Compose.' };
   if (dir.startsWith('/mnt/.ix-apps')) return { ok: false, reason: 'Managed by TrueNAS Apps. Update it there.' };
-  if (!under(config.composeRoot, dir) || files.some((f) => !isAbsolute(f) || !under(config.composeRoot!, f))) {
+  if (files.some((f) => !isAbsolute(f))) return { ok: false, reason: 'Its compose files have relative paths.' };
+  if (config.composeRoot && (!under(config.composeRoot, dir) || files.some((f) => !under(config.composeRoot!, f)))) {
     return { ok: false, reason: `Its compose folder isn't under ${config.composeRoot}.` };
+  }
+  if (!files.length || files.some((f) => !existsSync(f))) {
+    return { ok: false, reason: `Mount ${dir} into Patchboard at the same path, read-only, to update it here.` };
   }
   const image = r.Config.Image;
   const project = labels['com.docker.compose.project'];

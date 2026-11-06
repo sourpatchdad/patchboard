@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
 import { request } from './http.ts';
@@ -39,7 +39,7 @@ import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, describeThresholds, saveThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
-import { withConfig } from './config.ts';
+import { authLocked, envHas, withConfig } from './config.ts';
 import { haActionFor, pinnedEntities } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
@@ -68,7 +68,7 @@ import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
-import { currentUser, login, logout, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
+import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
@@ -191,16 +191,18 @@ app.use('*', securityHeaders(existsSync(indexPathForCsp) ? readFileSync(indexPat
 // answers requests addressed to an IP literal, localhost, or a hostname listed
 // in ALLOWED_HOSTS. Changes must also carry a matching Origin when one is sent.
 // (Homepage's CVE-2024-42364 was this attack.)
-const allowedHosts = new Set(['localhost', ...config.allowedHosts]);
+// Names nobody can register on the public internet, so a hostile page can't
+// point one at Patchboard: nas, nas.local, server.lan, box.home.arpa.
+const HOME_NAME = /^(localhost|[a-z0-9-]+|[a-z0-9.-]+\.(local|lan|home|home\.arpa|internal|localdomain|localhost))$/;
 function hostAllowed(hostHeader: string | undefined): boolean {
   if (!hostHeader) return false;
   const host = hostHeader.replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
-  return allowedHosts.has(host) || isIP(host) !== 0;
+  return isIP(host) !== 0 || HOME_NAME.test(host) || config.allowedHosts.includes(host);
 }
 app.use('/api/*', async (c, next) => {
   const host = c.req.header('host');
   if (!hostAllowed(host)) {
-    return c.json({ error: `Requests to ${host ?? 'an unknown host'} are refused. Add it to ALLOWED_HOSTS if it's yours.` }, 403);
+    return c.json({ error: `Requests to ${host ?? 'an unknown host'} are refused. Open Patchboard by its IP address and add it in Settings, Sign-in.` }, 403);
   }
   if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
     const origin = c.req.header('origin');
@@ -260,6 +262,58 @@ app.post('/api/login', async (c) => {
   const body = await c.req.json<{ password?: string }>().catch(() => ({ password: undefined }));
   const r = login(c, typeof body.password === 'string' ? body.password.slice(0, 500) : '');
   return r.ok ? c.json({ ok: true }) : c.json({ error: r.error }, r.status);
+});
+
+// Sign-in from Settings: off, or one password. A reverse proxy or OIDC stays
+// in the environment, where a mistake can't lock anyone out of the fix.
+app.get('/api/auth/settings', (c) =>
+  c.json({
+    mode: config.auth.mode,
+    locked: authLocked(),
+    hookToken: config.auth.mode === 'none' ? undefined : (config.auth.hookToken ?? null),
+    hosts: config.allowedHosts,
+    hostsLocked: envHas('ALLOWED_HOSTS'),
+  }),
+);
+
+// Other names Patchboard answers to, like the domain a reverse proxy serves.
+app.put('/api/auth/hosts', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (envHas('ALLOWED_HOSTS')) return c.json({ error: 'Set in the environment (ALLOWED_HOSTS). Change it there.' }, 409);
+  if (config.demo) return c.json({ error: "Demo mode doesn't change this." }, 400);
+  const body = (await c.req.json().catch(() => null)) as { hosts?: unknown } | null;
+  const hosts = (typeof body?.hosts === 'string' ? body.hosts : '').split(/[\s,]+/).map((h) => h.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/[:/].*$/, '')).filter(Boolean);
+  const bad = hosts.find((h) => !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h) || h.length > 253);
+  if (bad) return c.json({ error: `${bad} isn't a host name.` }, 400);
+  if (hosts.length > 20) return c.json({ error: 'Twenty names at most.' }, 400);
+  saveValues({ ALLOWED_HOSTS: hosts.length ? [...new Set(hosts)].join(',') : null });
+  recordAudit(who(c), 'auth.hosts', 'sign-in', hosts.join(', ') || 'none');
+  return c.json({ hosts: config.allowedHosts });
+});
+
+app.put('/api/auth/settings', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (authLocked()) return c.json({ error: 'Sign-in is set in the environment. Change it there.' }, 409);
+  if (config.demo) return c.json({ error: "Demo mode doesn't change sign-in." }, 400);
+  const body = (await c.req.json().catch(() => null)) as { mode?: unknown; password?: unknown; current?: unknown } | null;
+  const password = typeof body?.password === 'string' ? body.password : '';
+  const current = typeof body?.current === 'string' ? body.current.slice(0, 500) : '';
+  const was = config.auth.mode;
+  if (was === 'password' && !passwordMatches(current)) return c.json({ error: 'The current password is wrong.' }, 403);
+  if (body?.mode === 'none') {
+    saveValues({ AUTH: null, PATCHBOARD_PASSWORD_HASH: null });
+    endAllSessions();
+    recordAudit(who(c), 'auth.off', 'sign-in');
+    return c.json({ mode: 'none' });
+  }
+  if (body?.mode !== 'password') return c.json({ error: 'Choose no sign-in or a password.' }, 400);
+  if (password.length < 8 || password.length > 200) return c.json({ error: 'Use at least 8 characters.' }, 400);
+  saveValues({ AUTH: 'password', PATCHBOARD_PASSWORD_HASH: hashPassword(password), HOOK_TOKEN: config.auth.hookToken ?? randomBytes(24).toString('base64url') });
+  // A new password signs everyone else out; whoever set it stays in.
+  endAllSessions();
+  startSession(c, 'admin');
+  recordAudit(who(c), was === 'password' ? 'auth.password-changed' : 'auth.on', 'sign-in');
+  return c.json({ mode: 'password' });
 });
 
 app.post('/api/logout', (c) => {

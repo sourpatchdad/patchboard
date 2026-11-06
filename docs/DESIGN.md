@@ -42,8 +42,8 @@ one click.
 ## Architecture
 
 - **The server holds every credential.** The browser talks only to
-  Patchboard. Keys come from `.env` or, when pasted in the UI, from the
-  database, and never travel to the browser.
+  Patchboard. Keys come from the database, pasted in the UI, or from the
+  environment, and never travel to the browser.
 - **One adapter per integration,** each polling on its own schedule, each
   with a demo fixture of the same shape. One failing integration marks its
   data stale; nothing else stops.

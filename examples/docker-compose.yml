@@ -1,17 +1,17 @@
-# Copy next to a .env made from env.example, then run: docker compose up -d
-# Other setups (every optional mount, a hardened install, labels): the folders here.
+# Save as docker-compose.yml, run `docker compose up -d`, and open
+# http://<this machine>:3200. Everything else is set up in the browser.
 
 services:
   patchboard:
     image: ghcr.io/sourpatchdad/patchboard:latest
     container_name: patchboard
     restart: unless-stopped
-    env_file: .env
     environment:
-      - TZ=${TZ:-UTC}
+      - TZ=America/New_York # your time zone
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:3200:3200"
+      # Open to your network. If the internet can reach this machine, turn on
+      # a password in Settings, Sign-in.
+      - "3200:3200"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./config:/config:ro
       - ./data:/data

@@ -22,13 +22,13 @@ it anywhere.
 
 | `AUTH` | Use it when |
 |---|---|
-| `none` (default) | Only you can reach the address: Tailscale, or a LAN you control. Set `BIND_ADDRESS` to that address, never `0.0.0.0` on a shared network. |
+| `none` (default) | Only you can reach the address: Tailscale, or a LAN you control. On a shared network, publish the port on a private address only, such as `"100.64.0.5:3200:3200"`. |
 | `forward` | A reverse proxy (Authelia, Authentik, Cloudflare Access, oauth2-proxy) signs people in and passes the user in `TRUSTED_USER_HEADER`. Bind Patchboard to `127.0.0.1` or a network only the proxy shares, or anyone can send that header. |
 | `oidc` | You have an identity provider: Authentik, Authelia, Keycloak, Pocket ID, Zitadel, Google. Patchboard uses the authorization-code flow with PKCE and checks the ID token's signature, issuer, audience, expiry and nonce. Set `OIDC_ALLOWED` to the emails, usernames or groups that may sign in; without it, anyone your provider signs in gets in. |
-| `password` | You have no proxy or provider. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
+| `password` | You have no proxy or provider. Turn it on in Settings, Sign-in, which stores a salted scrypt hash, or set `PATCHBOARD_PASSWORD`. A new password signs out every other device; changing or removing it needs the current one. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
 
 With sign-in on, webhooks send `HOOK_TOKEN` as `Authorization: Bearer <token>`
-or `?token=`.
+or `?token=`. Turning on a password in Settings generates one.
 
 OIDC sessions use the same hashed tokens with a SameSite=Lax cookie, so the
 cookie arrives on the redirect back from the provider. Changes still need the
@@ -75,21 +75,22 @@ container creation, which comes close to full access.
   your network. On the public ntfy.sh, anyone who guesses the topic can read
   it, so use a long random topic name or a token.
 - **Keys are write-only.** Typed in Settings, they live encrypted in the
-  database in `DATA_DIR`; set in `.env`, they live there. The browser can set a key but
+  database in `DATA_DIR`; set in the environment, they live there. The browser can set a key but
   never read one back: the API says whether a key is set, never what it is.
   The setup file export carries no keys and no addresses.
 - **Saved keys are encrypted at rest** with AES-256-GCM. The key that seals
   them sits apart from the database, in `DATA_DIR/secret.key` (owner-only),
   or in `PATCHBOARD_SECRET_KEY` if you set one. A copy of `patchboard.db` on
   its own reveals nothing. Anyone who can read both files, or the running
-  process, can read the keys, the same as your `.env`; protect `DATA_DIR`
+  process, can read the keys, the same as an env file; protect `DATA_DIR`
   the same way.
 - **Setting up an integration in the UI is guarded like any change:** sign-in
   when it's on, the action header, refused under `READ_ONLY`, recorded in
-  Activity. An environment variable always wins and shows as locked. Sign-in
-  settings (`AUTH`, OIDC), Docker access, folder mounts and the webhook token
-  can only come from the environment, so a session can't widen its own
-  access. **Test connection** runs one request with the values in the form,
+  Activity. An environment variable always wins and shows as locked.
+  Settings can turn a password on, and change or remove it with the current
+  one. A reverse proxy, OIDC, Docker access and folder mounts come only from
+  the environment, so a session can't hand itself a new way in. Forgot the
+  password? `AUTH=none` or `PATCHBOARD_PASSWORD` in the environment wins. **Test connection** runs one request with the values in the form,
   on a scoped copy of the settings, so live polling never sees unsaved
   values. Tests are limited to one every two seconds per integration.
 - **Requests fill in keys late.** Requests refer to keys as

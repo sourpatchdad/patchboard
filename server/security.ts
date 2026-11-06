@@ -13,7 +13,7 @@
 // READ_ONLY=1 refuses every change to the server (actions, updates, board
 // edits, sign-ins to integrations) no matter who asks.
 
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { config } from './config.ts';
@@ -86,11 +86,25 @@ function sessions(): Record<string, Session> {
   return all;
 }
 
-function passwordMatches(given: string): boolean {
-  const want = config.auth.password ?? '';
-  const a = Buffer.from(sha(given));
-  const b = Buffer.from(sha(want));
-  return want.length > 0 && timingSafeEqual(a, b);
+/** A password set in Settings is kept as scrypt$salt$hash. */
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16);
+  return `scrypt$${salt.toString('base64url')}$${scryptSync(password, salt, 32).toString('base64url')}`;
+}
+
+export function passwordMatches(given: string): boolean {
+  const plain = config.auth.password;
+  if (plain) return timingSafeEqual(Buffer.from(sha(given)), Buffer.from(sha(plain)));
+  const [kind, salt, hash] = (config.auth.passwordHash ?? '').split('$');
+  if (kind !== 'scrypt' || !salt || !hash) return false;
+  const want = Buffer.from(hash, 'base64url');
+  const got = scryptSync(given, Buffer.from(salt, 'base64url'), want.length);
+  return got.length === want.length && timingSafeEqual(got, want);
+}
+
+/** Sign everyone out, for a new password. */
+export function endAllSessions(): void {
+  kvSet('sessions', {});
 }
 
 // Attempts per address: 5 free, then a doubling wait up to 15 minutes.

@@ -10,6 +10,7 @@ import type { CatalogAudit } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
+import { SignIn } from '../components/SignIn.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -210,6 +211,7 @@ export function Settings() {
         <>
           <Integrations />
           <Connections />
+          <SignIn />
           <Keys />
           <CatalogCheck />
         </>

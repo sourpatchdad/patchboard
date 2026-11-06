@@ -1,9 +1,9 @@
 # Patchboard that can look but not touch. It runs as the unprivileged node
 # user, reaches Docker through a socket proxy that allows reads only, refuses
 # every change including board edits (READ_ONLY), and listens on 127.0.0.1
-# for a reverse proxy that signs people in (AUTH=forward or AUTH=oidc in
-# .env). It can't update containers, so it runs the slim image, which leaves
-# out the Docker CLI. SECURITY.md explains each choice.
+# for a reverse proxy that signs people in. It can't update containers, so it
+# runs the slim image, which leaves out the Docker CLI. SECURITY.md explains
+# each choice.
 
 services:
   patchboard:
@@ -12,15 +12,17 @@ services:
     restart: unless-stopped
     user: node
     read_only: true
-    env_file: .env
     environment:
-      - TZ=${TZ:-UTC}
+      - TZ=America/New_York
       - DOCKER_HOST=tcp://socket-proxy:2375
       - READ_ONLY=1
+      # Your proxy signs people in and passes the name in this header.
+      - AUTH=forward
+      - TRUSTED_USER_HEADER=Remote-User
+      - ALLOWED_HOSTS=dash.example.com
     ports:
       - "127.0.0.1:3200:3200"
     volumes:
-      - ./config:/config:ro
       - patchboard-data:/data
     tmpfs:
       - /tmp

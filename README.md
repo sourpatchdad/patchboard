@@ -26,7 +26,6 @@ Open <http://localhost:3200>.
 mkdir patchboard && cd patchboard
 base=https://raw.githubusercontent.com/sourpatchdad/patchboard/main
 curl -fsSL $base/examples/docker-compose.yml -o docker-compose.yml
-curl -fsSL $base/examples/env.example -o .env
 docker compose up -d
 ```
 
@@ -45,9 +44,9 @@ encrypted on the server. Sonarr, Radarr,
 Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
 SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS, weather and more. [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
-The `.env` holds only server settings: the address to listen on, the time
-zone, sign-in. Prefer config as code? Integration keys and a `services.yaml`
-still work, and Settings can copy either into Patchboard later.
+No `.env` and no config files: the compose file sets the time zone, and the
+rest lives in Settings. Prefer config as code? Environment variables and a
+`services.yaml` still work, and Settings can copy them in later.
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md) has both ways.
 
 `latest` follows releases. Pin `1` to stay on 1.x, or a version like
@@ -56,8 +55,8 @@ is work in progress.
 [docs/RELEASING.md](docs/RELEASING.md) lists every tag.
 
 Before you expose it anywhere, read [SECURITY.md](SECURITY.md). Sign-in is off
-by default, for a private address. Turn it on with `AUTH=password`, or
-`AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
+by default, for a home network. Turn on a password in Settings, Sign-in, or
+use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 ## What you get
 

@@ -83,6 +83,7 @@ export async function listContainers(): Promise<Container[]> {
         created: c.Created * 1000,
         project,
         service: c.Labels?.[SERVICE],
+        workingDir: c.Labels?.['com.docker.compose.project.working_dir'],
         dependsOn: deps.length ? deps : undefined,
         labels: pickLabels(c.Labels),
       };

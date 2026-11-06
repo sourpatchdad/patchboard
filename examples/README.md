@@ -1,11 +1,9 @@
 # Examples
 
-Complete compose files. Copy one next to your `.env` as `docker-compose.yml`.
-[docker-compose.yml](docker-compose.yml) is the plain install, and
-[env.example](env.example) is the `.env` template for all of them; it needs
-only the server settings at the top, since integrations are set up in
-Settings, Connections. [services.example.yaml](services.example.yaml) starts
-a `services.yaml` if you'd rather keep your apps in a file.
+Complete compose files. Save one as `docker-compose.yml`; none needs a
+`.env`. [docker-compose.yml](docker-compose.yml) is the plain install.
+For config as code, [env.example](env.example) lists every variable and
+[services.example.yaml](services.example.yaml) starts a `services.yaml`.
 
 | Folder | For |
 |---|---|

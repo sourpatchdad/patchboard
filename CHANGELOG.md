@@ -12,9 +12,10 @@ The first public release, 1.0.0. What's in it:
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
   blocking pauses, requests approve, Proxmox guests start and stop, all from
   the widget.
-- **Set up in the UI.** Add every running container as an app in one click,
-  arrange them in Edit apps, and connect integrations in Settings,
-  Connections, with keys encrypted on the server. A `services.yaml`, Docker
+- **One compose file, no config files.** Add every running container as an
+  app in one click, arrange them in Edit apps, connect integrations and turn
+  on a password in Settings, with keys encrypted on the server. Mounts at
+  /pool, /docs and /logs turn on by being there. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
   in so the files can go. Coming from Homepage, paste its `services.yaml`
   and the apps come over.
@@ -42,7 +43,7 @@ The first public release, 1.0.0. What's in it:
 - **Yours to style:** six themes plus your own colors, three type pairings,
   three densities, and light and dark, per device. Works on a phone and
   installs as an app.
-- **Safe to trust:** sign-in with forward auth or OIDC, a read-only mode, a
+- **Safe to trust:** sign-in with a password, forward auth or OIDC, a read-only mode, a
   socket proxy example, an activity log, and keys that never reach the
   browser. SECURITY.md has the details.
 
