@@ -24,7 +24,7 @@ import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
-import { candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
+import { adoptEnvironment, candidate, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { withConfig } from './config.ts';
 import { haActionFor, pinnedEntities } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
@@ -59,11 +59,11 @@ import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
-import { getCatalog, setCatalogOrder } from './catalog.ts';
+import { getCatalog, getYamlCatalog, setCatalogOrder } from './catalog.ts';
 import { catalogYaml } from '../shared/catalog-yaml.ts';
 import { poster } from './art.ts';
 import { clearUpdate } from './updates.ts';
-import { type AppOrder, validateOrder } from '../shared/order.ts';
+import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
 /** Pause and resume for each configured download client. */
@@ -533,6 +533,31 @@ app.put('/api/setup/integrations/:id', async (c) => {
   return c.json({ integrations: describeSetup() });
 });
 
+// Copy every integration value from the environment into Patchboard, so the
+// .env lines can be removed. Values never leave the server.
+app.post('/api/setup/adopt-env', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save integration settings." }, 400);
+  const copied = adoptEnvironment();
+  recordAudit(who(c), 'setup.adopt-env', 'integrations', copied.join(', ') || 'nothing new');
+  return c.json({ copied, integrations: describeSetup() });
+});
+
+// Copy services.yaml into Patchboard's own app list, so the file can go.
+// Groups, order, links, icons and checks come along; the file isn't touched.
+app.post('/api/catalog/adopt', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.demo) return c.json({ error: "Demo mode doesn't save apps." }, 400);
+  const v = validateOrder(adoptYaml(getYamlCatalog(), kvGet<AppOrder>('app-order')));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  kvSet('app-order', v.order);
+  setCatalogOrder(v.order);
+  hub.emitCatalog();
+  const n = getYamlCatalog().groups.reduce((k, g) => k + g.services.length, 0);
+  recordAudit(who(c), 'apps.adopt-yaml', 'apps', `${n} apps, ${getYamlCatalog().dock.length} links`);
+  return c.json({ apps: n, links: getYamlCatalog().dock.length });
+});
+
 app.delete('/api/setup/integrations/:id', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const i = setupIntegration(c.req.param('id'));
@@ -939,7 +964,14 @@ app.get('/api/catalog/audit', async (c) => {
     }),
   );
   const audit = auditCatalog(catalog, containers, (n) => ports.get(n), hrefHost ?? 'localhost');
-  return c.json({ ...audit, yaml: draftYaml(audit.discovered) });
+  // What services.yaml still holds that Patchboard hasn't copied in.
+  const saved = kvGet<AppOrder>('app-order');
+  const savedApps = new Set((saved?.added ?? []).map((a) => a.name));
+  const savedLinks = new Set((saved?.addedLinks ?? []).map((b) => b.name));
+  const yamlCat = getYamlCatalog();
+  const yamlApps = yamlCat.groups.flatMap((g) => g.services).filter((s) => !savedApps.has(s.name)).length;
+  const yamlLinks = yamlCat.dock.filter((b) => !savedLinks.has(b.name)).length;
+  return c.json({ ...audit, yaml: draftYaml(audit.discovered), yamlApps, yamlLinks });
 });
 
 // Runbook sections that name this container's app or compose stack.

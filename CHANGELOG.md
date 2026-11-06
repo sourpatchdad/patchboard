@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Move off files in two clicks.** Settings, Connections has Save them in
+  Patchboard, which copies every integration value from your `.env` into
+  the encrypted store, and Copy into Patchboard, which turns `services.yaml`
+  into apps saved in Patchboard: groups, order, short names, icons, checks,
+  one-shot jobs and links. Then remove the `.env` lines and the file, and
+  restart. docs/CONFIGURATION.md has the steps. Values never reach a
+  browser, and Patchboard never edits your files.
+- **An app saved in Patchboard wins over a `services.yaml` entry of the
+  same name,** so the file can go without anything showing twice or
+  disappearing. Apps added here can now carry a short name, a check setting
+  and the one-shot flag, and links can be added to the Elsewhere row.
+- **No `services.yaml` is fine.** Patchboard logs that apps come from the
+  UI and Docker labels instead of an error.
 - **The otter notices quiet notes.** With image updates waiting, or an app
   it can't reach, it opens its eyes (the hello face) instead of resting
   calm. No amber and no tab dot: these aren't problems. At night it sleeps

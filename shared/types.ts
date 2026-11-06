@@ -163,6 +163,9 @@ export interface CatalogAudit {
   discovered: DiscoveredService[];
   /** Drafted YAML for everything discovered. */
   yaml?: string;
+  /** services.yaml entries not yet copied into Patchboard. */
+  yamlApps?: number;
+  yamlLinks?: number;
 }
 
 export interface UpdateEligibility {
@@ -660,6 +663,8 @@ export interface Bookmark {
   name: string;
   href: string;
   icon?: string;
+  /** Added in the UI, or from services.yaml (default). */
+  source?: 'yaml' | 'ui';
 }
 
 export interface Catalog {

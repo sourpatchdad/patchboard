@@ -105,6 +105,8 @@ export interface SetupField {
   required: boolean;
   /** Set in the environment: shown, not editable. */
   locked: boolean;
+  /** Set in the environment and also saved in Patchboard, so the environment line can be removed. */
+  savedToo?: boolean;
   /** Has a value from the environment or the UI. */
   set: boolean;
   /** The value, for anything that isn't a secret. */

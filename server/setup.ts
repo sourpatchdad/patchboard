@@ -5,7 +5,7 @@
 
 import { INTEGRATIONS, type Integration } from '../shared/integrations.ts';
 import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP, CHOICES } from '../shared/setup.ts';
-import { envHas, setSavedSettings } from './config.ts';
+import { envHas, envValue, setSavedSettings } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
 import { seal, unseal } from './vault.ts';
 
@@ -41,6 +41,8 @@ export function describeSetup(): SetupIntegration[] {
         kind,
         required: i.env.includes(name),
         locked,
+        // Locked, and Patchboard has the same value: the .env line can go.
+        ...(locked && value !== undefined && value === envValue(name) ? { savedToo: true } : {}),
         set: locked || value !== undefined,
         ...(kind !== 'secret' && !locked && value !== undefined ? { value } : {}),
         ...(fieldHint(name) ? { hint: fieldHint(name) } : {}),
@@ -101,6 +103,28 @@ export function saveValues(values: Record<string, string | null>): void {
   }
   write(s);
   loadSavedSettings();
+}
+
+/**
+ * Copy every integration value set in the environment into the encrypted
+ * store, so the .env lines can go. Values move server side only; nothing
+ * reaches a browser. Returns the variable names copied.
+ */
+export function adoptEnvironment(): string[] {
+  const s = read();
+  const at = Date.now();
+  const copied: string[] = [];
+  for (const i of INTEGRATIONS.filter((x) => UI_SETUP.has(x.id))) {
+    for (const n of fieldsOf(i)) {
+      const v = envValue(n);
+      if (v === undefined || s[n]?.value === v) continue;
+      s[n] = { value: v, at };
+      copied.push(n);
+    }
+  }
+  if (copied.length) write(s);
+  loadSavedSettings();
+  return copied;
 }
 
 /** Forget everything saved for one integration. */

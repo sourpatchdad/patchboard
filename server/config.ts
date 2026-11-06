@@ -26,6 +26,9 @@ function lookup(overlay: Record<string, string> = {}): Lookup {
   return (key) => fromEnv(key) ?? (overlay[key]?.trim() || undefined) ?? (saved[key]?.trim() || undefined);
 }
 
+/** The environment's value, for copying it into Patchboard's own store. Server side only. */
+export const envValue = (key: string): string | undefined => fromEnv(key);
+
 /** True when the environment sets this variable, so the UI can't change it. */
 export const envHas = (key: string): boolean => fromEnv(key) !== undefined;
 

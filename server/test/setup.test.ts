@@ -84,3 +84,13 @@ test('a menu field takes only its listed values', () => {
   assert.deepEqual(setup.checkValues(ntfy, { NTFY_URL: 'https://ntfy.sh/x', NOTIFY_LEVEL: 'critical' }), { values: { NTFY_URL: 'https://ntfy.sh/x', NOTIFY_LEVEL: 'critical' } });
   assert.match((setup.checkValues(ntfy, { NOTIFY_LEVEL: 'loud' }) as { error: string }).error, /warn, critical/);
 });
+
+test('moving the environment in: values are copied sealed, marked safe to remove, and the environment still wins until it goes', () => {
+  const copied = setup.adoptEnvironment();
+  assert.ok(copied.includes('RADARR_URL'));
+  assert.ok(!JSON.stringify(kvGet('integration-settings')).includes('7878'), 'sealed at rest');
+  const field = setup.describeSetup().find((i) => i.id === 'radarr')!.fields.find((f) => f.name === 'RADARR_URL')!;
+  assert.equal(field.locked, true);
+  assert.equal(field.savedToo, true);
+  assert.deepEqual(setup.adoptEnvironment(), [], 'a second run copies nothing new');
+});

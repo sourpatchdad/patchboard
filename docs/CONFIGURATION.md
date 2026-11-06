@@ -19,6 +19,28 @@ Settings, Home and units, Setup file downloads the UI part (board, apps, page
 settings) as one JSON file and imports it on another server. Keys and
 uploaded icons stay behind.
 
+## Moving off files
+
+Started with a `.env` full of integration keys and a `services.yaml`? Patchboard
+can take both over, so the UI is the one place you change things.
+
+1. **Settings, Connections, Integrations: Save them in Patchboard.** Every
+   integration value in your `.env` is copied into Patchboard's encrypted
+   store. The `.env` keeps winning while it still has them, so nothing
+   changes yet. Each field it copied now reads "Saved here too".
+2. **Settings, Connections, Catalog: Copy into Patchboard.** Every app in
+   `services.yaml` becomes one saved in Patchboard, with its group, order,
+   short name, icon, check and one-shot flag, and the links join the
+   Elsewhere row. Patchboard never edits the file.
+3. **Remove what was copied:** the integration lines from your `.env`, and
+   `services.yaml` (or the `./config` mount). Keep the lines Patchboard can't
+   take over: the port, sign-in, mounts and folder paths.
+4. **Restart Patchboard.** Apps, links and connections are all still there,
+   and from now on you change them in the UI.
+
+To keep a copy in git, Settings, Connections, Catalog has Download
+services.yaml.
+
 ## Server
 
 | Variable | Default | |

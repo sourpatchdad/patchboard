@@ -50,15 +50,27 @@ export function draftFrom(cat: Catalog, stats: Record<string, JsonWidgetConfig> 
 export function layoutOf(d: Draft, prevRenamed?: Record<string, string>): AppOrder {
   const groups = d.groups.map((g) => ({ ...g, name: g.name.trim() }));
   const base = orderOf(groups, prevRenamed);
-  const added: AddedApp[] = groups.flatMap((g) =>
-    g.services
-      .filter((s) => s.source === 'ui')
-      .map((s) => ({ name: s.name, group: g.name, href: s.href, icon: s.icon, container: s.container, description: s.description })),
-  );
+  const keep = (s: Service, group: string): AddedApp => ({
+    name: s.name,
+    group,
+    ...(s.label ? { label: s.label } : {}),
+    href: s.href,
+    icon: s.icon,
+    container: s.container,
+    description: s.description,
+    ...(s.expectStopped ? { expectStopped: true } : {}),
+    ...(s.check != null ? { check: s.check } : {}),
+  });
+  const added: AddedApp[] = [
+    ...groups.flatMap((g) => g.services.filter((s) => s.source === 'ui').map((s) => keep(s, g.name))),
+    // Hidden apps saved here stay saved, so showing one again brings it back.
+    ...d.hidden.filter((h) => h.service.source === 'ui').map((h) => keep(h.service, h.group)),
+  ];
+  const addedLinks = [...d.dock, ...d.hiddenDock].filter((b) => b.source === 'ui').map(({ name, href, icon }) => ({ name, href, ...(icon ? { icon } : {}) }));
   const hidden = [...d.hidden.map((h) => h.service.name), ...d.hiddenDock.map((b) => b.name)];
   const exists = new Set([...groups.flatMap((g) => g.services.map((s) => s.name)), ...d.hidden.map((h) => h.service.name)]);
   const stats = Object.fromEntries(Object.entries(d.stats).filter(([n]) => exists.has(n)));
-  return { ...base, hidden, icons: d.icons, added, stats };
+  return { ...base, hidden, icons: d.icons, added, ...(addedLinks.length ? { addedLinks } : {}), stats };
 }
 
 /** Problems that would stop a save, in plain words. */

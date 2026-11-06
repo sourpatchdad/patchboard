@@ -12,10 +12,15 @@ import type { Bookmark, Catalog, Service } from './types.ts';
 export interface AddedApp {
   name: string;
   group: string;
+  label?: string;
   href?: string;
   icon?: string;
   container?: string;
   description?: string;
+  /** A one-shot job: stopped is normal, never an alert. */
+  expectStopped?: boolean;
+  /** Reachability check: false off, true on, or a URL to check instead. */
+  check?: boolean | string;
 }
 
 export interface AppOrder {
@@ -29,8 +34,10 @@ export interface AppOrder {
   hidden?: string[];
   /** App or bookmark name -> icon (a dashboard-icons name, a URL, or an uploaded /api/icons/ file). */
   icons?: Record<string, string>;
-  /** Apps added in the UI. */
+  /** Apps added in the UI (or copied in from services.yaml). */
   added?: AddedApp[];
+  /** Links in the Elsewhere row added in the UI (or copied in from services.yaml). */
+  addedLinks?: Bookmark[];
   /** App name -> where its live number comes from. */
   stats?: Record<string, JsonWidgetConfig>;
 }
@@ -47,6 +54,43 @@ const isUrl = (s: unknown) => {
     return false;
   }
 };
+
+/**
+ * services.yaml copied into a layout: every app becomes one saved here, in
+ * its group and order, and every link joins the Elsewhere row. What the
+ * layout already says (renames, hidden apps, icons, apps added here) stays.
+ */
+export function adoptYaml(cat: Catalog, prev: AppOrder | null | undefined): AppOrder {
+  const p: AppOrder = prev ?? { groups: [], apps: {} };
+  const added = [...(p.added ?? [])];
+  const have = new Set(added.map((a) => a.name));
+  const groups = [...p.groups];
+  const apps: Record<string, string[]> = { ...p.apps };
+  for (const g of cat.groups) {
+    const group = p.renamed?.[g.name] ?? g.name;
+    if (!groups.includes(group)) groups.push(group);
+    for (const s of g.services) {
+      if (have.has(s.name)) continue;
+      have.add(s.name);
+      added.push({
+        name: s.name,
+        group,
+        ...(s.label ? { label: s.label } : {}),
+        ...(s.href ? { href: s.href } : {}),
+        ...(s.icon ? { icon: s.icon } : {}),
+        ...(s.container ? { container: s.container } : {}),
+        ...(s.description ? { description: s.description } : {}),
+        ...(s.expectStopped ? { expectStopped: true } : {}),
+        ...(s.check != null ? { check: s.check } : {}),
+      });
+      const placedSomewhere = Object.values(apps).some((list) => list.includes(s.name));
+      if (!placedSomewhere) apps[group] = [...(apps[group] ?? []), s.name];
+    }
+  }
+  const links = [...(p.addedLinks ?? [])];
+  for (const b of cat.dock) if (!links.some((l) => l.name === b.name)) links.push({ name: b.name, href: b.href, ...(b.icon ? { icon: b.icon } : {}) });
+  return { ...p, groups, apps, added, ...(links.length ? { addedLinks: links } : {}) };
+}
 
 /** A clean layout from untrusted input, or an error message. */
 export function validateOrder(input: unknown): { order: AppOrder } | { error: string } {
@@ -91,9 +135,14 @@ export function validateOrder(input: unknown): { order: AppOrder } | { error: st
       if (a.icon != null && a.icon !== '' && !(typeof a.icon === 'string' && ICON.test(a.icon))) return { error: `${a.name}: bad icon` };
       if (a.container != null && a.container !== '' && !(typeof a.container === 'string' && CONTAINER.test(a.container))) return { error: `${a.name}: bad container name` };
       if (a.description != null && (typeof a.description !== 'string' || a.description.length > 200)) return { error: `${a.name}: description too long` };
+      if (a.label != null && a.label !== '' && !isName(a.label)) return { error: `${a.name}: bad short name` };
+      if (a.check != null && typeof a.check !== 'boolean' && !isUrl(a.check)) return { error: `${a.name}: the check must be on, off or an http(s) address` };
       added.push({
         name: a.name.trim(),
         group: a.group.trim(),
+        ...(a.label ? { label: (a.label as string).trim() } : {}),
+        ...(a.expectStopped === true ? { expectStopped: true } : {}),
+        ...(a.check != null ? { check: a.check as boolean | string } : {}),
         ...(a.href ? { href: a.href as string } : {}),
         ...(a.icon ? { icon: a.icon as string } : {}),
         ...(a.container ? { container: a.container as string } : {}),
@@ -101,6 +150,16 @@ export function validateOrder(input: unknown): { order: AppOrder } | { error: st
       });
     }
     if (added.length) order.added = added;
+  }
+  if (raw.addedLinks !== undefined) {
+    if (!Array.isArray(raw.addedLinks) || raw.addedLinks.length > 100) return { error: 'Bad links' };
+    const links: Bookmark[] = [];
+    for (const b of raw.addedLinks as Record<string, unknown>[]) {
+      if (!isMap(b) || !isName(b.name) || !isUrl(b.href)) return { error: 'Each link needs a name and an http(s) address' };
+      if (b.icon != null && b.icon !== '' && !(typeof b.icon === 'string' && ICON.test(b.icon))) return { error: `${b.name}: bad icon` };
+      links.push({ name: (b.name as string).trim(), href: b.href as string, ...(b.icon ? { icon: b.icon as string } : {}) });
+    }
+    if (links.length) order.addedLinks = links;
   }
   if (raw.stats !== undefined) {
     if (!isMap(raw.stats) || Object.keys(raw.stats).length > 200) return { error: 'Bad live numbers' };
@@ -122,12 +181,11 @@ export function applyOrder(cat: Catalog, order: AppOrder | null | undefined): Ca
   const icon = <T extends { name: string; icon?: string }>(x: T): T => (order.icons?.[x.name] ? { ...x, icon: order.icons[x.name] } : x);
   const hidden = new Set(order.hidden ?? []);
 
-  // The catalog plus apps added in the UI (names already in the catalog win).
-  const known = new Set(cat.groups.flatMap((g) => g.services.map((s) => s.name)));
-  const base: Catalog['groups'] = cat.groups.map((g) => ({ ...g, services: [...g.services] }));
+  // The catalog plus apps added in the UI. An app saved here wins over a file
+  // entry of the same name, so a copied-in services.yaml can be deleted.
+  const addedNames = new Set((order.added ?? []).map((a) => a.name));
+  const base: Catalog['groups'] = cat.groups.map((g) => ({ ...g, services: g.services.filter((s) => !addedNames.has(s.name)) }));
   for (const a of order.added ?? []) {
-    if (known.has(a.name)) continue;
-    known.add(a.name);
     const { group, ...rest } = a;
     const svc: Service = { ...rest, source: 'ui' };
     let g = base.find((x) => x.name === group);
@@ -167,8 +225,10 @@ export function applyOrder(cat: Catalog, order: AppOrder | null | undefined): Ca
     }
   }
   const groups = [...out].filter(([, services]) => services.length > 0).map(([name, services]) => ({ name, services }));
-  const dock: Bookmark[] = cat.dock.filter((b) => !hidden.has(b.name)).map(icon);
-  const hiddenDock = cat.dock.filter((b) => hidden.has(b.name)).map(icon);
+  const linkNames = new Set((order.addedLinks ?? []).map((b) => b.name));
+  const allDock: Bookmark[] = [...cat.dock.filter((b) => !linkNames.has(b.name)), ...(order.addedLinks ?? []).map((b) => ({ ...b, source: 'ui' as const }))];
+  const dock: Bookmark[] = allDock.filter((b) => !hidden.has(b.name)).map(icon);
+  const hiddenDock = allDock.filter((b) => hidden.has(b.name)).map(icon);
   return {
     ...cat,
     groups,

@@ -410,6 +410,20 @@ function Connections() {
 /** Catalog vs. Docker: entries pointing at nothing, and apps not listed yet. */
 function CatalogCheck() {
   const [copied, setCopied] = useState(false);
+  const readOnly = !!useStore().snap?.readOnly;
+  const [adoptState, setAdoptState] = useState<'idle' | 'busy' | 'done'>('idle');
+  const adoptYaml = async () => {
+    setAdoptState('busy');
+    try {
+      const res = await fetch('/api/catalog/adopt', { method: 'POST', headers: { 'x-patchboard': 'action' } });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+      setAdoptState('done');
+    } catch (e) {
+      alert((e as Error).message);
+      setAdoptState('idle');
+    }
+  };
   const [audit, setAudit] = useState<CatalogAudit | null>(null);
   useEffect(() => {
     void (async () => setAudit(await (await fetch('/api/catalog/audit')).json()))();
@@ -426,6 +440,21 @@ function CatalogCheck() {
         Keep your catalog in git? <a href="/api/catalog/yaml" download>Download services.yaml</a> writes the apps as you arranged them here, with groups,
         order, icons and apps you added. Hidden apps and live numbers stay in Patchboard.
       </p>
+      {(audit.yamlApps ?? 0) > 0 && !readOnly && (
+        <div className="adopt">
+          <p>
+            <strong>
+              services.yaml lists {audit.yamlApps} {audit.yamlApps === 1 ? 'app' : 'apps'}
+              {audit.yamlLinks ? ` and ${audit.yamlLinks} ${audit.yamlLinks === 1 ? 'link' : 'links'}` : ''}.
+            </strong>{' '}
+            Copy them into Patchboard, with their groups, order, icons and checks, and the file is no longer needed. Patchboard never edits the file;
+            delete it yourself afterward.
+          </p>
+          <button type="button" className="button" disabled={adoptState === 'busy'} onClick={() => void adoptYaml()}>
+            {adoptState === 'busy' ? 'Copying…' : adoptState === 'done' ? 'Copied. Safe to delete services.yaml' : 'Copy into Patchboard'}
+          </button>
+        </div>
+      )}
       {clean && <p className="settings-note">Every catalog entry matches a container, and every running app is listed.</p>}
       {audit.missing.length > 0 && (
         <dl className="ledger">
@@ -606,6 +635,7 @@ function Keys() {
 function Integrations() {
   const { snap } = useStore();
   const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
+  const [adopting, setAdopting] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string } | null>>({});
   useEffect(() => {
@@ -676,12 +706,45 @@ function Integrations() {
       </li>
     );
   };
+  // Values still living only in the environment: offer to move them in.
+  const envOnly = setup?.integrations.flatMap((x) => x.fields.filter((f) => f.locked && !f.savedToo)) ?? [];
+  const movedIn = setup?.integrations.flatMap((x) => x.fields.filter((f) => f.savedToo).map((f) => f.name)) ?? [];
+  const adopt = async () => {
+    setAdopting(true);
+    try {
+      const res = await fetch('/api/setup/adopt-env', { method: 'POST', headers: { 'x-patchboard': 'action' } });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+      setSetup({ ...setup!, integrations: body.integrations });
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setAdopting(false);
+    }
+  };
   return (
     <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all">
       <p className="settings-note">
         Set one up here, or with variables in your environment file. A variable in the environment always wins and shows here as locked. Keys you
         type here are encrypted on this server and never sent back to a browser, not even this one.
       </p>
+      {!setup?.demo && !snap.readOnly && envOnly.length > 0 && (
+        <div className="adopt">
+          <p>
+            <strong>{envOnly.length} settings come from your .env.</strong> Save them in Patchboard, encrypted, and you can remove those lines. Nothing
+            changes until you do; the .env keeps winning while it has them.
+          </p>
+          <button type="button" className="button" disabled={adopting} onClick={() => void adopt()}>
+            {adopting ? 'Saving…' : 'Save them in Patchboard'}
+          </button>
+        </div>
+      )}
+      {movedIn.length > 0 && (
+        <p className="settings-note adopt-done">
+          Saved here too, so these can come out of your .env: <span className="mono">{movedIn.join(', ')}</span>. Restart Patchboard after you
+          remove them.
+        </p>
+      )}
       {/* One list, so a row that turns on moves without its open form starting over. */}
       <ul className="integrations">
         {on.map(row)}

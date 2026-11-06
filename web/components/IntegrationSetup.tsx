@@ -113,7 +113,9 @@ export function IntegrationForm({
             {!f.required && <em> optional</em>}
           </span>
           {f.locked ? (
-            <span className="setup-locked">Set in the environment ({f.name})</span>
+            <span className="setup-locked">
+              {f.savedToo ? `Saved here too. You can remove ${f.name} from your .env.` : `Set in the environment (${f.name})`}
+            </span>
           ) : f.kind === 'flag' ? (
             <select className="field" value={values[f.name] || '0'} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
               <option value="0">No</option>

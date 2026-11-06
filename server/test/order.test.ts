@@ -88,14 +88,16 @@ test('hidden apps and bookmarks are set aside; icons override; added apps join t
     added: [{ name: 'Wiki', group: 'Projects', href: 'https://wiki.example' }, { name: 'Plex', group: 'Infra' }],
   });
   const media = out.groups.find((g) => g.name === 'Media')!;
-  assert.deepEqual(media.services.map((s) => s.name), ['Plex', 'Radarr']);
-  assert.equal(media.services[0].icon, '/api/icons/0123456789abcdef.png');
+  // Plex was saved here in Infra, which wins over the file's Media entry.
+  assert.deepEqual(media.services.map((s) => s.name), ['Radarr']);
+  const infra = out.groups.find((g) => g.name === 'Infra')!;
+  assert.equal(infra.services.find((s) => s.name === 'Plex')?.icon, '/api/icons/0123456789abcdef.png');
   assert.deepEqual(out.hiddenApps?.map((h) => [h.group, h.service.name]), [['Media', 'Sonarr']]);
   assert.deepEqual(out.dock.map((b) => [b.name, b.icon]), [['GitHub', 'github']]);
   assert.deepEqual(out.hiddenDock?.map((b) => b.name), ['Mail']);
   const projects = out.groups.find((g) => g.name === 'Projects')!;
   assert.deepEqual(projects.services, [{ name: 'Wiki', href: 'https://wiki.example', source: 'ui' }]);
-  // A name already in the catalog wins over an added app with the same name.
+  // An app saved here wins over a file entry with the same name, and shows once.
   assert.equal(out.groups.flatMap((g) => g.services).filter((s) => s.name === 'Plex').length, 1);
 });
 
@@ -105,4 +107,31 @@ test('validateOrder refuses unsafe icons and links', () => {
   assert.ok('error' in validateOrder({ groups: [], apps: {}, added: [{ name: 'x', group: 'g', href: 'javascript:alert(1)' }] }));
   assert.ok('error' in validateOrder({ groups: [], apps: {}, added: [{ name: 'x', group: 'g' }, { name: 'x', group: 'g' }] }));
   assert.ok('order' in validateOrder({ groups: [], apps: {}, icons: { Plex: 'plex.png', Wiki: 'https://example.com/i.svg' } }));
+});
+
+test('services.yaml copied in: every app keeps its group, order, label, icon and check; links join; nothing doubles', async () => {
+  const { adoptYaml, applyOrder, validateOrder } = await import('../../shared/order.ts');
+  const cat = {
+    groups: [
+      { name: 'Media', services: [{ name: 'Plex', href: 'http://10.0.0.2:32400', icon: 'plex.png', container: 'plex', label: 'Plex' }, { name: 'Tdarr', container: 'tdarr', expectStopped: true, check: false }] },
+      { name: 'Tools', services: [{ name: 'Dozzle', href: 'http://10.0.0.2:8080', container: 'dozzle' }] },
+    ],
+    dock: [{ name: 'Router', href: 'http://192.168.1.1' }],
+  };
+  const v = validateOrder(adoptYaml(cat, null));
+  assert.ok('order' in v, 'error' in v ? v.error : '');
+  const order = v.order;
+  assert.equal(order.added!.length, 3);
+  assert.deepEqual(order.apps, { Media: ['Plex', 'Tdarr'], Tools: ['Dozzle'] });
+  assert.deepEqual(order.added!.find((a) => a.name === 'Tdarr'), { name: 'Tdarr', group: 'Media', expectStopped: true, check: false, container: 'tdarr' });
+  // With the file gone, the same apps and link remain.
+  const after = applyOrder({ groups: [], dock: [] }, order);
+  assert.deepEqual(after.groups.map((g) => [g.name, g.services.map((s) => s.name)]), [['Media', ['Plex', 'Tdarr']], ['Tools', ['Dozzle']]]);
+  assert.deepEqual(after.dock.map((b) => b.name), ['Router']);
+  // With the file still there, nothing shows twice.
+  const both = applyOrder(cat, order);
+  assert.equal(both.groups.flatMap((g) => g.services).length, 3);
+  assert.equal(both.dock.length, 1);
+  // Copying again adds nothing.
+  assert.equal(adoptYaml(cat, order).added!.length, 3);
 });

@@ -40,6 +40,13 @@ function load(): void {
     merged = null;
     console.log(`catalog: ${catalog.groups.reduce((n, g) => n + g.services.length, 0)} services`);
   } catch (err) {
+    // No file is fine: apps live in Patchboard, from the UI and Docker labels.
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      catalog = { groups: [], dock: [] };
+      merged = null;
+      console.log('catalog: no services.yaml; apps come from Patchboard and Docker labels');
+      return;
+    }
     console.error(`catalog: could not read ${config.catalogPath}: ${(err as Error).message}`);
   }
 }
