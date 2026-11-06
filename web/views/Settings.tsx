@@ -223,7 +223,26 @@ export function Settings() {
       {tab === 'alerts' && <Alerts />}
       {tab === 'activity' && <Activity />}
       </div>
+      <AppVersion />
     </div>
+  );
+}
+
+/** Which Patchboard this is, and the way to the newer one when Diun has seen it. */
+function AppVersion() {
+  const { snap } = useStore();
+  const me = snap?.self;
+  if (!me) return null;
+  const update = me.container ? snap.updates[me.container] : undefined;
+  return (
+    <p className="app-version">
+      Patchboard {me.version}
+      {update && me.container && (
+        <>
+          . A newer image is out: <Link to={`/c/${encodeURIComponent(me.container)}`}>update it from its page</Link>, or run docker compose pull and up -d in its folder.
+        </>
+      )}
+    </p>
   );
 }
 

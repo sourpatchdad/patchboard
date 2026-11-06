@@ -106,9 +106,13 @@ container creation, which comes close to full access.
   8 seconds or 512 KB.
 - **Uploaded icons** get a name from their content hash, and Patchboard serves
   them with a sandboxing policy, so an uploaded SVG can't run script.
-- **Updates stay inside `COMPOSE_ROOT`,** mounted read-only. Patchboard
-  refuses TrueNAS apps, locally built images and itself, and runs compose
-  with only `PATH`, `HOME` and `DOCKER_HOST`, so its keys never reach a stack.
+- **Updates run only where you mounted the compose folder,** read-only, at
+  its host path; `COMPOSE_ROOT` narrows that to one folder. Patchboard
+  refuses TrueNAS apps and locally built images, and runs compose with only
+  `PATH`, `HOME` and `DOCKER_HOST`, so its keys never reach a stack. To update
+  itself it starts a one-off helper from the image it just pulled, with the
+  same Docker socket and the compose folder read-only, which recreates
+  Patchboard and removes itself. Behind a socket proxy it won't.
 - **CI** runs gitleaks over the full history on every push.
 
 ## Reporting a vulnerability

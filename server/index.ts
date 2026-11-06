@@ -440,7 +440,7 @@ app.get('/api/containers/:name', async (c) => {
   if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
   if (config.demo) {
     const d = demoInspect(name, hub.containers());
-    if (d) d.update = name === 'patchboard' ? { ok: false, reason: "Patchboard can't replace itself mid-update." } : { ok: true };
+    if (d) d.update = { ok: true };
     return d ? c.json(d) : c.json({ error: 'No such container' }, 404);
   }
   try {

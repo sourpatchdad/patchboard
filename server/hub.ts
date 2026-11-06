@@ -2,6 +2,7 @@
 // and pushed to every open browser over SSE. The browser never talks to an
 // integration directly, so no key ever leaves the server.
 
+import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type {
@@ -20,7 +21,7 @@ import type {
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
-import { composeMounted } from './updater.ts';
+import { composeMounted, whoAmI } from './updater.ts';
 import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
@@ -36,6 +37,16 @@ const CHANGE_WINDOW = 48 * 3_600_000;
 
 /** Always on: these keep their loops when integrations change. */
 const CORE = new Set<SourceId>(['docker', 'stats', 'system', 'checks']);
+
+const APP_VERSION: string = (() => {
+  try {
+    return (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
+  } catch {
+    return 'dev';
+  }
+})();
+let selfContainer: string | null = null;
+void whoAmI().then((n) => (selfContainer = n));
 
 export class Hub {
   private sources: Partial<Record<SourceId, SourceState>> = {};
@@ -241,6 +252,7 @@ export class Hub {
       catalog: getCatalog(),
       updates: pendingUpdates(),
       readOnly: config.readOnly,
+      self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer },
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
       brand: kvGet('brand') ?? {},

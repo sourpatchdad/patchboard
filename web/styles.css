@@ -9006,6 +9006,12 @@ button.ha-act:hover {
   }
 }
 
+.app-version {
+  margin: 40px 0 8px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
 /* Sign-in */
 .signin-form {
   display: grid;

@@ -1048,6 +1048,8 @@ export interface Snapshot {
   limits?: Limits;
   /** What each page shows (its Customize button). */
   pages?: import('./pages.ts').Pages;
+  /** This Patchboard: its version, and its own container's name when it runs in Docker. */
+  self?: { version: string; container: string | null };
   /** The name in the header and the tab, and whether the otter sits beside it. */
   brand?: Brand;
   /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */

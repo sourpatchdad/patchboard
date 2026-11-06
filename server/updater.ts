@@ -9,12 +9,17 @@
 //   narrows that to one folder. TrueNAS apps (/mnt/.ix-apps) are refused.
 // - Locally built images (no registry to pull from) are refused.
 // - One job at a time, server-wide.
+// - Patchboard itself: the pull runs here, then a one-off helper container,
+//   started from the image just pulled, recreates Patchboard's service. The
+//   helper outlives the process it replaces and removes itself after.
 // - Compose runs with a minimal environment (PATH and HOME only). Patchboard's
 //   own variables hold API keys; if they leaked into a child process they
 //   could override a stack's own .env values with the same names. Compose
 //   reads each stack's .env itself; Patchboard never opens it.
 
 import { spawn } from 'node:child_process';
+import { hostname } from 'node:os';
+import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import { existsSync } from 'node:fs';
@@ -26,9 +31,11 @@ import { recordEvent } from './db.ts';
 import { clearUpdate } from './updates.ts';
 
 interface Inspect {
+  Name?: string;
   Image: string;
   Config: { Image: string; Labels?: Record<string, string> };
   State: { Status: string; Health?: { Status: string } };
+  Mounts?: { Source: string; Destination: string }[];
 }
 
 function dockerJson<T>(path: string): Promise<T> {
@@ -45,6 +52,29 @@ function dockerJson<T>(path: string): Promise<T> {
 }
 
 const inspect = (name: string) => dockerJson<Inspect>(`/containers/${encodeURIComponent(name)}/json`);
+
+let selfName: string | null | undefined;
+
+/**
+ * Patchboard's own container. Docker names a container's host after its id,
+ * so that finds it whatever it's called; outside Docker there is none.
+ */
+export async function whoAmI(): Promise<string | null> {
+  if (selfName !== undefined) return selfName;
+  try {
+    selfName = (await inspect(hostname())).Name?.replace(/^\//, '') ?? null;
+  } catch {
+    selfName = null;
+  }
+  return selfName;
+}
+
+/** The host path of the Docker socket mounted into Patchboard, which the helper needs too. */
+async function selfSocket(): Promise<string | null> {
+  const me = await whoAmI();
+  if (!me || config.dockerHost) return null;
+  return (await inspect(me)).Mounts?.find((m) => m.Destination === '/var/run/docker.sock')?.Source ?? null;
+}
 const imageId = async (ref: string) => (await dockerJson<{ Id: string }>(`/images/${encodeURIComponent(ref)}/json`)).Id;
 
 function under(root: string, p: string): boolean {
@@ -59,10 +89,28 @@ export function composeMounted(containers: Container[]): boolean {
   return [...dirs].some((d) => existsSync(d));
 }
 
+/**
+ * The helper that recreates Patchboard: its own new image, run once with the
+ * Docker socket and the compose folders at their host paths, removed after.
+ */
+export function helperArgs(o: { sock: string; dir: string; files: string[]; image: string; project: string; service: string; at: number }): string[] {
+  const dirs = [...new Set([o.dir, ...o.files.map((f) => dirname(f))])];
+  return [
+    'run', '-d', '--rm', '--name', `patchboard-self-update-${o.at}`, '--user', '0:0',
+    '-v', `${o.sock}:/var/run/docker.sock`,
+    ...dirs.flatMap((d) => ['-v', `${d}:${d}:ro`]),
+    '-w', o.dir, '--entrypoint', 'docker', o.image,
+    'compose', '-p', o.project, ...o.files.flatMap((f) => ['-f', f]),
+    'up', '-d', '--no-deps', '--pull', 'never', o.service,
+  ];
+}
+
 /** Whether a container can be updated from Patchboard, and why not. */
 export async function eligibility(c: Container): Promise<UpdateEligibility> {
   if (!dockerCli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
-  if (c.name === 'patchboard') return { ok: false, reason: "Patchboard can't replace itself mid-update. Rebuild it from its folder." };
+  if (c.name === (await whoAmI()) && !(await selfSocket())) {
+    return { ok: false, reason: 'Updating Patchboard from here needs the Docker socket mounted. Behind a socket proxy, run docker compose pull and up -d in its folder.' };
+  }
   let r: Inspect;
   try {
     r = await inspect(c.name);
@@ -225,6 +273,14 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
       step(j, 'pull', 'done', `New image ${j.to}`);
       step(j, 'recreate', 'running');
       recordEvent('container.action', c.name, 'update');
+      if (c.name === (await whoAmI())) {
+        // Recreating our own container ends this process, so a helper does it.
+        await run(j, helperArgs({ sock: (await selfSocket())!, dir, files, image: r.Config.Image, project, service, at: Date.now() }), dir);
+        step(j, 'recreate', 'done', 'Handed to a helper. Patchboard restarts on the new image and this page reconnects.');
+        step(j, 'healthy', 'skipped');
+        j.status = 'done';
+        return;
+      }
       await run(j, [...compose, 'up', '-d', '--no-deps', '--pull', 'never', service], dir);
       step(j, 'recreate', 'done');
       step(j, 'healthy', 'running');

@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { config, withConfig } from '../config.ts';
 import { hashPassword, passwordMatches } from '../security.ts';
-import { composeMounted } from '../updater.ts';
+import { composeMounted, helperArgs } from '../updater.ts';
 
 test('A password set in Settings is stored as a salted scrypt hash and checks out', async () => {
   const h = hashPassword('correct horse battery');
@@ -28,4 +28,16 @@ test('Updates turn on when a compose folder is mounted where Docker says it is',
   assert.equal(composeMounted([at('/nowhere/compose/app')]), false);
   assert.equal(composeMounted([at('relative/dir')]), false);
   assert.equal(composeMounted([]), false);
+});
+
+test('Patchboard updates itself through a one-off helper with the socket and its compose folder', () => {
+  const args = helperArgs({ sock: '/var/run/docker.sock', dir: '/mnt/tank/compose/patchboard', files: ['/mnt/tank/compose/patchboard/docker-compose.yml'], image: 'ghcr.io/sourpatchdad/patchboard:edge', project: 'patchboard', service: 'patchboard', at: 1 });
+  assert.deepEqual(args, [
+    'run', '-d', '--rm', '--name', 'patchboard-self-update-1', '--user', '0:0',
+    '-v', '/var/run/docker.sock:/var/run/docker.sock',
+    '-v', '/mnt/tank/compose/patchboard:/mnt/tank/compose/patchboard:ro',
+    '-w', '/mnt/tank/compose/patchboard', '--entrypoint', 'docker', 'ghcr.io/sourpatchdad/patchboard:edge',
+    'compose', '-p', 'patchboard', '-f', '/mnt/tank/compose/patchboard/docker-compose.yml',
+    'up', '-d', '--no-deps', '--pull', 'never', 'patchboard',
+  ]);
 });

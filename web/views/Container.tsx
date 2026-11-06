@@ -134,7 +134,7 @@ export function ContainerPage() {
         </p>
         <div className="ctr-actions-wrap">
           {!snap.readOnly && detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
-          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === 'patchboard'} />}
+          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === (snap.self?.container ?? 'patchboard')} />}
         </div>
       </div>
 
