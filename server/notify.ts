@@ -1,4 +1,4 @@
-// Notifications through ntfy, Gotify, Pushover or email, opt-in. A problem in Needs
+// Notifications through ntfy, Gotify, Pushover, Discord, email or a webhook, opt-in. A problem in Needs
 // attention is sent once it has lasted two minutes, so a container that
 // restarts on its own never buzzes a phone, and once more when it clears.
 // What was sent is remembered across restarts, so a restart doesn't resend
@@ -25,8 +25,16 @@ const NTFY_PRIORITY = { critical: 5, warn: 4, resolved: 2, test: 3 } as const;
 const NTFY_TAGS = { critical: ['rotating_light'], warn: ['warning'], resolved: ['white_check_mark'], test: ['wave'] } as const;
 const GOTIFY_PRIORITY = { critical: 8, warn: 5, resolved: 2, test: 4 } as const;
 const PUSHOVER_PRIORITY = { critical: 1, warn: 0, resolved: -1, test: 0 } as const;
+/** Discord embed colors: the same red, amber and green the app uses. */
+const DISCORD_COLOR = { critical: 0xef5b4c, warn: 0xf0a43a, resolved: 0x4caf7a, test: 0x5b8def } as const;
 
-export type Channel = 'ntfy' | 'gotify' | 'pushover' | 'email';
+export type Channel = 'ntfy' | 'gotify' | 'pushover' | 'discord' | 'email' | 'webhook';
+
+/** Any notifier set up at all. */
+export const anyNotifier = (): boolean => {
+  const n = config.notify;
+  return !!(n.ntfy || n.gotify || n.pushover || n.discord || n.email || n.webhook);
+};
 
 function clickUrl(href: string | undefined): string | undefined {
   if (!href) return config.notify.publicUrl;
@@ -41,6 +49,8 @@ export async function send(m: Message, only?: Channel): Promise<void> {
   const gotify = use('gotify') ? config.notify.gotify : undefined;
   const pushover = use('pushover') ? config.notify.pushover : undefined;
   const email = use('email') ? config.notify.email : undefined;
+  const discord = use('discord') ? config.notify.discord : undefined;
+  const webhook = use('webhook') ? config.notify.webhook : undefined;
   const click = clickUrl(m.href);
   const jobs: Promise<unknown>[] = [];
   if (ntfy) {
@@ -77,6 +87,30 @@ export async function send(m: Message, only?: Channel): Promise<void> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: pushover.token, user: pushover.user, title: m.title, message: m.body || m.title, priority: PUSHOVER_PRIORITY[m.level], ...(click ? { url: click, url_title: 'Open in Patchboard' } : {}) }),
+      }),
+    );
+  }
+  if (discord) {
+    jobs.push(
+      request(discord.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'Patchboard',
+          // No @everyone or role pings from text that came from an app.
+          allowed_mentions: { parse: [] },
+          embeds: [{ title: m.title.slice(0, 256), description: m.body.slice(0, 2000), color: DISCORD_COLOR[m.level], ...(click ? { url: click } : {}) }],
+        }),
+      }),
+    );
+  }
+  if (webhook) {
+    // Plain JSON for Home Assistant, n8n, Apprise or anything else that takes a POST.
+    jobs.push(
+      request(webhook.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(webhook.token ? { Authorization: `Bearer ${webhook.token}` } : {}) },
+        body: JSON.stringify({ source: 'patchboard', level: m.level, title: m.title, body: m.body, url: click ?? null, at: new Date().toISOString() }),
       }),
     );
   }
@@ -134,8 +168,7 @@ let sending = false;
 
 /** Called whenever alerts change and every 30 seconds, so a settled alert goes out on time. */
 export async function notifyAlerts(alerts: Alert[]): Promise<void> {
-  const n = config.notify;
-  if (config.demo || (!n.ntfy && !n.gotify && !n.pushover && !n.email) || sending) return;
+  if (config.demo || !anyNotifier() || sending) return;
   sending = true;
   try {
     for (const m of plan(alerts, Date.now(), state, config.notify.level)) {

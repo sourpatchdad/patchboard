@@ -37,7 +37,7 @@ The first public release, 1.0.0. What's in it:
 - **For the household:** a Calendar widget from any iCal address (Google,
   iCloud, Outlook, Nextcloud), and Notes the house shares, with checklists
   you tick right on the board.
-- **Notifications** through ntfy, Gotify, Pushover or email for problems that last two
+- **Notifications** through ntfy, Gotify, Pushover, Discord, email or any webhook for problems that last two
   minutes, and again when they clear. Updates and restarts never count as
   outages.
 - **The otter** keeps watch in the header, the browser tab and beside the

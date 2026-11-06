@@ -71,6 +71,9 @@ export function checkValues(i: Integration, input: unknown): { values: Record<st
     if (v.length > 2048 || /[\u0000-\u001f]/.test(v)) return { error: `${fieldLabel(name)} is too long or has control characters` };
     if (!v && fieldKind(name) === 'secret') continue;
     if (v && fieldKind(name) === 'url' && !/^(https?|wss?):\/\/[^\s/]+/i.test(v)) return { error: `${fieldLabel(name)} must start with http:// or https://` };
+    if (v && name === 'DISCORD_WEBHOOK' && !/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(v)) {
+      return { error: "That isn't a Discord webhook address. In the channel's settings: Integrations, Webhooks, Copy Webhook URL." };
+    }
     if (v && fieldKind(name) === 'flag' && v !== '1' && v !== '0') return { error: `${fieldLabel(name)} is on (1) or off (0)` };
     if (v && fieldKind(name) === 'choice' && !CHOICES[name]!.some(([c]) => c === v)) return { error: `${fieldLabel(name)} is one of: ${CHOICES[name].map(([c]) => c).join(', ')}` };
     out[name] = v || null;

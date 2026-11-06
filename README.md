@@ -62,9 +62,9 @@ use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 **It answers before you ask.** The top of Home says "All quiet" or "4 things
 need you", with each problem on its own line under it, linked to its fix. A container that crashed at
-3 AM still shows under Changes at breakfast. Turn on ntfy or Gotify and a
-problem that lasts two minutes reaches your phone, then again when it
-clears.
+3 AM still shows under Changes at breakfast. Turn on ntfy, Gotify, Pushover,
+Discord, email or a webhook and a problem that lasts two minutes reaches
+you, then again when it clears.
 
 **Everything leads somewhere.** Each container has a page with its alerts, its
 runbook section, live logs, a 30-day health strip, and buttons to restart,

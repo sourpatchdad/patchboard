@@ -248,6 +248,9 @@ function build(str: Lookup) {
       ntfy: str('NTFY_URL') ? { url: trimSlash(str('NTFY_URL')!), token: str('NTFY_TOKEN') } : undefined,
       gotify: str('GOTIFY_URL') && str('GOTIFY_TOKEN') ? { url: trimSlash(str('GOTIFY_URL')!), token: str('GOTIFY_TOKEN')! } : undefined,
       pushover: str('PUSHOVER_TOKEN') && str('PUSHOVER_USER_KEY') ? { token: str('PUSHOVER_TOKEN')!, user: str('PUSHOVER_USER_KEY')! } : undefined,
+      // Only Discord's own webhook addresses, so a typo can't post alerts somewhere else.
+      discord: /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(str('DISCORD_WEBHOOK') ?? '') ? { url: str('DISCORD_WEBHOOK')! } : undefined,
+      webhook: /^https?:\/\//.test(str('WEBHOOK_URL') ?? '') ? { url: str('WEBHOOK_URL')!, token: str('WEBHOOK_TOKEN') } : undefined,
       email:
         str('SMTP_HOST') && str('SMTP_FROM') && str('SMTP_TO')
           ? {

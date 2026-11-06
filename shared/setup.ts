@@ -66,6 +66,8 @@ export const UI_SETUP = new Set([
   'gotify',
   'pushover',
   'email',
+  'discord',
+  'webhook',
   'dozzle',
 ]);
 
@@ -82,7 +84,7 @@ export const CHOICES: Record<string, [value: string, label: string][]> = {
 export function fieldKind(name: string): FieldKind {
   if (CHOICES[name]) return 'choice';
   // Calendar addresses carry private keys (Google's secret address), so they are secrets too.
-  if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name) || name === 'CALENDAR_URLS') return 'secret';
+  if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name) || name === 'CALENDAR_URLS' || name === 'DISCORD_WEBHOOK') return 'secret';
   if (/VERIFY_TLS$/.test(name)) return 'flag';
   if (/_URL$/.test(name)) return 'url';
   return 'text';
@@ -90,6 +92,7 @@ export function fieldKind(name: string): FieldKind {
 
 const LABELS: [RegExp, string][] = [
   [/^NTFY_URL$/, 'Topic address'],
+  [/^DISCORD_WEBHOOK$/, 'Webhook address'],
   [/^PATCHBOARD_URL$/, 'Patchboard address'],
   [/^GLANCES_URL$/, 'Addresses'],
   [/^NUT_HOST$/, 'NUT server'],
@@ -152,6 +155,8 @@ const HINTS: Record<string, string> = {
   HEALTHCHECKS_URL: 'https://healthchecks.io, or your own',
   BESZEL_URL: 'http://192.168.1.10:8090',
   NTFY_URL: 'https://ntfy.sh/your-secret-topic',
+  DISCORD_WEBHOOK: 'https://discord.com/api/webhooks/…',
+  WEBHOOK_URL: 'http://homeassistant.local:8123/api/webhook/patchboard',
   PATCHBOARD_URL: 'https://patchboard.home.example',
   WEATHER_LAT: '40.71',
   WEATHER_LON: '-74.01',

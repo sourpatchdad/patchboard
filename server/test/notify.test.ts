@@ -12,6 +12,7 @@ const server = createServer(async (req, res) => {
   const b = JSON.parse(await body(req));
   if (req.url === '/' && req.method === 'POST') got.push({ to: 'ntfy', auth: req.headers.authorization, body: b });
   else if (req.url === '/gotify/message') got.push({ to: 'gotify', auth: req.headers['x-gotify-key'] as string, body: b });
+  else if (req.url === '/hook') got.push({ to: 'webhook', auth: req.headers.authorization, body: b });
   else return void res.writeHead(404).end();
   res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
 });
@@ -20,7 +21,7 @@ let n: typeof import('../notify.ts');
 before(async () => {
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  Object.assign(process.env, { NTFY_URL: `${base}/patchboard-x7`, NTFY_TOKEN: 'tk', GOTIFY_URL: `${base}/gotify`, GOTIFY_TOKEN: 'gk', PATCHBOARD_URL: 'https://pb.home' });
+  Object.assign(process.env, { NTFY_URL: `${base}/patchboard-x7`, NTFY_TOKEN: 'tk', GOTIFY_URL: `${base}/gotify`, GOTIFY_TOKEN: 'gk', PATCHBOARD_URL: 'https://pb.home', WEBHOOK_URL: `${base}/hook`, WEBHOOK_TOKEN: 'wh' });
   n = await import('../notify.ts');
 });
 after(() => server.close());
@@ -69,4 +70,18 @@ test('ntfy gets a JSON publish with the topic, priority and a tap link; Gotify i
   got.length = 0;
   await n.send({ title: 'Test', body: 'x', level: 'test' }, 'gotify');
   assert.deepEqual(got.map((g) => g.to), ['gotify'], 'a test reaches only the one being tested');
+});
+
+test('a webhook gets plain JSON with the level, a link and the token', async () => {
+  got.length = 0;
+  await n.send({ title: 'plex is not running', body: 'Exited (137)', level: 'critical', href: '/c/plex' }, 'webhook');
+  const w = got.find((g) => g.to === 'webhook')!;
+  assert.equal(w.auth, 'Bearer wh');
+  assert.deepEqual([w.body.source, w.body.level, w.body.title, w.body.url], ['patchboard', 'critical', 'plex is not running', 'https://pb.home/c/plex']);
+});
+
+test('Discord takes only its own webhook addresses', async () => {
+  const { withConfig, config } = await import('../config.ts');
+  await withConfig({ DISCORD_WEBHOOK: 'https://discord.com/api/webhooks/1/abc' }, async () => assert.ok(config.notify.discord));
+  await withConfig({ DISCORD_WEBHOOK: 'https://evil.example/api/webhooks/1/abc' }, async () => assert.equal(config.notify.discord, undefined));
 });
