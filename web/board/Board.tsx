@@ -5,6 +5,7 @@
 // stored on the server, so every device shows the same one; phones show it
 // as a single column in the same order.
 
+import { Roll } from '../components/Roll.tsx';
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, STARTERS, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
@@ -485,13 +486,13 @@ function Vitals() {
     <Section title="Server" action={{ label: 'Details', to: '/server' }} className="vitals-widget">
       <div className="vw-grid">
         <Link to="/server" className="vw">
-          <span className="vw-num">{pct(sys.cpuPct)}</span>
+          <Roll className="vw-num" value={pct(sys.cpuPct)} />
           <span className="vw-label">CPU</span>
           <Spark data={h.cpu} max={100} height={22} label="CPU, last 24 hours" />
         </Link>
         {m && (
           <Link to="/server" className="vw">
-            <span className="vw-num">{size(used)}</span>
+            <Roll className="vw-num" value={size(used)} />
             <span className="vw-label">Memory in use</span>
             <Split
               label="Memory: in use, ZFS cache, free"
@@ -505,13 +506,13 @@ function Vitals() {
         )}
         {storage != null && (
           <Link to="/server" className="vw">
-            <span className="vw-num">{Math.round(storage)}%</span>
+            <Roll className="vw-num" value={`${Math.round(storage)}%`} />
             <span className="vw-label">Storage{pool ? ` on ${pool.name}` : ''}</span>
             <Meter value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}
         <Link to="/server" className="vw">
-          <span className="vw-num">{uptime(sys.uptimeSec)}</span>
+          <Roll className="vw-num" value={uptime(sys.uptimeSec)} />
           <span className="vw-label">Uptime</span>
         </Link>
       </div>

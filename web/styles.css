@@ -2444,10 +2444,28 @@ ul.plain {
   justify-content: space-between;
 }
 
+.spark-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
 .spark {
   display: block;
   width: 100%;
   overflow: visible;
+}
+
+/* The latest reading, with a soft halo so the line reads as live. */
+.spark-now {
+  position: absolute;
+  right: 0;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px -2.5px 0 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .spark polyline {
@@ -2530,7 +2548,7 @@ ul.plain {
   max-width: 46ch;
 }
 
-.metric .spark {
+.metric .spark-wrap {
   margin-top: 8px;
 }
 
@@ -8696,6 +8714,128 @@ button.ha-act:hover {
   gap: 8px;
   font-size: 14px;
   color: var(--ink-2);
+}
+
+/* Rolling numbers: each digit a reel, like an odometer. */
+.roll {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.roll-digit {
+  display: inline-block;
+  height: 1.15em;
+  line-height: 1.15;
+  overflow: hidden;
+}
+
+.roll-reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.roll-reel > span {
+  height: 1.15em;
+}
+
+.roll-ch {
+  line-height: 1.15;
+  white-space: pre;
+}
+
+/* Hold to confirm: a fill sweeps across while you hold. */
+.hold {
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.hold-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: color-mix(in srgb, var(--warn) 24%, transparent);
+  transition: transform 160ms ease-out;
+  pointer-events: none;
+}
+
+.hold.is-danger .hold-fill {
+  background: color-mix(in srgb, var(--crit) 26%, transparent);
+}
+
+.hold.is-holding .hold-fill {
+  transform: scaleX(1);
+  transition: transform var(--hold-ms, 900ms) linear;
+}
+
+.hold-label {
+  position: relative;
+}
+
+/* Test connection: a check draws in, a failure shakes once. */
+.setup-result.is-ok {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.check-draw {
+  flex: none;
+}
+
+.check-draw path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  animation: check-draw 420ms 80ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.setup-result.is-bad {
+  animation: shake 360ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll-reel,
+  .hold-fill,
+  .hold.is-holding .hold-fill {
+    transition: none;
+  }
+
+  .check-draw path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .setup-result.is-bad {
+    animation: none;
+  }
 }
 
 /* Sign-in */

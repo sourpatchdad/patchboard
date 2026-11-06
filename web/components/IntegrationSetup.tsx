@@ -145,7 +145,16 @@ export function IntegrationForm({
         </label>
       ))}
       {integration.where && <p className="settings-note">{integration.where}</p>}
-      {result && <p className={`setup-result ${result.ok ? 'ok-text' : 'crit-text'}`}>{result.text}</p>}
+      {result && (
+        <p key={result.text} className={`setup-result ${result.ok ? 'ok-text is-ok' : 'crit-text is-bad'}`}>
+          {result.ok && (
+            <svg className="check-draw" viewBox="0 0 16 16" width="15" height="15" aria-hidden>
+              <path d="M3 8.5l3.2 3L13 4.5" />
+            </svg>
+          )}
+          {result.text}
+        </p>
+      )}
       {demo && <p className="settings-note">Demo mode: Test works, Save doesn't.</p>}
       <div className="setup-actions">
         <button type="button" className="button button-quiet" disabled={!!busy || readOnly} onClick={() => void test()}>

@@ -2,6 +2,7 @@
 // Wake-on-LAN, Uptime Kuma monitors, ad blocking, internet speed, and
 // Overseerr requests.
 
+import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
@@ -930,9 +931,8 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
   const { state, data } = useSource<ProxmoxData>('proxmox');
   const { limit = 8 } = useWidget();
   const readOnly = !!useStore().snap?.readOnly;
-  // One guest open at a time; shut down and reboot ask twice.
+  // One guest open at a time; shut down and reboot take a press and hold.
   const [open, setOpen] = useState<number | null>(null);
-  const [confirm, setConfirm] = useState<'shutdown' | 'reboot' | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ vmid: number; text: string; bad?: boolean; was?: boolean } | null>(null);
   if (!state || !data) return null;
@@ -942,7 +942,6 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
     try {
       await post(`/api/proxmox/${vmid}/${action}`);
       setMsg({ vmid, was: action === 'reboot' ? undefined : was, text: action === 'start' ? `Starting ${name}.` : action === 'reboot' ? `Rebooting ${name}.` : `Shutting ${name} down.` });
-      setConfirm(null);
     } catch (e) {
       setMsg({ vmid, text: (e as Error).message, bad: true });
     } finally {
@@ -994,7 +993,7 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
               aria-expanded={open === g.vmid}
               disabled={readOnly}
               title={g.running ? `Up ${uptime(g.uptime)} on ${g.node}` : `Stopped, on ${g.node}`}
-              onClick={() => (setOpen(open === g.vmid ? null : g.vmid), setConfirm(null), setMsg(null))}
+              onClick={() => (setOpen(open === g.vmid ? null : g.vmid), setMsg(null))}
             >
               <span className="pve-kind mono">
                 {g.kind === 'lxc' ? 'CT' : 'VM'} {g.vmid}
@@ -1018,23 +1017,14 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
                   <button type="button" className="text-button" disabled={busy} onClick={() => void act(g.vmid, g.name, g.running, 'start')}>
                     Start
                   </button>
-                ) : confirm ? (
-                  <>
-                    <button type="button" className="text-button req-decline" disabled={busy} onClick={() => void act(g.vmid, g.name, g.running, confirm)}>
-                      {confirm === 'shutdown' ? `Shut ${g.name} down` : `Reboot ${g.name}`}
-                    </button>
-                    <button type="button" className="text-button req-quiet" onClick={() => setConfirm(null)}>
-                      Cancel
-                    </button>
-                  </>
                 ) : (
                   <>
-                    <button type="button" className="text-button" disabled={busy} onClick={() => setConfirm('reboot')}>
+                    <HoldButton className="text-button" disabled={busy} hint="Hold to reboot" onConfirm={() => void act(g.vmid, g.name, g.running, 'reboot')}>
                       Reboot
-                    </button>
-                    <button type="button" className="text-button req-quiet" disabled={busy} onClick={() => setConfirm('shutdown')}>
+                    </HoldButton>
+                    <HoldButton className="text-button req-quiet" danger disabled={busy} hint="Hold to shut down" onConfirm={() => void act(g.vmid, g.name, g.running, 'shutdown')}>
                       Shut down
-                    </button>
+                    </HoldButton>
                   </>
                 )}
                 {/* The note goes once Proxmox reports the new state. */}

@@ -2,6 +2,7 @@
 // say. Pool health and capacity come from the TrueNAS API; CPU and memory
 // from the host; history from Patchboard's own samples.
 
+import { Roll } from '../components/Roll.tsx';
 import { Fragment } from 'react';
 import { arrange } from '../../shared/pages.ts';
 import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
@@ -331,7 +332,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
   return (
     <Section title="Resources" count="last 24 hours">
       <div className="metric">
-        <span className="metric-num">{pct(sys.cpuPct)}</span>
+        <Roll className="metric-num" value={pct(sys.cpuPct)} />
         <span className="metric-label">
           CPU, load {sys.load.map((l) => l.toFixed(2)).join(' ')}
         </span>
@@ -339,7 +340,7 @@ function Resources({ sys, nas }: { sys: SystemData | null; nas: TruenasData | nu
       </div>
       {m && (
         <div className="metric">
-          <span className="metric-num">{size(used)}</span>
+          <Roll className="metric-num" value={size(used)} />
           <span className="metric-label">
             Memory in use by apps and the system. {size(m.arc)} is ZFS cache, which the system hands back when needed. {size(Math.max(0, m.available))} free.
           </span>
