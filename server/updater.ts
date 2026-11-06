@@ -28,7 +28,8 @@ import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../sha
 import { dockerCli } from './cli.ts';
 import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
-import { clearUpdate } from './updates.ts';
+import { clearUpdate, flagUpdate } from './updates.ts';
+import { isNewer, localDigests, parseRef, remoteDigest } from './selfcheck.ts';
 
 interface Inspect {
   Name?: string;
@@ -67,6 +68,27 @@ export async function whoAmI(): Promise<string | null> {
     selfName = null;
   }
   return selfName;
+}
+
+/**
+ * Ask the registry whether Patchboard's own tag has moved past the image it
+ * runs, and flag it if so. True when it flagged something new.
+ */
+export async function checkSelfImage(containers: Container[]): Promise<boolean> {
+  const me = await whoAmI();
+  const c = me ? containers.find((x) => x.name === me) : undefined;
+  if (!c) return false;
+  try {
+    const r = await inspect(c.name);
+    const ref = r.Config.Image;
+    const img = await dockerJson<{ RepoDigests?: string[] }>(`/images/${encodeURIComponent(r.Image)}/json`);
+    if (!isNewer(await remoteDigest(ref), localDigests(img.RepoDigests))) return false;
+    const where = parseRef(ref);
+    const link = where?.registry === 'ghcr.io' ? `https://github.com/${where.repo.split('/').slice(0, 2).join('/')}/releases` : undefined;
+    return flagUpdate(c, link);
+  } catch {
+    return false;
+  }
 }
 
 /** The host path of the Docker socket mounted into Patchboard, which the helper needs too. */

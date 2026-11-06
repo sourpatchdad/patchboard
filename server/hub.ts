@@ -21,7 +21,7 @@ import type {
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
-import { composeMounted, whoAmI } from './updater.ts';
+import { checkSelfImage, composeMounted, whoAmI } from './updater.ts';
 import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
@@ -101,7 +101,11 @@ export class Hub {
       pruneSamples('cpu', 8 * 24 * H);
       pruneSamples('mem.', 8 * 24 * H);
       void seedPoolHistoryFromAudits();
+      // A new Patchboard shows up without Diun watching it.
+      if (!config.demo) void checkSelfImage(this.containers()).then((flagged) => flagged && this.emitUpdates());
     };
+    // The first look waits a minute, for Docker's container list to arrive.
+    setTimeout(housekeeping, 60_000).unref();
     housekeeping();
     setInterval(housekeeping, 6 * H).unref();
     setInterval(() => this.sample(), 60_000).unref();

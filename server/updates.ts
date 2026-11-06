@@ -67,6 +67,15 @@ export function pendingUpdates(): Record<string, ImageUpdate> {
   return Object.fromEntries(Object.entries(all).map(([k, { imageIdAtNotice: _drop, ...u }]) => [k, u]));
 }
 
+/** Flag one container as Diun would: Patchboard found its own newer image. */
+export function flagUpdate(c: Container, link?: string): boolean {
+  const all = kvGet<Record<string, Stored>>(KEY) ?? {};
+  if (all[c.name]) return false;
+  all[c.name] = { image: c.image, at: Date.now(), link, imageIdAtNotice: c.imageId };
+  kvSet(KEY, all);
+  return true;
+}
+
 /** Clear one container's mark: it runs the newest image, or someone dismissed it. */
 export function clearUpdate(name: string): boolean {
   const all = kvGet<Record<string, Stored>>(KEY) ?? {};

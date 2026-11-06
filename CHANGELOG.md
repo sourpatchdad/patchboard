@@ -25,7 +25,9 @@ The first public release, 1.0.0. What's in it:
   the widget. Anything that takes something down asks for a press and hold.
   A container still running the old copy of an image you already pulled
   says so, by name, and Update switches it over. Patchboard updates itself
-  the same way, from its own page, and Settings shows its version.
+  the same way, from its own page, and Settings shows its version. It
+  checks its own registry every six hours, so a new release shows up
+  without Diun.
 - **One compose file, no config files.** Add every running container as an
   app in one click, arrange them and add links in Edit apps, connect integrations and turn
   on a password in Settings, with keys encrypted on the server. Mounts at
