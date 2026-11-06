@@ -30,6 +30,38 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
   };
 }
 
+/** What a widget waits for: the integration to name, and the one Settings opens to set it up. */
+export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>> = {
+  homeassistant: { label: 'Home Assistant', setup: 'homeassistant' },
+  car: { label: 'Tessie', setup: 'tessie' },
+  uptime: { label: 'Uptime Kuma, Gatus or Healthchecks.io', setup: 'uptimekuma' },
+  dns: { label: 'Pi-hole or AdGuard Home', setup: 'pihole' },
+  speed: { label: 'Speedtest Tracker', setup: 'speedtest' },
+  photos: { label: 'Immich', setup: 'immich' },
+  proxmox: { label: 'Proxmox', setup: 'proxmox' },
+  drives: { label: 'Scrutiny', setup: 'scrutiny' },
+  sync: { label: 'Syncthing', setup: 'syncthing' },
+  hosts: { label: 'Glances or Beszel', setup: 'glances' },
+  power: { label: 'NUT', setup: 'nut' },
+  storage: { label: 'Unraid, Synology or QNAP', setup: 'unraid' },
+  dockerhosts: { label: 'Portainer', setup: 'portainer' },
+  network: { label: 'UniFi or Tailscale', setup: 'unifi' },
+  calendar: { label: 'a calendar', setup: 'calendar' },
+  books: { label: 'Hardcover or Goodreads', setup: 'hardcover' },
+  requests: { label: 'Overseerr or Jellyseerr', setup: 'overseerr' },
+  wake: { label: 'Wake-on-LAN machines', setup: 'wake' },
+  nextup: { label: 'Jellyfin or Emby', setup: 'jellyfin' },
+};
+
+/** Where to set up what a widget needs. */
+export const setupHref = (t: WidgetType): string => `/settings?tab=connections&setup=${NEEDS[t]?.setup ?? ''}`;
+
+/** The widgets a layout would drop here, by name, for a note beside it. */
+export function leftOut(board: Board, snap: Snapshot | null | undefined): string[] {
+  const ready = widgetReady(snap);
+  return board.widgets.filter((w) => ready[w.type] === false).map((w) => WIDGET_INFO[w.type].name);
+}
+
 /** A starting layout with the widgets that would land empty taken out. */
 export function forThisServer(board: Board, snap: Snapshot | null | undefined): Board {
   const ready = widgetReady(snap);

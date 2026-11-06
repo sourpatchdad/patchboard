@@ -91,6 +91,10 @@ export function checkValues(i: Integration, input: unknown): { values: Record<st
     if (v.length > 2048 || /[\u0000-\u001f]/.test(v)) return { error: `${fieldLabel(name)} is too long or has control characters` };
     if (!v && fieldKind(name) === 'secret') continue;
     if (v && fieldKind(name) === 'url' && !/^(https?|wss?):\/\/[^\s/]+/i.test(v)) return { error: `${fieldLabel(name)} must start with http:// or https://` };
+    if (v && fieldKind(name) === 'urls') {
+      const bad = v.split(',').map((u) => u.trim()).filter(Boolean).find((u) => !/^https?:\/\/[^\s/]+/i.test(u));
+      if (bad) return { error: `${bad.slice(0, 60)} must start with http:// or https://` };
+    }
     if (v && name === 'DISCORD_WEBHOOK' && !/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(v)) {
       return { error: "That isn't a Discord webhook address. In the channel's settings: Integrations, Webhooks, Copy Webhook URL." };
     }
@@ -162,6 +166,19 @@ export function describeThresholds(): ThresholdState[] {
 
 /** Check and save thresholds. An empty value goes back to the default. */
 export function saveThresholds(input: unknown): { error: string } | { ok: true } {
+  const v = checkThresholds(input);
+  if ('error' in v) return v;
+  saveValues(v.values);
+  return { ok: true };
+}
+
+/** Thresholds as a setup file carries them: only the ones changed from their default. */
+export function savedThresholds(): Record<string, string> {
+  return Object.fromEntries(describeThresholds().filter((t) => t.saved).map((t) => [t.name, t.value]));
+}
+
+/** Check thresholds without saving: the values to save, or what's wrong. */
+export function checkThresholds(input: unknown): { error: string } | { values: Record<string, string | null> } {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return { error: 'Expected a map of settings' };
   const values: Record<string, string | null> = {};
   for (const [name, raw] of Object.entries(input as Record<string, unknown>)) {
@@ -186,8 +203,7 @@ export function saveThresholds(input: unknown): { error: string } | { ok: true }
   const merged = { ...Object.fromEntries(describeThresholds().map((t) => [t.name, t.value])), ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v ?? THRESHOLDS.find((t) => t.name === k)!.default])) };
   if (Number(merged.POOL_CRIT_PCT) <= Number(merged.POOL_WARN_PCT)) return { error: 'The storage alarm must be higher than the warning' };
   if (Number(merged.DISK_CRIT_C) <= Number(merged.DISK_WARN_C)) return { error: 'The drive alarm must be higher than the warning' };
-  saveValues(values);
-  return { ok: true };
+  return { values };
 }
 
 /** Forget everything saved for one integration. */

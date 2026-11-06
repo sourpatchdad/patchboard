@@ -3,6 +3,7 @@
 // shows as "Saved" with a blank field to replace it. Anything set in the
 // environment shows as locked, because the environment wins.
 
+import { HoldButton } from './Hold.tsx';
 import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
 import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
@@ -50,7 +51,6 @@ export function IntegrationForm({
     });
   }, [setup]);
   const [busy, setBusy] = useState<'test' | 'save' | 'remove' | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState(false);
 
   // Only fields you can edit, and secrets only when typed in, go to the server.
   const payload = () => Object.fromEntries(setup.fields.filter((f) => !f.locked && (f.kind !== 'secret' || values[f.name])).map((f) => [f.name, values[f.name] ?? '']));
@@ -170,21 +170,9 @@ export function IntegrationForm({
         </button>
         {setup.fromUi && !disabled && (
           <span className="setup-remove">
-            {confirmRemove ? (
-              <>
-                Forget these settings?{' '}
-                <button type="button" className="text-button crit-text" onClick={() => void remove()}>
-                  Forget
-                </button>{' '}
-                <button type="button" className="text-button" onClick={() => setConfirmRemove(false)}>
-                  Keep
-                </button>
-              </>
-            ) : (
-              <button type="button" className="text-button" onClick={() => setConfirmRemove(true)}>
-                Remove
-              </button>
-            )}
+            <HoldButton className="text-button" danger hint="Hold to remove" onConfirm={() => void remove()}>
+              Remove
+            </HoldButton>
           </span>
         )}
       </div>

@@ -621,7 +621,7 @@ function AppForm({
         </div>
         <div className="jw-actions">
           <button type="button" className="button board-save" onClick={() => void done()}>
-            {isNew ? 'Add' : 'Done'}
+            {isNew ? 'Add' : 'Apply'}
           </button>
           {err && <span className="crit-text">{err}</span>}
         </div>

@@ -593,11 +593,16 @@ export function NotesWidget({ id }: { id: string }) {
     const t = setInterval(() => !editing && load(), 30_000);
     return () => clearInterval(t);
   }, [id, editing]);
-  const save = async (next: string) => {
+  /** True once saved. A failure keeps the draft open with the reason beside it. */
+  const save = async (next: string): Promise<boolean> => {
     setErr('');
-    const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify({ text: next }) });
-    if (!res.ok) return setErr((await res.json().catch(() => ({}))).error ?? 'Could not save');
+    const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify({ text: next }) }).catch(() => null);
+    if (!res?.ok) {
+      setErr((await res?.json().catch(() => ({}))).error ?? 'Not saved: Patchboard did not answer');
+      return false;
+    }
     setText(next);
+    return true;
   };
   if (text === null) return null;
   const toggle = (i: number) => {
@@ -611,7 +616,7 @@ export function NotesWidget({ id }: { id: string }) {
         <div className="notes-edit">
           <textarea className="field" value={draft} rows={Math.min(14, Math.max(4, draft.split('\n').length + 1))} onChange={(e) => setDraft(e.target.value)} placeholder={'Groceries\n- [ ] milk\n- [ ] coffee'} autoFocus />
           <div className="notes-actions">
-            <button type="button" className="button" onClick={() => void save(draft).then(() => setEditing(false))}>
+            <button type="button" className="button" onClick={() => void save(draft).then((ok) => ok && setEditing(false))}>
               Save
             </button>
             <button type="button" className="text-button" onClick={() => setEditing(false)}>
@@ -639,6 +644,7 @@ export function NotesWidget({ id }: { id: string }) {
           })}
         </ul>
       )}
+      {!editing && err && <p className="warn-text">{err}</p>}
     </Section>
   );
 }

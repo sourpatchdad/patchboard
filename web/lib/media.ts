@@ -3,13 +3,14 @@
 
 import { dedupeRecent } from '../../shared/media.ts';
 import type { MediaServerData, RecentItem, SourceId, TautulliData } from '../../shared/types.ts';
+import { findContainer } from './services.ts';
 import { useSource, useStore } from './store.tsx';
 
 export interface MediaServer {
   id: SourceId;
   label: string;
-  /** The container name its app page lives under. */
-  container: string;
+  /** The container its app page lives under, when one runs here. */
+  container?: string;
   data: TautulliData | MediaServerData;
   /** The app's address from your catalog, when it has one. */
   href?: string;
@@ -25,7 +26,8 @@ export function useMediaServers(): { servers: MediaServer[]; configured: boolean
   const plex = useSource<TautulliData>('tautulli');
   const jelly = useSource<MediaServerData>('jellyfin');
   const emby = useSource<MediaServerData>('emby');
-  const apps = useStore().snap?.catalog.groups.flatMap((g) => g.services) ?? [];
+  const snap = useStore().snap ?? null;
+  const apps = snap?.catalog.groups.flatMap((g) => g.services) ?? [];
   const states = [plex, jelly, emby];
   const servers: MediaServer[] = [];
   SERVERS.forEach((s, i) => {
@@ -33,7 +35,7 @@ export function useMediaServers(): { servers: MediaServer[]; configured: boolean
     if (!data) return;
     const app = apps.find((a) => a.container === s.container || a.name.toLowerCase() === s.label.toLowerCase());
     const href = app?.href && app.href !== '#' ? app.href.replace(/\/+$/, '') : undefined;
-    servers.push({ ...s, data, href });
+    servers.push({ ...s, container: app?.container ?? findContainer(snap, s.container, s.label), data, href });
   });
   return { servers, configured: states.some((s) => s.state) };
 }

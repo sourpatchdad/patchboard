@@ -17,7 +17,7 @@ import { frigateAdapter } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
-import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras } from './boards.ts';
+import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
@@ -44,7 +44,7 @@ import { send } from './notify.ts';
 import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
-import { adoptEnvironment, candidate, describeThresholds, saveThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
+import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, envHas, withConfig } from './config.ts';
 import { haActionFor } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
@@ -86,7 +86,7 @@ import { clearUpdate } from './updates.ts';
 import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
-import { auditCatalog, draftYaml } from './catalog-audit.ts';
+import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
 
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
@@ -191,6 +191,8 @@ const hub = new Hub(adapters);
 initCatalog(() => hub.refreshAlerts());
 hub.start();
 whenTraktConnects(() => void hub.pollNow('trakt'));
+// Keys typed into API widgets before they moved to the key store.
+sealSavedBoards();
 console.log(`patchboard: ${config.demo ? 'DEMO mode, ' : ''}${adapters.map((a) => a.id).join(', ')}`);
 
 const app = new Hono();
@@ -916,11 +918,11 @@ app.post('/api/boards', async (c) => {
   if ('error' in v) return c.json({ error: v.error }, 400);
   if (!v.board.name) return c.json({ error: 'Give it a name' }, 400);
   const id = boardId(v.board.name, boardList().map((b) => b.id));
-  const err = putBoard(id, v.board);
-  if (err) return c.json({ error: err }, 400);
+  const put = putBoard(id, v.board);
+  if ('error' in put) return c.json({ error: put.error }, 400);
   recordAudit(who(c), 'board.add', id, v.board.name);
   hub.emitBoards();
-  return c.json({ id, board: v.board });
+  return c.json({ id, board: put.board });
 });
 
 // Save a board.
@@ -930,13 +932,13 @@ app.put('/api/boards/:id', async (c) => {
   const v = validateBoard(await c.req.json().catch(() => null));
   if ('error' in v) return c.json({ error: v.error }, 400);
   if (!getBoard(id)) return c.json({ error: 'No such board' }, 404);
-  const err = putBoard(id, v.board);
-  if (err) return c.json({ error: err }, 400);
+  const put = putBoard(id, v.board);
+  if ('error' in put) return c.json({ error: put.error }, 400);
   recordAudit(who(c), 'board.save', id, `${v.board.widgets.length} widgets`);
-  hub.emitBoards();
+  hub.emitBoards(id);
   // Newly pinned Home Assistant entities show up without waiting for the next poll.
   if (config.homeassistant || config.demo) void hub.pollNow('homeassistant');
-  return c.json({ board: v.board, custom: true });
+  return c.json({ board: put.board, custom: true });
 });
 
 // Home goes back to the default; any other board is deleted.
@@ -945,7 +947,7 @@ app.delete('/api/boards/:id', (c) => {
   const id = c.req.param('id');
   if (!removeBoard(id)) return c.json({ error: 'No such board' }, 404);
   recordAudit(who(c), id === 'home' ? 'board.reset' : 'board.delete', id);
-  hub.emitBoards();
+  hub.emitBoards(id);
   return c.json(getBoard(id) ?? { deleted: true });
 });
 
@@ -1007,13 +1009,29 @@ app.get('/api/catalog/yaml', (c) =>
 
 // The whole setup as one file: board, app layout, page settings. Keys stay
 // out; setups refer to them by name, so you paste them again after a move.
-// Notes widgets: one shared text per widget id.
+// Notes widgets: one text per widget, keyed by board and widget (noteKey).
+const NOTE_KEY = /^[\w.-]{1,80}$/;
+
+/** Notes from a setup file: every key and text checked, or the reason not. */
+function cleanNotes(raw: unknown): { notes: Record<string, { text: string; at: number }> } | { error: string } {
+  if (raw == null) return { notes: {} };
+  if (typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Expected a map of notes' };
+  const out: Record<string, { text: string; at: number }> = {};
+  const entries = Object.entries(raw as Record<string, { text?: unknown; at?: unknown }>);
+  if (entries.length > 200) return { error: 'At most 200 notes' };
+  for (const [k, v] of entries) {
+    if (!NOTE_KEY.test(k) || typeof v?.text !== 'string' || v.text.length > 20_000) return { error: `Bad note ${k.slice(0, 40)}` };
+    out[k] = { text: v.text, at: typeof v.at === 'number' ? v.at : Date.now() };
+  }
+  return { notes: out };
+}
+
 app.get('/api/notes', (c) => c.json(kvGet<Record<string, { text: string; at: number }>>('board-notes') ?? {}));
 
 app.put('/api/notes/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const id = c.req.param('id');
-  if (!/^[\w-]{1,64}$/.test(id)) return c.json({ error: 'Bad note id' }, 400);
+  if (!NOTE_KEY.test(id)) return c.json({ error: 'Bad note id' }, 400);
   const body = await c.req.json<{ text?: unknown }>().catch(() => ({}) as { text?: unknown });
   if (typeof body.text !== 'string' || body.text.length > 20_000) return c.json({ error: 'A note is text, up to 20,000 characters' }, 400);
   const all = kvGet<Record<string, { text: string; at: number }>>('board-notes') ?? {};
@@ -1056,6 +1074,8 @@ app.get('/api/setup', (c) => {
     apps: kvGet('app-order') ?? null,
     pages: kvGet('pages') ?? {},
     brand: kvGet('brand') ?? {},
+    notes: kvGet('board-notes') ?? {},
+    thresholds: savedThresholds(),
   };
   return c.body(JSON.stringify(body, null, 2), 200, {
     'Content-Type': 'application/json',
@@ -1065,7 +1085,7 @@ app.get('/api/setup', (c) => {
 
 app.put('/api/setup', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; boards?: unknown; apps?: unknown; pages?: unknown; brand?: unknown } | null;
+  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; boards?: unknown; apps?: unknown; pages?: unknown; brand?: unknown; notes?: unknown; thresholds?: unknown } | null;
   if (!raw || raw.patchboard !== 'setup') return c.json({ error: "That isn't a Patchboard setup file." }, 400);
   // Check everything before changing anything.
   const board = raw.board ? validateBoard(raw.board) : null;
@@ -1078,9 +1098,14 @@ app.put('/api/setup', async (c) => {
   if (pages && 'error' in pages) return c.json({ error: `Pages: ${pages.error}` }, 400);
   const brand = raw.brand ? cleanBrand(raw.brand) : {};
   if ('error' in brand) return c.json({ error: `Name: ${brand.error}` }, 400);
-  kvSet('board', board ? board.board : null);
+  const notes = cleanNotes(raw.notes);
+  if ('error' in notes) return c.json({ error: `Notes: ${notes.error}` }, 400);
+  // Thresholds set in the environment win, so a file's own are only checked against the rest.
+  const thresholds = raw.thresholds && !config.demo ? checkThresholds(raw.thresholds) : null;
+  if (thresholds && 'error' in thresholds) return c.json({ error: `Alerts: ${thresholds.error}` }, 400);
+  saveHome(board ? board.board : null);
   saveExtras(boards.boards);
-  hub.emitBoards();
+  hub.emitBoards('*');
   kvSet('app-order', apps ? apps.order : null);
   setCatalogOrder(apps ? apps.order : null);
   kvSet('pages', pages ? pages.pages : {});
@@ -1088,6 +1113,12 @@ app.put('/api/setup', async (c) => {
   hub.emitPages(pages ? pages.pages : {});
   kvSet('brand', brand);
   hub.emitBrand(brand);
+  // An older file has no notes; leave the ones here alone.
+  if (raw.notes != null) kvSet('board-notes', notes.notes);
+  if (thresholds) {
+    saveThresholds(raw.thresholds);
+    hub.refreshAlerts();
+  }
   recordAudit(who(c), 'setup.import', 'setup');
   return c.json({ ok: true });
 });
@@ -1184,8 +1215,11 @@ app.get('/api/catalog/audit', async (c) => {
     .flatMap((g) => g.services)
     .map((s) => (s.href ? /^https?:\/\/(\d+\.\d+\.\d+\.\d+)/.exec(s.href)?.[1] : undefined))
     .find(Boolean);
+  // With no app addresses yet, the address this browser used to reach
+  // Patchboard is the server's: links built from it work from a phone too.
+  const hostGuess = hrefHost ?? visitorHost(c.req.header('host'));
   // Ports need an inspect per container; only fetch them for candidates.
-  const first = auditCatalog(catalog, containers, () => undefined, hrefHost ?? 'localhost');
+  const first = auditCatalog(catalog, containers, () => undefined, hostGuess);
   const ports = new Map<string, ContainerDetail['ports']>();
   await Promise.all(
     first.discovered.map(async (d) => {
@@ -1197,7 +1231,7 @@ app.get('/api/catalog/audit', async (c) => {
       }
     }),
   );
-  const audit = auditCatalog(catalog, containers, (n) => ports.get(n), hrefHost ?? 'localhost');
+  const audit = auditCatalog(catalog, containers, (n) => ports.get(n), hostGuess);
   // What services.yaml still holds that Patchboard hasn't copied in.
   const saved = kvGet<AppOrder>('app-order');
   const savedApps = new Set((saved?.added ?? []).map((a) => a.name));

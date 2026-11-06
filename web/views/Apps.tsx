@@ -2,6 +2,7 @@
 // the bookmarks. Edit apps changes all of it in place: order, groups, names,
 // what's hidden, icons, and apps added without touching services.yaml.
 
+import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { CatalogAudit, Service } from '../../shared/types.ts';
@@ -102,15 +103,9 @@ export function Apps() {
           <span className="arrange-actions">
             {error && <span className="crit-text">{error}</span>}
             {snap.catalog.ordered && (
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  if (confirm('Go back to services.yaml as written? Your order, renamed groups, hidden apps, icons and apps added here are all removed.')) void save(true);
-                }}
-              >
+              <HoldButton className="text-button" danger hint="Hold to start over: order, groups, hidden apps and added apps all go" onConfirm={() => void save(true)}>
                 Start over
-              </button>
+              </HoldButton>
             )}
             <button type="button" className="button button-quiet" onClick={() => (setDraft(null), setOpenForm(null))}>
               Cancel

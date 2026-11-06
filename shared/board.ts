@@ -94,6 +94,13 @@ export function cleanBoardName(raw: unknown): string | undefined {
   return name || undefined;
 }
 
+/**
+ * Where a Notes widget's text is kept. Home's notes keep the bare widget id
+ * they always had; another board's are prefixed with the board, so the first
+ * Notes widget on two boards doesn't share one text.
+ */
+export const noteKey = (board: string, widget: string): string => (board === HOME_ID ? widget : `${board}.${widget}`);
+
 /** An address for a new board from its name, unlike any taken. */
 export function boardId(name: string, taken: string[]): string {
   const base =
@@ -213,7 +220,27 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };
 
+/**
+ * A fresh install's Home: one screen. The server and Right now, the apps as
+ * icons, then the week, reading and changes, trimmed to fit the window.
+ */
 export const DEFAULT_BOARD: Board = {
+  version: 1,
+  columns: 3,
+  fit: true,
+  widgets: [
+    { id: 'vitals', type: 'vitals', size: 'w', span: 2 },
+    { id: 'now', type: 'now', size: 'm', span: 1 },
+    { id: 'apps', type: 'apps', size: 'w', span: 2, config: { style: 'patchbay' } },
+    { id: 'attention', type: 'attention', size: 'm', span: 1 },
+    { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
+    { id: 'feeds', type: 'feeds', size: 'm', span: 1 },
+    { id: 'changes', type: 'changes', size: 'm', span: 1 },
+  ],
+};
+
+/** Every everyday widget, three columns, scrolling: the old default. */
+const EVERYTHING: Board = {
   version: 1,
   columns: 3,
   widgets: [
@@ -303,7 +330,8 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
 
 /** Starting layouts, offered in Customize and on the first run. */
 export const STARTERS: { id: string; name: string; about: string; board: Board }[] = [
-  { id: 'everything', name: 'Everything', about: 'Every widget, three columns.', board: DEFAULT_BOARD },
+  { id: 'home', name: 'One screen', about: 'The server, Right now, apps as icons, the week, reading and changes, fit to the window.', board: DEFAULT_BOARD },
+  { id: 'everything', name: 'Everything', about: 'The everyday widgets with apps as tiles and posters, three columns. Scrolls.', board: EVERYTHING },
   {
     id: 'media',
     name: 'Media night',

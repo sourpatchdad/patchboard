@@ -97,11 +97,14 @@ container creation, which comes close to full access.
   values. Tests are limited to one every two seconds per integration.
 - **Requests fill in keys late.** Requests refer to keys as
   `${secret:NAME}` or `${env:WIDGET_NAME}`, and the server fills them in only
-  when it makes the call. Error messages never include URLs, because some
+  when it makes the call. A key typed straight into an API numbers widget's
+  header or URL moves to the encrypted key store when the board is saved,
+  leaving a reference behind, so a board, a browser and a setup file never
+  hold it. Error messages never include URLs, because some
   APIs put keys in the query string. Patchboard proxies Plex and calendar
   artwork for the same reason.
 - **Fetching on your behalf is fenced.** The server fetches only URLs saved
-  in the board or the app layout; the browser asks by id. It follows no
+  in a board or the app layout; the browser asks by id. It follows no
   redirects, refuses link-local and cloud-metadata addresses, and stops at
   8 seconds or 512 KB.
 - **Logs are masked on the server.** Apps write their own keys into their

@@ -1,6 +1,8 @@
 // "Needs attention" rules. Home shows exceptions, not inventory, so these
 // rules decide what earns space on the page. Keep them few and specific.
 
+import { HOME_ID, type WidgetType } from '../shared/board.ts';
+import { getBoard, savedBoards } from './boards.ts';
 import type {
   GlancesData,
   NextcloudData,
@@ -50,6 +52,20 @@ const MONITORS = [
   ['gatus', 'Gatus'],
   ['healthchecks', 'Healthchecks.io'],
 ] as const;
+
+/** An integration's own web page, with an optional path, or nothing when it isn't set up. */
+function appUrl(c: { url: string } | undefined, path = ''): string | undefined {
+  return c?.url ? `${c.url.replace(/\/+$/, '')}${path}` : undefined;
+}
+
+/** The first board with a widget of this type, on that widget: where its alert is acted on. */
+function boardWith(type: WidgetType): string | undefined {
+  for (const { id, board } of [{ id: HOME_ID, board: getBoard(HOME_ID)!.board }, ...savedBoards().filter((b) => b.id !== HOME_ID)]) {
+    const w = board.widgets.find((x) => x.type === type);
+    if (w) return `${id === HOME_ID ? '/' : `/b/${id}`}#w-${w.id}`;
+  }
+  return undefined;
+}
 
 export function computeAlerts(sources: Sources, catalog: Catalog, updates: Record<string, ImageUpdate> = {}, now = Date.now()): Alert[] {
   const alerts: Alert[] = [];
@@ -119,20 +135,20 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   const nas = data<TruenasData>(sources, 'truenas');
   for (const p of nas?.pools ?? []) {
     if (!p.healthy) {
-      alerts.push({ id: `pool-health-${p.name}`, subject: p.name, level: 'critical', title: `${p.name} is ${p.status.toLowerCase()}`, detail: p.disks.filter((d) => d.status !== 'ONLINE' || d.errors).map((d) => `${d.name} ${d.status}${d.errors ? `, ${d.errors} errors` : ''}`).join('; ') || 'Open the Server page for the pool layout.', href: '/server', source: 'truenas' });
+      alerts.push({ id: `pool-health-${p.name}`, subject: p.name, level: 'critical', title: `${p.name} is ${p.status.toLowerCase()}`, detail: p.disks.filter((d) => d.status !== 'ONLINE' || d.errors).map((d) => `${d.name} ${d.status}${d.errors ? `, ${d.errors} errors` : ''}`).join('; ') || 'Open the Server page for the pool layout.', href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     } else if (p.disks.some((d) => d.errors > 0)) {
-      alerts.push({ id: `pool-errors-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} has disk errors`, detail: p.disks.filter((d) => d.errors).map((d) => `${d.name}: ${d.errors}`).join(', '), href: '/server', source: 'truenas' });
+      alerts.push({ id: `pool-errors-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} has disk errors`, detail: p.disks.filter((d) => d.errors).map((d) => `${d.name}: ${d.errors}`).join(', '), href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
     if (p.scan?.errors) {
-      alerts.push({ id: `pool-scrub-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} scrub found ${p.scan.errors} errors`, href: '/server', source: 'truenas' });
+      alerts.push({ id: `pool-scrub-${p.name}`, subject: p.name, level: 'warn', title: `${p.name} scrub found ${p.scan.errors} errors`, href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
     if (p.usedPct >= config.poolWarnPct) {
-      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= config.poolCritPct ? 'critical' : 'warn', title: `Storage is ${Math.round(p.usedPct)}% full`, detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: '/server', source: 'truenas' });
+      alerts.push({ id: `pool-full-${p.name}`, level: p.usedPct >= config.poolCritPct ? 'critical' : 'warn', title: `Storage is ${Math.round(p.usedPct)}% full`, detail: `${fmtTB(p.freeBytes)} free on ${p.name}`, href: `/server#storage-${encodeURIComponent(p.name)}`, source: 'truenas' });
     }
   }
   for (const d of nas?.disks ?? []) {
     if (d.tempC != null && d.tempC >= config.diskWarnC) {
-      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', title: `${d.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: '/server', source: 'truenas' });
+      alerts.push({ id: `disk-temp-${d.name}`, subject: d.name, level: d.tempC >= config.diskCritC ? 'critical' : 'warn', title: `${d.name} is running at ${Math.round(d.tempC)}°C (${Math.round(d.tempC * 1.8 + 32)}°F)`, detail: d.model, href: '/server#disks', source: 'truenas' });
     }
   }
   for (const a of nas?.alerts ?? []) {
@@ -140,7 +156,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     // Pool capacity is already its own alert above, with Patchboard's threshold.
     if (!level || /space usage for pool/i.test(a.text)) continue;
     const [first, ...rest] = a.text.split(/(?<=\.)\s+/);
-    alerts.push({ id: `nas-${a.id}`, level, title: first.length > 110 ? `${first.slice(0, 107)}...` : first, detail: rest.join(' ') || undefined, since: a.at ?? undefined, href: '/server', source: 'truenas' });
+    alerts.push({ id: `nas-${a.id}`, level, title: first.length > 110 ? `${first.slice(0, 107)}...` : first, detail: rest.join(' ') || undefined, since: a.at ?? undefined, href: '/server#nas-alerts', source: 'truenas' });
   }
 
   // Ad blocking switched off with no timer: someone paused it "for a minute"
@@ -148,17 +164,17 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const [id, name] of [['pihole', 'Pi-hole'], ['adguard', 'AdGuard Home']] as const) {
     const d = data<DnsData>(sources, id);
     if (d && !d.protecting && !d.resumesAt) {
-      alerts.push({ id: `dns-off-${id}`, level: 'warn', title: `${name} isn't blocking ads`, detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: '/', source: id });
+      alerts.push({ id: `dns-off-${id}`, level: 'warn', title: `${name} isn't blocking ads`, detail: 'Blocking is off with no timer. Turn it back on from the Ad blocking widget.', href: boardWith('dns') ?? (id === 'pihole' ? appUrl(config.pihole, '/admin') : appUrl(config.adguard)), source: id });
     }
   }
 
   // Internet speed: Speedtest Tracker's own thresholds decide what is slow.
   const speed = data<SpeedData>(sources, 'speedtest');
   if (speed?.lastFailed && (!speed.latest || speed.lastFailed > speed.latest.at)) {
-    alerts.push({ id: 'speed-failed', level: 'warn', title: 'The last speed test failed', detail: 'Speedtest Tracker could not reach a test server. The connection may be down.', since: speed.lastFailed, href: '/', source: 'speedtest' });
+    alerts.push({ id: 'speed-failed', level: 'warn', title: 'The last speed test failed', detail: 'Speedtest Tracker could not reach a test server. The connection may be down.', since: speed.lastFailed, href: appUrl(config.speedtest), source: 'speedtest' });
   } else if (speed?.latest && speed.latest.healthy === false) {
     const l = speed.latest;
-    alerts.push({ id: 'speed-slow', level: 'warn', title: 'The internet is slower than your thresholds', detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: '/', source: 'speedtest' });
+    alerts.push({ id: 'speed-slow', level: 'warn', title: 'The internet is slower than your thresholds', detail: `${l.down} Mbps down, ${l.up} up${l.ping != null ? `, ${l.ping} ms ping` : ''} in the last test.`, since: l.at, href: appUrl(config.speedtest), source: 'speedtest' });
   }
 
   // Monitors (Uptime Kuma, Gatus, Healthchecks.io): one that is down right
@@ -233,6 +249,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       level: sys.pool.usedPct >= config.poolCritPct ? 'critical' : 'warn',
       title: `Storage is ${Math.round(sys.pool.usedPct)}% full`,
       detail: `${fmtTB(sys.pool.totalBytes - sys.pool.usedBytes)} free on ${sys.pool.path}`,
+      href: '/server#storage',
       source: 'system',
     });
   }
@@ -243,22 +260,22 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!arr) continue;
     const name = ARR_NAMES[id];
     for (const p of arr.problems) {
-      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, source: id });
+      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, href: appUrl(config[id], '/activity/queue'), source: id });
     }
     for (const h of arr.health.filter((h) => h.level === 'error')) {
-      alerts.push({ id: `${id}-h-${h.message}`, level: 'warn', title: `${name} health check`, detail: h.message, source: id });
+      alerts.push({ id: `${id}-h-${h.message}`, level: 'warn', title: `${name} health check`, detail: h.message, href: appUrl(config[id], '/system/status'), source: id });
     }
   }
 
   const qbit = data<QbitData>(sources, 'qbit');
   for (const name of qbit?.errored ?? []) {
-    alerts.push({ id: `qbit-err-${name}`, level: 'warn', title: 'Torrent has errored', detail: name, source: 'qbit' });
+    alerts.push({ id: `qbit-err-${name}`, level: 'warn', title: 'Torrent has errored', detail: name, href: appUrl(config.qbit), source: 'qbit' });
   }
 
   const frigate = data<FrigateData>(sources, 'frigate');
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
-      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
+      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', href: appUrl(config.frigate), source: 'frigate' });
     }
   }
 
@@ -334,11 +351,12 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         subject: u.name,
         title: u.lowBattery ? `${u.name}'s battery is nearly empty` : `The power is out: ${u.name} is on battery`,
         detail: [left, u.charge != null ? `${Math.round(u.charge)}% charged` : undefined].filter(Boolean).join(', ') || undefined,
+        href: boardWith('power'),
         source: 'nut',
       });
     }
     if (u.replaceBattery) {
-      alerts.push({ id: `ups-rb-${u.name}`, level: 'warn', subject: u.name, title: `${u.name} needs a new battery`, detail: u.model, source: 'nut' });
+      alerts.push({ id: `ups-rb-${u.name}`, level: 'warn', subject: u.name, title: `${u.name} needs a new battery`, detail: u.model, href: boardWith('power'), source: 'nut' });
     }
   }
 
@@ -347,7 +365,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const src of ['glances', 'beszel'] as const)
   for (const h of data<GlancesData>(sources, src)?.hosts ?? []) {
     if (!h.ok) {
-      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, source: src });
+      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, href: src === 'glances' ? h.url : appUrl(config.beszel), source: src });
       continue;
     }
     for (const d of h.disks) {
@@ -358,6 +376,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         subject: h.name,
         title: `${d.mount === '/' && !d.size ? 'The disk' : d.mount} on ${h.name} is ${Math.round(d.pct)}% full`,
         detail: d.size ? `${fmtTB(d.size - d.used)} free` : undefined,
+        href: src === 'glances' ? h.url : appUrl(config.beszel),
         source: src,
       });
     }
@@ -431,7 +450,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // Proxmox: a node that drops out of the cluster.
   for (const n of data<ProxmoxData>(sources, 'proxmox')?.nodes ?? []) {
-    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, title: `Proxmox node ${n.name} is offline`, detail: 'The cluster can no longer reach it.', source: 'proxmox' });
+    if (!n.online) alerts.push({ id: `pve-${n.name}`, level: 'critical', subject: n.name, title: `Proxmox node ${n.name} is offline`, detail: 'The cluster can no longer reach it.', href: appUrl(config.proxmox), source: 'proxmox' });
   }
 
   // Image updates: one quiet line, not one per container.

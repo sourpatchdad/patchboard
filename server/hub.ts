@@ -226,9 +226,9 @@ export class Hub {
     this.emit({ type: 'brand', brand });
   }
 
-  /** A board was added, renamed or deleted: every tab redraws its board tabs. */
-  emitBoards(): void {
-    this.emit({ type: 'boards', boards: boardList() });
+  /** A board was added, saved or deleted: every tab redraws its tabs, and any tab showing `changed` reloads it. */
+  emitBoards(changed?: string): void {
+    this.emit({ type: 'boards', boards: boardList(), ...(changed ? { changed } : {}) });
   }
 
   /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */

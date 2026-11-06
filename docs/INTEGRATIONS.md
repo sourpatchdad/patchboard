@@ -49,8 +49,10 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
    choose Icon and live number, pick a preset or Any JSON API, paste the key,
    and press Test. The key stays on the server.
 3. **An API numbers widget** on Home shows up to four values from any JSON
-   API, with amber and red thresholds. Refer to keys as `${secret:NAME}`
-   (from Settings, Keys) or `${env:WIDGET_NAME}`.
+   API, with amber and red thresholds. Paste a key into a header or the
+   URL as it is: saving the board moves it to Settings, Keys and leaves a
+   `${secret:NAME}` reference in the widget, so boards and setup files
+   never carry it. `${env:WIDGET_NAME}` reads one from the environment.
 
 ## Built-in integrations
 

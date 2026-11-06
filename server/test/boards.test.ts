@@ -3,8 +3,11 @@ import { test } from 'node:test';
 import { boardId, cleanBoardName, DEFAULT_BOARD, EMPTY_BOARD, MAX_BOARDS, validateBoard } from '../../shared/board.ts';
 import { boardList, getBoard, importExtras, putBoard, removeBoard, savedBoards } from '../boards.ts';
 import { kvSet } from '../db.ts';
+import { sealBoard } from '../sealwidgets.ts';
+import type { Board } from '../../shared/board.ts';
 
 const named = (name: string) => ({ ...EMPTY_BOARD, name });
+const errorOf = (r: object) => ('error' in r ? String(r.error) : '');
 
 test('board names and addresses', () => {
   assert.equal(cleanBoardName('  Server \u0007 room  '), 'Server room');
@@ -35,9 +38,9 @@ test('Home is always there; other boards come and go, in order', () => {
   assert.deepEqual(getBoard('home'), { board: DEFAULT_BOARD, custom: false });
   assert.equal(getBoard('media'), null);
 
-  assert.equal(putBoard('media', named('Media')), null);
-  assert.equal(putBoard('ops', named('Server room')), null);
-  assert.equal(putBoard('home', named('Front')), null);
+  assert.ok('board' in putBoard('media', named('Media')));
+  assert.ok('board' in putBoard('ops', named('Server room')));
+  assert.ok('board' in putBoard('home', named('Front')));
   assert.deepEqual(boardList(), [
     { id: 'home', name: 'Front' },
     { id: 'media', name: 'Media' },
@@ -47,7 +50,7 @@ test('Home is always there; other boards come and go, in order', () => {
     savedBoards().map((b) => b.id),
     ['home', 'media', 'ops'],
   );
-  assert.match(putBoard('Bad Id', named('x')) ?? '', /lowercase/);
+  assert.match(errorOf(putBoard('Bad Id', named('x'))), /lowercase/);
 
   assert.equal(removeBoard('media'), true);
   assert.equal(removeBoard('media'), false);
@@ -62,9 +65,9 @@ test('Home is always there; other boards come and go, in order', () => {
 
 test('there is a ceiling on boards', () => {
   kvSet('boards', null);
-  for (let i = 1; i < MAX_BOARDS; i++) assert.equal(putBoard(`b-${i}`, named(`B ${i}`)), null);
-  assert.match(putBoard('one-more', named('One more')) ?? '', /At most/);
-  assert.equal(putBoard('b-1', named('Renamed')), null, 'saving an existing board still works at the ceiling');
+  for (let i = 1; i < MAX_BOARDS; i++) assert.ok('board' in putBoard(`b-${i}`, named(`B ${i}`)));
+  assert.match(errorOf(putBoard('one-more', named('One more'))), /At most/);
+  assert.ok('board' in putBoard('b-1', named('Renamed')), 'saving an existing board still works at the ceiling');
   kvSet('boards', null);
 });
 
@@ -75,4 +78,39 @@ test('a setup file brings its boards, or is refused whole', () => {
   assert.ok('error' in importExtras([{ id: 'a', board: named('A') }, { id: 'a', board: named('B') }]));
   assert.ok('error' in importExtras([{ id: 'a', board: { widgets: [{ type: 'nope' }] } }]));
   assert.deepEqual(importExtras(undefined), { boards: [] });
+});
+
+test('keys typed into an API widget move to the key store; references and plain values stay', () => {
+  const saved: Record<string, string> = {};
+  const save = (n: string, v: string) => void (saved[n] = v);
+  const widget = (cfg: object) => ({ ...EMPTY_BOARD, widgets: [...EMPTY_BOARD.widgets, { id: 'api-1', type: 'json' as const, size: 's' as const, config: { json: JSON.stringify({ title: 'T', interval: 60, fields: [{ label: 'n', path: 'n', format: 'number' }], ...cfg }) } }] });
+  const cfgOf = (b: Board) => JSON.parse(b.widgets.find((w) => w.id === 'api-1')!.config!.json);
+
+  const b = sealBoard(
+    'home',
+    widget({
+      url: 'https://me:hunter2@nas.lan/api/stats?apikey=abc123&page=2',
+      headers: { Authorization: 'Bearer eyJ.abc.def', 'X-Api-Key': 'k-555', Accept: 'application/json', 'X-Plex-Token': '${secret:PLEX}' },
+    }),
+    save,
+  );
+  const c = cfgOf(b);
+  assert.equal(c.url, 'https://me:${secret:W_HOME_API_1_PASSWORD}@nas.lan/api/stats?apikey=${secret:W_HOME_API_1_APIKEY}&page=2');
+  assert.equal(c.headers.Authorization, 'Bearer ${secret:W_HOME_API_1_AUTHORIZATION}');
+  assert.equal(c.headers['X-Api-Key'], '${secret:W_HOME_API_1_X_API_KEY}');
+  assert.equal(c.headers.Accept, 'application/json', 'not a credential');
+  assert.equal(c.headers['X-Plex-Token'], '${secret:PLEX}', 'already a reference');
+  assert.deepEqual(saved, { W_HOME_API_1_PASSWORD: 'hunter2', W_HOME_API_1_APIKEY: 'abc123', W_HOME_API_1_AUTHORIZATION: 'eyJ.abc.def', W_HOME_API_1_X_API_KEY: 'k-555' });
+  assert.ok(!JSON.stringify(b).includes('hunter2') && !JSON.stringify(b).includes('eyJ'), 'nothing secret left in the board');
+
+  const plain = widget({ url: 'https://api.example.org/v1/stats', headers: {} });
+  assert.equal(sealBoard('home', plain, save), plain, 'a board with nothing to move comes back as it was');
+});
+
+test('TrueNAS reads Check the certificate from Settings like every other integration', async () => {
+  const { withConfig, config } = await import('../config.ts');
+  const on = await withConfig({ TRUENAS_API_KEY: 'k', TRUENAS_VERIFY_TLS: '1' }, async () => config.truenas?.verifyTls);
+  const off = await withConfig({ TRUENAS_API_KEY: 'k' }, async () => config.truenas?.verifyTls);
+  assert.equal(on, true);
+  assert.equal(off, false);
 });

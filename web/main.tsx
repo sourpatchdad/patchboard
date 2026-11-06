@@ -1,19 +1,10 @@
-import { StrictMode } from 'react';
+import { type ComponentType, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Shell } from './components/Shell.tsx';
 import { SnapshotProvider } from './lib/store.tsx';
-import { Apps } from './views/Apps.tsx';
-import { ContainerPage } from './views/Container.tsx';
-import { Feeds } from './views/Feeds.tsx';
 import { Home } from './views/Home.tsx';
-import { Logs } from './views/Logs.tsx';
-import { Server } from './views/Server.tsx';
-import { Settings } from './views/Settings.tsx';
 import { initAppearance } from './lib/appearance.ts';
-import { Stacks } from './views/Stacks.tsx';
-import { Upcoming } from './views/Upcoming.tsx';
-import { Weather } from './views/Weather.tsx';
 import { NotFound } from './views/NotFound.tsx';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
@@ -23,22 +14,26 @@ import '@fontsource/dm-mono/500.css';
 import '@fontsource/dm-serif-display/400.css';
 import './styles.css';
 
+// Home loads with the app; every other page loads the first time it opens,
+// so a phone opening Home doesn't download Settings and the editors.
+const page = <M extends Record<string, any>>(load: () => Promise<M>, name: keyof M) => async () => ({ Component: (await load())[name] as ComponentType });
+
 const router = createBrowserRouter([
   {
     element: <Shell />,
     children: [
       { path: '/', element: <Home /> },
       { path: '/b/:board', element: <Home /> },
-      { path: '/server', element: <Server /> },
-      { path: '/stacks', element: <Stacks /> },
-      { path: '/c/:name', element: <ContainerPage /> },
-      { path: '/feeds', element: <Feeds /> },
-      { path: '/upcoming', element: <Upcoming /> },
-      { path: '/weather', element: <Weather /> },
-      { path: '/logs', element: <Logs /> },
-      { path: '/logs/:name', element: <Logs /> },
-      { path: '/apps', element: <Apps /> },
-      { path: '/settings', element: <Settings /> },
+      { path: '/server', lazy: page(() => import('./views/Server.tsx'), 'Server') },
+      { path: '/stacks', lazy: page(() => import('./views/Stacks.tsx'), 'Stacks') },
+      { path: '/c/:name', lazy: page(() => import('./views/Container.tsx'), 'ContainerPage') },
+      { path: '/feeds', lazy: page(() => import('./views/Feeds.tsx'), 'Feeds') },
+      { path: '/upcoming', lazy: page(() => import('./views/Upcoming.tsx'), 'Upcoming') },
+      { path: '/weather', lazy: page(() => import('./views/Weather.tsx'), 'Weather') },
+      { path: '/logs', lazy: page(() => import('./views/Logs.tsx'), 'Logs') },
+      { path: '/logs/:name', lazy: page(() => import('./views/Logs.tsx'), 'Logs') },
+      { path: '/apps', lazy: page(() => import('./views/Apps.tsx'), 'Apps') },
+      { path: '/settings', lazy: page(() => import('./views/Settings.tsx'), 'Settings') },
       { path: '*', element: <NotFound /> },
     ],
   },

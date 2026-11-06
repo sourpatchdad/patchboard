@@ -4,6 +4,7 @@
 
 import { type Board, type BoardRef, BOARD_ID, DEFAULT_BOARD, HOME_ID, MAX_BOARDS, validateBoard } from '../shared/board.ts';
 import { kvGet, kvSet } from './db.ts';
+import { sealBoard } from './sealwidgets.ts';
 
 interface Stored {
   id: string;
@@ -52,20 +53,36 @@ export function boardList(): BoardRef[] {
   return [{ id: HOME_ID, name: savedHome()?.name ?? 'Home' }, ...extras().map((s) => ({ id: s.id, name: s.board.name ?? s.id }))];
 }
 
-/** Save a board, adding it when the address is new. An error message when it can't. */
-export function putBoard(id: string, board: Board): string | null {
-  if (!BOARD_ID.test(id)) return 'A board address is lowercase letters, digits and dashes';
-  if (id === HOME_ID) {
-    kvSet('board', board);
-    return null;
-  }
+/**
+ * Save a board, adding it when the address is new. Keys typed into its
+ * widgets move to the key store first. The board as stored, or why not.
+ */
+export function putBoard(id: string, input: Board): { board: Board } | { error: string } {
+  if (!BOARD_ID.test(id)) return { error: 'A board address is lowercase letters, digits and dashes' };
   const all = extras();
   const at = all.findIndex((s) => s.id === id);
-  if (at < 0 && all.length + 1 >= MAX_BOARDS) return `At most ${MAX_BOARDS} boards`;
+  if (id !== HOME_ID && at < 0 && all.length + 1 >= MAX_BOARDS) return { error: `At most ${MAX_BOARDS} boards` };
+  const board = sealBoard(id, input);
+  if (id === HOME_ID) {
+    kvSet('board', board);
+    return { board };
+  }
   if (at < 0) all.push({ id, board });
   else all[at] = { id, board };
   kvSet('boards', all);
-  return null;
+  return { board };
+}
+
+/** Boards saved before keys were moved out of widgets: move them now. */
+export function sealSavedBoards(): void {
+  const home = savedHome();
+  if (home) {
+    const sealed = sealBoard(HOME_ID, home);
+    if (sealed !== home) kvSet('board', sealed);
+  }
+  const all = extras();
+  const sealed = all.map((s) => ({ id: s.id, board: sealBoard(s.id, s.board) }));
+  if (sealed.some((s, i) => s.board !== all[i].board)) kvSet('boards', sealed);
 }
 
 /** Reset Home to the default, or delete another board. False when there was nothing to delete. */
@@ -78,6 +95,9 @@ export function removeBoard(id: string): boolean {
   const next = all.filter((s) => s.id !== id);
   if (next.length === all.length) return false;
   kvSet('boards', next);
+  // Its Notes widgets' text goes with it.
+  const notes = kvGet<Record<string, unknown>>('board-notes');
+  if (notes) kvSet('board-notes', Object.fromEntries(Object.entries(notes).filter(([k]) => !k.startsWith(`${id}.`))));
   return true;
 }
 
@@ -101,5 +121,10 @@ export function importExtras(raw: unknown): { boards: Stored[] } | { error: stri
 }
 
 export function saveExtras(boards: Stored[]): void {
-  kvSet('boards', boards.length ? boards : null);
+  kvSet('boards', boards.length ? boards.map((s) => ({ id: s.id, board: sealBoard(s.id, s.board) })) : null);
+}
+
+/** Home from a setup file, or back to the default with null. */
+export function saveHome(board: Board | null): void {
+  kvSet('board', board ? sealBoard(HOME_ID, board) : null);
 }

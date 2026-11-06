@@ -22,6 +22,22 @@ export function containerMap(snap: Snapshot | null): Map<string, Container> {
   return new Map(list.map((c) => [c.name, c]));
 }
 
+/**
+ * The container an integration's app actually runs in: the one its app in the
+ * catalog names, else one called the usual name, else one whose image is the
+ * app's (plexinc/pms-docker, lscr.io/linuxserver/qbittorrent). Undefined when
+ * nothing here runs it, so a heading stays plain text instead of a dead link.
+ */
+export function findContainer(snap: Snapshot | null, usual: string, label: string): string | undefined {
+  const ctrs = containerMap(snap);
+  const apps = snap?.catalog.groups.flatMap((g) => g.services) ?? [];
+  const app = apps.find((a) => a.container && ctrs.has(a.container) && (a.name.toLowerCase() === label.toLowerCase() || a.container === usual));
+  if (app?.container) return app.container;
+  if (ctrs.has(usual)) return usual;
+  const word = new RegExp(`(^|[/_.-])${usual.replace(/[^a-z0-9]/gi, '')}([/:_.-]|$)`, 'i');
+  return [...ctrs.values()].find((c) => word.test(c.image) || word.test(c.name))?.name;
+}
+
 export function checkFor(snap: Snapshot | null, name: string): ServiceCheck | undefined {
   return (snap?.sources.checks?.data as ChecksData | null)?.services[name];
 }

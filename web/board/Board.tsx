@@ -16,6 +16,7 @@ import {
   EMPTY_BOARD,
   HOME_ID,
   MIN_COLUMN_PX,
+  noteKey,
   spanOf,
   STARTERS,
   WIDGET_INFO,
@@ -23,7 +24,7 @@ import {
   type WidgetType,
 } from '../../shared/board.ts';
 import { HoldButton } from '../components/Hold.tsx';
-import { forThisServer, widgetReady } from './ready.ts';
+import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -34,6 +35,7 @@ import { HealthStrip } from '../components/Squares.tsx';
 import { Empty, Icon, Meter, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
+import { useLanding } from '../lib/landing.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
@@ -50,9 +52,16 @@ function useBoard(id: string) {
   const [board, setBoard] = useState<BoardData | null>(null);
   const [custom, setCustom] = useState(false);
   const [missing, setMissing] = useState(false);
+  // Saved from another device or tab: load it again, without a blank frame.
+  const saved = useStore().snap?.boardSaved;
+  const stamp = saved && (saved.id === id || saved.id === '*') ? saved.at : 0;
+  const shownId = useRef(id);
   useEffect(() => {
     let gone = false;
-    setBoard(null);
+    if (shownId.current !== id) {
+      shownId.current = id;
+      setBoard(null);
+    }
     setMissing(false);
     void (async () => {
       try {
@@ -69,7 +78,7 @@ function useBoard(id: string) {
     return () => {
       gone = true;
     };
-  }, [id]);
+  }, [id, stamp]);
   /** Save, or with null reset Home or delete another board. */
   const save = async (b: BoardData | null): Promise<string | null> => {
     const res = await fetch(`/api/boards/${encodeURIComponent(id)}`, { method: b ? 'PUT' : 'DELETE', headers: ACTION, body: b ? JSON.stringify(b) : undefined });
@@ -109,7 +118,8 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     let timer = 0;
     const check = () => {
       // Page coordinates, so a scrolled page measures the same as one at the top.
-      const floor = window.innerHeight - 12 - window.scrollY;
+      // The foot (Customize, New board) stays on screen too.
+      const floor = window.innerHeight - 48 - window.scrollY;
       const cells = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((c) => ({ c, r: c.getBoundingClientRect(), w: widgets.find((x) => `w-${x.id}` === c.id) }));
       const shown = (x: Widget) => trim[x.id] ?? Number(x.config?.limit ?? WIDGET_INFO[x.type].options.limit?.[0] ?? 0);
       const over = cells.filter((x) => x.r.bottom > floor).sort((a, b) => b.r.bottom - a.r.bottom);
@@ -154,6 +164,9 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const { snap } = useStore();
   const navigate = useNavigate();
   const { board, custom, missing, save } = useBoard(id);
+  const { homeApps } = useAppearance();
+  // An alert that points at a widget (#w-power) lands on it once the board is drawn.
+  useLanding(!!board);
   const types = board?.widgets.map((w) => (w.type === 'attention' && w.config?.style === 'card' ? 'attention-card' : w.type)).join(',') ?? '';
   useEffect(() => {
     if (board) onWidgets?.(types.split(','));
@@ -166,9 +179,12 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   /** The widget whose settings drawer is open. */
   const [setting, setSetting] = useState<string | null>(null);
   const [error, setError] = useState('');
+  /** A note about the last layout applied, such as what it left out. */
+  const [notice, setNotice] = useState('');
   useEffect(() => {
     setDraft(null);
     setError('');
+    setNotice('');
   }, [id]);
   const editing = draft !== null;
   const shown = draft ?? board;
@@ -210,6 +226,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       return next;
     });
   const home = id === HOME_ID;
+  /** Apps shown as tiles, which take far more room than icons. */
+  const tiles = shown.widgets.some((w) => w.type === 'apps' && (w.config?.style || homeApps) !== 'patchbay');
 
   return (
     <div className={`board-wrap ${editing ? 'is-editing' : ''}`}>
@@ -228,7 +246,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             />
             <span className="board-bar-hint">Drag to move, drag the right edge to widen, Settings to rename or trim.</span>
             {error && <span className="crit-text">{error}</span>}
-            <button type="button" className="text-button" onClick={() => setDraft(null)}>
+            {notice && !error && <span className="drawer-note">{notice}</span>}
+            <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
               Cancel
             </button>
             <button
@@ -268,7 +287,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               value=""
               onChange={(e) => {
                 const st = STARTERS.find((x) => x.id === e.target.value);
-                if (st) setDraft({ ...forThisServer(st.board, snap), name: draft.name });
+                if (!st) return;
+                setDraft({ ...forThisServer(st.board, snap), name: draft.name });
+                const gone = leftOut(st.board, snap);
+                setNotice(gone.length ? `Left out ${gone.join(', ')} until their integrations are set up.` : '');
               }}
             >
               <option value="" disabled>
@@ -339,10 +361,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         <div className="board-foot">
           {over > 40 && (
             <span className="board-over">
-              Still {over} px past the window with every list at its shortest. Apps as icons, or moving a widget to another board, would make room.
+              Still {over} px past the window with every list at its shortest.{' '}
+              {tiles ? 'Apps as icons, or a widget moved to another board, would make room.' : 'Moving a widget to another board would make room.'}
             </span>
           )}
-          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setDraft(structuredClone(board!)))}>
+          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             {custom ? 'Customize' : 'Customize this board'}
           </button>
           <button type="button" className="text-button board-customize" onClick={() => setCreating(true)}>
@@ -612,7 +635,7 @@ function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: strin
     case 'calendar':
       return <CalendarWidget now={now} />;
     case 'notes':
-      return <NotesWidget id={w.id} />;
+      return <NotesWidget id={noteKey(board, w.id)} />;
     case 'books':
       return <BooksWidget />;
     case 'requests':
@@ -770,6 +793,10 @@ function NewBoard({ onClose }: { onClose: () => void }) {
           ))}
         </ul>
         <footer className="drawer-foot">
+          {(() => {
+            const gone = leftOut((choices.find((c) => c.id === pick) ?? choices[0]).board, snap);
+            return gone.length ? <span className="drawer-note">Leaves out {gone.join(', ')} until their integrations are set up.</span> : null;
+          })()}
           {error && <span className="crit-text">{error}</span>}
           <button type="submit" className="button board-save" disabled={busy}>
             {busy ? 'Creating...' : 'Create board'}
@@ -787,7 +814,10 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   const present = new Set(board.widgets.map((w) => w.type));
   // Integration widgets appear once their integration is on, so nothing lands empty.
   const ready = widgetReady(snap);
-  const types = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => (WIDGET_INFO[t].multiple || !present.has(t)) && ready[t] !== false);
+  const open = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => WIDGET_INFO[t].multiple || !present.has(t));
+  const types = open.filter((t) => ready[t] !== false);
+  // The rest wait on an integration: listed after, each leading to its setup.
+  const waiting = open.filter((t) => ready[t] === false);
   const containers = [...containerMap(snap).values()].filter((c) => c.name.includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
   const id = (base: string) => {
     let n = 1;
@@ -818,6 +848,15 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
               </li>
             ))}
             {types.length === 0 && <li className="settings-note">Everything is already on the board.</li>}
+            {waiting.length > 0 && <li className="drawer-sub">Set up first</li>}
+            {waiting.map((t) => (
+              <li key={t} className="is-waiting">
+                <Link to={setupHref(t)} onClick={onClose}>
+                  <strong>{WIDGET_INFO[t].name}</strong>
+                  <span>Needs {NEEDS[t]?.label}. Set it up</span>
+                </Link>
+              </li>
+            ))}
           </ul>
         ) : (
           <>
@@ -859,6 +898,9 @@ function SettingsDrawer({
   const info = WIDGET_INFO[w.type];
   const o = info.options;
   const cfg = w.config ?? {};
+  // Apps: the look in effect, this widget's own or the Settings default it follows.
+  const { homeApps } = useAppearance();
+  const appsLook = cfg.style || homeApps;
   const set = (k: string, v: string) => {
     const next = { ...cfg, [k]: v };
     if (!v) delete next[k];
@@ -869,8 +911,8 @@ function SettingsDrawer({
       <div className="palette drawer widget-settings" role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{cfg.title || info.name}</h2>
-          <button type="button" className="text-button" onClick={onClose}>
-            Done
+          <button type="button" className="text-button" onClick={onClose} title="Back to the board; its Save keeps this">
+            Apply
           </button>
         </header>
         <p className="settings-note">{info.about}</p>
@@ -926,13 +968,13 @@ function SettingsDrawer({
               <span className="seg" role="group" aria-label="Look">
                 {o.styles.map(([v, label]) => (
                   <button key={v} type="button" aria-pressed={(cfg.style ?? '') === v} onClick={() => set('style', v)}>
-                    {label}
+                    {v === '' && w.type === 'apps' ? `${label} (${homeApps === 'patchbay' ? 'icons' : 'tiles'})` : label}
                   </button>
                 ))}
               </span>
             </div>
           )}
-          {o.names && (cfg.style || 'patchbay') !== 'tiles' && (
+          {o.names && appsLook === 'patchbay' && (
             <div className="ws-row">
               <span>Names under icons</span>
               <span className="seg" role="group" aria-label="Names under icons">

@@ -8,7 +8,7 @@ import { forThisServer } from '../board/ready.ts';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link, NavLink, useParams } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
@@ -104,12 +104,17 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
   const night = d.getHours() >= 23 || d.getHours() < 6;
   const running = [...containerMap(snap).values()].filter((c) => c.state === 'running').length;
   const dockerOk = !!snap!.sources.docker?.ok;
+  const blind = blindSpot(snap!);
   const status =
     alerts.length === 0
-      ? dockerOk
-        ? { tone: 'ok', text: `All quiet. ${running} containers running.` }
-        : { tone: 'warn', text: "Can't see Docker right now." }
+      ? !dockerOk
+        ? { tone: 'warn', text: "Can't see Docker right now." }
+        : blind
+          ? { tone: 'warn', text: `Nothing wrong that Patchboard can see. ${blind}` }
+          : { tone: 'ok', text: `All quiet. ${running} containers running.` }
       : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: `${alerts.length === 1 ? 'One thing needs' : `${alerts.length} things need`} you.` };
+  // A quiet line leads to what's running, or to the integrations it can't reach.
+  const quietTo = blind ? '/settings?tab=connections' : '/stacks';
   // The otter beside the status line wears the worst of it.
   const mood = moodFor(status.tone === 'crit' ? 'critical' : status.tone === 'warn' ? 'warn' : null, night, snap!.alerts.length);
 
@@ -147,12 +152,12 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
       )}
       <div className={`masthead-status tone-${status.tone}`}>
         {!attentionCard && !alerts.length ? (
-          <Link className="status-line is-quiet" to="/stacks">
+          <Link className="status-line is-quiet" to={quietTo}>
             <Mascot mood={mood} size={40} />
             <span>{status.text}</span>
           </Link>
         ) : attentionCard || !alerts.length ? (
-          <a className="status-line" href={alerts.length ? '#w-attention' : '/stacks'} onClick={(e) => {
+          <a className="status-line" href={alerts.length ? '#w-attention' : quietTo} onClick={(e) => {
               if (!alerts.length) return;
               e.preventDefault();
               document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -194,6 +199,8 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
               <WithSubject title={a.title} subject={a.subject} />
             </span>
             {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
+            {/* Shown on touch screens, where the hover title can't be read. */}
+            {a.detail && <span className="head-alert-detail">{a.detail}</span>}
           </>
         );
         return (
@@ -236,7 +243,19 @@ function Overnight({ now }: { now: number }) {
   );
 }
 
+/**
+ * Integrations Patchboard can't reach, as a sentence, or null. "All quiet"
+ * would be a guess while one is down, so the quiet lines say this instead.
+ */
+function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): string | null {
+  const down = snap.alerts.filter((a) => a.id.startsWith('src-')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
+  if (!down.length) return null;
+  return down.length === 1 ? `It can't reach ${down[0]}.` : `It can't reach ${down.length} integrations.`;
+}
+
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
+  const { snap } = useStore();
+  const blind = snap ? blindSpot(snap) : null;
   const serious = alerts.filter((a) => a.level !== 'info').length;
   const h = new Date(now).getHours();
   const night = h >= 23 || h < 6;
@@ -247,7 +266,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
       <p>
         <strong>Nothing needs you.</strong>
         <br />
-        {night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+        {blind ? `Nothing wrong that Patchboard can see. ${blind}` : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
       </p>
     </div>
   );
@@ -384,7 +403,7 @@ export function NowPlaying() {
             {idle.map((m, i) => (
               <span key={m.id}>
                 {i > 0 && (i === idle.length - 1 ? ' or ' : ', ')}
-                <Link to={`/c/${m.container}`}>{m.label}</Link>
+                <AppLink container={m.container}>{m.label}</AppLink>
               </span>
             ))}
             .
@@ -394,7 +413,7 @@ export function NowPlaying() {
       {watching.map((m) => (
         <div className="now-block" key={m.id}>
           <h3>
-            <Link to={`/c/${m.container}`}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</Link>
+            <AppLink container={m.container}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</AppLink>
           </h3>
           {m.data.streams.slice(0, limit).map((s, i) => (
             <div className="stream" key={i}>
@@ -447,7 +466,7 @@ export function NowPlaying() {
             {quietClients.map((d, i) => (
               <span key={d.id}>
                 {i > 0 && (i === quietClients.length - 1 ? ' or ' : ', ')}
-                <Link to={`/c/${d.container}`}>{d.label}</Link>
+                <AppLink container={d.container}>{d.label}</AppLink>
               </span>
             ))}
             .
@@ -471,13 +490,13 @@ export function NowPlaying() {
         return (
         <div className="now-block" key={d.id}>
           <h3 className="now-head">
-            <Link to={`/c/${d.container}`}>
+            <AppLink container={d.container}>
               {d.data.paused
                 ? `${d.label} is paused`
                 : d.data.downloading
                   ? `Downloading ${d.data.downloading} in ${d.label} at ${speed(d.data.down)}`
                   : `Nothing downloading in ${d.label}`}
-            </Link>
+            </AppLink>
             <PauseButton client={d} />
           </h3>
           {!d.data.paused &&
@@ -695,7 +714,13 @@ function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now
         const href = itemHref(r.server, r.id);
         return (
           <li key={`${r.server.id}:${r.id}:${r.subtitle ?? ''}`}>
-            <a className="poster-link" href={href} target="_blank" rel="noreferrer" title={href ? `Open in ${r.server.label}` : undefined}>
+            <a
+              className="poster-link"
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              title={href ? `Open in ${r.server.label}` : `Give ${r.server.label} an address in Edit apps and its posters open there`}
+            >
               <Poster title={r.title} thumb={r.thumb} />
               <span className="poster-title">{r.title}</span>
               <span className="poster-sub">
@@ -746,15 +771,25 @@ export function groupDrops(list: ReleaseItem[]): ReleaseItem[] {
   });
 }
 
+/** A link to an app's container page, or plain text when no container here runs it. */
+function AppLink({ container, children }: { container?: string; children: ReactNode }) {
+  return container ? <Link to={`/c/${container}`}>{children}</Link> : <>{children}</>;
+}
+
+/** Sources every install has; anything else is an integration someone connected. */
+const BUILT_IN = new Set(['docker', 'stats', 'system', 'checks']);
+
 /**
- * First run: no apps yet. Offer the containers already running, grouped by
- * stack, in one click; or picking them; then the two places to make it yours.
- * Gone as soon as there's one app.
+ * First run: the containers already running, added as apps in one click;
+ * then integrations; then the layout and the look. Stays until apps are in
+ * and one integration is connected, or until hidden.
  */
 function Welcome() {
   const { snap } = useStore();
   // A fresh install: hardly any apps (a label or two) and nothing arranged yet.
   const count = snap?.catalog.groups.reduce((n, g) => n + g.services.length, 0) ?? 0;
+  const appsDone = count >= 5 || !!snap?.catalog.ordered;
+  const connected = Object.keys(snap?.sources ?? {}).filter((id) => !BUILT_IN.has(id)).length;
   const [dismissed, setDismissed] = useState(() => {
     try {
       return localStorage.getItem('pb-welcome-hidden') === '1';
@@ -762,8 +797,8 @@ function Welcome() {
       return false;
     }
   });
-  const none = !!snap && count < 5 && !snap.catalog.ordered && !dismissed;
-  const audit = useJson<CatalogAudit>(none ? '/api/catalog/audit' : null, 60_000);
+  const none = !!snap && !dismissed && (!appsDone || connected === 0);
+  const audit = useJson<CatalogAudit>(none && !appsDone ? '/api/catalog/audit' : null, 60_000);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   if (!snap || !none) return null;
@@ -805,7 +840,11 @@ function Welcome() {
       <ol className="welcome-steps">
         <li>
           <strong>Your apps.</strong>{' '}
-          {!docker?.ok ? (
+          {appsDone ? (
+            <span>
+              {count} on Home. <Link to="/apps?arrange=1">Edit apps</Link> adds, groups and renames them.
+            </span>
+          ) : !docker?.ok ? (
             <span>
               Patchboard can't see Docker yet. Mount <code>/var/run/docker.sock</code> (read-only is fine) or set <code>DOCKER_HOST</code>, then reload.
             </span>
@@ -821,10 +860,25 @@ function Welcome() {
                 </>
               )}
             </span>
+          ) : audit.data ? (
+            <span>
+              No other containers are running yet. Start some, or add an app by hand in <Link to="/apps?arrange=1">Edit apps</Link>.
+            </span>
           ) : (
             <span>Looking for running containers...</span>
           )}
           {err && <span className="crit-text"> {err}</span>}
+        </li>
+        <li>
+          <strong>Integrations.</strong>{' '}
+          {connected ? (
+            <span>{connected === 1 ? 'One connected' : `${connected} connected`}. More in <Link to="/settings?tab=connections">Settings, Connections</Link>.</span>
+          ) : (
+            <span>
+              Connect Plex, Sonarr, your NAS and the rest in <Link to="/settings?tab=connections">Settings, Connections</Link>: an address and a key each. Their numbers
+              and problems show up here.
+            </span>
+          )}
         </li>
         <li>
           <strong>Home.</strong> Start from a layout:{' '}

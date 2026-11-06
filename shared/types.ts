@@ -1054,6 +1054,8 @@ export interface Snapshot {
   brand?: Brand;
   /** The boards, Home first, for the tabs over the board. */
   boards?: import('./board.ts').BoardRef[];
+  /** The board saved last since this tab opened, so a wall display redraws it. */
+  boardSaved?: { id: string; at: number };
   /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */
   features?: string[];
   /** Wake-on-LAN device names, from WOL_DEVICES. */
@@ -1069,7 +1071,7 @@ export type ServerEvent =
   | { type: 'catalog'; catalog: Catalog }
   | { type: 'pages'; pages: import('./pages.ts').Pages }
   | { type: 'brand'; brand: Brand }
-  | { type: 'boards'; boards: import('./board.ts').BoardRef[] };
+  | { type: 'boards'; boards: import('./board.ts').BoardRef[]; changed?: string };
 
 export interface Brand {
   /** Empty means Patchboard. */

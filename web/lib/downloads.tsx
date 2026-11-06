@@ -1,6 +1,7 @@
 // Every configured download client behind one hook, plus the Pause/Resume
 // button that works the same on all of them.
 
+import { findContainer } from './services.ts';
 import { useState } from 'react';
 import type { DownloadClientId, QbitData } from '../../shared/types.ts';
 import { useSource, useStore } from './store.tsx';
@@ -8,8 +9,8 @@ import { useSource, useStore } from './store.tsx';
 export interface DownloadClient {
   id: DownloadClientId;
   label: string;
-  /** The container name its app page lives under. */
-  container: string;
+  /** The container its app page lives under, when one runs here. */
+  container?: string;
   data: QbitData;
 }
 
@@ -23,10 +24,11 @@ export const CLIENTS: { id: DownloadClientId; label: string; container: string }
 
 export function useDownloadClients(): { clients: DownloadClient[]; configured: boolean } {
   const states = [useSource<QbitData>('qbit'), useSource<QbitData>('transmission'), useSource<QbitData>('deluge'), useSource<QbitData>('sabnzbd'), useSource<QbitData>('nzbget')];
+  const snap = useStore().snap ?? null;
   const clients: DownloadClient[] = [];
   CLIENTS.forEach((c, i) => {
     const data = states[i].data;
-    if (data) clients.push({ ...c, data });
+    if (data) clients.push({ ...c, container: findContainer(snap, c.container, c.label), data });
   });
   return { clients, configured: states.some((s) => s.state) };
 }

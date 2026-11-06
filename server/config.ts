@@ -148,7 +148,7 @@ function build(str: Lookup) {
       ? {
           url: (str('TRUENAS_URL') ?? 'wss://localhost/api/current').replace(/^ws:\/\//, 'wss://'),
           apiKey: truenasKey,
-          verifyTls: env.TRUENAS_VERIFY_TLS === '1',
+          verifyTls: str('TRUENAS_VERIFY_TLS') === '1',
         }
       : undefined,
 

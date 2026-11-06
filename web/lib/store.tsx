@@ -30,7 +30,7 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
     case 'brand':
       return { ...prev, brand: e.brand };
     case 'boards':
-      return { ...prev, boards: e.boards };
+      return { ...prev, boards: e.boards, boardSaved: e.changed ? { id: e.changed, at: Date.now() } : prev.boardSaved };
   }
 }
 

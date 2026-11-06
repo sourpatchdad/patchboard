@@ -9341,3 +9341,73 @@ button.ha-act:hover {
     order: 2;
   }
 }
+
+/* One column with something wrong: the live logs come first, where the error
+   is, then the fix and the details. */
+@media (max-width: 1080px) {
+  .detail-grid.has-problem {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-grid.has-problem > .detail-main,
+  .detail-grid.has-problem > .detail-side {
+    display: contents;
+  }
+
+  .detail-grid.has-problem .side-logs {
+    order: -1;
+    margin-bottom: 28px;
+  }
+}
+
+/* Add widget: widgets waiting on an integration, each a link to its setup. */
+.drawer-list .is-waiting a {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+.drawer-list .is-waiting a:hover,
+.drawer-list .is-waiting a:focus-visible {
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.drawer-list .is-waiting span {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.drawer-note {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* Header alerts: the why under each title on touch screens; a mouse gets it on hover. */
+.head-alert-detail {
+  display: block;
+  flex-basis: 100%;
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--ink-3);
+  white-space: normal;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .head-alert-detail {
+    display: none;
+  }
+}
+
+.head-alert > a,
+.head-alert > span {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

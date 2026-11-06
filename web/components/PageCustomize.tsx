@@ -162,7 +162,7 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
 
         <div className="jw-actions">
           <button type="button" className="button board-save" disabled={busy} onClick={() => void done()}>
-            {busy ? 'Saving...' : 'Done'}
+            {busy ? 'Saving...' : 'Save'}
           </button>
           {err && <span className="crit-text">{err}</span>}
         </div>

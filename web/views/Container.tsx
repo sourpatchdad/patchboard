@@ -86,7 +86,10 @@ export function ContainerPage() {
   const sections = runbook.data?.sections ?? [];
   const dozzle = snap.links.dozzle;
   // This app's alerts, from the same list as Home's Needs attention.
-  const mine = snap.alerts.filter((a) => a.subject === name || a.href === `/c/${name}` || (svc && (a.subject === svc.name || a.title.includes(svc.name))));
+  // The state line already says stopped or unhealthy; the rest (a failing check, an app's own alert) still shows.
+  const mine = snap.alerts.filter(
+    (a) => a.id !== `ctr-down-${name}` && a.id !== `ctr-unhealthy-${name}` && (a.subject === name || a.href === `/c/${name}` || (svc && (a.subject === svc.name || a.title.includes(svc.name)))),
+  );
   const number = svc ? numberText(nums[svc.name]) : null;
 
   // Calm: no trouble, no update running. Then the logs keep the side to
@@ -233,7 +236,7 @@ export function ContainerPage() {
         <span className="health-caption">{healthCaption(uptime, name)}</span>
       </div>
 
-      <div className="detail-grid">
+      <div className={`detail-grid ${problem ? 'has-problem' : ''}`}>
         <div className="detail-main">
           <UpdatePanel job={upd.job} error={upd.error} onRollback={(id) => void upd.rollback(id)} onDismiss={upd.dismiss} />
           {mine.length > 0 && <Attention alerts={mine} now={now} />}

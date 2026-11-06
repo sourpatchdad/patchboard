@@ -52,6 +52,26 @@ export function HoldButton({
     setHolding(false);
     if (Date.now() - started.current < HOLD_MS * 0.6) setHinted(true);
   };
+  /** Let go without a hint: focus moved, the window lost focus, or the button was disabled. */
+  const cancel = () => {
+    if (!timer.current) return;
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+    setHolding(false);
+  };
+  useEffect(() => {
+    if (disabled) cancel();
+  }, [disabled]);
+  useEffect(() => {
+    if (!holding) return;
+    const off = () => cancel();
+    window.addEventListener('blur', off);
+    document.addEventListener('visibilitychange', off);
+    return () => {
+      window.removeEventListener('blur', off);
+      document.removeEventListener('visibilitychange', off);
+    };
+  }, [holding]);
 
   return (
     <button
@@ -65,6 +85,7 @@ export function HoldButton({
       onPointerUp={stop}
       onPointerLeave={stop}
       onPointerCancel={stop}
+      onBlur={cancel}
       onContextMenu={(e) => e.preventDefault()}
       onKeyDown={(e) => {
         if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {

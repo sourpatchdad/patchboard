@@ -77,6 +77,16 @@ export function auditCatalog(
   return { missing, discovered };
 }
 
+/**
+ * The host from a request's Host header, without its port: what links to the
+ * server's other apps should use. localhost when there's nothing better.
+ */
+export function visitorHost(header: string | undefined): string {
+  const h = (header ?? '').trim().toLowerCase();
+  const host = h.startsWith('[') ? h.slice(0, h.indexOf(']') + 1) : h.split(':')[0];
+  return /^[a-z0-9.\-\[\]:]+$/.test(host) && host ? host : 'localhost';
+}
+
 /** A YAML snippet to paste under a group's `services:`. */
 export function draftYaml(list: DiscoveredService[]): string {
   return list

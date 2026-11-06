@@ -25,6 +25,13 @@ The first public release, 1.0.0. What's in it:
   haven't set up. Fit the window trims each board's lists to one screen and
   says what to move when it can't. Right now takes an item count like the
   other lists.
+  A fresh install's Home is one screen at 1920 by 1080: the server, Right
+  now, apps as icons, the week, reading and changes, fit to the window, with
+  Customize in view. The old everything-board is the Everything layout.
+  While an integration is down, Home says "Nothing wrong that Patchboard can
+  see" and names it, instead of "All quiet". A board saved on one device
+  redraws on every open screen. On a phone, each alert in the header shows
+  why under its title.
 - **Every glance leads to an action.** A stopped container is two clicks
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
   blocking pauses, requests approve, Proxmox guests start and stop, all from
@@ -34,6 +41,14 @@ The first public release, 1.0.0. What's in it:
   the same way, from its own page, and Settings shows its version. It
   checks its own registry every six hours, so a new release shows up
   without Diun.
+  Every alert leads somewhere specific: a pool to its storage section,
+  Sonarr's import trouble to its queue, ad blocking off to the widget that
+  turns it back on, a host to its own page. Removing a key or an
+  integration, replacing the setup and starting Edit apps over are all a
+  press and hold now. A hold lets go when focus leaves the button. Buttons
+  that store something say Save; ones that hand a change to the board or
+  Edit apps say Apply. On a phone, a stopped container's page opens on its
+  live logs.
 - **One compose file, no config files.** Add every running container as an
   app in one click, arrange them and add links in Edit apps, connect integrations and turn
   on a password in Settings, with keys encrypted on the server. Mounts at
@@ -43,6 +58,13 @@ The first public release, 1.0.0. What's in it:
   labels and environment variables still work, and Settings can copy them
   in so the files can go. Coming from Homepage, paste its `services.yaml`
   and the apps come over.
+  The welcome stays through the integrations step and says so when no
+  containers are running. Add widget lists the widgets waiting on an
+  integration, each linking to its setup, and a layout says which widgets it
+  left out. Apps added in one click link to the address you opened
+  Patchboard by, so they work from a phone. Glances takes several addresses.
+  The setup file carries notes and alert thresholds too. Pages other than
+  Home load when first opened, so Home's download is a third smaller.
 - **65 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
   Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Beszel, Syncthing, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Hardcover, Goodreads, Home
   Assistant, Frigate, Uptime Kuma, Gatus, Healthchecks.io, Pi-hole, AdGuard Home, Speedtest Tracker,
@@ -75,7 +97,10 @@ The first public release, 1.0.0. What's in it:
   socket proxy example, an activity log, and keys that never reach the
   browser, and keys an app writes into its own logs are masked before
   Patchboard shows them. Setting `PATCHBOARD_SECRET_KEY` later moves saved keys over
-  instead of locking them away. SECURITY.md has the details.
+  instead of locking them away. A key pasted into an API numbers widget
+  moves to the key store when the board is saved, so boards and setup files
+  never carry one. TrueNAS honors Check the certificate set in Settings.
+  SECURITY.md has the details.
 
 Patchboard is licensed under the AGPL-3.0.
 

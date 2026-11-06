@@ -2,6 +2,7 @@
 // every device; everything else is a per-device preference (appearance.ts).
 // Themes are data in themes.ts, so this page renders whatever is there.
 
+import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -173,8 +174,8 @@ export function Settings() {
       <Section title="Home">
         <div className="choice-row">
           {seg('homeApps', [
-            ['tiles', 'App tiles with live stats'],
-            ['patchbay', 'Patch bay'],
+            ['tiles', 'Tiles with a live number'],
+            ['patchbay', 'Icons'],
           ])}
         </div>
         <p className="settings-note">
@@ -630,7 +631,6 @@ function Keys() {
     await load();
   };
   const remove = async (n: string) => {
-    if (!confirm(`Remove the key ${n}? Anything using it stops working until a new one is saved.`)) return;
     await fetch(`/api/secrets/${n}`, { method: 'DELETE', headers: ACTION });
     await load();
   };
@@ -648,9 +648,9 @@ function Keys() {
               <span className="mono">{k.name}</span>
               <time>{agoLong(k.at)}</time>
               {!readOnly && (
-                <button type="button" className="text-button" onClick={() => void remove(k.name)}>
+                <HoldButton className="text-button" danger hint="Hold to remove. Anything using it stops working." onConfirm={() => void remove(k.name)}>
                   Remove
-                </button>
+                </HoldButton>
               )}
             </li>
           ))}
@@ -794,8 +794,8 @@ function Integrations() {
       )}
       {movedIn.length > 0 && (
         <p className="settings-note adopt-done">
-          Saved here too, so these can come out of your .env: <span className="mono">{movedIn.join(', ')}</span>. Restart Patchboard after you
-          remove them.
+          Saved here too, so these can come out of your .env: <span className="mono">{movedIn.join(', ')}</span>. Then recreate Patchboard with{' '}
+          <code>docker compose up -d</code>: a restart keeps the old environment.
         </p>
       )}
       <div className="int-tools">
@@ -853,24 +853,28 @@ function SetupFile() {
   const readOnly = !!useStore().snap?.readOnly;
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  /** A file read and waiting for the hold that replaces everything with it. */
+  const [pending, setPending] = useState<{ name: string; body: unknown } | null>(null);
   const load = async (f: File) => {
     setMsg('');
     setErr('');
-    let body: unknown;
     try {
-      body = JSON.parse(await f.text());
+      setPending({ name: f.name, body: JSON.parse(await f.text()) });
     } catch {
-      return setErr("That file isn't JSON.");
+      setErr("That file isn't JSON.");
     }
-    if (!confirm('Replace your board, apps and page settings with this file? Your keys stay as they are.')) return;
-    const res = await fetch('/api/setup', { method: 'PUT', headers: ACTION, body: JSON.stringify(body) });
+  };
+  const replace = async () => {
+    if (!pending) return;
+    const res = await fetch('/api/setup', { method: 'PUT', headers: ACTION, body: JSON.stringify(pending.body) });
+    setPending(null);
     if (!res.ok) return setErr(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`);
-    setMsg('Imported. Reload Home to see the board.');
+    setMsg('Replaced. Every open tab shows the new boards.');
   };
   return (
     <Section title="Setup file">
       <p className="settings-note">
-        Your board, apps and page settings in one file, for a backup or a new server. Keys and uploaded icons stay on this server; add them again after a move.
+        Your boards, apps, page settings, notes, alert thresholds and name in one file, for a backup or a new server. Integration settings, keys and uploaded icons stay on this server; add them again after a move.
       </p>
       <div className="choice-row">
         <a className="button button-quiet" href="/api/setup" download>
@@ -879,10 +883,29 @@ function SetupFile() {
         {!readOnly && (
           <label className="button button-quiet file-button">
             Import a setup file
-            <input type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && void load(e.target.files[0])} />
+            <input type="file" accept="application/json,.json" hidden onChange={(e) => {
+                const f = e.target.files?.[0];
+                // Cleared, so choosing the same file again after Cancel still counts.
+                e.target.value = '';
+                if (f) void load(f);
+              }}
+            />
           </label>
         )}
       </div>
+      {pending && (
+        <div className="choice-row">
+          <span>
+            Replace your boards, apps, page settings, notes and thresholds with <span className="mono">{pending.name}</span>?
+          </span>
+          <HoldButton danger hint="Hold to replace" onConfirm={() => void replace()}>
+            Replace
+          </HoldButton>
+          <button type="button" className="text-button" onClick={() => setPending(null)}>
+            Cancel
+          </button>
+        </div>
+      )}
       {msg && <p className="settings-note">{msg}</p>}
       {err && <p className="crit-text">{err}</p>}
     </Section>

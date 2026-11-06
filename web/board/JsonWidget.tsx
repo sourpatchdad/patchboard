@@ -146,10 +146,10 @@ export function JsonEditor({ initial, onSave, onClose }: { initial: JsonWidgetCo
           </label>
           <label className="jw-wide">
             <span>
-              Headers, one per line. Use a key saved in Settings, Keys as <code>{'${secret:NAME}'}</code>, or one from the environment as{' '}
-              <code>{'${env:WIDGET_NAME}'}</code>.
+              Headers, one per line. Paste a key as it is: saving the board moves it to Settings, Keys and leaves{' '}
+              <code>{'${secret:NAME}'}</code> here, so it never reaches a browser.
             </span>
-            <textarea className="field mono" rows={2} value={headersText} placeholder={'X-Api-Key: ${env:WIDGET_PIHOLE_KEY}'} onChange={(e) => setHeadersText(e.target.value)} />
+            <textarea className="field mono" rows={2} value={headersText} placeholder={'X-Api-Key: paste the key'} onChange={(e) => setHeadersText(e.target.value)} />
           </label>
           <label>
             <span>Refresh every (seconds)</span>
@@ -188,7 +188,7 @@ export function JsonEditor({ initial, onSave, onClose }: { initial: JsonWidgetCo
             {busy ? 'Testing...' : 'Test'}
           </button>
           <button type="button" className="button board-save" onClick={() => onSave(JSON.stringify(full()))}>
-            Use these settings
+            Apply
           </button>
           {error && <span className="crit-text">{error}</span>}
         </div>

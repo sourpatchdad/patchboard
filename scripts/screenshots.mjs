@@ -116,27 +116,9 @@ try {
   // A second board, so the tabs over the board show.
   await go('/');
   await page.evaluate(() => fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ version: 1, name: 'Movie night', widgets: [{ id: 'now', type: 'now', size: 'm' }, { id: 'recent', type: 'recent', size: 'xl' }] }) }));
-  // The hero: one 1920 by 1080 screen, the way a home server's board ends up
-  // once arranged: the server and Right now, the rack of apps, then the
-  // week, reading and changes. Fit the window trims the
-  // lists to the screen.
-  await go('/');
-  await page.evaluate((b) => fetch('/api/boards/home', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(b) }), {
-    columns: 3,
-    fit: true,
-    widgets: [
-      { id: 'vitals', type: 'vitals', size: 'w', span: 2 },
-      { id: 'now', type: 'now', size: 'm', span: 1, config: { limit: '3' } },
-      { id: 'apps', type: 'apps', size: 'l', span: 2, config: { style: 'patchbay' } },
-      { id: 'attention', type: 'attention', size: 'l', span: 1 },
-      { id: 'feeds', type: 'feeds', size: 'm', span: 1, config: { limit: '4' } },
-      { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { limit: '5' } },
-      { id: 'changes', type: 'changes', size: 'm', span: 1, config: { limit: '5' } },
-    ],
-  });
+  // The hero: Home as a fresh install arranges it, on one 1920 by 1080 screen.
   await go('/', 3000);
   await shoot(page, 'home');
-  await page.evaluate(() => fetch('/api/boards/home', { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }));
   await go('/server');
   await shoot(page, 'server', { fullPage: true });
   await go('/stacks');

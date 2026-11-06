@@ -72,7 +72,8 @@ export const UI_SETUP = new Set([
   'dozzle',
 ]);
 
-export type FieldKind = 'url' | 'secret' | 'text' | 'flag' | 'choice';
+/** url is one address; urls is several, comma-separated, each checked on its own. */
+export type FieldKind = 'url' | 'urls' | 'secret' | 'text' | 'flag' | 'choice';
 
 /** Fields with a fixed set of values, shown as a menu. The first is the default. */
 export const CHOICES: Record<string, [value: string, label: string][]> = {
@@ -87,6 +88,7 @@ export function fieldKind(name: string): FieldKind {
   // Calendar addresses carry private keys (Google's secret address), so they are secrets too.
   if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name) || name === 'CALENDAR_URLS' || name === 'DISCORD_WEBHOOK') return 'secret';
   if (/VERIFY_TLS$/.test(name)) return 'flag';
+  if (name === 'GLANCES_URL') return 'urls';
   if (/_URL$/.test(name)) return 'url';
   return 'text';
 }
