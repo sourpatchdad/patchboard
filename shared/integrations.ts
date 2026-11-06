@@ -227,6 +227,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'scrutiny',
+    name: 'Scrutiny',
+    adds: "A Drives widget: every drive's SMART verdict, temperature and age. A drive that fails its SMART check, or Scrutiny's thresholds, shows in Needs attention before it dies.",
+    env: ['SCRUTINY_URL'],
+    where: "Scrutiny's web address. It has no API key, so keep it on a private address.",
+    source: true,
+  },
+  {
     id: 'proxmox',
     name: 'Proxmox VE',
     adds: 'A Proxmox widget: each node with its CPU and memory, and every VM and LXC container, running or stopped. A node that goes offline shows in Needs attention.',

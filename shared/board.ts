@@ -25,6 +25,7 @@ export type WidgetType =
   | 'speed'
   | 'photos'
   | 'proxmox'
+  | 'drives'
   | 'requests'
   | 'container'
   | 'json'
@@ -144,6 +145,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   uptime: { name: 'Uptime', about: 'Uptime Kuma monitors: problems first, each with its last 30 checks and 24-hour uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
   dns: { name: 'Ad blocking', about: 'Pi-hole or AdGuard Home: what it blocked today, and Pause for 5, 30 or 60 minutes.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   speed: { name: 'Internet', about: 'Speedtest Tracker: the latest download, upload and ping, and the last day as a line.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },

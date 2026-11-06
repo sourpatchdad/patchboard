@@ -16,8 +16,8 @@ The first public release, 1.0.0. What's in it:
   Connections, with keys encrypted on the server. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
   in so the files can go.
-- **35 integrations,** among them Sonarr, Radarr, Plex through Tautulli,
-  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Proxmox, Immich, Home
+- **36 integrations,** among them Sonarr, Radarr, Plex through Tautulli,
+  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Proxmox, Scrutiny, Immich, Home
   Assistant, Frigate, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker,
   Overseerr, Miniflux and Trakt, plus a live number from any JSON API.
 - **Pages:** Server (pools, disks, backups, CPU by hour), Stacks, Reading,

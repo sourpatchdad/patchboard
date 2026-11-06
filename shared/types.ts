@@ -27,6 +27,7 @@ export type SourceId =
   | 'speedtest'
   | 'immich'
   | 'proxmox'
+  | 'scrutiny'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -559,6 +560,27 @@ export interface ProxmoxGuest {
 export interface ProxmoxData {
   nodes: ProxmoxNode[];
   guests: ProxmoxGuest[];
+  webUrl: string;
+}
+
+/** One drive as Scrutiny sees it. */
+export interface DriveHealth {
+  id: string;
+  /** Device name without /dev/: sda, nvme0n1. */
+  name: string;
+  model: string;
+  capacity: number;
+  /** Scrutiny's collector host, when several machines report. */
+  host?: string;
+  /** failed: the drive's own SMART check failed. warn: Scrutiny's thresholds did. */
+  status: 'ok' | 'warn' | 'failed';
+  temp?: number;
+  hours?: number;
+  checkedAt?: number;
+}
+
+export interface ScrutinyData {
+  drives: DriveHealth[];
   webUrl: string;
 }
 

@@ -286,3 +286,9 @@ test('an unreachable integration is mentioned quietly, and only after two minute
   assert.equal(late[0].since, t - 3 * 60_000);
   assert.equal(late[0].href, '/settings?tab=connections');
 });
+
+test('Scrutiny: a failed SMART check is critical, a threshold warning is a warning, healthy drives stay quiet', () => {
+  const drive = (name: string, status: 'ok' | 'warn' | 'failed') => ({ id: name, name, model: 'WD Red', capacity: 0, status });
+  const alerts = computeAlerts(sources({ scrutiny: { webUrl: 'http://scrutiny', drives: [drive('sda', 'ok'), drive('sdb', 'warn'), drive('sdc', 'failed')] } }), catalog());
+  assert.deepEqual(alerts.filter((a) => a.source === 'scrutiny').map((a) => [a.subject, a.level]), [['sdb', 'warn'], ['sdc', 'critical']]);
+});

@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, HaEntity, ImmichData, ProxmoxData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -478,6 +478,37 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Scrutiny ----------
+
+/** Drives: trouble first, then by name, each with temperature and age. */
+export function DrivesWidget({ now }: { now: number }) {
+  const { state, data } = useSource<ScrutinyData>('scrutiny');
+  const { limit = 8 } = useWidget();
+  const { temp: unit } = useAppearance();
+  if (!state || !data) return null;
+  const rank = { failed: 0, warn: 1, ok: 2 } as const;
+  const list = [...data.drives].sort((a, b) => rank[a.status] - rank[b.status]);
+  const bad = data.drives.filter((d) => d.status !== 'ok').length;
+  const last = Math.max(0, ...data.drives.map((d) => d.checkedAt ?? 0));
+  const years = (h: number) => (h >= 8766 ? `${(h / 8766).toFixed(1)} yr` : `${Math.round(h / 24)} d`);
+  return (
+    <Section title="Drives" source={state} className="drives" count={bad ? `${bad} need${bad === 1 ? 's' : ''} you` : `${data.drives.length} healthy`} action={{ label: 'Open Scrutiny', href: data.webUrl }}>
+      <ul className="drive-list">
+        {list.slice(0, limit).map((d) => (
+          <li key={d.id} className={`drive-${d.status}`} title={[d.model, d.host].filter(Boolean).join(', ')}>
+            <span className="drive-dot" aria-hidden />
+            <span className="drive-name mono">{d.name}</span>
+            <span className="drive-model">{d.status === 'ok' ? d.model : d.status === 'failed' ? 'SMART failed' : 'Wearing out'}</span>
+            <span className="mono drive-num">{d.temp != null ? `${deg(d.temp, unit)}°` : ''}</span>
+            <span className="mono drive-num">{d.hours != null ? years(d.hours) : ''}</span>
+          </li>
+        ))}
+      </ul>
+      {last > 0 && <p className="speed-seen">Checked {agoLong(last, now)}.</p>}
     </Section>
   );
 }

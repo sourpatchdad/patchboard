@@ -7068,6 +7068,70 @@ button.ha-act:hover {
   justify-self: start;
 }
 
+/* ---------- Drives (Scrutiny) ---------- */
+
+.drive-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drive-list li {
+  display: grid;
+  grid-template-columns: 8px 64px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 13.5px;
+}
+
+.drive-list li:first-child {
+  border-top: 0;
+}
+
+.drive-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--quiet);
+}
+
+.drive-warn .drive-dot {
+  background: var(--warn);
+}
+
+.drive-failed .drive-dot {
+  background: var(--crit);
+}
+
+.drive-name {
+  color: var(--head);
+  font-size: 12.5px;
+}
+
+.drive-model {
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drive-warn .drive-model {
+  color: var(--warn);
+}
+
+.drive-failed .drive-model {
+  color: var(--crit);
+}
+
+.drive-num {
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: right;
+}
+
 /* ---------- Proxmox ---------- */
 
 .pve-nodes,

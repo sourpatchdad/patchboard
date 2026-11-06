@@ -3,6 +3,7 @@
 
 import type {
   ProxmoxData,
+  ScrutinyData,
   Alert,
   ArrData,
   BackupRun,
@@ -236,6 +237,22 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
     }
+  }
+
+  // Scrutiny: a drive failing its own SMART check is an emergency; failing
+  // Scrutiny's stricter thresholds is a warning to plan a replacement.
+  for (const d of data<ScrutinyData>(sources, 'scrutiny')?.drives ?? []) {
+    if (d.status === 'ok') continue;
+    const where = [d.model, d.host].filter(Boolean).join(', ');
+    alerts.push({
+      id: `drive-${d.id}`,
+      level: d.status === 'failed' ? 'critical' : 'warn',
+      subject: d.name,
+      title: d.status === 'failed' ? `Drive ${d.name} is failing` : `Drive ${d.name} is wearing out`,
+      detail: `${d.status === 'failed' ? 'Its own SMART check failed. Back up what it holds and replace it.' : "It crossed Scrutiny's thresholds. Plan a replacement."}${where ? ` ${where}.` : ''}`,
+      href: data<ScrutinyData>(sources, 'scrutiny')?.webUrl,
+      source: 'scrutiny',
+    });
   }
 
   // Proxmox: a node that drops out of the cluster.

@@ -20,6 +20,7 @@ import type {
   FeedFilter,
   ImmichData,
   ProxmoxData,
+  ScrutinyData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -604,6 +605,20 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<ScrutinyData>('scrutiny', 'Scrutiny', 5 * MINUTE, () => {
+      const T = 1e12;
+      const at = Date.now() - 40 * MINUTE;
+      return {
+        webUrl: 'http://scrutiny.local',
+        drives: [
+          { id: 'w1', name: 'nvme0n1', model: 'Samsung 980 PRO', capacity: 1 * T, status: 'ok', temp: 41, hours: 14_210, checkedAt: at },
+          { id: 'w2', name: 'sda', model: 'WD Red Plus', capacity: 8 * T, status: 'ok', temp: 36, hours: 26_480, checkedAt: at },
+          { id: 'w3', name: 'sdb', model: 'WD Red Plus', capacity: 8 * T, status: 'ok', temp: 37, hours: 26_475, checkedAt: at },
+          { id: 'w4', name: 'sdc', model: 'Seagate IronWolf', capacity: 12 * T, status: 'ok', temp: 39, hours: 9_120, checkedAt: at },
+          { id: 'w5', name: 'sdd', model: 'Seagate IronWolf', capacity: 12 * T, status: 'ok', temp: 40, hours: 9_118, checkedAt: at },
+        ],
+      };
+    }),
     demo<ProxmoxData>('proxmox', 'Proxmox', 30 * SECOND, () => {
       const wave = (base: number, amp: number, period: number) => Math.max(0.005, base + amp * Math.sin(Date.now() / period));
       const G = 1024 ** 3;
