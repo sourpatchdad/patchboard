@@ -1,16 +1,11 @@
-# Save as docker-compose.yml, run `docker compose up -d`, and open
-# http://<this machine>:3200. Everything else is set up in the browser.
-
 services:
   patchboard:
     image: ghcr.io/sourpatchdad/patchboard:latest
     container_name: patchboard
     restart: unless-stopped
     environment:
-      - TZ=America/New_York # your time zone
+      - TZ=America/Chicago
     ports:
-      # Open to your network. If the internet can reach this machine, turn on
-      # a password in Settings, Sign-in.
       - "3200:3200"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -1,16 +1,12 @@
 # Examples
 
-Complete compose files. Save one as `docker-compose.yml`; none needs a
-`.env`. [docker-compose.yml](docker-compose.yml) is the plain install.
-For config as code, [env.example](env.example) lists every variable and
-[services.example.yaml](services.example.yaml) starts a `services.yaml`.
+Each is a complete `docker-compose.yml`. None needs a `.env` file.
 
-| Folder | For |
+| File | For |
 |---|---|
-| [everything](everything/docker-compose.yml) | Every optional mount: pool usage, runbook, backup logs, updates from the UI. |
-| [hardened](hardened/docker-compose.yml) | Look but don't touch: a read-only socket proxy, `READ_ONLY=1`, localhost only, behind forward auth. |
-| [labels](labels/docker-compose.yml) | Labels on your own apps so they list themselves. |
-| [wake-on-lan](wake-on-lan/docker-compose.yml) | Host networking, so the Wake widget's packets reach your LAN. |
-
-For HTTPS on a private network, which installing Patchboard as a phone app
-needs, see [Caddyfile](Caddyfile).
+| [docker-compose.yml](docker-compose.yml) | The plain install. |
+| [everything](everything/docker-compose.yml) | Every optional mount: storage use, runbook, backup logs, updates from the UI. |
+| [hardened](hardened/docker-compose.yml) | Read-only, behind a reverse proxy that signs people in. |
+| [wake-on-lan](wake-on-lan/docker-compose.yml) | Host networking for the Wake widget. |
+| [Caddyfile](Caddyfile) | HTTPS on a private network, so phones can install Patchboard as an app. |
+| [env.example](env.example) | Every setting as a variable, for keeping config in a file. |

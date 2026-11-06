@@ -60,13 +60,18 @@ The first public release, 1.0.0. What's in it:
   labels and environment variables still work, and Settings can copy them
   in so the files can go. Coming from Homepage, paste its `services.yaml`
   and the apps come over.
-  The welcome stays through the integrations step and says so when no
-  containers are running. Add widget lists the widgets waiting on an
+  The welcome asks for a name (empty keeps Patchboard), stays through the
+  integrations step, and says so when no containers are running. The otter
+  beside the name in the header is off unless you turn it on in Settings;
+  Home's status line keeps its own. Add widget lists the widgets waiting on an
   integration, each linking to its setup, and a layout says which widgets it
   left out. Apps added in one click link to the address you opened
   Patchboard by, so they work from a phone. Glances takes several addresses.
   The setup file carries notes and alert thresholds too. Pages other than
   Home load when first opened, so Home's download is a third smaller.
+  The examples are complete compose files with a line or two of comment
+  each; the env template lists every variable in Settings' order, with the
+  secret key near the top.
 - **65 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
   Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Beszel, Syncthing, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Hardcover, Goodreads, Home
   Assistant, Frigate, Uptime Kuma, Gatus, Healthchecks.io, Pi-hole, AdGuard Home, Speedtest Tracker,

@@ -113,8 +113,8 @@ Each turns on by being mounted, read-only, at its place.
 
 Optional. Most installs add apps with one click and Edit apps. A catalog file
 suits anyone who wants the list in git: `config/services.yaml` lists apps in
-groups, plus bookmarks. Copy
-[examples/services.example.yaml](../examples/services.example.yaml) to start.
+groups, plus bookmarks. Settings, Connections, Catalog, Download
+services.yaml gives you your current apps as a starting file.
 
 | Field | |
 |---|---|

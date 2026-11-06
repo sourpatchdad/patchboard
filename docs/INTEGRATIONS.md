@@ -15,7 +15,15 @@ never rewrite your files.
    and group. Drag apps between groups, rename groups, hide anything, change
    any icon or upload one.
 3. **Docker labels** in the app's own compose file, so the entry travels with
-   the app. See [examples/labels](../examples/labels/docker-compose.yml).
+   the app:
+
+   ```yaml
+   labels:
+     patchboard.name: Sonarr
+     patchboard.group: Media
+     patchboard.href: http://192.168.1.10:8989
+     patchboard.icon: sonarr.png
+   ```
 
    | Label | |
    |---|---|
@@ -30,7 +38,7 @@ never rewrite your files.
    labels work as they are. Patchboard ignores `homepage.widget.*`, which
    carry credentials.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
-   place. Start from [examples/services.example.yaml](../examples/services.example.yaml).
+   place. Settings, Connections, Catalog downloads your current apps as one.
    Coming from Homepage? Settings, Connections, Import from Homepage takes
    its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard.
    To keep a file instead, `npm run import-homepage -- /path/to/homepage/config`

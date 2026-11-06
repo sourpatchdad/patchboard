@@ -5,6 +5,7 @@ import { moodFor } from '../../shared/otter.ts';
 import { Mascot } from '../components/Otter.tsx';
 import { HOME_ID, STARTERS } from '../../shared/board.ts';
 import { forThisServer } from '../board/ready.ts';
+import { NameForm } from '../components/BrandName.tsx';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
@@ -869,6 +870,10 @@ function Welcome() {
           )}
           {err && <span className="crit-text"> {err}</span>}
         </li>
+        <li className="welcome-name">
+          <strong>Name it.</strong> What the header and the tab call it. Leave it empty for Patchboard.
+          <NameForm />
+        </li>
         <li>
           <strong>Integrations.</strong>{' '}
           {connected ? (
@@ -905,8 +910,7 @@ function Welcome() {
         </li>
       </ol>
       <p className="settings-note">
-        Coming from Homepage? <Link to="/settings?tab=connections&import=homepage">Import its services.yaml</Link> in Settings. Prefer files? A{' '}
-        <code>services.yaml</code> or <code>patchboard.*</code> Docker labels work too, and so do Homepage's labels.
+        Coming from Homepage? <Link to="/settings?tab=connections&import=homepage">Import its services.yaml</Link> in Settings.
       </p>
     </section>
   );

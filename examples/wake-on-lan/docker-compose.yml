@@ -1,8 +1,5 @@
-# Wake-on-LAN. A wake packet is a broadcast, and a broadcast only reaches
-# your LAN from the host's own network, so this runs Patchboard with
-# network_mode: host. Docker ignores ports: there; LISTEN_HOST picks the
-# address Patchboard answers on instead. Name your machines in Settings,
-# Connections, Wake-on-LAN, then add the Wake widget to Home.
+# Wake-on-LAN needs the host's network to reach your LAN.
+# Add your machines in Settings, Connections, Wake-on-LAN.
 
 services:
   patchboard:
@@ -12,8 +9,7 @@ services:
     network_mode: host
     environment:
       - TZ=America/New_York
-      # The LAN address to answer on; 127.0.0.1 if a reverse proxy on this host fronts it.
-      - LISTEN_HOST=192.168.1.10
+      - LISTEN_HOST=192.168.1.10 # this machine's LAN address
       - PORT=3200
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -1,12 +1,6 @@
-# HTTPS for Patchboard on a private network. A phone needs it to install
-# Patchboard as an app.
-#
-# Point a name such as dash.example.com at your server's private address (a
-# Tailscale IP works well) with a DNS-only A record. Caddy gets the
-# certificate from Let's Encrypt over DNS-01, so nothing opens to the
-# internet. You need a Caddy build with your DNS provider's module: for
-# Cloudflare, ghcr.io/caddybuilds/caddy-cloudflare and a CLOUDFLARE_API_TOKEN
-# with Zone:DNS:Edit.
+# HTTPS on a private network, so phones can install Patchboard as an app.
+# Point dash.example.com at your server's private or Tailscale address.
+# Needs a Caddy build with your DNS provider, e.g. ghcr.io/caddybuilds/caddy-cloudflare.
 
 dash.example.com {
 	bind 100.64.0.10
@@ -15,7 +9,7 @@ dash.example.com {
 	}
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3200 {
-		# Live updates use server-sent events, which must not be buffered.
+		# Live updates must not be buffered.
 		flush_interval -1
 	}
 }

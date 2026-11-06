@@ -1,7 +1,5 @@
-# Every optional mount, for a TrueNAS box with notes, backup logs and compose
-# projects under /mnt/tank. Change the host paths on the left to yours; each
-# one turns its feature on by being there. docs/CONFIGURATION.md, Mounts,
-# says what each adds.
+# Every optional mount. Change the paths on the left to yours.
+# docs/CONFIGURATION.md, Mounts, says what each one adds.
 
 services:
   patchboard:
@@ -15,8 +13,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data:/data
-      - /mnt/tank:/pool:ro # storage use, when TrueNAS isn't connected
-      - /mnt/tank/notes:/docs:ro # RUNBOOK.md sections on container pages
-      - /mnt/tank/logs:/logs:ro # backup logs: the Backups grid
-      # Updates from the UI: compose projects at the same path as on the host.
-      - /mnt/tank/compose:/mnt/tank/compose:ro
+      - /mnt/tank:/pool:ro # storage use
+      - /mnt/tank/notes:/docs:ro # RUNBOOK.md
+      - /mnt/tank/logs:/logs:ro # backup logs
+      - /mnt/tank/compose:/mnt/tank/compose:ro # updates from the UI: same path as on the host

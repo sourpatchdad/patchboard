@@ -1078,6 +1078,6 @@ export type ServerEvent =
 export interface Brand {
   /** Empty means Patchboard. */
   name?: string;
-  /** false hides the otter beside the name; the tab icon keeps it. */
+  /** true puts the otter beside the name in the header. Off by default: Home's status line has one. */
   otter?: boolean;
 }

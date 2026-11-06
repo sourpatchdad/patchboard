@@ -9405,3 +9405,12 @@ button.ha-act:hover {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+/* The welcome's name step: the field under its sentence. */
+.welcome-name .brand-row {
+  margin-top: 8px;
+}
+
+.welcome-name .field {
+  max-width: 320px;
+}

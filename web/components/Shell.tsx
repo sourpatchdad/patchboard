@@ -105,7 +105,7 @@ export function Shell() {
       <PullRefresh />
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
-          {snap?.brand?.otter !== false && <Otter mood={mood} size={32} mark className="wordmark-otter" />}
+          {snap?.brand?.otter === true && <Otter mood={mood} size={32} mark className="wordmark-otter" />}
           <span title={name}>{name}</span>
         </NavLink>
         <nav className="nav" aria-label="Views">
