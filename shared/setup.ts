@@ -35,6 +35,7 @@ export const UI_SETUP = new Set([
   'immich',
   'proxmox',
   'scrutiny',
+  'glances',
   'overseerr',
   'ntfy',
   'gotify',
@@ -62,6 +63,7 @@ export function fieldKind(name: string): FieldKind {
 const LABELS: [RegExp, string][] = [
   [/^NTFY_URL$/, 'Topic address'],
   [/^PATCHBOARD_URL$/, 'Patchboard address'],
+  [/^GLANCES_URL$/, 'Addresses'],
   [/WEB_URL$/, 'Web address'],
   [/_URL$/, 'Address'],
   [/API_KEY$|_KEY$/, 'API key'],
@@ -92,6 +94,7 @@ const HINTS: Record<string, string> = {
   TRUENAS_URL: 'wss://truenas.local/api/current',
   PROXMOX_URL: 'https://pve.local:8006',
   SCRUTINY_URL: 'http://192.168.1.10:8080',
+  GLANCES_URL: 'http://192.168.1.10:61208, http://192.168.1.11:61208',
   PROXMOX_TOKEN_ID: 'patchboard@pve!dash',
   UPTIME_KUMA_SLUG: 'home, from /status/home',
   NTFY_URL: 'https://ntfy.sh/your-secret-topic',

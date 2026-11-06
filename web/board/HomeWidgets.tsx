@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
-import type { CarData, DnsData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
+import type { CarData, DnsData, GlancesData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -478,6 +478,63 @@ export function SpeedWidget({ now }: { now: number }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+// ---------- Glances ----------
+
+/** Every host: CPU and memory meters, the fullest disk, network, the hottest sensor. Trouble first. */
+export function HostsWidget() {
+  const { state, data } = useSource<GlancesData>('glances');
+  const { limit = 6 } = useWidget();
+  const { temp: unit } = useAppearance();
+  if (!state || !data) return null;
+  const level = (p: number) => (p >= 90 ? 'crit' : p >= 75 ? 'warn' : 'ok');
+  const worst = (h: GlancesData['hosts'][number]) => (h.ok ? Math.max(h.cpuPct, h.memPct, h.disks[0]?.pct ?? 0) : 999);
+  const list = [...data.hosts].sort((a, b) => worst(b) - worst(a));
+  const rate = (b: number) => (b >= 1e6 ? `${(b / 1e6).toFixed(1)} MB/s` : `${Math.round(b / 1e3)} KB/s`);
+  const down = data.hosts.filter((h) => !h.ok).length;
+  return (
+    <Section title="Hosts" source={state} className="hosts" count={down ? `${down} not answering` : `${data.hosts.length} ${data.hosts.length === 1 ? 'host' : 'hosts'}`}>
+      <ul className="host-list">
+        {list.slice(0, limit).map((h) => (
+          <li key={h.url} className={h.ok ? undefined : 'is-off'} title={[h.os, h.uptime ? `up ${h.uptime}` : ''].filter(Boolean).join(', ')}>
+            <a className="host-name" href={h.url} target="_blank" rel="noreferrer">
+              {h.name}
+            </a>
+            {h.ok ? (
+              <>
+                <span className="host-stat">
+                  <Meter value={h.cpuPct} level={level(h.cpuPct)} />
+                  <span className="mono">{Math.round(h.cpuPct)}% CPU</span>
+                </span>
+                <span className="host-stat">
+                  <Meter value={h.memPct} level={level(h.memPct)} />
+                  <span className="mono">{Math.round(h.memPct)}% mem</span>
+                </span>
+                <span className="host-stat">
+                  {h.disks[0] ? (
+                    <>
+                      <Meter value={h.disks[0].pct} level={level(h.disks[0].pct)} />
+                      <span className="mono" title={h.disks[0].mount}>
+                        {Math.round(h.disks[0].pct)}% {h.disks[0].mount === '/' ? 'disk' : h.disks[0].mount.split('/').pop()}
+                      </span>
+                    </>
+                  ) : null}
+                </span>
+                <span className="host-meta mono">
+                  ↓ {rate(h.rx)}
+                  {h.tempC != null ? `  ${deg(h.tempC, unit)}°` : ''}
+                </span>
+              </>
+            ) : (
+              <span className="host-meta warn-text">Not answering</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {data.hosts.length > limit && <p className="speed-seen">{data.hosts.length - limit} more hosts.</p>}
     </Section>
   );
 }

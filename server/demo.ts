@@ -21,6 +21,7 @@ import type {
   ImmichData,
   ProxmoxData,
   ScrutinyData,
+  GlancesData,
   KumaMonitor,
   UptimeKumaData,
   MinifluxData,
@@ -605,6 +606,18 @@ export function demoAdapters(): Adapter[] {
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),
     demo<SpeedData>('speedtest', 'Speedtest Tracker', 5 * MINUTE, demoSpeed),
+    demo<GlancesData>('glances', 'Glances', 15 * SECOND, () => {
+      const wave = (base: number, amp: number, period: number) => Math.max(1, base + amp * Math.sin(Date.now() / period));
+      const G = 1024 ** 3;
+      const T = 1e12;
+      return {
+        hosts: [
+          { url: 'http://beelink.local:61208', ok: true, name: 'beelink', os: 'Ubuntu 24.04', cpuPct: wave(14, 6, 30_000), cores: 8, load: 1.2, memPct: 58, memUsed: 9.3 * G, memTotal: 16 * G, disks: [{ mount: '/', used: 0.31 * T, size: 0.5 * T, pct: 62 }], rx: wave(2.4e6, 1.5e6, 20_000), tx: wave(0.6e6, 0.3e6, 25_000), tempC: 52, uptime: '18 days, 4:12:09' },
+          { url: 'http://pi.local:61208', ok: true, name: 'raspberrypi', os: 'Debian 12', cpuPct: wave(6, 3, 26_000), cores: 4, load: 0.3, memPct: 41, memUsed: 1.6 * G, memTotal: 4 * G, disks: [{ mount: '/', used: 0.019 * T, size: 0.064 * T, pct: 30 }], rx: wave(0.2e6, 0.1e6, 18_000), tx: wave(0.05e6, 0.02e6, 21_000), tempC: 48, uptime: '41 days, 2:01:55' },
+          { url: 'http://backup.local:61208', ok: true, name: 'backup-box', os: 'Debian 12', cpuPct: wave(3, 2, 33_000), cores: 4, load: 0.1, memPct: 22, memUsed: 1.8 * G, memTotal: 8 * G, disks: [{ mount: '/mnt/backup', used: 3.5 * T, size: 4 * T, pct: 88 }, { mount: '/', used: 0.04 * T, size: 0.25 * T, pct: 16 }], rx: 0.1e6, tx: 0.02e6, tempC: 39, uptime: '9 days, 22:40:01' },
+        ],
+      };
+    }),
     demo<ScrutinyData>('scrutiny', 'Scrutiny', 5 * MINUTE, () => {
       const T = 1e12;
       const at = Date.now() - 40 * MINUTE;

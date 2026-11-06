@@ -292,3 +292,12 @@ test('Scrutiny: a failed SMART check is critical, a threshold warning is a warni
   const alerts = computeAlerts(sources({ scrutiny: { webUrl: 'http://scrutiny', drives: [drive('sda', 'ok'), drive('sdb', 'warn'), drive('sdc', 'failed')] } }), catalog());
   assert.deepEqual(alerts.filter((a) => a.source === 'scrutiny').map((a) => [a.subject, a.level]), [['sdc', 'critical'], ['sdb', 'warn']]);
 });
+
+test('Glances: a host that stops answering warns; a disk past the storage thresholds warns, then alarms', () => {
+  const host = (name: string, pct: number, ok = true) => ({ url: `http://${name}`, ok, name, os: '', cpuPct: 5, memPct: 20, memUsed: 0, memTotal: 0, disks: [{ mount: '/', used: pct, size: 100, pct }], rx: 0, tx: 0 });
+  const alerts = computeAlerts(sources({ glances: { hosts: [host('pi', 40), host('nas', 88), host('vm', 97), host('old', 0, false)] } }), catalog());
+  assert.deepEqual(
+    alerts.filter((a) => a.source === 'glances').map((a) => [a.subject, a.level]),
+    [['vm', 'critical'], ['nas', 'warn'], ['old', 'warn']],
+  );
+});

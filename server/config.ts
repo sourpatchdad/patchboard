@@ -189,6 +189,9 @@ function build(str: Lookup) {
     speedtest: pair('SPEEDTEST_URL', 'SPEEDTEST_TOKEN'),
     immich: pair('IMMICH_URL', 'IMMICH_KEY'),
     scrutiny: str('SCRUTINY_URL') ? { url: trimSlash(str('SCRUTINY_URL')!) } : undefined,
+    glances: str('GLANCES_URL')
+      ? { urls: str('GLANCES_URL')!.split(',').map((u) => trimSlash(u.trim())).filter(Boolean).slice(0, 50) }
+      : undefined,
     proxmox:
       str('PROXMOX_URL') && str('PROXMOX_TOKEN_ID') && str('PROXMOX_SECRET')
         ? { url: trimSlash(str('PROXMOX_URL')!), tokenId: str('PROXMOX_TOKEN_ID')!, secret: str('PROXMOX_SECRET')!, verifyTls: str('PROXMOX_VERIFY_TLS') === '1' }

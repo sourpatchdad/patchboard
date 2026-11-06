@@ -227,6 +227,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'glances',
+    name: 'Glances',
+    adds: 'A Hosts widget for any machine that runs Glances, from a mini PC or a Pi to a rack server: CPU, memory, the fullest disk, network and the hottest sensor. List several addresses to watch every machine at once. A disk past your storage thresholds, or a host that stops answering, shows in Needs attention.',
+    env: ['GLANCES_URL'],
+    where: 'Run Glances in web server mode (glances -w, or the nicolargo/glances image with GLANCES_OPT=-w). The address is port 61208. Several machines: separate the addresses with commas.',
+    source: true,
+  },
+  {
     id: 'scrutiny',
     name: 'Scrutiny',
     adds: "A Drives widget: every drive's SMART verdict, temperature and age. A drive that fails its SMART check, or Scrutiny's thresholds, shows in Needs attention before it dies.",

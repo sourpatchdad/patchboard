@@ -28,6 +28,7 @@ export type SourceId =
   | 'immich'
   | 'proxmox'
   | 'scrutiny'
+  | 'glances'
   | 'overseerr'
   | 'truenas'
   | 'stats'
@@ -582,6 +583,41 @@ export interface DriveHealth {
 export interface ScrutinyData {
   drives: DriveHealth[];
   webUrl: string;
+}
+
+export interface GlancesDisk {
+  mount: string;
+  used: number;
+  size: number;
+  pct: number;
+}
+
+/** One machine running Glances. */
+export interface GlancesHost {
+  url: string;
+  ok: boolean;
+  error?: string;
+  name: string;
+  os: string;
+  cpuPct: number;
+  cores?: number;
+  /** Five-minute load average. */
+  load?: number;
+  memPct: number;
+  memUsed: number;
+  memTotal: number;
+  /** Fullest first. */
+  disks: GlancesDisk[];
+  /** Bytes per second across the physical interfaces. */
+  rx: number;
+  tx: number;
+  /** The hottest temperature sensor. */
+  tempC?: number;
+  uptime?: string;
+}
+
+export interface GlancesData {
+  hosts: GlancesHost[];
 }
 
 export interface CarData {

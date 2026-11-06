@@ -2,6 +2,7 @@
 // rules decide what earns space on the page. Keep them few and specific.
 
 import type {
+  GlancesData,
   ProxmoxData,
   ScrutinyData,
   Alert,
@@ -236,6 +237,26 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
       alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', source: 'frigate' });
+    }
+  }
+
+  // Glances: a host that stops answering, and disks past the storage thresholds.
+  const glances = data<GlancesData>(sources, 'glances');
+  for (const h of glances?.hosts ?? []) {
+    if (!h.ok) {
+      alerts.push({ id: `host-down-${h.url}`, level: 'warn', subject: h.name, title: `${h.name} isn't answering`, detail: h.error, source: 'glances' });
+      continue;
+    }
+    for (const d of h.disks) {
+      if (d.pct < config.poolWarnPct) continue;
+      alerts.push({
+        id: `host-disk-${h.name}-${d.mount}`,
+        level: d.pct >= config.poolCritPct ? 'critical' : 'warn',
+        subject: h.name,
+        title: `${d.mount} on ${h.name} is ${Math.round(d.pct)}% full`,
+        detail: `${fmtTB(d.size - d.used)} free`,
+        source: 'glances',
+      });
     }
   }
 
