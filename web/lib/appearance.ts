@@ -70,7 +70,7 @@ export const ACCENTS: { id: string; name: string; dark: string; light: string }[
 
 export const HOME_SECTIONS: { id: HomeSection; label: string }[] = [
   { id: 'inbox', label: 'Inbox' },
-  { id: 'feeds', label: 'Feeds' },
+  { id: 'feeds', label: 'Reading' },
   { id: 'upcoming', label: 'This week' },
   { id: 'now', label: 'Right now' },
   { id: 'changes', label: 'Changes' },

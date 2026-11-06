@@ -201,7 +201,7 @@ export function Feeds() {
   if (snap && !snap.sources.miniflux && !snap.demo) {
     return (
       <div className="page">
-        <h1 className="page-title">Feeds</h1>
+        <h1 className="page-title">Reading</h1>
         <Empty>Feeds come from Miniflux. Set MINIFLUX_URL and MINIFLUX_TOKEN to turn this on.</Empty>
       </div>
     );
@@ -217,11 +217,11 @@ export function Feeds() {
     <div className={`reader-layout ${selected ? 'has-selection' : ''}`}>
       <aside className="reader-list" aria-label="Unread articles">
         <header className="feeds-head">
-          <h1 className="page-title">Feeds</h1>
+          <h1 className="page-title">Reading</h1>
           <span className="section-count">{total != null ? `${total} unread${category !== 'All' ? ` in ${category}` : ''}` : ''}</span>
           <CustomizePage
             page="feeds"
-            title="Feeds"
+            title="Reading"
             lists={[
               { key: 'hideCategories', title: 'Categories', note: 'Tap a category to hide it, here and on Home.', items: allCats },
               { key: 'hideFeeds', title: 'Feeds', note: 'Tap a feed to hide it. Feeds show up here once they have unread articles.', items: allFeeds },

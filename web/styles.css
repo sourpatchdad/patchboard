@@ -660,7 +660,7 @@ time,
 
 .head-alert.alert-info > a,
 .head-alert.alert-info > span {
-  border-right-color: var(--line);
+  border-right-color: transparent;
 }
 
 .head-alert.alert-info .head-alert-title {
@@ -724,7 +724,7 @@ h2.status-line {
 
   .head-alert.alert-info > a,
   .head-alert.alert-info > span {
-    border-left-color: var(--line);
+    border-left-color: transparent;
   }
 }
 

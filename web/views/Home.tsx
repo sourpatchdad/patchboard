@@ -302,7 +302,7 @@ export function FeedsBrief({ now }: { now: number }) {
   if (!state) return null;
   return (
     <Section
-      title="Feeds"
+      title="Reading"
       className="feeds-brief"
       count={data ? `${data.unread} unread` : undefined}
       action={data?.unread ? { label: 'Read all', to: '/feeds' } : undefined}

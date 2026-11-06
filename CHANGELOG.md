@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Feeds is now Reading,** in the top bar, the Home widget, Jump to and
+  Settings. The address stays /feeds, so bookmarks keep working.
+- **Quiet notes in Home's header lose their rule.** "15 containers have
+  image updates" shows as plain gray text; only problems get the amber or
+  red edge.
 - **Recreated containers show once.** Compose recreates a container by
   removing it and creating a new one, which passes through Created on the
   way. Patchboard counted Created as a stop, so every update showed

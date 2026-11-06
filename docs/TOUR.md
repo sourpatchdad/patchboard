@@ -50,14 +50,14 @@ with posters and no doubles. A phone gets a day-by-day list.
 
 ![Weather](screenshots/weather.webp)
 
-**Feeds:** your Miniflux unread as a morning edition: a lead story, then the
+**Reading:** your Miniflux unread as a morning edition: a lead story, then the
 newest from each category, with pictures. Filter by category, sort, or mark a
 category read. Open an article to read it here; `j` and `k` move, `o` opens
 the original.
 
-![Feeds, the edition](screenshots/feeds-edition.webp)
+![Reading, the edition](screenshots/feeds-edition.webp)
 
-![Feeds, reading](screenshots/feeds.webp)
+![Reading, one article](screenshots/feeds.webp)
 
 **The house:** Home Assistant lights, sensors and scenes, the car, and Wake
 buttons, on the Home board. Tap a light or a scene; a lock or a garage door

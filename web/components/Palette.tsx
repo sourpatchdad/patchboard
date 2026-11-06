@@ -62,7 +62,7 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
       { id: 'v-home', label: 'Home', hint: 'View', run: go('/') },
       { id: 'v-server', label: 'Server', hint: 'View', run: go('/server') },
       { id: 'v-stacks', label: 'Stacks', hint: 'View', run: go('/stacks') },
-      { id: 'v-feeds', label: 'Feeds', hint: 'View', run: go('/feeds') },
+      { id: 'v-feeds', label: 'Reading', hint: 'View', run: go('/feeds') },
       { id: 'v-up', label: 'Upcoming', hint: 'View', run: go('/upcoming') },
       { id: 'v-weather', label: 'Weather', hint: 'View', run: go('/weather') },
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },

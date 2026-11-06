@@ -96,7 +96,7 @@ see who did what.
 | **Home** | The board: apps, Needs attention, Right now, This week, inbox, feeds, server, weather, changes, recently added, Next up, any container or JSON API. |
 | **Server** | TrueNAS pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate. |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
-| **Feeds** | A Miniflux reader with keyboard navigation. |
+| **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |
 | **Upcoming** | Sonarr, Radarr and Trakt in one calendar, without doubles, with posters. |
 | **Weather** | The next 24 hours, the week, sunrise and sunset, US weather alerts. |
 | **Logs** | Live container logs, with a hand-off to Dozzle. |
