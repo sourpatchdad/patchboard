@@ -693,14 +693,13 @@ h2.status-line {
   margin: 0;
 }
 
-/* All quiet, with Needs attention in the header: the otter keeps watch
-   beside the line, the mascot's moment that the card used to hold. */
-.status-line.is-quiet {
+/* The otter keeps watch beside the status line and wears its mood. */
+.status-line {
   gap: 10px;
   text-decoration: none;
 }
 
-.status-line.is-quiet .otter {
+.status-line .otter {
   margin: -8px 0;
 }
 

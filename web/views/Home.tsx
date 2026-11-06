@@ -91,6 +91,8 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
         ? { tone: 'ok', text: `All quiet. ${running} containers running.` }
         : { tone: 'warn', text: "Can't see Docker right now." }
       : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: `${alerts.length === 1 ? 'One thing needs' : `${alerts.length} things need`} you.` };
+  // The otter beside the status line wears the worst of it.
+  const mood = moodFor(status.tone === 'crit' ? 'critical' : status.tone === 'warn' ? 'warn' : null, night, snap!.alerts.length);
 
   return (
     <header className="masthead">
@@ -127,7 +129,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
       <div className={`masthead-status tone-${status.tone}`}>
         {!attentionCard && !alerts.length ? (
           <Link className="status-line is-quiet" to="/stacks">
-            <Mascot mood={moodFor(null, night, snap!.alerts.length)} size={40} />
+            <Mascot mood={mood} size={40} />
             <span>{status.text}</span>
           </Link>
         ) : attentionCard || !alerts.length ? (
@@ -136,12 +138,12 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
               e.preventDefault();
               document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}>
-            <span className="status-led" aria-hidden />
+            <Mascot mood={mood} size={40} />
             <span>{status.text}</span>
           </a>
         ) : (
           <h2 className="status-line">
-            <span className="status-led" aria-hidden />
+            <Mascot mood={mood} size={40} />
             <span>{status.text}</span>
           </h2>
         )}
