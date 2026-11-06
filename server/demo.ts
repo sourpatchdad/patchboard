@@ -2,8 +2,7 @@
 // network access. This is what the public portfolio build and screenshots run
 // on, so it should look like a believable, slightly imperfect homelab.
 
-import { pinnedEntities } from '../shared/ha.ts';
-import { savedBoard } from './adapters/homeassistant.ts';
+import { pinnedAnywhere } from './adapters/homeassistant.ts';
 import { poster } from './demo-media.ts';
 import { episodeKey } from './adapters/arr.ts';
 import type {
@@ -626,7 +625,7 @@ export function demoAdapters(): Adapter[] {
     demo<MediaServerData>('jellyfin', 'Jellyfin', 15 * SECOND, demoJellyfin),
     demo<QbitData>('qbit', 'qBittorrent', 5 * SECOND, demoQbit),
     demo<QbitData>('sabnzbd', 'SABnzbd', 5 * SECOND, demoSab),
-    demo<HomeAssistantData>('homeassistant', 'Home Assistant', 15 * SECOND, () => demoHa(() => pinnedEntities(savedBoard()))),
+    demo<HomeAssistantData>('homeassistant', 'Home Assistant', 15 * SECOND, () => demoHa(pinnedAnywhere)),
     demo<CarData>('tessie', 'Tesla', 2 * MINUTE, demoCar),
     demo<UptimeKumaData>('uptimekuma', 'Uptime Kuma', 30 * SECOND, demoKuma),
     demo<DnsData>('pihole', 'Pi-hole', 30 * SECOND, demoPihole),

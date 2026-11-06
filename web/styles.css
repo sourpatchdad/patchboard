@@ -9221,3 +9221,123 @@ button.ha-act:hover {
   margin-top: 8px;
 }
 
+
+/* ---------- Boards: tabs over the board, and the arrange bar in two rows ---------- */
+
+.board-tabs {
+  display: flex;
+  gap: 4px 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 4px 0 2px;
+  border-bottom: 1px solid var(--line);
+}
+
+.board-tab {
+  flex: none;
+  padding: 6px 0 8px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+.board-tab:hover {
+  color: var(--head);
+}
+
+.board-tab.active {
+  color: var(--head);
+  border-bottom-color: var(--accent);
+}
+
+.is-editing .board-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.board-bar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.board-bar-tools {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.board-name {
+  flex: 0 1 220px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.board-fit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.board-foot {
+  gap: 18px;
+}
+
+.drawer-sub {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.drawer-list button[aria-checked='true'] {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.drawer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.board-over {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* A phone shows one column and scrolls, so columns and fit stay on wider screens. */
+@media (max-width: 760px) {
+  .is-editing .board-bar .board-bar-hint,
+  .is-editing .board-bar .board-cols,
+  .is-editing .board-bar .board-fit {
+    display: none;
+  }
+
+  .is-editing .board-bar .board-bar-row:first-child {
+    flex-wrap: nowrap;
+  }
+
+  .board-name {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .board-bar-tools .starter-pick {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    order: 2;
+  }
+}

@@ -3,13 +3,14 @@
 
 import { moodFor } from '../../shared/otter.ts';
 import { Mascot } from '../components/Otter.tsx';
-import { STARTERS } from '../../shared/board.ts';
+import { HOME_ID, STARTERS } from '../../shared/board.ts';
+import { forThisServer } from '../board/ready.ts';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
 import { useEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
-import { Link } from 'react-router-dom';
+import { Link, NavLink, useParams } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { sameRelease } from '../../shared/media.ts';
 import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
@@ -49,15 +50,33 @@ import { useNow, useSource, useStore } from '../lib/store.tsx';
 
 export function Home() {
   const { snap } = useStore();
+  const { board = HOME_ID } = useParams();
   const now = useNow(15_000);
   const [widgets, setWidgets] = useState<string[]>([]);
   if (!snap) return <HomeSkeleton />;
   return (
     <div className="home">
       <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} />
-      <Welcome />
-      <Board now={now} onWidgets={setWidgets} />
+      {board === HOME_ID && <Welcome />}
+      <BoardTabs />
+      <Board key={board} id={board} now={now} onWidgets={setWidgets} />
     </div>
+  );
+}
+
+/** One tab per board, once there is more than Home. */
+function BoardTabs() {
+  const { snap } = useStore();
+  const boards = snap?.boards ?? [];
+  if (boards.length < 2) return null;
+  return (
+    <nav className="board-tabs" aria-label="Boards">
+      {boards.map((b) => (
+        <NavLink key={b.id} to={b.id === HOME_ID ? '/' : `/b/${b.id}`} end className="board-tab">
+          {b.name}
+        </NavLink>
+      ))}
+    </nav>
   );
 }
 
@@ -336,6 +355,9 @@ export function FeedsBrief({ now }: { now: number }) {
 }
 
 export function NowPlaying() {
+  // Rows per server or client, so a busy evening doesn't push the board down.
+  // Each heading already gives the full count.
+  const { limit = 6 } = useWidget();
   const { servers, configured } = useMediaServers();
   const { clients, configured: anyClient } = useDownloadClients();
   const abs = useSource<ListeningData>('audiobookshelf');
@@ -374,7 +396,7 @@ export function NowPlaying() {
           <h3>
             <Link to={`/c/${m.container}`}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</Link>
           </h3>
-          {m.data.streams.map((s, i) => (
+          {m.data.streams.slice(0, limit).map((s, i) => (
             <div className="stream" key={i}>
               <div className="stream-line">
                 <span className="stream-title">
@@ -403,7 +425,7 @@ export function NowPlaying() {
           <h3>
             {l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}
           </h3>
-          {l.data!.streams.map((s, i) => (
+          {l.data!.streams.slice(0, limit).map((s, i) => (
             <div className="stream" key={i}>
               <div className="stream-line">
                 <span className="stream-title">
@@ -459,7 +481,7 @@ export function NowPlaying() {
             <PauseButton client={d} />
           </h3>
           {!d.data.paused &&
-            d.data.active.map((t) => (
+            d.data.active.slice(0, limit).map((t) => (
               <div className="stream" key={t.name}>
                 <div className="stream-line">
                   <span className="stream-title torrent-name">{t.name}</span>
@@ -814,7 +836,7 @@ function Welcome() {
                 className="text-button"
                 title={st.about}
                 onClick={async () => {
-                  await fetch('/api/board', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(st.board) });
+                  await fetch(`/api/boards/${HOME_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(forThisServer(st.board, snap)) });
                   location.reload();
                 }}
               >
@@ -822,7 +844,7 @@ function Welcome() {
               </button>
             </span>
           ))}
-          . Customize, at the foot of the board, changes any of it.
+          . Customize, at the foot of the board, changes any of it, and New board adds another.
         </li>
         <li>
           <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.

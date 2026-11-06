@@ -1,6 +1,7 @@
-// The Home board: an ordered list of widgets, each with a size. Shared by the
-// server (which stores and validates it) and the browser (which draws and
-// edits it), so a saved board can never hold something the UI can't render.
+// Boards: ordered lists of widgets, each with a size. Home is the first board;
+// more can be added and named. Shared by the server (which stores and
+// validates them) and the browser (which draws and edits them), so a saved
+// board can never hold something the UI can't render.
 // Runtime code is fine here: no Node or DOM use.
 
 import { parseEntities } from './ha.ts';
@@ -62,9 +63,49 @@ export interface Widget {
 
 export interface Board {
   version: 1;
+  /** Shown in the board tabs. Home's is "Home" unless renamed. */
+  name?: string;
   /** How many columns the board has on a wide screen (2 to 6). Narrower screens use fewer. */
   columns?: number;
+  /** Lists show fewer items so the whole board fits the window, on screens wide enough for two columns. */
+  fit?: boolean;
   widgets: Widget[];
+}
+
+/** A board in the tabs: its address and its name. */
+export interface BoardRef {
+  id: string;
+  name: string;
+}
+
+/** The first board, at /. It can be renamed and reset but not deleted. */
+export const HOME_ID = 'home';
+export const MAX_BOARDS = 12;
+export const BOARD_ID = /^[a-z0-9][a-z0-9-]{0,31}$/;
+
+/** A board name: trimmed, single spaces, no control characters, 32 characters at most. */
+export function cleanBoardName(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const name = raw
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 32);
+  return name || undefined;
+}
+
+/** An address for a new board from its name, unlike any taken. */
+export function boardId(name: string, taken: string[]): string {
+  const base =
+    name
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 28) || 'board';
+  let id = base === HOME_ID ? 'home-2' : base;
+  for (let n = 2; taken.includes(id); n++) id = `${base}-${n}`;
+  return id;
 }
 
 export const DEFAULT_COLUMNS = 3;
@@ -142,7 +183,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
     options: {},
   },
   vitals: { name: 'Server', about: 'CPU, memory, storage and uptime, with the last 24 hours.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
-  now: { name: 'Right now', about: 'Who is watching Plex, Jellyfin or Emby, and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  now: { name: 'Right now', about: 'Who is watching Plex, Jellyfin or Emby, and what is downloading.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
   upcoming: { name: 'This week', about: 'Episodes and movies due in the next week or two.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [9, 3, 40], days: true } },
   inbox: { name: 'Inbox', about: 'Newest mail and the unread count.', size: 'm', sizes: WIDE, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
   feeds: { name: 'Reading', about: 'Newest unread articles from Miniflux.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 30] } },
@@ -187,6 +228,9 @@ export const DEFAULT_BOARD: Board = {
     { id: 'recent', type: 'recent', size: 'xl', span: 3 },
   ],
 };
+
+/** A new board with nothing on it but Needs attention, which lives in the header. */
+export const EMPTY_BOARD: Board = { version: 1, columns: 3, widgets: [{ id: 'attention', type: 'attention', size: 'm' }] };
 
 const ID = /^[a-z0-9-]{1,40}$/;
 const CONTAINER = /^[\w.-]{1,128}$/;
@@ -235,7 +279,9 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
   // Needs attention is part of what Patchboard is; it can move but not leave.
   if (!widgets.some((w) => w.type === 'attention')) widgets.unshift({ id: 'attention', type: 'attention', size: 'm' });
   const columns = Number.isInteger(raw.columns) && (raw.columns as number) >= 2 && (raw.columns as number) <= 6 ? (raw.columns as number) : undefined;
-  return { board: { version: 1, ...(columns ? { columns } : {}), widgets } };
+  const name = cleanBoardName((raw as { name?: unknown }).name);
+  const fit = (raw as { fit?: unknown }).fit === true;
+  return { board: { version: 1, ...(name ? { name } : {}), ...(columns ? { columns } : {}), ...(fit ? { fit } : {}), widgets } };
 }
 
 /** The shared settings, kept only when they make sense for this widget. */

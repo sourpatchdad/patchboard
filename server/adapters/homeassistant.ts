@@ -1,13 +1,13 @@
-// Home Assistant: the states of the entities pinned on the board, and one tap
+// Home Assistant: the states of the entities pinned on the boards, and one tap
 // to toggle a light or run a scene. A long-lived access token reads
 // everything the token's user can; Patchboard only shows and changes what you
 // pinned, and only the domains in shared/ha.ts.
 
-import { type Board, validateBoard } from '../../shared/board.ts';
+import { savedBoards } from '../boards.ts';
 import { type HaAction, haService, pinnedEntities } from '../../shared/ha.ts';
 import type { HaEntity, HomeAssistantData } from '../../shared/types.ts';
 import { config } from '../config.ts';
-import { kvGet } from '../db.ts';
+
 import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 
@@ -21,10 +21,11 @@ interface State {
 const headers = () => ({ Authorization: `Bearer ${config.homeassistant!.token}`, 'Content-Type': 'application/json' });
 const states = () => getJson<State[]>(`${config.homeassistant!.url}/api/states`, { headers: headers() });
 
-export function savedBoard(): Board | null {
-  const saved = kvGet<unknown>('board');
-  const v = saved ? validateBoard(saved) : null;
-  return v && 'board' in v ? v.board : null;
+/** Entities pinned to a Home Assistant widget on any board: the only ones fetched or changed. */
+export function pinnedAnywhere(): Set<string> {
+  const out = new Set<string>();
+  for (const { board } of savedBoards()) for (const id of pinnedEntities(board)) out.add(id);
+  return out;
 }
 
 export function toEntity(s: State): HaEntity {
@@ -44,7 +45,7 @@ export function homeAssistantAdapter(): Adapter<HomeAssistantData> {
     label: 'Home Assistant',
     intervalMs: 15 * SECOND,
     async fetch() {
-      const pinned = pinnedEntities(savedBoard());
+      const pinned = pinnedAnywhere();
       const all = await states();
       return { total: all.length, entities: all.filter((s) => pinned.has(s.entity_id)).map(toEntity) };
     },

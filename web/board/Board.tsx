@@ -6,18 +6,32 @@
 // as a single column in the same order.
 
 import { Roll } from '../components/Roll.tsx';
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { type Board as BoardData, DEFAULT_BOARD, DEFAULT_COLUMNS, MIN_COLUMN_PX, spanOf, STARTERS, WIDGET_INFO, type Widget, type WidgetSize, type WidgetType } from '../../shared/board.ts';
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  type Board as BoardData,
+  cleanBoardName,
+  DEFAULT_BOARD,
+  DEFAULT_COLUMNS,
+  EMPTY_BOARD,
+  HOME_ID,
+  MIN_COLUMN_PX,
+  spanOf,
+  STARTERS,
+  WIDGET_INFO,
+  type Widget,
+  type WidgetType,
+} from '../../shared/board.ts';
+import { HoldButton } from '../components/Hold.tsx';
+import { forThisServer, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
-import { NAS_SOURCES } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HealthStrip } from '../components/Squares.tsx';
-import { Icon, Meter, Section } from '../components/ui.tsx';
+import { Empty, Icon, Meter, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
@@ -30,60 +44,147 @@ import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, Dns
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
 const spanLabel = (n: number, cols: number) => (n >= cols ? 'Full' : String(n));
+const NONE: Widget[] = [];
 
-function useBoard() {
+function useBoard(id: string) {
   const [board, setBoard] = useState<BoardData | null>(null);
   const [custom, setCustom] = useState(false);
+  const [missing, setMissing] = useState(false);
   useEffect(() => {
+    let gone = false;
+    setBoard(null);
+    setMissing(false);
     void (async () => {
       try {
-        const res = (await (await fetch('/api/board')).json()) as { board: BoardData; custom: boolean };
-        setBoard(res.board);
-        setCustom(res.custom);
+        const res = await fetch(`/api/boards/${encodeURIComponent(id)}`);
+        if (gone) return;
+        if (res.status === 404) return setMissing(true);
+        const body = (await res.json()) as { board: BoardData; custom: boolean };
+        setBoard(body.board);
+        setCustom(body.custom);
       } catch {
-        setBoard(DEFAULT_BOARD);
+        if (!gone && id === HOME_ID) setBoard(DEFAULT_BOARD);
       }
     })();
-  }, []);
+    return () => {
+      gone = true;
+    };
+  }, [id]);
+  /** Save, or with null reset Home or delete another board. */
   const save = async (b: BoardData | null): Promise<string | null> => {
-    const res = await fetch('/api/board', { method: b ? 'PUT' : 'DELETE', headers: ACTION, body: b ? JSON.stringify(b) : undefined });
-    const body = (await res.json()) as { board?: BoardData; custom?: boolean; error?: string };
-    if (!res.ok || !body.board) return body.error ?? `HTTP ${res.status}`;
-    setBoard(body.board);
-    setCustom(!!body.custom);
+    const res = await fetch(`/api/boards/${encodeURIComponent(id)}`, { method: b ? 'PUT' : 'DELETE', headers: ACTION, body: b ? JSON.stringify(b) : undefined });
+    const body = (await res.json()) as { board?: BoardData; custom?: boolean; error?: string; deleted?: boolean };
+    if (!res.ok) return body.error ?? `HTTP ${res.status}`;
+    if (body.board) {
+      setBoard(body.board);
+      setCustom(!!body.custom);
+    }
     return null;
   };
-  return { board, custom, save };
+  return { board, custom, missing, save };
 }
 
-export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: string[]) => void }) {
+/**
+ * Fit the screen: while the board runs past the bottom of the window, take
+ * items off the list widget doing the most to push it there, a few at a time,
+ * until it fits or nothing more can go. Starts over when the window's height
+ * changes or the board is saved.
+ */
+function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; over: number } {
+  const [trim, setTrim] = useState<Record<string, number>>({});
+  /** Pixels still past the window once nothing more can be trimmed. */
+  const [over, setOver] = useState(0);
+  const [height, setHeight] = useState(() => window.innerHeight);
+  useEffect(() => {
+    const onResize = () => setHeight(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  useEffect(() => {
+    setTrim({});
+    setOver(0);
+  }, [on, height, widgets]);
+  useEffect(() => {
+    if (!on || !el) return;
+    let timer = 0;
+    const check = () => {
+      // Page coordinates, so a scrolled page measures the same as one at the top.
+      const floor = window.innerHeight - 12 - window.scrollY;
+      const cells = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((c) => ({ c, r: c.getBoundingClientRect(), w: widgets.find((x) => `w-${x.id}` === c.id) }));
+      const shown = (x: Widget) => trim[x.id] ?? Number(x.config?.limit ?? WIDGET_INFO[x.type].options.limit?.[0] ?? 0);
+      const over = cells.filter((x) => x.r.bottom > floor).sort((a, b) => b.r.bottom - a.r.bottom);
+      for (const low of over) {
+        // Anything sharing its columns, at or above it, can make room. The
+        // list with the most to spare goes first, so cuts spread evenly
+        // instead of leaving one widget with a single row.
+        const pick = cells
+          .filter((x) => x.w && x.r.top <= low.r.top && x.r.left < low.r.right - 1 && x.r.right > low.r.left + 1)
+          .map((x) => {
+            const lim = WIDGET_INFO[x.w!.type].options.limit;
+            const now = shown(x.w!);
+            const items = Math.max(1, Math.min(now, x.c.querySelectorAll('li').length || now));
+            return { ...x, w: x.w!, now, items, min: lim?.[1] ?? Infinity };
+          })
+          .filter((x) => x.items > x.min)
+          .sort((a, b) => b.items - b.min - (a.items - a.min) || b.r.height - a.r.height)[0];
+        if (!pick) continue;
+        const need = Math.ceil((low.r.bottom - floor) / (pick.r.height / pick.items));
+        const step = Math.max(1, Math.min(need, Math.ceil((pick.items - pick.min) / 2)));
+        setTrim((t) => ({ ...t, [pick.w.id]: Math.max(pick.min, pick.items - step) }));
+        return;
+      }
+      setOver(over.length ? Math.round(over[0].r.bottom - floor) : 0);
+    };
+    const queue = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(check, 90);
+    };
+    const ro = new ResizeObserver(queue);
+    ro.observe(el);
+    queue();
+    return () => {
+      ro.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [on, el, widgets, trim]);
+  return on ? { trim, over } : { trim: {}, over: 0 };
+}
+
+export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: number; onWidgets?: (types: string[]) => void }) {
   const { snap } = useStore();
-  const { board, custom, save } = useBoard();
+  const navigate = useNavigate();
+  const { board, custom, missing, save } = useBoard(id);
   const types = board?.widgets.map((w) => (w.type === 'attention' && w.config?.style === 'card' ? 'attention-card' : w.type)).join(',') ?? '';
   useEffect(() => {
     if (board) onWidgets?.(types.split(','));
   }, [types]);
   const [draft, setDraft] = useState<BoardData | null>(null);
   const [adding, setAdding] = useState(false);
+  const [creating, setCreating] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */
   const [jsonEdit, setJsonEdit] = useState<string | null>(null);
   /** The widget whose settings drawer is open. */
   const [setting, setSetting] = useState<string | null>(null);
   const [error, setError] = useState('');
+  useEffect(() => {
+    setDraft(null);
+    setError('');
+  }, [id]);
   const editing = draft !== null;
   const shown = draft ?? board;
   // Columns: the board's choice, fewer when the window can't fit them.
+  const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
   const [boardW, setBoardW] = useState(0);
-  const ro = useRef<ResizeObserver | null>(null);
-  const measureRef = useCallback((el: HTMLDivElement | null) => {
-    ro.current?.disconnect();
-    if (!el) return;
-    setBoardW(el.clientWidth);
-    ro.current = new ResizeObserver(() => setBoardW(el.clientWidth));
-    ro.current.observe(el);
-  }, []);
+  useEffect(() => {
+    if (!boardEl) return;
+    setBoardW(boardEl.clientWidth);
+    const ro = new ResizeObserver(() => setBoardW(boardEl.clientWidth));
+    ro.observe(boardEl);
+    return () => ro.disconnect();
+  }, [boardEl]);
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
+  const { trim, over } = useFit(!!board?.fit && !editing && cols > 1, boardEl, board?.widgets ?? NONE);
   const sort = useDragSort('cell', (drag, over) => {
     const ws = draft?.widgets ?? [];
     move(
@@ -91,6 +192,12 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
       ws.findIndex((w) => w.id === over),
     );
   });
+  if (missing)
+    return (
+      <Empty>
+        That board was deleted. <Link to="/">Back to {snap?.boards?.[0]?.name ?? 'Home'}</Link>
+      </Empty>
+    );
   if (!shown) return <div className="board board-loading" aria-busy="true" />;
 
   const update = (fn: (w: Widget[]) => Widget[]) => setDraft((d) => (d ? { ...d, widgets: fn(d.widgets) } : d));
@@ -102,6 +209,7 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
       next.splice(to, 0, item);
       return next;
     });
+  const home = id === HOME_ID;
 
   return (
     <div className={`board-wrap ${editing ? 'is-editing' : ''}`}>
@@ -109,70 +217,101 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
           at the foot of the board and the widgets start right under the masthead. */}
       {editing && (
         <div className="board-bar">
-          <span className="board-bar-title">Arrange your board</span>
-          <span className="board-bar-hint">Drag a widget to move it, drag its right edge to widen it, Settings to rename it or choose what it shows.</span>
-          <span className="board-cols" role="group" aria-label="Columns">
-            <span>Columns</span>
-            <span className="seg">
-              {[2, 3, 4, 5, 6].map((n) => (
-                <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
-                  {n}
-                </button>
-              ))}
+          <div className="board-bar-row">
+            <input
+              className="field board-name"
+              aria-label="Board name"
+              maxLength={32}
+              value={draft.name ?? (home ? 'Home' : '')}
+              placeholder="Name this board"
+              onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
+            />
+            <span className="board-bar-hint">Drag to move, drag the right edge to widen, Settings to rename or trim.</span>
+            {error && <span className="crit-text">{error}</span>}
+            <button type="button" className="text-button" onClick={() => setDraft(null)}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="button board-save"
+              onClick={async () => {
+                const err = await save({ ...draft, name: draft.name?.trim() || undefined });
+                if (err) setError(err);
+                else setDraft(null);
+              }}
+            >
+              Save
+            </button>
+          </div>
+          <div className="board-bar-row board-bar-tools">
+            <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
+              Add widget
+            </button>
+            <span className="board-cols" role="group" aria-label="Columns">
+              <span>Columns</span>
+              <span className="seg">
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
+                    {n}
+                  </button>
+                ))}
+              </span>
+              {cols < chosen && <small>{cols} fit in this window</small>}
             </span>
-            {cols < chosen && <small>{cols} fit in this window</small>}
-          </span>
-          <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
-            Add widget
-          </button>
-          <button
-            type="button"
-            className="text-button"
-            onClick={async () => {
-              const err = await save(null);
-              if (err) setError(err);
-              else setDraft(null);
-            }}
-          >
-            Reset to default
-          </button>
-          <select
-            className="field starter-pick"
-            aria-label="Start from a layout"
-            value=""
-            onChange={(e) => {
-              const st = STARTERS.find((x) => x.id === e.target.value);
-              if (st) setDraft(structuredClone(st.board));
-            }}
-          >
-            <option value="" disabled>
-              Start from a layout...
-            </option>
-            {STARTERS.map((st) => (
-              <option key={st.id} value={st.id}>
-                {st.name}: {st.about}
+            <label className="check board-fit" title="Lists show fewer items so the board ends at the bottom of the window. Phones still scroll.">
+              <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
+              Fit the window
+            </label>
+            <select
+              className="field starter-pick"
+              aria-label="Start over from a layout"
+              value=""
+              onChange={(e) => {
+                const st = STARTERS.find((x) => x.id === e.target.value);
+                if (st) setDraft({ ...forThisServer(st.board, snap), name: draft.name });
+              }}
+            >
+              <option value="" disabled>
+                Start over from a layout
               </option>
-            ))}
-          </select>
-          <button type="button" className="text-button" onClick={() => setDraft(null)}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="button board-save"
-            onClick={async () => {
-              const err = await save(draft);
-              if (err) setError(err);
-              else setDraft(null);
-            }}
-          >
-            Save
-          </button>
-          {error && <span className="crit-text">{error}</span>}
+              {STARTERS.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.name}: {st.about}
+                </option>
+              ))}
+            </select>
+            {home ? (
+              <HoldButton
+                className="text-button"
+                hint="Hold to reset"
+                onConfirm={async () => {
+                  const err = await save(null);
+                  if (err) setError(err);
+                  else setDraft(null);
+                }}
+              >
+                Reset to default
+              </HoldButton>
+            ) : (
+              <HoldButton
+                className="text-button"
+                danger
+                hint="Hold to delete"
+                onConfirm={async () => {
+                  const err = await save(null);
+                  if (err) return setError(err);
+                  setDraft(null);
+                  navigate('/');
+                }}
+              >
+                Delete this board
+              </HoldButton>
+            )}
+          </div>
         </div>
       )}
 
-      <div className="board" ref={measureRef} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      <div className="board" ref={setBoardEl} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card').map((w, i) => (
           <Cell
             key={w.id}
@@ -183,6 +322,7 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
             span={Math.min(spanOf(w, chosen), cols)}
             cols={cols}
             chosen={chosen}
+            limit={trim[w.id]}
             onMove={move}
             onSpan={(n) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, span: n } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
@@ -190,18 +330,28 @@ export function Board({ now, onWidgets }: { now: number; onWidgets?: (types: str
             bind={editing ? sort.bind(w.id) : undefined}
             dragging={sort.dragging === w.id}
           >
-            <WidgetBody w={w} now={now} editing={editing} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
+            <WidgetBody w={w} board={id} now={now} editing={editing} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
           </Cell>
         ))}
       </div>
 
       {!editing && !snap?.readOnly && (
         <div className="board-foot">
+          {over > 40 && (
+            <span className="board-over">
+              Still {over} px past the window with every list at its shortest. Apps as icons, or moving a widget to another board, would make room.
+            </span>
+          )}
           <button type="button" className="text-button board-customize" onClick={() => (setError(''), setDraft(structuredClone(board!)))}>
             {custom ? 'Customize' : 'Customize this board'}
           </button>
+          <button type="button" className="text-button board-customize" onClick={() => setCreating(true)}>
+            New board
+          </button>
         </div>
       )}
+
+      {creating && <NewBoard onClose={() => setCreating(false)} />}
 
       {adding && draft && (
         <AddDrawer
@@ -258,6 +408,8 @@ function Cell(props: {
   span: number;
   cols: number;
   chosen: number;
+  /** Items shown when fitting the window trimmed this widget. */
+  limit?: number;
   children: ReactNode;
   onMove: (from: number, to: number) => void;
   onSpan: (n: number) => void;
@@ -382,7 +534,7 @@ function Cell(props: {
           <WidgetCtx.Provider
             value={{
               title: w.config?.title,
-              limit: w.config?.limit ? Number(w.config.limit) : undefined,
+              limit: props.limit ?? (w.config?.limit ? Number(w.config.limit) : undefined),
               style: w.config?.style,
               days: w.config?.days ? Number(w.config.days) : undefined,
               editing,
@@ -396,7 +548,7 @@ function Cell(props: {
   );
 }
 
-function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved: boolean; editing?: boolean }) {
+function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: string; now: number; saved: boolean; editing?: boolean }) {
   const { snap } = useStore();
   const { homeApps } = useAppearance();
   if (!snap) return null;
@@ -468,7 +620,7 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':
-      return <JsonWidgetView id={w.id} json={w.config?.json} saved={saved} />;
+      return <JsonWidgetView board={board} id={w.id} json={w.config?.json} saved={saved} />;
     case 'weather':
       return <WeatherWidget />;
   }
@@ -566,34 +718,75 @@ function ContainerWidget({ name }: { name: string }) {
   );
 }
 
+/** Name a new board and pick what it starts with; it opens once made. */
+function NewBoard({ onClose }: { onClose: () => void }) {
+  const { snap } = useStore();
+  const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [pick, setPick] = useState('empty');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const choices = [{ id: 'empty', name: 'Empty', about: 'Nothing yet. Add the widgets you want.', board: EMPTY_BOARD }, ...STARTERS];
+  const create = async () => {
+    const clean = cleanBoardName(name);
+    if (!clean) return setError('Give it a name');
+    const st = choices.find((c) => c.id === pick) ?? choices[0];
+    setBusy(true);
+    const res = await fetch('/api/boards', { method: 'POST', headers: ACTION, body: JSON.stringify({ ...forThisServer(st.board, snap), name: clean }) });
+    const body = (await res.json()) as { id?: string; error?: string };
+    setBusy(false);
+    if (!res.ok || !body.id) return setError(body.error ?? `HTTP ${res.status}`);
+    onClose();
+    navigate(`/b/${body.id}`);
+  };
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <form
+        className="palette drawer"
+        role="dialog"
+        aria-label="New board"
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          void create();
+        }}
+      >
+        <header className="drawer-head">
+          <h2>New board</h2>
+          <button type="button" className="text-button" onClick={onClose}>
+            Close
+          </button>
+        </header>
+        <input className="field palette-input" placeholder="Name, like Media or Server room" maxLength={32} value={name} onChange={(e) => (setName(e.target.value), setError(''))} autoFocus />
+        <p className="drawer-sub">Start with</p>
+        <ul className="drawer-list" role="radiogroup" aria-label="Start with">
+          {choices.map((c) => (
+            <li key={c.id}>
+              <button type="button" role="radio" aria-checked={pick === c.id} onClick={() => setPick(c.id)}>
+                <strong>{c.name}</strong>
+                <span>{c.about}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <footer className="drawer-foot">
+          {error && <span className="crit-text">{error}</span>}
+          <button type="submit" className="button board-save" disabled={busy}>
+            {busy ? 'Creating...' : 'Create board'}
+          </button>
+        </footer>
+      </form>
+    </div>
+  );
+}
+
 function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () => void; onAdd: (w: Widget) => void }) {
   const { snap } = useStore();
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
   const present = new Set(board.widgets.map((w) => w.type));
   // Integration widgets appear once their integration is on, so nothing lands empty.
-  const has = (id: string) => !!snap?.sources[id as keyof typeof snap.sources];
-  const ready: Partial<Record<WidgetType, boolean>> = {
-    homeassistant: has('homeassistant'),
-    car: has('tessie'),
-    uptime: has('uptimekuma') || has('gatus') || has('healthchecks'),
-    dns: has('pihole') || has('adguard'),
-    speed: has('speedtest'),
-    photos: has('immich'),
-    proxmox: has('proxmox'),
-    drives: has('scrutiny'),
-    sync: has('syncthing'),
-    hosts: has('glances') || has('beszel'),
-    power: has('nut'),
-    storage: NAS_SOURCES.some(has),
-    dockerhosts: has('portainer'),
-    network: has('unifi') || has('tailscale'),
-    calendar: has('calendar'),
-    books: has('books'),
-    requests: has('overseerr'),
-    wake: !!snap?.features?.includes('wake'),
-    nextup: has('jellyfin') || has('emby'),
-  };
+  const ready = widgetReady(snap);
   const types = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => (WIDGET_INFO[t].multiple || !present.has(t)) && ready[t] !== false);
   const containers = [...containerMap(snap).values()].filter((c) => c.name.includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
   const id = (base: string) => {

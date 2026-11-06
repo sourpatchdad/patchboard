@@ -19,6 +19,12 @@ The first public release, 1.0.0. What's in it:
   Plex and Jellyfin group a season differently.
   Each number in the Server widget opens the section that explains it,
   and an empty page links straight to the setting that fills it.
+  Add as many boards as you like (twelve), each with its own name, widgets
+  and columns, switched by tabs over the board. A new board starts empty or
+  from a layout, and a layout leaves out widgets for integrations you
+  haven't set up. Fit the window trims each board's lists to one screen and
+  says what to move when it can't. Right now takes an item count like the
+  other lists.
 - **Every glance leads to an action.** A stopped container is two clicks
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
   blocking pauses, requests approve, Proxmox guests start and stop, all from

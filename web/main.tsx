@@ -28,6 +28,7 @@ const router = createBrowserRouter([
     element: <Shell />,
     children: [
       { path: '/', element: <Home /> },
+      { path: '/b/:board', element: <Home /> },
       { path: '/server', element: <Server /> },
       { path: '/stacks', element: <Stacks /> },
       { path: '/c/:name', element: <ContainerPage /> },

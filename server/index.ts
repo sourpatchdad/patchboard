@@ -16,7 +16,8 @@ import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
-import { haCall, haEntityList, homeAssistantAdapter, savedBoard } from './adapters/homeassistant.ts';
+import { haCall, haEntityList, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
+import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras } from './boards.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
 import { speedtestAdapter } from './adapters/speedtest.ts';
@@ -45,7 +46,7 @@ import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './a
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, describeThresholds, saveThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, envHas, withConfig } from './config.ts';
-import { haActionFor, pinnedEntities } from '../shared/ha.ts';
+import { haActionFor } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
@@ -63,7 +64,7 @@ import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeeds
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
-import { type Board, DEFAULT_BOARD, validateBoard } from '../shared/board.ts';
+import { boardId, validateBoard } from '../shared/board.ts';
 import { type JsonField, validateJsonConfig } from '../shared/jsonwidget.ts';
 import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
 import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts';
@@ -334,15 +335,16 @@ app.post('/api/logout', (c) => {
 
 app.get('/api/audit', (c) => c.json(listAudit(200)));
 
-// API numbers widgets. The server only ever fetches URLs saved in the board:
-// the browser asks for a widget by id, never for a URL.
-app.get('/api/widgets/:id', async (c) => {
-  const saved = kvGet<Board>('board');
-  const w = saved?.widgets.find((x) => x.id === c.req.param('id') && x.type === 'json');
+// API numbers widgets. The server only ever fetches URLs saved in a board:
+// the browser asks for a widget by board and id, never for a URL.
+app.get('/api/widgets/:board/:id', async (c) => {
+  const board = c.req.param('board');
+  const found = getBoard(board);
+  const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'json') : undefined;
   if (!w?.config?.json) return c.json({ error: 'No such widget' }, 404);
   const v = validateJsonConfig(JSON.parse(w.config.json));
   if ('error' in v) return c.json({ error: v.error }, 400);
-  return c.json(config.demo ? demoJson(v.config) : await cachedJsonWidget(w.id, v.config));
+  return c.json(config.demo ? demoJson(v.config) : await cachedJsonWidget(`${board}/${w.id}`, v.config));
 });
 
 // Try a configuration before saving it. A change-level request: it needs the
@@ -578,7 +580,7 @@ app.post('/api/ha/:entity/:action', async (c) => {
   const action = c.req.param('action');
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (action !== 'toggle' && action !== 'run') return c.json({ error: 'Unknown action' }, 400);
-  if (!pinnedEntities(savedBoard()).has(entity)) return c.json({ error: 'Pin that entity to a Home Assistant widget first' }, 403);
+  if (!pinnedAnywhere().has(entity)) return c.json({ error: 'Pin that entity to a Home Assistant widget first' }, 403);
   if (haActionFor(entity) !== action) return c.json({ error: 'Patchboard does not change that kind of entity' }, 403);
   try {
     if (config.demo) demoHaAction(entity, action);
@@ -900,28 +902,51 @@ app.put('/api/appearance', async (c) => {
 });
 
 // The Home board. Stored on the server so every device shows the same one.
-app.get('/api/board', (c) => {
-  const saved = kvGet<unknown>('board');
-  const v = saved ? validateBoard(saved) : null;
-  return c.json(v && 'board' in v ? { board: v.board, custom: true } : { board: DEFAULT_BOARD, custom: false });
+app.get('/api/boards', (c) => c.json({ boards: boardList() }));
+
+app.get('/api/boards/:id', (c) => {
+  const found = getBoard(c.req.param('id'));
+  return found ? c.json(found) : c.json({ error: 'No such board' }, 404);
 });
 
-app.put('/api/board', async (c) => {
+// Add a board. The server picks its address from its name.
+app.post('/api/boards', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const v = validateBoard(await c.req.json().catch(() => null));
   if ('error' in v) return c.json({ error: v.error }, 400);
-  kvSet('board', v.board);
-  recordAudit(who(c), 'board.save', 'home', `${v.board.widgets.length} widgets`);
+  if (!v.board.name) return c.json({ error: 'Give it a name' }, 400);
+  const id = boardId(v.board.name, boardList().map((b) => b.id));
+  const err = putBoard(id, v.board);
+  if (err) return c.json({ error: err }, 400);
+  recordAudit(who(c), 'board.add', id, v.board.name);
+  hub.emitBoards();
+  return c.json({ id, board: v.board });
+});
+
+// Save a board.
+app.put('/api/boards/:id', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const id = c.req.param('id');
+  const v = validateBoard(await c.req.json().catch(() => null));
+  if ('error' in v) return c.json({ error: v.error }, 400);
+  if (!getBoard(id)) return c.json({ error: 'No such board' }, 404);
+  const err = putBoard(id, v.board);
+  if (err) return c.json({ error: err }, 400);
+  recordAudit(who(c), 'board.save', id, `${v.board.widgets.length} widgets`);
+  hub.emitBoards();
   // Newly pinned Home Assistant entities show up without waiting for the next poll.
   if (config.homeassistant || config.demo) void hub.pollNow('homeassistant');
   return c.json({ board: v.board, custom: true });
 });
 
-app.delete('/api/board', (c) => {
+// Home goes back to the default; any other board is deleted.
+app.delete('/api/boards/:id', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  kvSet('board', null);
-  recordAudit(who(c), 'board.reset', 'home');
-  return c.json({ board: DEFAULT_BOARD, custom: false });
+  const id = c.req.param('id');
+  if (!removeBoard(id)) return c.json({ error: 'No such board' }, 404);
+  recordAudit(who(c), id === 'home' ? 'board.reset' : 'board.delete', id);
+  hub.emitBoards();
+  return c.json(getBoard(id) ?? { deleted: true });
 });
 
 // Dismiss an image-update mark you know is wrong (a re-published tag).
@@ -1027,6 +1052,7 @@ app.get('/api/setup', (c) => {
     version: 1,
     exportedAt: new Date().toISOString(),
     board: kvGet('board') ?? null,
+    boards: exportExtras(),
     apps: kvGet('app-order') ?? null,
     pages: kvGet('pages') ?? {},
     brand: kvGet('brand') ?? {},
@@ -1039,11 +1065,13 @@ app.get('/api/setup', (c) => {
 
 app.put('/api/setup', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; apps?: unknown; pages?: unknown; brand?: unknown } | null;
+  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; boards?: unknown; apps?: unknown; pages?: unknown; brand?: unknown } | null;
   if (!raw || raw.patchboard !== 'setup') return c.json({ error: "That isn't a Patchboard setup file." }, 400);
   // Check everything before changing anything.
   const board = raw.board ? validateBoard(raw.board) : null;
   if (board && 'error' in board) return c.json({ error: `Board: ${board.error}` }, 400);
+  const boards = importExtras(raw.boards);
+  if ('error' in boards) return c.json({ error: `Boards: ${boards.error}` }, 400);
   const apps = raw.apps ? validateOrder(raw.apps) : null;
   if (apps && 'error' in apps) return c.json({ error: `Apps: ${apps.error}` }, 400);
   const pages = raw.pages ? validatePages(raw.pages) : null;
@@ -1051,6 +1079,8 @@ app.put('/api/setup', async (c) => {
   const brand = raw.brand ? cleanBrand(raw.brand) : {};
   if ('error' in brand) return c.json({ error: `Name: ${brand.error}` }, 400);
   kvSet('board', board ? board.board : null);
+  saveExtras(boards.boards);
+  hub.emitBoards();
   kvSet('app-order', apps ? apps.order : null);
   setCatalogOrder(apps ? apps.order : null);
   kvSet('pages', pages ? pages.pages : {});

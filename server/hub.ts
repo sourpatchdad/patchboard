@@ -2,6 +2,7 @@
 // and pushed to every open browser over SSE. The browser never talks to an
 // integration directly, so no key ever leaves the server.
 
+import { boardList } from './boards.ts';
 import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
 import type { Adapter } from './adapters/adapter.ts';
@@ -225,6 +226,11 @@ export class Hub {
     this.emit({ type: 'brand', brand });
   }
 
+  /** A board was added, renamed or deleted: every tab redraws its board tabs. */
+  emitBoards(): void {
+    this.emit({ type: 'boards', boards: boardList() });
+  }
+
   /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */
   emitCatalog(): void {
     const cat = getCatalog();
@@ -260,6 +266,7 @@ export class Hub {
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
       brand: kvGet('brand') ?? {},
+      boards: boardList(),
       features: [
         'diun',
         ...((dockerCli && composeMounted(this.containers())) || config.demo ? ['updates'] : []),

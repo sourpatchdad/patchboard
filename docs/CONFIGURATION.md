@@ -5,7 +5,7 @@ You configure almost everything in the UI:
 | Where | What | Applies to |
 |---|---|---|
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
-| Apps, Edit apps, and Customize on each page | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
+| Apps, Edit apps, and Customize on each page | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in | A password, and other names you open Patchboard by | Every device |
 | Settings, Look, Name | The name in the header and tab, and the otter beside it | Every device |
@@ -54,7 +54,7 @@ services.yaml.
 | `ALLOWED_HOSTS` | empty | Other names you reach Patchboard by, such as `dash.example.com`; Settings, Sign-in sets them too. IP addresses, `localhost` and home names (`nas`, `nas.local`, `.lan`, `.home.arpa`, `.internal`) always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |
-| `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the board, apps, history, integration settings, keys) and `secret.key`, which encrypts the keys. Mount it, back it up, keep it owner-only. A few megabytes. |
+| `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the boards, apps, history, integration settings, keys) and `secret.key`, which encrypts the keys. Mount it, back it up, keep it owner-only. A few megabytes. |
 | `PATCHBOARD_SECRET_KEY` | a random `secret.key` | Any long string. Encrypts keys saved in the UI instead of the generated file, so the database and the key can live on different disks. Set it later and Patchboard moves saved keys over to it on the next start, as long as `secret.key` is still in `DATA_DIR`. Back up `DATA_DIR` whole: the database and its key together. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |

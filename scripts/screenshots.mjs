@@ -89,10 +89,10 @@ async function shootEl(locator, name) {
   await save(await locator.screenshot(), name);
 }
 
-/** A browser context with a theme saved, as Settings would save it. */
+/** A browser context with a look saved, as Settings would save it. Icons in color: they read better in a screenshot. */
 async function context(browser, opts, appearance) {
   const ctx = await browser.newContext(opts);
-  if (appearance) await ctx.addInitScript((a) => localStorage.setItem('pb-appearance', JSON.stringify(a)), appearance);
+  await ctx.addInitScript((a) => localStorage.setItem('pb-appearance', JSON.stringify(a)), { icons: 'color', ...appearance });
   return ctx;
 }
 
@@ -113,27 +113,30 @@ try {
   };
 
   console.log('Pages');
-  // The hero: one 1920 by 1080 screen, the way a home server's board ends up
-  // once arranged: the server and Right now, the rack of apps beside the
-  // inbox, then reading, the week and changes, with posters below the fold.
+  // A second board, so the tabs over the board show.
   await go('/');
-  await page.evaluate((b) => fetch('/api/board', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(b) }), {
+  await page.evaluate(() => fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ version: 1, name: 'Movie night', widgets: [{ id: 'now', type: 'now', size: 'm' }, { id: 'recent', type: 'recent', size: 'xl' }] }) }));
+  // The hero: one 1920 by 1080 screen, the way a home server's board ends up
+  // once arranged: the server and Right now, the rack of apps, then the
+  // week, reading and changes. Fit the window trims the
+  // lists to the screen.
+  await go('/');
+  await page.evaluate((b) => fetch('/api/boards/home', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(b) }), {
     columns: 3,
+    fit: true,
     widgets: [
       { id: 'vitals', type: 'vitals', size: 'w', span: 2 },
       { id: 'now', type: 'now', size: 'm', span: 1, config: { limit: '3' } },
       { id: 'apps', type: 'apps', size: 'l', span: 2, config: { style: 'patchbay' } },
-      { id: 'inbox', type: 'inbox', size: 'm', span: 1, config: { limit: '4' } },
       { id: 'attention', type: 'attention', size: 'l', span: 1 },
       { id: 'feeds', type: 'feeds', size: 'm', span: 1, config: { limit: '4' } },
       { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { limit: '5' } },
       { id: 'changes', type: 'changes', size: 'm', span: 1, config: { limit: '5' } },
-      { id: 'recent', type: 'recent', size: 'xl', span: 3 },
     ],
   });
-  await go('/', 1500);
+  await go('/', 3000);
   await shoot(page, 'home');
-  await page.evaluate(() => fetch('/api/board', { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }));
+  await page.evaluate(() => fetch('/api/boards/home', { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }));
   await go('/server');
   await shoot(page, 'server', { fullPage: true });
   await go('/stacks');
@@ -152,7 +155,7 @@ try {
   // The house, then the network, as boards of their own, then back to the default.
   const board = (method, body) =>
     page.evaluate(
-      ([m, b]) => fetch('/api/board', { method: m, headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: b && JSON.stringify(b) }),
+      ([m, b]) => fetch('/api/boards/home', { method: m, headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: b && JSON.stringify(b) }),
       [method, body],
     );
   await go('/');

@@ -8,7 +8,7 @@ A start page and control center for a home server. Open it and you know in
 five seconds whether anything is broken, what's new, and what's coming. Click
 anything and you land where you can fix it.
 
-![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the inbox, reading and the week's releases](docs/screenshots/home.webp)
+![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the week's releases, reading and what changed](docs/screenshots/home.webp)
 
 Healthy apps stay quiet. The space goes to what needs you: a stopped
 container, a full pool, a stuck import, tonight's episodes.
@@ -84,7 +84,9 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
-shows. Every other page has a Customize button too. Six themes, each dark and
+shows, or turn on Fit the window and the lists trim themselves to one
+screen. Add more boards and name them: one for the TV, one for the rack.
+Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors. Call it whatever your household
 calls it.
 

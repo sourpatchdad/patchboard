@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { moodFor } from '../../shared/otter.ts';
 import { setAppName, setStatus } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
@@ -47,6 +47,8 @@ export function Shell() {
   const { snap, live, failed, auth } = useStore();
   const [palette, setPalette] = useState(false);
   const [help, setHelp] = useState(false);
+  // Every board counts as Home in the nav.
+  const onBoard = useLocation().pathname.startsWith('/b/');
   const navigate = useNavigate();
   const gAt = useRef(0);
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -108,7 +110,12 @@ export function Shell() {
         </NavLink>
         <nav className="nav" aria-label="Views">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className={`nav-link ${n.desktop ? 'nav-desktop' : ''}`}>
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.end}
+              className={({ isActive }) => `nav-link ${n.desktop ? 'nav-desktop' : ''} ${isActive || (n.to === '/' && onBoard) ? 'active' : ''}`}
+            >
               {ICONS[n.to] && (
                 <svg className="nav-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                   <path d={ICONS[n.to]} />

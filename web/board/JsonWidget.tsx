@@ -40,7 +40,7 @@ export function parseConfig(json?: string): JsonWidgetConfig | null {
 }
 
 /** The widget on the board. Saved widgets only; a draft shows its preview in the editor. */
-export function JsonWidgetView({ id, json, saved }: { id: string; json?: string; saved: boolean }) {
+export function JsonWidgetView({ board, id, json, saved }: { board: string; id: string; json?: string; saved: boolean }) {
   const cfg = parseConfig(json);
   const [r, setR] = useState<Result | null>(null);
   useEffect(() => {
@@ -48,7 +48,7 @@ export function JsonWidgetView({ id, json, saved }: { id: string; json?: string;
     let gone = false;
     const load = async () => {
       try {
-        const res = await fetch(`/api/widgets/${encodeURIComponent(id)}`);
+        const res = await fetch(`/api/widgets/${encodeURIComponent(board)}/${encodeURIComponent(id)}`);
         const body = (await res.json()) as Result & { error?: string };
         if (!gone) setR(res.ok ? body : { values: [], at: Date.now(), error: body.error });
       } catch {

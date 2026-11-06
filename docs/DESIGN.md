@@ -49,7 +49,7 @@ one click.
   data stale; nothing else stops.
 - **Server-sent events** push changes to every open tab.
 - **SQLite** (`node:sqlite`) holds what integrations can't supply: container
-  history, minute samples, the board, the app layout, page settings, keys and
+  history, minute samples, the boards, the app layout, page settings, keys and
   the activity log.
 - **Shared validation.** `shared/` holds the board, layout, page and widget
   rules that both sides use, so the server never stores something the UI
