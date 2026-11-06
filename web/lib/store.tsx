@@ -27,6 +27,8 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
       return { ...prev, catalog: e.catalog };
     case 'pages':
       return { ...prev, pages: e.pages };
+    case 'brand':
+      return { ...prev, brand: e.brand };
   }
 }
 

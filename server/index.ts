@@ -9,6 +9,7 @@ import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
 import type { ContainerDetail, ProxmoxData } from '../shared/types.ts';
+import { cleanBrand } from '../shared/brand.ts';
 import { radarrAdapter, sonarrAdapter } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
@@ -997,6 +998,17 @@ app.put('/api/setup/thresholds', async (c) => {
   return c.json({ thresholds: describeThresholds() });
 });
 
+// The name in the header and tab, for every device.
+app.put('/api/brand', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const b = cleanBrand(await c.req.json().catch(() => null));
+  if ('error' in b) return c.json({ error: b.error }, 400);
+  kvSet('brand', b);
+  hub.emitBrand(b);
+  recordAudit(who(c), 'brand.save', 'look', b.name ?? 'Patchboard');
+  return c.json({ brand: b });
+});
+
 app.get('/api/setup', (c) => {
   const body = {
     patchboard: 'setup',
@@ -1005,6 +1017,7 @@ app.get('/api/setup', (c) => {
     board: kvGet('board') ?? null,
     apps: kvGet('app-order') ?? null,
     pages: kvGet('pages') ?? {},
+    brand: kvGet('brand') ?? {},
   };
   return c.body(JSON.stringify(body, null, 2), 200, {
     'Content-Type': 'application/json',
@@ -1014,7 +1027,7 @@ app.get('/api/setup', (c) => {
 
 app.put('/api/setup', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; apps?: unknown; pages?: unknown } | null;
+  const raw = (await c.req.json().catch(() => null)) as { patchboard?: string; board?: unknown; apps?: unknown; pages?: unknown; brand?: unknown } | null;
   if (!raw || raw.patchboard !== 'setup') return c.json({ error: "That isn't a Patchboard setup file." }, 400);
   // Check everything before changing anything.
   const board = raw.board ? validateBoard(raw.board) : null;
@@ -1023,12 +1036,16 @@ app.put('/api/setup', async (c) => {
   if (apps && 'error' in apps) return c.json({ error: `Apps: ${apps.error}` }, 400);
   const pages = raw.pages ? validatePages(raw.pages) : null;
   if (pages && 'error' in pages) return c.json({ error: `Pages: ${pages.error}` }, 400);
+  const brand = raw.brand ? cleanBrand(raw.brand) : {};
+  if ('error' in brand) return c.json({ error: `Name: ${brand.error}` }, 400);
   kvSet('board', board ? board.board : null);
   kvSet('app-order', apps ? apps.order : null);
   setCatalogOrder(apps ? apps.order : null);
   kvSet('pages', pages ? pages.pages : {});
   hub.emitCatalog();
   hub.emitPages(pages ? pages.pages : {});
+  kvSet('brand', brand);
+  hub.emitBrand(brand);
   recordAudit(who(c), 'setup.import', 'setup');
   return c.json({ ok: true });
 });

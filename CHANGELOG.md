@@ -41,8 +41,8 @@ The first public release, 1.0.0. What's in it:
   open when updates wait, asleep at night, alert or worried when something
   needs you.
 - **Yours to style:** six themes plus your own colors, three type pairings,
-  three densities, and light and dark, per device. Works on a phone and
-  installs as an app.
+  three densities, and light and dark, per device. Give it your own name,
+  with or without the otter. Works on a phone and installs as an app.
 - **Safe to trust:** sign-in with a password, forward auth or OIDC, a read-only mode, a
   socket proxy example, an activity log, and keys that never reach the
   browser. SECURITY.md has the details.

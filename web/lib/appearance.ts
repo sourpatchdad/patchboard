@@ -196,12 +196,23 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
  * When all is quiet the tab shows the plain icon file.
  */
 let status: { level: 'critical' | 'warn' | null; count: number } = { level: null, count: 0 };
+let appName = 'Patchboard';
+
+const showTitle = () => {
+  if (typeof document !== 'undefined') document.title = status.count ? `(${status.count}) ${appName}` : appName;
+};
+
+/** The name in the tab, set in Settings, Look. */
+export function setAppName(name: string): void {
+  appName = name;
+  showTitle();
+}
 
 export function setStatus(level: 'critical' | 'warn' | null, count: number): void {
   if (level === status.level && count === status.count) return;
   status = { level, count };
   applyIcon(current.appIcon, resolvedScheme(current));
-  if (typeof document !== 'undefined') document.title = count ? `(${count}) Patchboard` : 'Patchboard';
+  showTitle();
   // An installed app shows the count on its icon where the platform allows it.
   const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
   try {

@@ -206,6 +206,10 @@ export class Hub {
     this.emit({ type: 'pages', pages });
   }
 
+  emitBrand(brand: import('../shared/types.ts').Brand): void {
+    this.emit({ type: 'brand', brand });
+  }
+
   /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */
   emitCatalog(): void {
     const cat = getCatalog();
@@ -239,6 +243,7 @@ export class Hub {
       readOnly: config.readOnly,
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
+      brand: kvGet('brand') ?? {},
       features: [
         'diun',
         ...((dockerCli && composeMounted(this.containers())) || config.demo ? ['updates'] : []),

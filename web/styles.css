@@ -301,6 +301,20 @@ time,
   text-decoration: none;
 }
 
+/* A name of your own stays on one line and gives way to the nav. */
+.wordmark {
+  min-width: 0;
+}
+
+.wordmark > span:not(.otter) {
+  min-width: 0;
+  max-width: 22ch;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-block: 2px;
+}
+
 /* The otter: the mark and the mascot. Its face follows the server. */
 .otter {
   display: inline-block;
@@ -8662,6 +8676,26 @@ button.ha-act:hover {
 .link-add .field {
   flex: 1 1 180px;
   max-width: 320px;
+}
+
+/* Settings, Look: the name */
+.brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+
+.brand-row .field {
+  flex: 0 1 320px;
+}
+
+.brand-row .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
 }
 
 /* Sign-in */

@@ -81,7 +81,8 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
 shows. Every other page has a Customize button too. Six themes, each dark and
-light, or build your own from three colors.
+light, or build your own from three colors. Call it whatever your household
+calls it.
 
 **An otter keeps watch.** The otter in the corner follows your server: calm
 when all is quiet, eyes open when updates wait, asleep at night, looking up

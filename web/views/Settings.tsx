@@ -11,6 +11,7 @@ import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
 import { SignIn } from '../components/SignIn.tsx';
+import { BrandName } from '../components/BrandName.tsx';
 import { type SetupIntegration, THRESHOLDS, type ThresholdState } from '../../shared/setup.ts';
 import {
   ACCENTS,
@@ -71,6 +72,7 @@ export function Settings() {
       <div className="settings-grid">
       {tab === 'look' && (
       <>
+      <BrandName />
 
       <Section title="Theme" count={`${THEMES.length + 1} themes`} className="span-all">
         <div className="theme-grid">

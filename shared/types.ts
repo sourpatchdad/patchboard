@@ -1008,6 +1008,8 @@ export interface Snapshot {
   limits?: Limits;
   /** What each page shows (its Customize button). */
   pages?: import('./pages.ts').Pages;
+  /** The name in the header and the tab, and whether the otter sits beside it. */
+  brand?: Brand;
   /** Features turned on by configuration alone (no polling): updates, runbook, dozzle, diun. */
   features?: string[];
   /** Wake-on-LAN device names, from WOL_DEVICES. */
@@ -1021,4 +1023,12 @@ export type ServerEvent =
   | { type: 'changes'; changes: ChangeEvent[] }
   | { type: 'updates'; updates: Record<string, ImageUpdate> }
   | { type: 'catalog'; catalog: Catalog }
-  | { type: 'pages'; pages: import('./pages.ts').Pages };
+  | { type: 'pages'; pages: import('./pages.ts').Pages }
+  | { type: 'brand'; brand: Brand };
+
+export interface Brand {
+  /** Empty means Patchboard. */
+  name?: string;
+  /** false hides the otter beside the name; the tab icon keeps it. */
+  otter?: boolean;
+}
