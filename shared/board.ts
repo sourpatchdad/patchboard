@@ -166,7 +166,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
-  requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
+  requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline. Hidden while none wait.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
   wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines you name in Settings, Connections.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },

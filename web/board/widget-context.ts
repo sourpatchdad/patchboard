@@ -9,6 +9,8 @@ export interface WidgetSettings {
   limit?: number;
   style?: string;
   days?: number;
+  /** Arranging the board: a widget that hides when quiet shows anyway, so it can be moved. */
+  editing?: boolean;
 }
 
 export const WidgetCtx = createContext<WidgetSettings | null>(null);

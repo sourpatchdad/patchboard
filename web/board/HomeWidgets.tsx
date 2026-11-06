@@ -1171,11 +1171,13 @@ function seasonsText(s: number[]): string {
 export function RequestsWidget({ now }: { now: number }) {
   const { state, data } = useSource<SeerrData>('overseerr');
   const { snap } = useStore();
-  const { limit = 5 } = useWidget();
+  const { limit = 5, editing } = useWidget();
   const [busy, setBusy] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!state || !data) return null;
+  // Nothing to approve: the widget steps aside until someone asks for something.
+  if (!data.requests.length && !editing && state.ok) return null;
   async function act(id: number, action: 'approve' | 'decline') {
     setBusy(id);
     setError(null);

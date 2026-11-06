@@ -7,14 +7,34 @@ import { INTEGRATIONS, type Integration } from '../shared/integrations.ts';
 import { fieldHint, fieldKind, fieldLabel, fieldsOf, type SetupIntegration, UI_SETUP, CHOICES, THRESHOLDS, type ThresholdState } from '../shared/setup.ts';
 import { envHas, envValue, setSavedSettings } from './config.ts';
 import { kvGet, kvSet } from './db.ts';
-import { seal, unseal } from './vault.ts';
+import { seal, unsealOr } from './vault.ts';
 
 const KV = 'integration-settings';
 type Stored = Record<string, { value: string; at: number }>;
 
-/** Saved values, unsealed. */
-const read = (): Stored => Object.fromEntries(Object.entries(kvGet<Stored>(KV) ?? {}).map(([k, v]) => [k, { ...v, value: unseal(v.value) }]));
-const write = (s: Stored) => kvSet(KV, Object.fromEntries(Object.entries(s).map(([k, v]) => [k, { ...v, value: seal(v.value) }])));
+/**
+ * Saved values, unsealed. One no key can open (a new PATCHBOARD_SECRET_KEY
+ * with secret.key gone) is left out with a warning instead of stopping
+ * Patchboard; values that opened with the old key are sealed again.
+ */
+function read(): Stored {
+  const out: Stored = {};
+  let reseal = false;
+  for (const [k, v] of Object.entries(kvGet<Stored>(KV) ?? {})) {
+    const r = unsealOr(v.value);
+    if (!r) {
+      console.warn(`settings: ${k} can't be read with this secret key; set it again in Settings`);
+      continue;
+    }
+    if (r.stale) reseal = true;
+    out[k] = { ...v, value: r.value };
+  }
+  if (reseal) write(out);
+  return out;
+}
+function write(s: Stored): void {
+  kvSet(KV, Object.fromEntries(Object.entries(s).map(([k, v]) => [k, { ...v, value: seal(v.value) }])));
+}
 
 /** Apply what's saved to the live configuration. Call at startup and after each change. */
 export function loadSavedSettings(): void {

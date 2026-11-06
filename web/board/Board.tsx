@@ -385,6 +385,7 @@ function Cell(props: {
               limit: w.config?.limit ? Number(w.config.limit) : undefined,
               style: w.config?.style,
               days: w.config?.days ? Number(w.config.days) : undefined,
+              editing,
             }}
           >
             {props.children}

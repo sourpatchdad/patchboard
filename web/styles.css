@@ -978,8 +978,9 @@ a.jack:focus-visible {
   border-left-color: var(--warn);
 }
 
-.alert-info > a,
-.alert-info > div {
+/* Only the Needs attention card: header lines share the class, not the padding. */
+.alerts .alert-info > a,
+.alerts .alert-info > div {
   border-left-color: var(--line);
   background: transparent;
   padding-top: 8px;
@@ -4643,6 +4644,11 @@ a.vitals:hover .vital-label {
 
 .cell-inner {
   padding-bottom: 24px;
+}
+
+/* A widget with nothing to say takes no room. */
+.board-wrap:not(.is-editing) .cell-inner:has(> .cell-body:empty) {
+  padding-bottom: 0;
 }
 
 .cell-inner > .cell-body > .section {

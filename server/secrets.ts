@@ -8,7 +8,7 @@
 // sealed the next time the store is written.
 
 import { kvGet, kvSet } from './db.ts';
-import { seal, unseal } from './vault.ts';
+import { seal, unsealOr } from './vault.ts';
 
 const KEY = 'secrets';
 export const SECRET_NAME = /^[A-Z0-9_]{1,40}$/;
@@ -19,7 +19,8 @@ const read = (): Store => kvGet<Store>(KEY) ?? {};
 
 export function getSecret(name: string): string | undefined {
   const v = read()[name]?.value;
-  return v === undefined ? undefined : unseal(v);
+  // A key no secret opens counts as unset: the request goes out without it.
+  return v === undefined ? undefined : unsealOr(v)?.value;
 }
 
 export function listSecrets(): { name: string; at: number }[] {
@@ -31,7 +32,11 @@ export function listSecrets(): { name: string; at: number }[] {
 export function setSecret(name: string, value: string): void {
   const s = read();
   s[name] = { value: seal(value), at: Date.now() };
-  for (const k of Object.keys(s)) s[k].value = seal(unseal(s[k].value));
+  // Everything else is sealed again with the current key; one no key opens stays as it was.
+  for (const k of Object.keys(s)) {
+    const r = unsealOr(s[k].value);
+    if (r) s[k].value = seal(r.value);
+  }
   kvSet(KEY, s);
 }
 

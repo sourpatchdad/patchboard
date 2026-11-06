@@ -52,7 +52,8 @@ The first public release, 1.0.0. What's in it:
   with pull to refresh and room under the status bar.
 - **Safe to trust:** sign-in with a password, forward auth or OIDC, a read-only mode, a
   socket proxy example, an activity log, and keys that never reach the
-  browser. SECURITY.md has the details.
+  browser. Setting `PATCHBOARD_SECRET_KEY` later moves saved keys over
+  instead of locking them away. SECURITY.md has the details.
 
 Patchboard is licensed under the AGPL-3.0.
 
