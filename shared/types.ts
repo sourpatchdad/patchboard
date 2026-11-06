@@ -25,6 +25,7 @@ export type SourceId =
   | 'gatus'
   | 'healthchecks'
   | 'beszel'
+  | 'syncthing'
   | 'pihole'
   | 'adguard'
   | 'speedtest'
@@ -557,6 +558,32 @@ export interface UptimeKumaData {
   /** The status page, to open from the widget. */
   link: string;
   monitors: KumaMonitor[];
+}
+
+/** A Syncthing folder. failing counts files it can't sync. */
+export interface SyncFolder {
+  id: string;
+  label: string;
+  state: 'idle' | 'syncing' | 'failing' | 'error' | 'paused';
+  bytes: number;
+  /** Percent in sync. */
+  pct: number;
+  failing: number;
+  error?: string;
+}
+
+export interface SyncDevice {
+  id: string;
+  name: string;
+  connected: boolean;
+  paused: boolean;
+  lastSeen?: number;
+}
+
+export interface SyncthingData {
+  webUrl: string;
+  folders: SyncFolder[];
+  devices: SyncDevice[];
 }
 
 /** A Proxmox VE node. CPU is a 0 to 1 share of its cores. */

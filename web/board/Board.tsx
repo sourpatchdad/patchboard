@@ -25,7 +25,7 @@ import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -444,6 +444,8 @@ function WidgetBody({ w, now, saved, editing }: { w: Widget; now: number; saved:
       return <ProxmoxWidget now={now} />;
     case 'drives':
       return <DrivesWidget now={now} />;
+    case 'sync':
+      return <SyncWidget now={now} />;
     case 'hosts':
       return <HostsWidget />;
     case 'power':
@@ -579,6 +581,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
     photos: has('immich'),
     proxmox: has('proxmox'),
     drives: has('scrutiny'),
+    sync: has('syncthing'),
     hosts: has('glances') || has('beszel'),
     power: has('nut'),
     storage: NAS_SOURCES.some(has),

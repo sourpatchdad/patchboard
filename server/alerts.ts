@@ -12,6 +12,7 @@ import type {
   NutData,
   ProxmoxData,
   ScrutinyData,
+  SyncthingData,
   Alert,
   ArrData,
   BackupRun,
@@ -359,6 +360,35 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
         source: src,
       });
     }
+  }
+
+  // Syncthing: a folder with files it can't sync, or stopped on an error; a
+  // device that hasn't checked in for a day. Syncing and paused stay quiet.
+  const st = data<SyncthingData>(sources, 'syncthing');
+  for (const f of st?.folders ?? []) {
+    if (f.state !== 'error' && f.state !== 'failing') continue;
+    alerts.push({
+      id: `sync-folder-${f.id}`,
+      level: 'warn',
+      subject: f.label,
+      title: f.state === 'error' ? `${f.label} stopped syncing` : `${f.label} has ${f.failing} ${f.failing === 1 ? 'file' : 'files'} it can't sync`,
+      detail: f.error ? `${f.error.replace(/\.$/, '')}. Seen by Syncthing.` : 'Seen by Syncthing.',
+      href: st!.webUrl,
+      source: 'syncthing',
+    });
+  }
+  for (const d of st?.devices ?? []) {
+    if (d.connected || d.paused || !d.lastSeen || now - d.lastSeen < 86_400_000) continue;
+    alerts.push({
+      id: `sync-device-${d.id}`,
+      level: 'warn',
+      subject: d.name,
+      title: `${d.name} hasn't synced in ${Math.floor((now - d.lastSeen) / 86_400_000)} days`,
+      detail: 'Its last contact with Syncthing.',
+      since: d.lastSeen,
+      href: st!.webUrl,
+      source: 'syncthing',
+    });
   }
 
   // Scrutiny: a drive failing its own SMART check is an emergency; failing

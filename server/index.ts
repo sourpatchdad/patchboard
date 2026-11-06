@@ -25,6 +25,7 @@ import { type GuestAction, proxmoxAdapter, proxmoxControl } from './adapters/pro
 import { scrutinyAdapter } from './adapters/scrutiny.ts';
 import { gatusAdapter, healthchecksAdapter } from './adapters/monitors.ts';
 import { beszelAdapter } from './adapters/beszel.ts';
+import { syncthingAdapter } from './adapters/syncthing.ts';
 import { glancesAdapter } from './adapters/glances.ts';
 import { nutAdapter } from './adapters/nut.ts';
 import { unraidAdapter } from './adapters/unraid.ts';
@@ -126,6 +127,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   gatus: () => (config.gatus ? { adapter: gatusAdapter() } : null),
   healthchecks: () => (config.healthchecks ? { adapter: healthchecksAdapter() } : null),
   beszel: () => (config.beszel ? { adapter: beszelAdapter() } : null),
+  syncthing: () => (config.syncthing ? { adapter: syncthingAdapter() } : null),
   glances: () => (config.glances ? { adapter: glancesAdapter() } : null),
   nut: () => (config.nut ? { adapter: nutAdapter() } : null),
   unraid: () => (config.unraid ? { adapter: unraidAdapter() } : null),

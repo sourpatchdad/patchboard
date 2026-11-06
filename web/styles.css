@@ -7502,6 +7502,34 @@ button.ha-act:hover {
   }
 }
 
+/* ---------- Sync (Syncthing): the drive list's rows, a name column that fits words ---------- */
+
+.drive-list.sync-list li {
+  grid-template-columns: 8px minmax(0, 1.3fr) minmax(0, 1fr) 7.5ch;
+}
+
+.sync-name {
+  color: var(--head);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-list li.is-paused .drive-dot {
+  background: var(--line);
+}
+
+/* Devices have no size, so their status takes that column too. */
+.sync-devices li > .drive-model {
+  grid-column: 3 / 5;
+}
+
+.sync-devices {
+  margin-top: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
 /* ---------- Drives (Scrutiny) ---------- */
 
 .drive-list {

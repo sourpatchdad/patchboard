@@ -494,6 +494,15 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'syncthing',
+    name: 'Syncthing',
+    adds: 'A Sync widget: each folder up to date or how far along, and when each device last checked in. A folder with files it can’t sync, or a device quiet for over a day, shows in Needs attention.',
+    env: ['SYNCTHING_URL', 'SYNCTHING_KEY'],
+    optional: ['SYNCTHING_VERIFY_TLS'],
+    where: 'Syncthing: Actions, Settings, General, API Key. The address is the web GUI, port 8384.',
+    source: true,
+  },
+  {
     id: 'gatus',
     name: 'Gatus',
     adds: 'Its endpoints join the Uptime widget, each with its recent results. An endpoint that fails shows in Needs attention.',

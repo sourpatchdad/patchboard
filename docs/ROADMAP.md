@@ -11,8 +11,7 @@ What comes next. CHANGELOG.md has what has shipped.
 ### Integrations
 
 - [ ] TP-Link Omada
-- [ ] Syncthing, Backrest
-- [ ] Ollama
+- [ ] Backrest
 - [ ] Kavita, Komga
 - [ ] GitHub releases for the apps you run
 

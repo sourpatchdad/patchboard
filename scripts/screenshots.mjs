@@ -149,7 +149,7 @@ try {
   await go('/', 1500);
   await shoot(page, 'house');
 
-  // The machines: hosts, storage, power, drives, Proxmox, Docker hosts, the network.
+  // The machines: hosts, storage, power, drives, Proxmox, Docker hosts, the network, sync.
   await board('PUT', {
     columns: 3,
     widgets: [
@@ -161,6 +161,7 @@ try {
       { id: 'dockerhosts', type: 'dockerhosts', size: 's', span: 1 },
       { id: 'network', type: 'network', size: 's', span: 1 },
       { id: 'photos', type: 'photos', size: 's', span: 1 },
+      { id: 'sync', type: 'sync', size: 's', span: 1 },
     ],
   });
   await go('/', 1500);

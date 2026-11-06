@@ -26,6 +26,7 @@ export type WidgetType =
   | 'photos'
   | 'proxmox'
   | 'drives'
+  | 'sync'
   | 'hosts'
   | 'power'
   | 'storage'
@@ -150,7 +151,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   nextup: { name: 'Next up', about: 'The next episode of each show you are watching on Jellyfin or Emby.', size: 'w', sizes: ['l', 'w', 'xl'], removable: true, multiple: false, options: { limit: [8, 2, 24] } },
   homeassistant: { name: 'Home Assistant', about: 'Lights, switches, sensors and scenes you pick. Tap to toggle a light or run a scene.', size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
   car: { name: 'Car', about: 'Your Tesla through Tessie: battery, range, charging, climate and locks.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
-  uptime: { name: 'Uptime', about: 'Uptime Kuma monitors: problems first, each with its last 30 checks and 24-hour uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
+  uptime: { name: 'Uptime', about: 'Uptime Kuma, Gatus and Healthchecks.io: problems first, with recent checks and uptime.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 40] } },
   dns: { name: 'Ad blocking', about: 'Pi-hole or AdGuard Home: what it blocked today, and Pause for 5, 30 or 60 minutes.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   speed: { name: 'Internet', about: 'Speedtest Tracker: the latest download, upload and ping, and the last day as a line.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   calendar: { name: 'Calendar', about: 'The days ahead from your iCal calendars: Google, iCloud, Outlook, Nextcloud and more.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
@@ -160,12 +161,13 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   dockerhosts: { name: 'Docker hosts', about: 'Portainer: every Docker environment, up or down, with running, stopped and unhealthy containers.', size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 60] } },
   storage: { name: 'Storage', about: 'Unraid, Synology or QNAP: every volume and pool, and every disk with its state and temperature.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [10, 1, 60] } },
   power: { name: 'Power', about: 'NUT: every UPS, on mains or on battery, with charge, runtime and load.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
-  hosts: { name: 'Hosts', about: 'Glances: CPU, memory, the fullest disk, network and temperature for every machine you list.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 50] } },
+  hosts: { name: 'Hosts', about: 'Glances or Beszel: CPU, memory, the fullest disk, network and temperature for every machine.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 50] } },
+  sync: { name: 'Sync', about: 'Syncthing: each folder up to date or how far along, and when each device last checked in.', size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
-  wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines in WOL_DEVICES.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines you name in Settings, Connections.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };

@@ -6,7 +6,7 @@ import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useMemo, useState } from 'react';
 import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
-import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, HomeAssistantData, KumaMonitor, KumaState, SourceState, UptimeKumaData } from '../../shared/types.ts';
+import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, SyncDevice, SyncFolder, SyncthingData, HomeAssistantData, KumaMonitor, KumaState, SourceState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
@@ -920,6 +920,55 @@ export function DrivesWidget({ now }: { now: number }) {
         ))}
       </ul>
       {last > 0 && <p className="speed-seen">Checked {agoLong(last, now)}.</p>}
+    </Section>
+  );
+}
+
+// ---------- Syncthing ----------
+
+const SYNC_RANK = { error: 0, failing: 1, syncing: 2, paused: 3, idle: 4 } as const;
+
+/** Folders, trouble first, then devices with their last contact. */
+export function SyncWidget({ now }: { now: number }) {
+  const { state, data } = useSource<SyncthingData>('syncthing');
+  const { limit = 8 } = useWidget();
+  if (!state || !data) return null;
+  const folders = [...data.folders].sort((a, b) => SYNC_RANK[a.state] - SYNC_RANK[b.state] || a.label.localeCompare(b.label));
+  const quiet = (d: SyncDevice) => !d.connected && !d.paused && d.lastSeen != null && now - d.lastSeen >= 86_400_000;
+  const devices = [...data.devices].sort((a, b) => Number(quiet(b)) - Number(quiet(a)) || Number(b.connected) - Number(a.connected) || a.name.localeCompare(b.name));
+  const bad = folders.filter((f) => f.state === 'error' || f.state === 'failing').length + devices.filter(quiet).length;
+  const syncing = folders.filter((f) => f.state === 'syncing').length;
+  const word = (f: SyncFolder) =>
+    f.state === 'error' ? 'Stopped' : f.state === 'failing' ? `${f.failing} can't sync` : f.state === 'syncing' ? `Syncing, ${f.pct}%` : f.state === 'paused' ? 'Paused' : 'Up to date';
+  return (
+    <Section
+      title="Sync"
+      source={state}
+      className="sync"
+      count={bad ? `${bad} need${bad === 1 ? 's' : ''} you` : syncing ? `${syncing} syncing` : 'All in sync'}
+      action={{ label: 'Open Syncthing', href: data.webUrl }}
+    >
+      <ul className="drive-list sync-list">
+        {folders.slice(0, limit).map((f) => (
+          <li key={f.id} className={f.state === 'error' ? 'drive-failed' : f.state === 'failing' ? 'drive-warn' : f.state === 'paused' ? 'is-paused' : undefined} title={f.error}>
+            <span className="drive-dot" aria-hidden />
+            <span className="sync-name">{f.label}</span>
+            <span className="drive-model">{word(f)}</span>
+            <span className="mono drive-num">{f.bytes ? size(f.bytes) : ''}</span>
+          </li>
+        ))}
+      </ul>
+      {devices.length > 0 && (
+        <ul className="drive-list sync-list sync-devices" aria-label="Devices">
+          {devices.slice(0, limit).map((d) => (
+            <li key={d.id} className={quiet(d) ? 'drive-warn' : d.connected ? undefined : 'is-paused'}>
+              <span className="drive-dot" aria-hidden />
+              <span className="sync-name">{d.name}</span>
+              <span className="drive-model">{d.paused ? 'Paused' : d.connected ? 'Connected' : d.lastSeen ? `Seen ${agoLong(d.lastSeen, now)}` : 'Never connected'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Section>
   );
 }
