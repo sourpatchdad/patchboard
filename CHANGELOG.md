@@ -8,12 +8,13 @@ The first public release, 1.0.0. What's in it:
   and "All quiet" or "4 things need you" with each problem linked to its
   fix. Below it, a board you arrange: apps with live numbers, Right now,
   This week, Reading, mail, the server, changes, recently added and more.
+  The board starts right under the header; Customize waits at its foot.
 - **Every glance leads to an action.** A stopped container is two clicks
   from its logs, a restart, an update or a rollback. Downloads pause, DNS
   blocking pauses, requests approve, Proxmox guests start and stop, all from
   the widget. Anything that takes something down asks for a press and hold.
 - **One compose file, no config files.** Add every running container as an
-  app in one click, arrange them in Edit apps, connect integrations and turn
+  app in one click, arrange them and add links in Edit apps, connect integrations and turn
   on a password in Settings, with keys encrypted on the server. Mounts at
   /pool, /docs and /logs turn on by being there. A `services.yaml`, Docker
   labels and environment variables still work, and Settings can copy them
@@ -37,9 +38,9 @@ The first public release, 1.0.0. What's in it:
 - **Notifications** through ntfy, Gotify, Pushover or email for problems that last two
   minutes, and again when they clear. Updates and restarts never count as
   outages.
-- **The otter** keeps watch in the header and the browser tab: calm, eyes
-  open when updates wait, asleep at night, alert or worried when something
-  needs you.
+- **The otter** keeps watch in the header, the browser tab and beside the
+  status line on Home: calm, eyes open when updates wait, asleep at night,
+  alert or worried when something needs you.
 - **Yours to style:** six themes plus your own colors, three type pairings,
   three densities, and light and dark, per device. Give it your own name,
   with or without the otter. Works on a phone and installs as an app.
