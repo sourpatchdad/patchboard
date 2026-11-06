@@ -1,6 +1,6 @@
-// The otter: Patchboard's mark and mascot. The art lives in scripts/otter, one
-// PNG per mood; `npm run icons` turns it into the app icons and the per-mood
-// images in web/public/otter. This module names the moods, picks one for the
+// The otter: Patchboard's mark and mascot. The designed art lives outside the
+// repo, one image per mood; `npm run icons -- /path/to/art` turns it into the
+// app icons and the per-mood images in web/public/otter. This module names the moods, picks one for the
 // server's state, and points at the right file.
 
 export type OtterMood = 'hello' | 'calm' | 'alert' | 'worried' | 'asleep' | 'happy' | 'lost';

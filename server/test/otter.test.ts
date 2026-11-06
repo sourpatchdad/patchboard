@@ -13,9 +13,8 @@ test('the otter follows the server: worried when down, alert when something need
   assert.equal(moodFor('warn', false, 15), 'alert');
 });
 
-test('every mood has its art and its built images', () => {
+test('every mood has its built images', () => {
   for (const mood of OTTER_MOODS) {
-    assert.ok(existsSync(`scripts/otter/${mood}.webp`), `scripts/otter/${mood}.webp`);
     for (const o of [{ tile: true }, {}, { mark: true }]) {
       const src = otterSrc(mood, o);
       assert.ok(existsSync(`web/public${src}`), `${src}: run npm run icons`);

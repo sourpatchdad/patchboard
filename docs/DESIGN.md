@@ -75,7 +75,7 @@ An otter peeking over the edge of the water, keeping an eye on your server
 so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
-- **The art.** `scripts/otter` holds the designed artwork, one 1254-pixel image
+- **The art.** The designed artwork lives outside the repo, one 1254-pixel image
   per mood (hello, calm, alert, worried, asleep, happy, lost), each the
   otter on a navy tile: a brown dome with round ears, a cream face from the
   eyes down, a nose over a wide "w" mouth, cream whiskers, two paws on one
@@ -97,7 +97,7 @@ something needs it, and Patchboard should feel the same.
   the mascot off per device; the header mark stays.
 - **The header mark and the tab icon** are the otter with no tile, cropped
   close, wearing the server's mood. The tab adds an amber or red dot.
-- **Files.** `npm run icons` reads `scripts/otter` and writes, per mood,
+- **Files.** `npm run icons -- /path/to/otter-art` reads the art and writes, per mood,
   `web/public/otter/<mood>.png` (navy tile), `<mood>-clear.png` (no tile,
   for the mascot) and `<mood>-mark.png`
   (no tile, cropped close, for the header). It also writes the home-screen

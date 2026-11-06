@@ -15,3 +15,6 @@ CLAUDE.md
 
 # Local one-off, not part of Patchboard
 scripts/audit-bets.sql
+
+# The otter artwork stays out of git; the built images in web/public ship.
+scripts/otter/

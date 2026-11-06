@@ -1,4 +1,5 @@
-// Builds every otter image from the designed art in scripts/otter: the app
+// Builds every otter image from the designed art (kept outside the repo; the
+// built images in web/public are what ship): the app
 // icons home screens need, the tab icons, favicon.ico, and the per-mood
 // images the header and the mascot use.
 // Run: npm run icons (needs Chrome or Chromium, like npm run screenshots).
@@ -8,10 +9,21 @@
 // edges), then places it on a navy tile, a cream tile, a full square for
 // home screens, or nothing at all for the mascot. It never recolors the art.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const MOODS = ['hello', 'calm', 'alert', 'worried', 'asleep', 'happy', 'lost'];
+
+// The art: one PNG or WebP per mood, named after it (calm.png, calm.webp), or
+// patchboard-otter-<mood>.png as designed. Pass the folder:
+//   npm run icons -- /path/to/otter-art
+const ART = process.argv[2] ?? 'scripts/otter';
+const artFile = (mood) => {
+  for (const name of [`${mood}.webp`, `${mood}.png`, `patchboard-otter-${mood}.png`, mood === 'hello' ? 'patchboard-otter-generic.png' : null]) {
+    if (name && existsSync(`${ART}/${name}`)) return `${ART}/${name}`;
+  }
+  throw new Error(`No art for ${mood} in ${ART}. Run: npm run icons -- /path/to/otter-art`);
+};
 const CHROME = process.env.CHROME_PATH ?? (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : '/usr/bin/chromium');
 
 mkdirSync('web/public/otter', { recursive: true });
@@ -223,7 +235,8 @@ const jobs = (mood) => {
 
 const ico = [];
 for (const mood of MOODS) {
-  const src = `data:image/webp;base64,${readFileSync(`scripts/otter/${mood}.webp`).toString('base64')}`;
+  const file = artFile(mood);
+  const src = `data:image/${file.endsWith('.webp') ? 'webp' : 'png'};base64,${readFileSync(file).toString('base64')}`;
   const files = await page.evaluate(build, { src, jobs: jobs(mood) });
   for (const [name, url] of Object.entries(files)) {
     const buf = Buffer.from(url.split(',')[1], 'base64');
