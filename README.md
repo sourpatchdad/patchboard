@@ -39,12 +39,16 @@ an app, grouped by compose stack.
 
 ![First run: Patchboard finds 20 running containers and offers to add them all](docs/screenshots/first-run.webp)
 
-Then add what you use from Settings, Connections: press **Set up**, paste
-the address and key, test, save. Or set them in `.env`. Sonarr, Radarr,
+Then connect what you run from Settings, Connections: press **Set up**,
+paste the address and key, test, save. It connects at once, and the key is
+encrypted on the server. Sonarr, Radarr,
 Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
-SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS, weather and more. Settings, Connections lists
-each integration, whether it's on, and the variables that turn it on.
-[docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
+SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS, weather and more. [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
+
+The `.env` holds only server settings: the address to listen on, the time
+zone, sign-in. Prefer config as code? Integration keys and a `services.yaml`
+still work, and Settings can copy either into Patchboard later.
+[docs/CONFIGURATION.md](docs/CONFIGURATION.md) has both ways.
 
 `latest` follows releases. Pin `1` to stay on 1.x, or a version like
 `1.2.0` to stay put. `edge` is the next release before it ships, and `dev`

@@ -74,8 +74,8 @@ container creation, which comes close to full access.
   temperature) go to that server. A self-hosted ntfy or Gotify keeps them on
   your network. On the public ntfy.sh, anyone who guesses the topic can read
   it, so use a long random topic name or a token.
-- **Keys are write-only.** They live in `.env`, or, when you type them in
-  Settings, in the database in `DATA_DIR`. The browser can set a key but
+- **Keys are write-only.** Typed in Settings, they live encrypted in the
+  database in `DATA_DIR`; set in `.env`, they live there. The browser can set a key but
   never read one back: the API says whether a key is set, never what it is.
   The setup file export carries no keys and no addresses.
 - **Saved keys are encrypted at rest** with AES-256-GCM. The key that seals

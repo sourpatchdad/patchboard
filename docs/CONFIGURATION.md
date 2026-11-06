@@ -1,16 +1,18 @@
 # Configuration
 
-You configure Patchboard in three places:
+You configure almost everything in the UI:
 
 | Where | What | Applies to |
 |---|---|---|
-| `.env` (from `examples/env.example`) | Addresses and keys for built-in integrations, sign-in, thresholds | The server |
-| The UI | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
+| Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
+| Apps, Edit apps, and Customize on each page | Apps, groups, icons, live numbers, the Home board, what each page shows | Every device |
 | Settings, Look and Home | Theme, colors, type, density, units | This device only |
+| `.env` (from `examples/env.example`) | Server settings: the listen address, time zone, sign-in, thresholds, folder paths | The server |
 
-`config/services.yaml` and Docker labels are optional ways to list apps. See
-[INTEGRATIONS.md](INTEGRATIONS.md) for those and for every integration's
-variables.
+Files still work for anyone who keeps config in git. Integration variables
+in `.env` win over the UI and show there as locked; `config/services.yaml`
+and Docker labels list apps underneath your UI changes. See
+[INTEGRATIONS.md](INTEGRATIONS.md) for those.
 
 After you change `.env`, recreate the container with `docker compose up -d`.
 A restart keeps the old values.
@@ -98,7 +100,9 @@ Each needs a read-only mount and its variable.
 
 ## The catalog file
 
-`config/services.yaml` lists apps in groups, plus bookmarks. Copy
+Optional. Most installs add apps with one click and Edit apps. A catalog file
+suits anyone who wants the list in git: `config/services.yaml` lists apps in
+groups, plus bookmarks. Copy
 [examples/services.example.yaml](../examples/services.example.yaml) to start.
 
 | Field | |

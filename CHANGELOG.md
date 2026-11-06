@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **The docs lead with the UI.** README, the configuration and integration
+  guides, SECURITY.md and the `.env` template now set up integrations in
+  Settings, Connections and apps in Edit apps. The `.env` is for server
+  settings; integration variables and `services.yaml` remain for anyone who
+  keeps config in git.
 - **Copy into Patchboard accepts every icon services.yaml can hold,**
   including paths on this site such as `/icon-192.png`. An icon it can't
   keep is dropped from that one app instead of stopping the copy.

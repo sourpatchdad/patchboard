@@ -434,7 +434,7 @@ function CatalogCheck() {
     <section className="section span-all" id="catalog">
       <header className="section-head">
         <h2>Catalog</h2>
-        <span className="section-count">config/services.yaml</span>
+        <span className="section-count">{(audit.yamlApps ?? 0) > 0 ? 'config/services.yaml' : 'apps saved in Patchboard'}</span>
       </header>
       <p className="settings-note">
         Keep your catalog in git? <a href="/api/catalog/yaml" download>Download services.yaml</a> writes the apps as you arranged them here, with groups,
@@ -725,8 +725,8 @@ function Integrations() {
   return (
     <Section title="Integrations" count={`${on.length} of ${rows.length} on`} className="span-all">
       <p className="settings-note">
-        Set one up here, or with variables in your environment file. A variable in the environment always wins and shows here as locked. Keys you
-        type here are encrypted on this server and never sent back to a browser, not even this one.
+        Press Set up, paste the address and key, test and save. Keys are encrypted on this server and never sent back to a browser, not even
+        this one. Keeping config in git? A variable in your environment file works too, wins over this page, and shows here as locked.
       </p>
       {!setup?.demo && !snap.readOnly && envOnly.length > 0 && (
         <div className="adopt">

@@ -42,8 +42,8 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 ## Three ways to add numbers
 
 1. **Built-in integrations** feed whole parts of Patchboard: Needs attention,
-   the calendar, Right now, the Server page. You turn them on in `.env`.
-   Settings, Connections shows which ones run and what the others need.
+   the calendar, Right now, the Server page. You turn them on in Settings,
+   Connections, which also shows which ones run.
 2. **A live number on an app's tile.** In Edit apps, open the app's ⋯ menu,
    choose Icon and live number, pick a preset or Any JSON API, paste the key,
    and press Test. The key stays on the server.
@@ -58,10 +58,12 @@ address and key, **Test connection**, then **Save**. Patchboard connects at
 once, with no restart. Keys you type there are encrypted on the server and
 never shown again.
 
-Or add the variables to `.env` and run `docker compose up -d` (a restart keeps
-the old values). A variable in `.env` always wins and shows in Settings as
-locked. Integrations that read folders need their mount in compose, so those
-use `.env` only.
+Keeping config in git instead? Add the variables to `.env` and run
+`docker compose up -d` (a restart keeps the old values). A variable in `.env`
+always wins and shows in Settings as locked. Integrations that read folders
+need their mount in compose, so those use `.env` only. To move variables
+from `.env` into Patchboard later, see
+[Moving off files](CONFIGURATION.md#moving-off-files).
 
 <!-- generated:integrations -->
 | Integration | What it adds | Turn on with | Where to find it |
