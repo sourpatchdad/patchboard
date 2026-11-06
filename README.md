@@ -4,7 +4,7 @@ A start page and control center for a home server. Open it and you know in
 five seconds whether anything is broken, what's new, and what's coming. Click
 anything and you land where you can fix it.
 
-![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, feeds and recently added](docs/screenshots/home.webp)
+![Patchboard's Home: apps with live numbers, Needs attention, Right now, the week's releases, the server, reading and recently added](docs/screenshots/home.webp)
 
 Healthy apps stay quiet. The space goes to what needs you: a stopped
 container, a full pool, a stuck import, tonight's episodes.
@@ -85,7 +85,7 @@ shows. Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors.
 
 **An otter keeps watch.** The otter in the corner follows your server: calm
-when all is quiet, asleep at night, looking up with an amber dot when
+when all is quiet, eyes open when updates wait, asleep at night, looking up with an amber dot when
 something needs you, worried with a red one when something is down. Your
 browser tab follows along, so a pinned tab tells you from across the room.
 
@@ -97,7 +97,7 @@ see who did what.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, This week, inbox, feeds, server, weather, changes, recently added, Next up, any container or JSON API. |
+| **Home** | The board: apps, Needs attention, Right now, This week, inbox, reading, server, weather, changes, recently added, Next up, any container or JSON API. |
 | **Server** | TrueNAS pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate. |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |

@@ -16,13 +16,13 @@ test('the otter follows the server: worried when down, alert when something need
 test('every mood has its art and its built images', () => {
   for (const mood of OTTER_MOODS) {
     assert.ok(existsSync(`scripts/otter/${mood}.webp`), `scripts/otter/${mood}.webp`);
-    for (const o of [{ tile: true }, { tile: true, light: true }, {}, { mark: true }]) {
+    for (const o of [{ tile: true }, {}, { mark: true }]) {
       const src = otterSrc(mood, o);
       assert.ok(existsSync(`web/public${src}`), `${src}: run npm run icons`);
     }
   }
   assert.equal(otterSrc('calm'), '/otter/calm-clear.png');
-  assert.equal(otterSrc('alert', { tile: true, light: true }), '/otter/alert-light.png');
+  assert.equal(otterSrc('alert', { tile: true }), '/otter/alert.png');
 });
 
 test('the app icons the manifests and index.html name exist', () => {

@@ -16,15 +16,14 @@ export const OTTER = {
 } as const;
 
 /**
- * The image for a mood: the otter on its navy tile (or, with light, the
- * cream tile), or with no tile, floating in its pool. The art is never
- * recolored; light pages show the navy tile so the cream whiskers show.
- * The mark is the otter with no tile, cropped close, for the header and tab.
+ * The image for a mood: the otter on its navy tile, or with no tile,
+ * floating in its pool. The art is never recolored; light pages show the
+ * navy tile so the cream whiskers show. The mark is the otter with no tile,
+ * cropped close, for the header and tab.
  */
-export function otterSrc(mood: OtterMood, o: { tile?: boolean; light?: boolean; mark?: boolean } = {}): string {
+export function otterSrc(mood: OtterMood, o: { tile?: boolean; mark?: boolean } = {}): string {
   if (o.mark) return `/otter/${mood}-mark.png`;
-  if (!o.tile) return `/otter/${mood}-clear.png`;
-  return `/otter/${mood}${o.light ? '-light' : ''}.png`;
+  return o.tile ? `/otter/${mood}.png` : `/otter/${mood}-clear.png`;
 }
 
 /**

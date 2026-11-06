@@ -98,8 +98,8 @@ something needs it, and Patchboard should feel the same.
 - **The header mark and the tab icon** are the otter with no tile, cropped
   close, wearing the server's mood. The tab adds an amber or red dot.
 - **Files.** `npm run icons` reads `scripts/otter` and writes, per mood,
-  `web/public/otter/<mood>.png` (navy tile), `<mood>-light.png` (cream
-  tile), `<mood>-clear.png` (no tile, for the mascot) and `<mood>-mark.png`
+  `web/public/otter/<mood>.png` (navy tile), `<mood>-clear.png` (no tile,
+  for the mascot) and `<mood>-mark.png`
   (no tile, cropped close, for the header). It also writes the home-screen
   PNGs with square corners (the platform rounds them), maskable PNGs with
   the otter inside Android's safe zone, `favicon.png` and `favicon.ico`. To

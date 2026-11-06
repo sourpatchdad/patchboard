@@ -201,7 +201,6 @@ const build = async ({ src, jobs }) => {
 const jobs = (mood) => {
   const list = [
     { name: `otter/${mood}.png`, tile: 'dark', shape: 'round', size: 160 },
-    { name: `otter/${mood}-light.png`, tile: 'light', shape: 'round', size: 160 },
     { name: `otter/${mood}-clear.png`, tile: 'none', size: 280 },
     { name: `otter/${mood}-mark.png`, tile: 'mark', size: 96 },
   ];

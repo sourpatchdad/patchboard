@@ -12,3 +12,6 @@ config/*.bak*
 
 # Local working notes for AI tools
 CLAUDE.md
+
+# Local one-off, not part of Patchboard
+scripts/audit-bets.sql
