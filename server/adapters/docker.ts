@@ -2,6 +2,7 @@
 // event stream. The only writes are start, stop and restart, and only through
 // containerAction(), which the API route guards and records.
 
+import { redact } from '../redact.ts';
 import http from 'node:http';
 import type { Container, ContainerDetail, ContainerStats, DockerData, StatsData } from '../../shared/types.ts';
 import { config, dockerTarget } from '../config.ts';
@@ -233,7 +234,7 @@ export async function inspectContainer(name: string, all: Container[]): Promise<
     healthLog: (r.State.Health?.Log ?? []).slice(-3).map((l) => ({
       at: time(l.Start) ?? 0,
       exitCode: l.ExitCode,
-      output: l.Output.trim().slice(0, 400),
+      output: redact(l.Output.trim()).slice(0, 400),
     })),
     project: labels[PROJECT],
     service: labels[SERVICE],

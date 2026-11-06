@@ -29,6 +29,7 @@ import { dockerCli } from './cli.ts';
 import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
 import { clearUpdate, flagUpdate } from './updates.ts';
+import { redact } from './redact.ts';
 import { isNewer, localDigests, parseRef, remoteDigest } from './selfcheck.ts';
 
 interface Inspect {
@@ -209,7 +210,7 @@ function run(j: UpdateJob & { listeners: Set<(j: UpdateJob) => void> }, args: st
     const onData = (buf: Buffer) => {
       for (const line of buf.toString('utf8').split(/\r?\n|\r/)) {
         const t = line.trim();
-        if (t) j.log.push(t.slice(0, 400));
+        if (t) j.log.push(redact(t).slice(0, 400));
       }
       if (j.log.length > 400) j.log.splice(0, j.log.length - 400);
       emit(j);

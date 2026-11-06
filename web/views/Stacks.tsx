@@ -150,7 +150,7 @@ export function Stacks() {
                         {snap.updates[c.name] && <span className="tag tag-update" title="Diun found a newer image">update</span>}
                       </span>
                       <HealthStrip states={uptime?.containers[c.name]} days={uptime?.days ?? []} label={`${c.name}, last 14 days`} />
-                      <span className="srow-status">{st === 'idle' && svc?.expectStopped ? 'Scheduled job, finished' : shortStatus(c)}</span>
+                      <span className="srow-status">{st === 'idle' && svc?.expectStopped ? 'Scheduled job, finished' : c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
                       <span className="srow-num">{load ? pct(load.cpu) : ''}</span>
                       <span className="srow-num">{load ? size(load.memBytes) : ''}</span>
                     </Link>

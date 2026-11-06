@@ -104,6 +104,11 @@ container creation, which comes close to full access.
   in the board or the app layout; the browser asks by id. It follows no
   redirects, refuses link-local and cloud-metadata addresses, and stops at
   8 seconds or 512 KB.
+- **Logs are masked on the server.** Apps write their own keys into their
+  logs (Sonarr's indexer URLs carry the API key and torrent passkey, Plex
+  logs its token). Patchboard masks API keys, tokens, passkeys, passwords,
+  auth headers and passwords in URLs in every log line, health-check output
+  and update log before a browser sees them.
 - **Uploaded icons** get a name from their content hash, and Patchboard serves
   them with a sandboxing policy, so an uploaded SVG can't run script.
 - **Updates run only where you mounted the compose folder,** read-only, at

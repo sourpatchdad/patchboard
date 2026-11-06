@@ -84,6 +84,7 @@ import { poster } from './art.ts';
 import { clearUpdate } from './updates.ts';
 import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
+import { redact } from './redact.ts';
 import { auditCatalog, draftYaml } from './catalog-audit.ts';
 
 /** Pause and resume for each configured download client. */
@@ -425,7 +426,8 @@ app.get('/api/logs/:name', (c) => {
     stream.onAbort(() => ac.abort());
     const follow = config.demo ? demoLogs : followLogs;
     try {
-      await follow(name, tail, (line) => void stream.writeSSE({ data: JSON.stringify(line) }), ac.signal);
+      // Keys an app writes into its own logs are masked before they leave the server.
+      await follow(name, tail, (line) => void stream.writeSSE({ data: JSON.stringify({ ...line, text: redact(line.text) }) }), ac.signal);
     } catch (err) {
       await stream.writeSSE({ event: 'failure', data: JSON.stringify({ message: (err as Error).message }) });
     }

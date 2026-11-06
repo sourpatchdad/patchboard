@@ -83,6 +83,90 @@ export function ContainerPage() {
   const mine = snap.alerts.filter((a) => a.subject === name || a.href === `/c/${name}` || (svc && (a.subject === svc.name || a.title.includes(svc.name))));
   const number = svc ? numberText(nums[svc.name]) : null;
 
+  // Calm: no trouble, no update running. Then the logs keep the side to
+  // themselves and the details balance the main column.
+  const calm = !problem && mine.length === 0 && !upd.job;
+  const details = (
+    <>
+            <AppPanel name={name} />
+            <Section title="Container">
+              {d ? (
+                <dl className="ledger">
+                  {svc && checkFor(snap, svc.name) && <AnswersRow name={svc.name} now={now} />}
+                  <Row k="Image">
+                    <span className="mono wrap">{d.image}</span>
+                    {ctr.staleImage && (
+                      <span className="update-note">
+                        A newer copy is already downloaded and this container still runs the old one.
+                        {!snap.readOnly && ' Update switches it over.'}
+                      </span>
+                    )}
+                    {snap.updates[name] && !ctr.staleImage && (
+                      <span className="update-note">
+                        Update available, found {ago(snap.updates[name].at, now)}
+                        {!snap.readOnly && (
+                          <>
+                            {' '}
+                            <button
+                              type="button"
+                              className="text-button"
+                              title="Clear this mark if you already run the newest image"
+                              onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
+                            >
+                              Dismiss
+                            </button>
+                          </>
+                        )}
+                        {snap.updates[name].link && snap.updates[name].link !== '#' && (
+                          <>
+                            {' '}
+                            <a href={snap.updates[name].link} target="_blank" rel="noreferrer">
+                              registry
+                            </a>
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </Row>
+                  {d.imageCreated && <Row k="Image built">{agoLong(d.imageCreated, now)}</Row>}
+                  <Row k="Created">{shortDate(d.created)}</Row>
+                  {d.startedAt && <Row k="Started">{agoLong(d.startedAt, now)}</Row>}
+                  {d.finishedAt && <Row k="Stopped">{agoLong(d.finishedAt, now)}</Row>}
+                  <Row k="Restarts">
+                    <span className="mono">{d.restartCount}</span>
+                    <span className="ledger-aside">policy {d.restartPolicy}</span>
+                  </Row>
+                  {d.project && (
+                    <Row k="Stack">
+                      <Link to={`/stacks#${d.project}`} className="ident">
+                        {d.project}
+                      </Link>
+                      {d.service && <span className="ledger-aside">service {d.service}</span>}
+                    </Row>
+                  )}
+                  {d.update && !d.update.ok && (
+                    <Row k="Updates">
+                      <span className="ledger-aside">{d.update.reason}</span>
+                    </Row>
+                  )}
+                  {d.workingDir && (
+                    <Row k="Compose folder">
+                      <span className="mono wrap">{d.workingDir}</span>
+                    </Row>
+                  )}
+                </dl>
+              ) : (
+                <Empty>{detail.error ?? 'Loading.'}</Empty>
+              )}
+            </Section>
+
+            {d && <Wiring d={d} />}
+
+            <Section title="History" count="48 hours">
+              <History name={name} now={now} />
+            </Section>
+    </>
+  );
   return (
     <div className="page detail">
       <Crumbs project={ctr.project} />
@@ -154,6 +238,8 @@ export function ContainerPage() {
           {runbook.data && !runbook.data.available && sections.length === 0 && problem && (
             <p className="detail-note">Mount the folder holding RUNBOOK.md at /docs and the matching section shows up here.</p>
           )}
+          {/* Nothing wrong: the app's details sit here, so the columns balance. */}
+          {calm && details}
         </div>
 
         {/* The live logs sit beside the fix, so 2 AM needs no scrolling. */}
@@ -161,83 +247,7 @@ export function ContainerPage() {
           <Section title="Logs" action={{ label: 'Open full view', to: `/logs/${name}` }} className="side-logs">
             <LogTail name={name} />
           </Section>
-          <AppPanel name={name} />
-          <Section title="Container">
-            {d ? (
-              <dl className="ledger">
-                {svc && checkFor(snap, svc.name) && <AnswersRow name={svc.name} now={now} />}
-                <Row k="Image">
-                  <span className="mono wrap">{d.image}</span>
-                  {ctr.staleImage && (
-                    <span className="update-note">
-                      A newer copy is already downloaded and this container still runs the old one.
-                      {!snap.readOnly && ' Update switches it over.'}
-                    </span>
-                  )}
-                  {snap.updates[name] && !ctr.staleImage && (
-                    <span className="update-note">
-                      Update available, found {ago(snap.updates[name].at, now)}
-                      {!snap.readOnly && (
-                        <>
-                          {' '}
-                          <button
-                            type="button"
-                            className="text-button"
-                            title="Clear this mark if you already run the newest image"
-                            onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
-                          >
-                            Dismiss
-                          </button>
-                        </>
-                      )}
-                      {snap.updates[name].link && snap.updates[name].link !== '#' && (
-                        <>
-                          {' '}
-                          <a href={snap.updates[name].link} target="_blank" rel="noreferrer">
-                            registry
-                          </a>
-                        </>
-                      )}
-                    </span>
-                  )}
-                </Row>
-                {d.imageCreated && <Row k="Image built">{agoLong(d.imageCreated, now)}</Row>}
-                <Row k="Created">{shortDate(d.created)}</Row>
-                {d.startedAt && <Row k="Started">{agoLong(d.startedAt, now)}</Row>}
-                {d.finishedAt && <Row k="Stopped">{agoLong(d.finishedAt, now)}</Row>}
-                <Row k="Restarts">
-                  <span className="mono">{d.restartCount}</span>
-                  <span className="ledger-aside">policy {d.restartPolicy}</span>
-                </Row>
-                {d.project && (
-                  <Row k="Stack">
-                    <Link to={`/stacks#${d.project}`} className="ident">
-                      {d.project}
-                    </Link>
-                    {d.service && <span className="ledger-aside">service {d.service}</span>}
-                  </Row>
-                )}
-                {d.update && !d.update.ok && (
-                  <Row k="Updates">
-                    <span className="ledger-aside">{d.update.reason}</span>
-                  </Row>
-                )}
-                {d.workingDir && (
-                  <Row k="Compose folder">
-                    <span className="mono wrap">{d.workingDir}</span>
-                  </Row>
-                )}
-              </dl>
-            ) : (
-              <Empty>{detail.error ?? 'Loading.'}</Empty>
-            )}
-          </Section>
-
-          {d && <Wiring d={d} />}
-
-          <Section title="History" count="48 hours">
-            <History name={name} now={now} />
-          </Section>
+          {!calm && details}
         </aside>
       </div>
     </div>
