@@ -102,4 +102,4 @@ privately.
 ## License
 
 By contributing, you agree that your contributions are licensed under the
-MIT License in LICENSE.
+GNU Affero General Public License v3.0 in LICENSE.

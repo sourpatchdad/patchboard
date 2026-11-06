@@ -51,6 +51,8 @@ The first public release, 1.0.0. What's in it:
   socket proxy example, an activity log, and keys that never reach the
   browser. SECURITY.md has the details.
 
+Patchboard is licensed under the AGPL-3.0.
+
 For contributors: the otter artwork stays outside the repo. Build the icons
 with `npm run icons -- /path/to/otter-art`; the built images in `web/public`
 are what ship.

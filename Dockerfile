@@ -21,7 +21,7 @@ RUN npm ci --omit=dev --no-audit --no-fund
 FROM node:26-alpine AS slim
 LABEL org.opencontainers.image.title="Patchboard" \
       org.opencontainers.image.description="A control center and start page for a home server." \
-      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.source="https://github.com/sourpatchdad/patchboard"
 ENV NODE_ENV=production \
     PORT=3200 \

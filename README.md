@@ -151,7 +151,9 @@ Wikimedia Commons under the licenses credited in `server/demo.ts`.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+AGPL-3.0, copyright 2026 Nathan Nicholas. Run it, change it and share it
+freely. If you hand out a changed version, or run one for other people over
+a network, share its source under the same license. See [LICENSE](LICENSE).
 
 ## Star history
 

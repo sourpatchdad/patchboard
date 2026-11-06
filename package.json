@@ -3,7 +3,7 @@
   "version": "1.39.1",
   "private": true,
   "description": "A control center and start page for a home server.",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "author": "Nathan Nicholas <github@nbnstack.com>",
   "homepage": "https://github.com/sourpatchdad/patchboard#readme",
   "repository": {
