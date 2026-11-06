@@ -30,6 +30,12 @@ one click.
   stays neutral until a threshold is crossed.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
+- **Status first.** Home starts with the otter beside the whole status
+  summary, then weather and the clock. Header sizes are per-device choices.
+  Weather charts show temperature and rain with times and units.
+- **Fit without losing the row.** Fit can shorten vertical lists. A single
+  horizontal poster row keeps its selected items. Recalculate on width
+  changes and report any remaining overflow.
 - **Use the width.** The board has the columns you choose; each widget lays
   itself out for the width it gets (container queries), so nothing clips.
 - **The UI sits on top of files.** Apps, groups, icons, live numbers, the

@@ -9,8 +9,15 @@ You configure almost everything in the UI:
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in | A password, and other names you open Patchboard by | Every device |
 | Settings, Look, Name | The name in the header and tab, and the otter beside it | Every device |
-| Settings, Look and Home | Theme, colors, type, density, units | This device only |
+| Settings, Look and Home and units | Theme, colors, type, density, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
+
+Settings, Home and units controls the header on this device. Status sizes
+offer Small, Medium and Large otters beside the whole summary. Clock offers
+Hide, Small, Medium and Large; Medium is the default. Weather offers
+Hide, Summary and Hourly chart. Hourly chart is the default: temperature
+and rain for the next 12 hours, falling back to daily forecasts when hourly
+data is unavailable.
 
 Files still work for anyone who keeps config in git. Any variable below, in
 the compose file's `environment:` or an `env_file`, wins over the UI and

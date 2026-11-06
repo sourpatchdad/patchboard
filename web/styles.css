@@ -5998,108 +5998,6 @@ a.vw:hover {
   color: var(--ink-3);
 }
 
-/* ---------- A tighter masthead ---------- */
-
-@media (min-width: 761px) {
-  /* Every block hangs from one top line: the clock, today's weather, the
-     next three days and the status line start level, whatever grows below. */
-  .masthead {
-    gap: 48px;
-    padding: 0 0 12px;
-    align-items: start;
-  }
-
-  .masthead-weather,
-  .masthead-weather .forecast {
-    align-items: start;
-  }
-
-  .clock {
-    font-size: 64px;
-  }
-
-  .masthead-time {
-    gap: 8px;
-  }
-
-  .temp {
-    font-size: 40px;
-  }
-
-  .status-line {
-    font-size: 21px;
-  }
-
-  .masthead-status {
-    gap: 10px;
-  }
-}
-
-a.masthead-weather {
-  color: inherit;
-  text-decoration: none;
-  border-radius: var(--radius-lg);
-  margin: -8px -12px;
-  padding: 8px 12px;
-  transition: background-color 150ms ease;
-}
-
-a.masthead-weather:hover {
-  background: var(--surface);
-}
-
-.masthead-alert {
-  grid-column: 1 / -1;
-  justify-self: start;
-  font: 500 12.5px/1.2 var(--f-body);
-  color: var(--warn);
-}
-
-/* With room, the next three days sit beside today instead of under it:
-   one row, a hairline between, each day stacked as name, high, sky. */
-@media (min-width: 1200px) {
-  .masthead-weather .weather-text {
-    white-space: nowrap;
-  }
-
-  .masthead-weather {
-    grid-template-columns: auto auto auto;
-    justify-content: start;
-    justify-self: start;
-    column-gap: 16px;
-  }
-
-  .masthead-weather .forecast {
-    grid-column: 3;
-    grid-row: 1;
-    align-self: stretch;
-    align-items: end;
-    gap: 22px;
-    margin-left: 10px;
-    padding-left: 26px;
-    border-left: 1px solid var(--line);
-  }
-
-  .masthead-weather .forecast li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 3px;
-  }
-
-  .masthead-weather .forecast strong {
-    font-size: 15px;
-    color: var(--head);
-  }
-
-  .masthead-weather .masthead-alert {
-    grid-column: 1 / -1;
-  }
-}
-
-a.status-line {
-  text-decoration: none;
-}
-
 /* ---------- Weather page ---------- */
 
 .weather-alert {
@@ -8757,52 +8655,6 @@ button.ha-act:hover {
   }
 }
 
-/* A wide screen: the top of Home grows into its row. Time on the left,
-   today and the next three days centered, the status on the right, each
-   larger, so the row reads as the page's headline instead of a strip. */
-@media (min-width: 1600px) {
-  .masthead {
-    padding-bottom: 20px;
-  }
-
-  .clock {
-    font-size: 84px;
-  }
-
-  .date {
-    font-size: 17px;
-  }
-
-  .masthead-weather {
-    justify-self: center;
-  }
-
-  .temp {
-    font-size: 56px;
-  }
-
-  .weather-text {
-    font-size: 16px;
-  }
-
-  .masthead-weather .forecast strong {
-    font-size: 18px;
-  }
-
-  .masthead-weather .forecast {
-    font-size: 14px;
-    gap: 28px;
-  }
-
-  .status-line {
-    font-size: 26px;
-  }
-
-  .head-alerts {
-    font-size: 15px;
-  }
-}
-
 /* Moving settings out of files: a quiet card with one button. */
 .adopt {
   display: flex;
@@ -9404,4 +9256,116 @@ button.ha-act:hover {
 .head-alert > span {
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+/* Home starts with the server's state. Weather and time share a compact row. */
+.masthead.home-header {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 440px) minmax(0, 1fr);
+  align-items: center;
+  gap: 20px 32px;
+  padding: 12px 0 24px;
+}
+
+.home-header > * { min-width: 0; }
+.home-header .masthead-status {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  grid-row: auto;
+}
+.home-header .status-mascot { flex: none; }
+.home-header .status-copy { display: grid; gap: 8px; min-width: 0; }
+.home-header .status-line { font-size: 22px; line-height: 1.25; }
+.home-header.status-small .status-line { font-size: 19px; }
+.home-header.status-large .status-line { font-size: 26px; }
+.home-header .head-alerts { justify-items: start; max-width: none; margin: 0; gap: 5px; }
+.home-header .head-alert > a,
+.home-header .head-alert > span {
+  justify-content: flex-start;
+  text-align: left;
+  border-right: 0;
+  border-left: 2px solid var(--warn);
+  padding: 0 0 0 10px;
+}
+.home-header .head-alert.alert-critical > a,
+.home-header .head-alert.alert-critical > span { border-left-color: var(--crit); }
+.home-header .head-alert.alert-info > a,
+.home-header .head-alert.alert-info > span { border-left-color: transparent; }
+.home-header .overnight { text-align: left; line-height: 1.4; margin-top: 0; }
+.home-header .masthead-time { align-items: flex-end; gap: 8px; }
+.home-header .clock { font-size: 48px; line-height: 1; white-space: nowrap; }
+.home-header.clock-small .clock { font-size: 32px; }
+.home-header.clock-large .clock { font-size: 68px; }
+.home-header .clock small { font-size: 11px; margin-left: 6px; }
+.home-header .date { font-size: 13px; white-space: nowrap; }
+.home-header.clock-hidden { grid-template-columns: minmax(0, 1fr) minmax(280px, 440px); }
+.home-header:not(:has(.header-weather)) { grid-template-columns: minmax(0, 1fr) auto; }
+.home-header.clock-hidden:not(:has(.header-weather)) { grid-template-columns: minmax(0, 1fr); }
+.home-header .header-weather {
+  display: grid;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+  transition: background-color 150ms ease;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 1fr);
+  align-items: center;
+  justify-self: stretch;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  background: var(--raised);
+}
+.home-header .header-weather:hover { background: var(--surface); }
+.header-weather-now { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.home-header .temp { font-size: 38px; line-height: 1; white-space: nowrap; }
+.home-header .weather-text { display: grid; gap: 2px; font-size: 12px; white-space: normal; }
+.header-weather .weather-text strong { color: var(--head); font-size: 13px; font-weight: 500; }
+.header-weather .weather-text small { color: var(--ink-3); font-size: 11px; }
+.header-weather-chart { min-width: 0; display: grid; gap: 3px; }
+.header-chart-caption,
+.header-hour-labels { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-3); font: 400 10px/1.4 var(--f-mono); }
+.header-weather-chart svg { width: 100%; height: 42px; overflow: visible; }
+.header-temperature { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.header-rain { fill: var(--accent); opacity: 0.65; }
+.header-hour-labels b { color: var(--ink-2); font-weight: 400; }
+.header-forecast { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; list-style: none; padding: 0; }
+.header-forecast li { display: grid; gap: 3px; font-size: 11px; color: var(--ink-3); }
+.header-forecast strong { color: var(--ink-2); font: 400 14px/1.2 var(--f-mono); }
+.home-header .masthead-alert { grid-column: 1 / -1; font-size: 12px; color: var(--warn); }
+.header-options { display: grid; gap: 14px; }
+.header-options > div { display: grid; gap: 6px; }
+.header-options > div > span { font-size: 13px; color: var(--ink-2); }
+.header-options .seg { justify-self: start; flex-wrap: wrap; }
+
+@media (min-width: 761px) and (max-width: 1199px) {
+  .masthead.home-header { grid-template-columns: minmax(0, 1fr) auto; gap: 16px 24px; }
+  .home-header .header-weather { grid-column: 1 / -1; grid-row: 2; max-width: 600px; }
+  .home-header .masthead-time { grid-column: 2; grid-row: 1; }
+  .home-header.clock-hidden { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .masthead.home-header,
+  .home-header.clock-hidden,
+  .home-header:not(:has(.header-weather)) { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 8px 0 20px; }
+  .home-header .masthead-status { align-items: flex-start; gap: 12px; }
+  .home-header .status-line { font-size: 20px; }
+  .home-header.status-large .status-line { font-size: 23px; }
+  .home-header .head-alerts { font-size: 13px; }
+  .home-header .status-mascot { max-width: 64px; max-height: 64px; }
+  .home-header .status-mascot img { width: 100%; height: 100%; }
+  .home-header .masthead-time { flex-direction: row; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .home-header .clock { font-size: 36px; }
+  .home-header.clock-large .clock { font-size: 48px; }
+  .home-header .date { white-space: normal; }
+  .home-header .header-weather { grid-template-columns: minmax(0, 1fr) minmax(120px, 1fr); gap: 8px 12px; }
+  .home-header .temp { font-size: 32px; }
+  .header-weather-now { gap: 8px; }
+}
+
+@media (max-width: 359px) {
+  .home-header .header-weather { grid-template-columns: minmax(0, 1fr); }
+  .home-header .status-mascot { max-width: 48px; max-height: 48px; }
 }
