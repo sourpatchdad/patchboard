@@ -38,7 +38,9 @@ one click.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
 - **Compact header.** Status, server graphs, and time above weather form
-  three groups. Quiet status stays on one desktop line. Full graphs are
+  three matching cards with aligned edges. Time and weather are centered
+  in one shared card; weather has no separate box. Quiet status stays on
+  one desktop line. Full graphs are
   the default, with on/off controls in Settings, Home and a Header settings
   link beside Arrange board. Sizes and forecasts are secondary controls.
   Header choices apply per device and preserve saved boards. New boards

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Status, server details, and time with weather now use matching header
+  cards with aligned top and bottom edges. Time and weather are centered
+  together inside one card, with a single outer edge and no nested box.
+  The quiet status stays on one desktop line and the compact height is kept.
+
 - The default header uses full server graphs in a shorter card, a quiet
   status line that fits on one desktop line, and time and date stacked
   above weather. Existing numeric header preferences adopt this layout;

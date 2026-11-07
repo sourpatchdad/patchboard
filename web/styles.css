@@ -9447,22 +9447,27 @@ button.ha-act:hover {
 /* Fit tightens spacing between sources before it shortens their lists. */
 .board[data-fit='true'] .now-block { padding-block: 8px; }
 
-/* Three compact groups: status, server, and time above weather. */
-.header-context { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 0 0 210px; }
+/* Three aligned cards share one surface and keep their content grouped. */
+.masthead.home-header { align-items: stretch; }
+.home-header > .masthead-status,
+.header-board-vitals > .section,
+.header-context { border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.header-context { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: 0 0 210px; padding: 8px 12px; margin-left: auto; text-align: center; }
 .header-context:empty { display: none; }
-.home-header .header-context .masthead-time { padding: 0; border: 0; align-items: flex-start; gap: 2px; }
+.home-header .header-context .masthead-time { padding: 0; border: 0; align-items: center; gap: 2px; }
 .home-header .header-context .clock { font-size: 32px; }
 .home-header.clock-medium .header-context .clock { font-size: 40px; }
 .home-header.clock-large .header-context .clock { font-size: 52px; }
 .home-header .header-context .date { font-size: 12px; }
-.home-header .header-context .header-weather { flex: none; width: 100%; max-width: none; padding: 4px 8px; }
+.home-header .header-context .header-weather { flex: none; width: 100%; max-width: none; padding: 0; border: 0; background: none; border-radius: var(--radius); }
+.home-header .header-context .header-weather:hover { background: var(--surface); }
 .home-header .header-context .header-weather.is-current { grid-template-columns: minmax(0, 1fr); }
 .home-header .header-context .header-weather:not(.is-current) { grid-template-columns: minmax(0, 1fr); }
-.header-context .header-weather-now { gap: 10px; }
+.header-context .header-weather-now { gap: 10px; justify-content: center; }
 .home-header .header-context .temp { font-size: 30px; }
-.home-header .header-context .weather-text { gap: 0; font-size: 11px; }
+.home-header .header-context .weather-text { gap: 0; font-size: 11px; text-align: center; }
 .header-board-vitals { flex: 1 1 480px; min-width: min(100%, 480px); }
-.header-board-vitals .section { margin-bottom: 0; padding: 8px 16px 10px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.header-board-vitals .section { height: 100%; margin-bottom: 0; padding: 8px 16px 10px; }
 .header-board-vitals .section-head { padding-bottom: 6px; }
 .header-board-vitals .section-head h2 { font-size: 16px; }
 .header-board-vitals .section-action { font-size: 12px; }
@@ -9470,7 +9475,7 @@ button.ha-act:hover {
 .header-board-vitals .vw { min-width: 0; }
 .header-board-vitals .vw-label { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-board-vitals .spark { height: 16px; }
-.home-header .masthead-status { flex: 0 1 auto; }
+.home-header .masthead-status { flex: 0 1 auto; padding: 8px 16px; max-width: 552px; }
 @media (min-width: 1280px) {
   .home-header.is-quiet .masthead-status { flex: 0 0 auto; max-width: none; }
   .home-header.is-quiet .status-line { white-space: nowrap; }
@@ -9483,7 +9488,7 @@ button.ha-act:hover {
   .header-board-vitals .vw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .header-context { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
   .home-header .header-context .header-weather { width: auto; flex: 1 1 180px; }
-  .home-header .header-context .masthead-time { flex-direction: column; align-items: flex-start; }
+  .home-header .header-context .masthead-time { flex-direction: column; align-items: center; }
 }
 .header-switches { display: flex; flex-wrap: wrap; gap: 16px 28px; margin-block: 20px 12px; }
 .header-options-details { margin-block: 16px; }

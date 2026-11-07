@@ -76,6 +76,23 @@ try {
     assert(geometry.statusHeight <= geometry.lineHeight * 1.2, `${width}px quiet status stays on one line`);
     assert(geometry.height <= 132, `${width}px default header stays compact: ${geometry.height}px`);
     assert(geometry.timeBottom <= geometry.weatherTop, 'time and date sit above weather');
+    const cards = await page.evaluate(() => {
+      const frames = ['.masthead-status', '.header-board-vitals > .section', '.header-context'].map((selector) => {
+        const el = document.querySelector(selector), r = el.getBoundingClientRect(), s = getComputedStyle(el);
+        return { top: r.top, bottom: r.bottom, surface: s.backgroundColor, edge: s.boxShadow, radius: s.borderRadius };
+      });
+      const context = document.querySelector('.header-context').getBoundingClientRect();
+      const clock = document.querySelector('.header-context .clock').getBoundingClientRect();
+      const temp = document.querySelector('.header-context .temp').getBoundingClientRect();
+      const weather = document.querySelector('.header-context .weather-text').getBoundingClientRect();
+      return { frames, center: context.x + context.width / 2, clockCenter: clock.x + clock.width / 2, weatherCenter: (temp.left + weather.right) / 2, weatherEdge: getComputedStyle(document.querySelector('.header-weather')).borderWidth };
+    });
+    assert(Math.max(...cards.frames.map((r) => r.top)) - Math.min(...cards.frames.map((r) => r.top)) < 1, `${width}px header card tops align`);
+    assert(Math.max(...cards.frames.map((r) => r.bottom)) - Math.min(...cards.frames.map((r) => r.bottom)) < 1, `${width}px header card bottoms align`);
+    assert(cards.frames.every((r) => r.surface === cards.frames[0].surface && r.edge === cards.frames[0].edge && r.radius === cards.frames[0].radius), 'header cards share their surface, edge and radius');
+    assert(Math.abs(cards.center - cards.clockCenter) < 1, 'clock is centered in its card');
+    assert(Math.abs(cards.center - cards.weatherCenter) < 1, 'weather is centered under the clock');
+    assert.equal(cards.weatherEdge, '0px', 'weather belongs to the shared card without a nested box');
     assert.equal(geometry.overflow, 0);
   }
   await page.setViewportSize({ width: 402, height: 874 });

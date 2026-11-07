@@ -6,7 +6,8 @@ they match the current code.
 ## Home
 
 The default header places status beside full server graphs, then time and
-date above weather in a shared column. The quiet status stays on one line
+date above weather in a centered card. All three header cards share
+the same surface and line up along their top and bottom edges. The quiet status stays on one line
 on a desktop. Header settings on Home opens Settings, Home: four clear
 on/off switches, with sizing and forecasts in Sizes and forecast details.
 Header preferences apply to this device. Arrange board controls the shared
