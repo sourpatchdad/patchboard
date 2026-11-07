@@ -114,7 +114,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
       ? !dockerOk
         ? { tone: 'warn', text: "Can't see Docker right now." }
         : blind
-          ? { tone: 'warn', text: `Nothing wrong that Patchboard can see. ${blind}` }
+          ? { tone: 'warn', text: blind }
           : { tone: 'ok', text: `All quiet. ${running} containers running.` }
       : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: `${alerts.length === 1 ? 'One thing needs' : `${alerts.length} things need`} you.` };
   // A quiet line leads to what's running, or to the integrations it can't reach.
@@ -122,8 +122,10 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
   // The otter beside the status line wears the worst of it.
   const mood = moodFor(status.tone === 'crit' ? 'critical' : status.tone === 'warn' ? 'warn' : null, night, snap!.alerts.length);
 
+  if (homeStatusSize === 'hidden' && homeServer === 'hidden' && homeClockSize === 'hidden' && (!weather || weatherOnBoard || homeWeather === 'hidden')) return null;
+
   return (
-    <header className={`masthead home-header status-${homeStatusSize} clock-${homeClockSize}`}>
+    <header className={`masthead home-header status-${homeStatusSize} clock-${homeClockSize}${status.tone === 'ok' ? ' is-quiet' : ''}`}>
       {homeStatusSize !== 'hidden' && <div className={`masthead-status tone-${status.tone}`}>
         <Mascot mood={mood} size={homeStatusSize === 'large' ? 88 : homeStatusSize === 'small' ? 56 : 72} className="status-mascot" />
         <div className="status-copy">
@@ -142,40 +144,42 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
           <Overnight now={now} />
         </div>
       </div>}
-      {homeServer === 'card' ? <div className="header-board-vitals"><Vitals /></div>
+      {homeServer === 'card' ? <div className="header-board-vitals"><Vitals compact /></div>
         : homeServer !== 'hidden' && <HeaderServer storage={homeServer === 'full'} />}
-      {weather && !weatherOnBoard && homeWeather !== 'hidden' && (
-        <Link to="/weather" className={`masthead-weather header-weather is-${homeWeather}`} title="Open the hourly forecast and weather alerts">
-          <div className="header-weather-now">
-            <span className="temp">{deg(weather.tempNow, unit)}°</span>
-            <span className="weather-text">
-              <strong>{weather.label}</strong>
-              <span>{weatherText(weather.codeNow)}</span>
-              <small>High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}° · Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</small>
-              {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
-            </span>
+      <div className="header-context">
+        {homeClockSize !== 'hidden' && (
+          <div className="masthead-time">
+            <span className="clock">{time}{meridiem && <small>{meridiem}</small>}</span>
+            <Link to="/upcoming" className="date" title="What's coming this week">{date}</Link>
           </div>
-          {homeWeather !== 'current' && (homeWeather === 'hourly' && (weather.hours?.length ?? 0) > 1 ? (
-            <HeaderWeatherChart weather={weather} clock24={clock24} unit={unit} />
-          ) : (
-            <ol className="header-forecast" aria-label="Next three days">
-              {weather.days.slice(1, 4).map((w) => (
-                <li key={w.date}>
-                  <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
-                  <strong>{deg(w.high, unit)}°</strong>
-                  <span>{weatherText(w.code)}</span>
-                </li>
-              ))}
-            </ol>
-          ))}
-        </Link>
-      )}
-      {homeClockSize !== 'hidden' && (
-        <div className="masthead-time">
-          <span className="clock">{time}{meridiem && <small>{meridiem}</small>}</span>
-          <Link to="/upcoming" className="date" title="What's coming this week">{date}</Link>
-        </div>
-      )}
+        )}
+        {weather && !weatherOnBoard && homeWeather !== 'hidden' && (
+          <Link to="/weather" className={`masthead-weather header-weather is-${homeWeather}`} title="Open the hourly forecast and weather alerts">
+            <div className="header-weather-now">
+              <span className="temp">{deg(weather.tempNow, unit)}°</span>
+              <span className="weather-text">
+                <strong>{weather.label}</strong>
+                <span>{weatherText(weather.codeNow)}</span>
+                <small>High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}° · Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</small>
+                {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
+              </span>
+            </div>
+            {homeWeather !== 'current' && (homeWeather === 'hourly' && (weather.hours?.length ?? 0) > 1 ? (
+              <HeaderWeatherChart weather={weather} clock24={clock24} unit={unit} />
+            ) : (
+              <ol className="header-forecast" aria-label="Next three days">
+                {weather.days.slice(1, 4).map((w) => (
+                  <li key={w.date}>
+                    <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                    <strong>{deg(w.high, unit)}°</strong>
+                    <span>{weatherText(w.code)}</span>
+                  </li>
+                ))}
+              </ol>
+            ))}
+          </Link>
+        )}
+      </div>
     </header>
   );
 }
@@ -277,7 +281,7 @@ function Overnight({ now }: { now: number }) {
 function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): string | null {
   const down = snap.alerts.filter((a) => a.id.startsWith('src-')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
   if (!down.length) return null;
-  return down.length === 1 ? `It can't reach ${down[0]}.` : `It can't reach ${down.length} integrations.`;
+  return down.length === 1 ? `Can't reach ${down[0]}.` : `Can't reach ${count(down.length)} integrations.`;
 }
 
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
@@ -289,11 +293,11 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   // The otter stays whenever nothing is wrong, even with a quiet note below.
   const clear = serious === 0 && (
     <div className="all-clear">
-      <Mascot mood={moodFor(null, night, alerts.length)} size={88} />
+      <Mascot mood={moodFor(blind ? 'warn' : null, night, alerts.length)} size={88} />
       <p>
-        <strong>Nothing needs you.</strong>
+        <strong>{blind ? 'Connection problem.' : 'Nothing needs you.'}</strong>
         <br />
-        {blind ? `Nothing wrong that Patchboard can see. ${blind}` : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+        {blind ? blind : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
       </p>
     </div>
   );
@@ -383,10 +387,10 @@ export function FeedsBrief({ now }: { now: number }) {
             .slice(0, limit)
             .map((e) => (
             <li key={e.id}>
-              <Link to={`/feeds?e=${e.id}`}>
+              <Link to={`/feeds?e=${e.id}`} title={e.title}>
                 <span className="feed-title">{e.title}</span>
                 <span className="feed-meta">
-                  <span>{e.feed}</span>
+                  <span title={e.feed}>{e.feed}</span>
                   <time>{ago(e.publishedAt, now)}</time>
                 </span>
               </Link>
@@ -608,7 +612,7 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
   return (
     <li className={`rel ${it.hasFile ? 'has-file' : ''} ${art ? 'with-art' : ''}`}>
       {it.url && it.url !== '#' ? (
-        <a href={it.url} target="_blank" rel="noreferrer">{content}</a>
+        <a href={it.url} target="_blank" rel="noreferrer" title={[it.title, it.subtitle].filter(Boolean).join(' · ')}>{content}</a>
       ) : (
         <div>{content}</div>
       )}
@@ -903,7 +907,7 @@ function Welcome() {
               </button>
             </span>
           ))}
-          . Customize, at the foot of the board, changes any of it, and New board adds another.
+          . Arrange board, at the foot of the board, changes any of it, and New board adds another.
         </li>
         <li>
           <strong>Your look.</strong> <Link to="/settings">Settings</Link> has themes, accent colors, type and density.

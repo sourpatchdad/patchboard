@@ -37,16 +37,18 @@ one click.
   report. Hover, keyboard focus and touch reach the same details.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
-- **Compact pieces.** Home's header keeps status, server metrics, weather
-  and time together at their content widths, wrapping when needed. It does
-  not stretch a chart to fill the screen. Compact shows status, CPU and
-  memory, current weather and a small clock; Basic keeps time and date.
-  Presets and individual controls apply per device and leave saved boards
-  alone. Server card reuses the complete Server widget in the header,
-  including its graphics and Details link; removing the board copy stays
-  an explicit Customize action. When status is hidden, the existing Needs attention widget renders
-  as a card on this device. Weather can be added through Customize.
-  Weather charts show temperature and rain with times and units.
+- **Compact header.** Status, server graphs, and time above weather form
+  three groups. Quiet status stays on one desktop line. Full graphs are
+  the default, with on/off controls in Settings, Home and a Header settings
+  link beside Arrange board. Sizes and forecasts are secondary controls.
+  Header choices apply per device and preserve saved boards. New boards
+  avoid a duplicate Server card; existing saved widgets remain explicit.
+  An unreachable integration leads with the connection problem, never a
+  reassuring statement that contradicts it.
+- **List alignment.** Reading metadata and calendar rows keep consistent
+  desktop baselines. Close-height neighboring Reading and This week cards
+  can share a bottom edge when a small adjustment fits in the available
+  room. Placement and page fit take priority over forced equal heights.
 - **Fit without losing the row.** Fit can shorten vertical lists. A single
   horizontal poster row keeps its selected items. Recalculate on width
   changes and changes to the space above the board. Reserve the measured
@@ -60,11 +62,12 @@ one click.
   board and page settings live in Patchboard's database. services.yaml and
   Docker labels keep working underneath, and the UI never rewrites them.
 - **One pattern per job.** Every page customizes through the same panel;
-  every list sorts through the same control; sorts live in the URL. Customize
+  every list sorts through the same control; sorts live in the URL. Arrange board
   keeps the viewed card sizes and fitted item counts, with floating controls
   and a bottom arrange bar. Hidden header widgets stay out of the grid.
   Dragging assigns a starting column and relative vertical position, so
   neighboring columns stay stable; narrower screens clamp the column.
+  Dotted editing outlines surround card content and leave the gutters clear.
 - **Keyboard access.** Board drawers contain focus, Escape closes them,
   and focus returns to the opener. The background is inert while a drawer
   is open. Skip to content bypasses the navigation.

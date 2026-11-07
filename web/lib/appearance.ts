@@ -60,7 +60,7 @@ export const DEFAULTS: Appearance = {
   homeClockSize: 'small',
   homeStatusSize: 'medium',
   homeWeather: 'current',
-  homeServer: 'summary',
+  homeServer: 'card',
   clock24: false,
   temp: usesFahrenheit ? 'f' : 'c',
   hidden: [],
@@ -87,12 +87,17 @@ export const HOME_SECTIONS: { id: HomeSection; label: string }[] = [
 
 let hadSaved = false;
 
+/** Older numeric headers adopt the graphical default; explicit off stays off. */
+function withDefaults(saved: Partial<Appearance>): Appearance {
+  return { ...DEFAULTS, ...saved, homeServer: saved.homeServer === 'hidden' ? 'hidden' : 'card', custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
+}
+
 function read(): Appearance {
   try {
     const raw = localStorage.getItem(KEY);
     hadSaved = raw !== null;
     const saved = JSON.parse(raw ?? '{}') as Partial<Appearance>;
-    return { ...DEFAULTS, ...saved, custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
+    return withDefaults(saved);
   } catch {
     return DEFAULTS;
   }
@@ -310,7 +315,7 @@ export function importAppearance(text: string): boolean {
   try {
     const parsed = JSON.parse(text) as Partial<Appearance>;
     if (typeof parsed !== 'object' || !parsed) return false;
-    setAppearance({ ...DEFAULTS, ...parsed });
+    setAppearance(withDefaults(parsed));
     return true;
   } catch {
     return false;
@@ -339,7 +344,7 @@ export function initAppearance(): void {
   void fetch('/api/appearance')
     .then((r) => (r.ok ? r.json() : null))
     .then((j: { appearance?: Partial<Appearance> | null } | null) => {
-      if (j?.appearance && !hadSaved) setAppearance({ ...DEFAULTS, ...j.appearance, custom: { ...DEFAULTS.custom, ...(j.appearance.custom ?? {}) } }, { push: false });
+      if (j?.appearance && !hadSaved) setAppearance(withDefaults(j.appearance), { push: false });
     })
     .catch(() => {});
 }

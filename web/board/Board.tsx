@@ -234,6 +234,50 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
   return on ? { trim, posters, over } : { trim: {}, posters: {}, over: 0 };
 }
 
+/** Align close-sized reading/calendar cards without adding more than 48px. */
+function useListCardAlignment(el: HTMLDivElement | null, widgets: string): Record<string, number> {
+  const [aligned, setAligned] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!el) return;
+    let frame = 0;
+    const measure = () => {
+      const zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+      const foot = el.parentElement?.querySelector<HTMLElement>('.board-foot');
+      const reserve = foot ? foot.getBoundingClientRect().height + parseFloat(getComputedStyle(foot).marginTop) : 0;
+      const freeRoom = (innerHeight - el.getBoundingClientRect().bottom - scrollY - reserve - 20) / zoom;
+      const occupied = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((cell) => ({ cell, rect: cell.getBoundingClientRect() }));
+      const cards = occupied.filter(({ cell }) => cell.dataset.type === 'feeds' || cell.dataset.type === 'upcoming').map(({ cell, rect }) => {
+        const body = cell.querySelector<HTMLElement>('.cell-body')!;
+        const content = body.firstElementChild;
+        const style = getComputedStyle(body);
+        const height = (content?.getBoundingClientRect().height ?? 0) / zoom + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + 24;
+        return { id: cell.id.slice(2), rect, top: rect.top, height, extra: Math.max(0, rect.height / zoom - height) };
+      });
+      const room = freeRoom + Math.max(0, ...cards.map((card) => card.extra));
+      const next: Record<string, number> = {};
+      for (const card of cards) {
+        const following = occupied.filter(({ rect }) => rect.top > card.top + 1 && rect.left < card.rect.right - 1 && rect.right > card.rect.left + 1);
+        const boundary = Math.min(el.getBoundingClientRect().bottom, ...following.map(({ rect }) => rect.top));
+        // Use already-empty space below a shorter card before spending any
+        // page height. A full-width row below both cards should never move.
+        const clearance = Math.max(0, (boundary - card.top) / zoom - card.height);
+        const capacity = Math.min(48, clearance + Math.max(0, room));
+        const peer = cards.find((other) => other.id !== card.id && Math.abs(other.top - card.top) < 4 && Math.max(0, other.height - card.height) <= capacity && Math.abs(other.height - card.height) <= 48);
+        if (peer) next[card.id] = Math.max(card.height, peer.height);
+      }
+      setAligned((previous) => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+    };
+    const queue = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    const observer = new ResizeObserver(queue);
+    observer.observe(el);
+    for (const section of el.querySelectorAll('.feeds-brief, .upcoming-brief')) observer.observe(section);
+    window.addEventListener('resize', queue);
+    queue();
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('resize', queue); };
+  }, [el, widgets]);
+  return aligned;
+}
+
 export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: number; onWidgets?: (types: string[]) => void }) {
   const { snap } = useStore();
   const navigate = useNavigate();
@@ -275,6 +319,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
   const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE);
+  const alignedHeights = useListCardAlignment(boardEl, shown?.widgets.map((w) => `${w.id}:${w.column ?? ''}:${w.span ?? ''}`).join(',') ?? '');
   const short = over;
   const sort = useDragSort('cell', () => {}, { onPoint: (drag, x, y) => {
     if (!boardEl || !draft) return;
@@ -451,6 +496,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             chosen={chosen}
             limit={trim[w.id]}
             posterHeight={posters[w.id]}
+            alignedHeight={alignedHeights[w.id]}
             onMove={(from, to) => {
               if (peers[from] && peers[to]) move(shown.widgets.indexOf(peers[from]), shown.widgets.indexOf(peers[to]));
             }}
@@ -465,16 +511,15 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         })}
       </div>
 
-      {!snap?.readOnly && (
-        <div className="board-foot" aria-hidden={editing || undefined} inert={editing || undefined}>
-          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
-            {custom ? 'Customize' : 'Customize this board'}
+      <div className="board-foot" aria-hidden={editing || undefined} inert={editing || undefined}>
+          <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Header settings</Link>
+          {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
+            Arrange board
           </button>
           <button type="button" className="text-button board-customize" onClick={() => setCreating(true)}>
             New board
-          </button>
+          </button></>}
         </div>
-      )}
 
       {creating && <NewBoard onClose={() => setCreating(false)} />}
 
@@ -537,6 +582,7 @@ function Cell(props: {
   /** Items shown when fitting the window trimmed this widget. */
   limit?: number;
   posterHeight?: number;
+  alignedHeight?: number;
   children: ReactNode;
   onMove: (from: number, to: number) => void;
   onSpan: (n: number) => void;
@@ -560,13 +606,22 @@ function Cell(props: {
     // otherwise every widget comes up short and the next one overlaps it.
     const measure = () => {
       const zoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
-      setRows(Math.max(1, Math.ceil(el.getBoundingClientRect().height / zoom / 4)));
+      const body = el.querySelector<HTMLElement>('.cell-body');
+      const content = body?.firstElementChild;
+      const alignable = w.type === 'feeds' || w.type === 'upcoming';
+      const style = body && getComputedStyle(body);
+      const natural = alignable && content && style
+        ? content.getBoundingClientRect().height / zoom + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + 24
+        : el.getBoundingClientRect().height / zoom;
+      setRows(Math.max(1, Math.ceil(Math.max(natural, props.alignedHeight ?? 0) / 4)));
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    const content = el.querySelector('.cell-body')?.firstElementChild;
+    if (content) ro.observe(content);
     return () => ro.disconnect();
-  }, []);
+  }, [props.alignedHeight]);
 
   return (
     <div
@@ -657,7 +712,7 @@ function Cell(props: {
             </span>
           </span>
         )}
-        <div className="cell-body" inert={editing || undefined} style={{ '--fit-poster-height': props.posterHeight ? `${props.posterHeight}px` : undefined } as CSSProperties}>
+        <div className="cell-body" inert={editing || undefined} style={{ minHeight: props.alignedHeight ? `${props.alignedHeight - 24}px` : undefined, '--fit-poster-height': props.posterHeight ? `${props.posterHeight}px` : undefined } as CSSProperties}>
           <WidgetCtx.Provider
             value={{
               title: w.config?.title,
@@ -754,7 +809,7 @@ function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: strin
 }
 
 /** The server at a glance, each number with its last 24 hours, each leading to its own section. */
-export function Vitals() {
+export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
   const { data: nas } = useSource<TruenasData>('truenas');
@@ -770,7 +825,7 @@ export function Vitals() {
         <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it">
           <Roll className="vw-num" value={pct(sys.cpuPct)} />
           <span className="vw-label">CPU</span>
-          <Spark data={h.cpu} max={100} height={22} label="CPU, last 24 hours" />
+          <Spark data={h.cpu} max={100} height={compact ? 16 : 22} label="CPU, last 24 hours" />
         </Link>
         {m && (
           <Link to="/server#resources" className="vw" title="What memory goes to">
@@ -789,7 +844,7 @@ export function Vitals() {
         {storage != null && (
           <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots">
             <Roll className="vw-num" value={`${Math.round(storage)}%`} />
-            <span className="vw-label">Storage{pool ? ` on ${pool.name}` : ''}</span>
+            <span className="vw-label" title={pool ? `Storage on ${pool.name}` : 'Storage'}>Storage{pool ? ` on ${pool.name}` : ''}</span>
             <Meter value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}

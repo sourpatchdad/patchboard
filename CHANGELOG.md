@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- The default header uses full server graphs in a shorter card, a quiet
+  status line that fits on one desktop line, and time and date stacked
+  above weather. Existing numeric header preferences adopt this layout;
+  explicit off choices stay off. New boards avoid duplicate Server cards;
+  saved boards stay intact.
+- Header settings and Arrange board name their separate jobs. Settings,
+  Home starts with four header on/off switches; sizing and forecast detail
+  live in a secondary disclosure. Appearance export lives in Look and setup
+  backups in Connections.
+- Editing outlines leave clear gutters between cards. Resize handles show
+  on the active card. Reading and This week use steady row baselines and
+  close-height neighboring cards align when there is room.
+- An unreachable integration leads with “Can't reach Nextcloud.” rather
+  than “Nothing wrong.” The attention card also names the connection issue.
+
 - Fit can shrink poster artwork after trimming vertical lists, preserving
   each cover's proportions and every item in the full horizontal row.
 
@@ -11,22 +26,18 @@
   arrangement until you move a card. Widget settings also offer a Column
   picker for keyboard placement.
 
-- Customize preserves fitted item counts, full card heights and the visible
+- Arrange board preserves fitted item counts, full card heights and the visible
   widget set. Its controls float over the board and its arrange bar stays
   at the bottom, so entering edit mode no longer repacks the layout.
   Needs attention settings remain available without inserting a placeholder
   card. Fit keeps useful height savings even in widgets with large headings.
 
-- Home's Server metrics now offers Server card: the complete card in the
-  header, with its CPU graph, memory breakdown, storage bar, uptime and
-  Details link. Remove the board copy through Customize when you are ready.
-  This device preference leaves saved boards intact.
 - Reading counts use locale grouping throughout navigation, Home and the
   reader: 1,006 unread instead of 1006. Shared plural counts do the same.
 
-- Fit reserves the actual space for Customize and New board, responds to
+- Fit reserves the actual space for Arrange board and New board, responds to
   Welcome and board-tab changes, and tightens Right now's source spacing.
-  Small remaining overflows are explained in Customize. Saved boards and
+  Small remaining overflows are explained in Arrange board. Saved boards and
   full horizontal poster rows stay intact.
 - Board drawers and Jump to contain keyboard focus, close with Escape and
   return focus to their opener. Background controls are unavailable while
@@ -35,21 +46,13 @@
 
 What's in Patchboard:
 
-- **Home** offers compact and basic headers. Compact shows the otter beside
-  status, CPU and memory, current weather and a small clock. Basic keeps
-  time and date. Settings, Home and units adjusts each part on this device,
-  including status and clock sizes or Hide, optional storage, and Current,
-  Forecast or Hourly chart weather. Header pieces keep compact widths and
-  wrap instead of stretching across spare space. CPU and memory link to
-  Server's resources; storage links to its storage section.
-  The optional chart shows the next 12 hours of temperature and rain, with
-  daily forecasts without hourly data. Saved hourly preferences stay in
-  place. Presets do not rewrite saved boards. Hiding status shows the
-  existing Needs attention widget as a card on this device; add Weather
-  separately through Customize. Below the header, a board you arrange:
-  apps with live numbers, Right now,
-  This week, Reading, mail, the server, changes, recently added and more.
-  The board starts right under the header; Customize waits at its foot.
+- **Home** has a compact graphical header by default: status beside CPU
+  history, memory, storage and uptime, with time and date above weather.
+  Header settings leads to four per-device on/off switches in Settings,
+  Home; sizes and forecasts are secondary choices. Existing saved boards
+  stay intact. Below the header, arrange apps with live numbers, Right now,
+  This week, Reading, mail, changes, recently added and more.
+  The board starts right under the header; Arrange board waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing
   downloading.
   Hover, focus or tap a playback row for an artwork preview, reported
@@ -77,8 +80,8 @@ What's in Patchboard:
   A fresh install's Home is one screen at 1920 by 1080: the server, Right
   now, apps as icons, the week, reading and changes, fit to the window, with
   Customize in view. The old everything-board is the Everything layout.
-  While an integration is down, Home says "Nothing wrong that Patchboard can
-  see" and names it, instead of "All quiet". A board saved on one device
+  When an integration is unreachable, Home names the connection problem
+  directly, without an all-clear lead-in. A board saved on one device
   redraws on every open screen. On a phone, each alert in the header shows
   why under its title.
 - **Every glance leads to an action.** A stopped container is two clicks

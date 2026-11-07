@@ -223,17 +223,16 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
 };
 
 /**
- * A fresh install's Home: one screen. The server and Right now, the apps as
- * icons, then the week, reading and changes, trimmed to fit the window.
+ * A fresh install's Home: server details live in the header. Apps as icons,
+ * Right now, the week, reading and changes fit into the board below.
  */
 export const DEFAULT_BOARD: Board = {
   version: 1,
   columns: 3,
   fit: true,
   widgets: [
-    { id: 'vitals', type: 'vitals', size: 'w', span: 2 },
-    { id: 'now', type: 'now', size: 'm', span: 1 },
     { id: 'apps', type: 'apps', size: 'w', span: 2, config: { style: 'patchbay' } },
+    { id: 'now', type: 'now', size: 'm', span: 1 },
     { id: 'attention', type: 'attention', size: 'm', span: 1 },
     { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
     { id: 'feeds', type: 'feeds', size: 'm', span: 1 },

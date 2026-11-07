@@ -5,23 +5,25 @@ You configure almost everything in the UI:
 | Where | What | Applies to |
 |---|---|---|
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
-| Apps, Edit apps, and Customize on each page | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
+| Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in | A password, and other names you open Patchboard by | Every device |
 | Settings, Look, Name | The name in the header and tab, and the otter beside it | Every device |
-| Settings, Look and Home and units | Theme, colors, type, density, units and Home header | This device only |
+| Settings, Look and Home | Theme, colors, type, density, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
 
-Settings, Home and units controls the header on this device. Use compact
-header shows status, CPU and memory, current weather and a small clock.
-Use basic header keeps time and date. Adjust each part independently:
-status and clock sizes or Hide; server metrics with optional storage; and
-Hide, Current, Forecast or Hourly chart weather. Compact is the default
-for a new device; saved hourly preferences stay in place. The optional
-hourly chart shows temperature and rain for the next 12 hours, falling
-back to daily forecasts when hourly data is unavailable. Presets do not
-rewrite saved boards. Hiding status renders the existing Needs attention
-widget as a card on this device. Add Weather through Customize on Home.
+Settings, Home controls the header on this device. Its default is status,
+full server graphs and a shared column with time and date above weather.
+Use the four Show switches to turn each part on or off. Sizes and forecast
+details contains the optional sizes and weather chart. Restore default
+header returns to the compact graphical layout. Older numeric header
+preferences adopt this default; an explicit off choice stays off.
+
+Header settings beside Arrange board opens these controls directly.
+Header choices never rewrite a saved board. New boards do not duplicate
+server details in the grid; existing saved Server widgets stay where you
+put them. Arrange board changes widgets and placement for every device.
+Appearance export lives in Settings, Look; setup backups live in Connections.
 
 Files still work for anyone who keeps config in git. Any variable below, in
 the compose file's `environment:` or an `env_file`, wins over the UI and
@@ -30,7 +32,7 @@ underneath your UI changes. See [INTEGRATIONS.md](INTEGRATIONS.md) for those.
 After you change a variable, recreate the container with
 `docker compose up -d`.
 
-Settings, Home and units, Setup file downloads the UI part (board, apps, page
+Settings, Connections, Setup file downloads the UI part (board, apps, page
 settings) as one JSON file and imports it on another server. Keys and
 uploaded icons stay behind.
 

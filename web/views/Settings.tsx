@@ -33,9 +33,9 @@ import { agoLong } from '../lib/format.ts';
 type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
 const TABS: [Tab, string, string][] = [
   ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved.'],
-  ['home', 'Home and units', 'Saved on this device. The Home board itself is the same everywhere: change it with Customize on Home.'],
+  ['home', 'Home', 'Header, app appearance and units for this device. Arrange board on Home changes the shared widget layout.'],
   ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],
-  ['connections', 'Connections', 'Shared by every device.'],
+  ['connections', 'Connections', 'Integrations, sign-in, keys and setup backups. Shared by every device.'],
   ['activity', 'Activity', 'Who changed what, newest first.'],
 ];
 
@@ -47,9 +47,10 @@ export function Settings() {
   useEffect(() => {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
   }, [hash]);
-  useLanding(!!useStore().snap && tab === 'connections');
+  useLanding(!!useStore().snap && (tab === 'connections' || tab === 'home'));
+  const groupLabels: Partial<Record<keyof Appearance, string>> = { homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
-    <div className="seg" role="group">
+    <div className="seg" role="group" aria-label={groupLabels[key]}>
       {options.map(([v, label]) => (
         <button key={String(v)} type="button" disabled={disabled} aria-pressed={a[key] === v} onClick={() => setAppearance({ [key]: v } as Partial<Appearance>)}>
           {label}
@@ -171,7 +172,27 @@ export function Settings() {
       )}
       {tab === 'home' && (
       <>
-      <Section title="Home">
+      <Section title="Home header" id="home-header" className="span-all">
+        <p className="settings-note">The default header shows status, server graphs, and time above weather. These controls change this device only.</p>
+        <div className="header-switches">
+          <label className="check"><input type="checkbox" checked={a.homeStatusSize !== 'hidden'} onChange={(e) => setAppearance({ homeStatusSize: e.target.checked ? 'medium' : 'hidden' })} />Show status</label>
+          <label className="check"><input type="checkbox" checked={a.homeServer !== 'hidden'} onChange={(e) => setAppearance({ homeServer: e.target.checked ? 'card' : 'hidden' })} />Show server details</label>
+          <label className="check"><input type="checkbox" checked={a.homeClockSize !== 'hidden'} onChange={(e) => setAppearance({ homeClockSize: e.target.checked ? 'small' : 'hidden' })} />Show time and date</label>
+          <label className="check"><input type="checkbox" checked={a.homeWeather !== 'hidden'} onChange={(e) => setAppearance({ homeWeather: e.target.checked ? 'current' : 'hidden' })} />Show weather</label>
+        </div>
+        <p className="settings-note">Server details includes CPU history, memory, storage and uptime. Its Details link opens Server. With status off, the Needs attention widget appears on the board. A Weather widget on the board takes the place of header weather.</p>
+        <details className="header-options-details">
+          <summary>Sizes and forecast details</summary>
+          <div className="header-options">
+            <div><span>Status size</span>{seg('homeStatusSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], a.homeStatusSize === 'hidden')}</div>
+            <div><span>Clock size</span>{seg('homeClockSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], a.homeClockSize === 'hidden')}</div>
+            <div><span>Weather view</span>{seg('homeWeather', [['current', 'Current'], ['summary', 'Forecast'], ['hourly', 'Hourly chart']], a.homeWeather === 'hidden')}</div>
+          </div>
+        </details>
+        <button type="button" className="button button-quiet" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'card', homeWeather: 'current', homeClockSize: 'small' })}>Restore default header</button>
+      </Section>
+
+      <Section title="Default app appearance">
         <div className="choice-row">
           {seg('homeApps', [
             ['tiles', 'Tiles with a live number'],
@@ -179,22 +200,8 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          <strong>Customize</strong> on Home picks the widgets, their order and their width. Every device shows the same board.
+          Used when an Apps widget follows Your Settings default. <strong>Arrange board → Apps settings</strong> can give a widget its own look. Widget placement is shared across devices.
         </p>
-      </Section>
-
-      <Section title="Home header">
-        <div className="header-presets">
-          <button type="button" className="btn" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'summary', homeWeather: 'current', homeClockSize: 'small' })}>Use compact header</button>
-          <button type="button" className="btn" onClick={() => setAppearance({ homeStatusSize: 'hidden', homeServer: 'hidden', homeWeather: 'hidden', homeClockSize: 'small' })}>Use basic header</button>
-        </div>
-        <div className="header-options">
-          <div><span>Status size</span>{seg('homeStatusSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
-          <div><span>Clock size</span>{seg('homeClockSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
-          <div><span>Weather</span>{seg('homeWeather', [['hidden', 'Hide'], ['current', 'Current'], ['summary', 'Forecast'], ['hourly', 'Hourly chart']])}</div>
-          <div><span>Server metrics</span>{seg('homeServer', [['hidden', 'Hide'], ['summary', 'CPU and memory'], ['full', 'CPU, memory and storage'], ['card', 'Server card']])}</div>
-        </div>
-        <p className="settings-note">Compact shows status, server metrics, weather and time. Basic keeps time and date. With status hidden, Needs attention appears on the board. Add Weather from Customize on Home. Server card puts the complete Server widget here, including its graphs and uptime. You can then remove the board copy in Customize. Adjust each part below. Saved on this device.</p>
       </Section>
 
       <Section title="Units and time">
@@ -211,8 +218,6 @@ export function Settings() {
         </div>
       </Section>
 
-      <Portability />
-      <SetupFile />
       </>
       )}
       {tab === 'look' && (
@@ -226,6 +231,7 @@ export function Settings() {
         <p className="settings-note">Grayscale icons get their color back when you point at them.</p>
       </Section>
       )}
+      {tab === 'look' && <Portability />}
       {tab === 'connections' && (
         <>
           <Integrations />
@@ -233,6 +239,7 @@ export function Settings() {
           <SignIn />
           <Keys />
           <CatalogCheck />
+          <SetupFile />
         </>
       )}
       {tab === 'alerts' && <Alerts />}

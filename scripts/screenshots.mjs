@@ -223,8 +223,8 @@ try {
 
   console.log('Making it yours');
   await go('/');
-  await page.getByRole('button', { name: /Customize/ }).click();
-  // Customize sits at the foot of the board; show the arrange bar over the top of it.
+  await page.getByRole('button', { name: /Arrange board/ }).click();
+  // Arrange board keeps the preview in place and floats its bar at the bottom.
   await page.evaluate(() => scrollTo(0, 0));
   await settle(page, 600);
   await shoot(page, 'customize');

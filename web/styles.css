@@ -9447,20 +9447,49 @@ button.ha-act:hover {
 /* Fit tightens spacing between sources before it shortens their lists. */
 .board[data-fit='true'] .now-block { padding-block: 8px; }
 
-/* The complete Server card can share the header, keeping its graphs and links. */
-.header-board-vitals { flex: 1 1 680px; min-width: min(100%, 580px); }
-.header-board-vitals .section { margin-bottom: 0; padding: 16px 20px 18px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
-.header-board-vitals .section-head h2 { font-size: 19px; }
-.header-board-vitals .vw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* Three compact groups: status, server, and time above weather. */
+.header-context { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 0 0 210px; }
+.header-context:empty { display: none; }
+.home-header .header-context .masthead-time { padding: 0; border: 0; align-items: flex-start; gap: 2px; }
+.home-header .header-context .clock { font-size: 32px; }
+.home-header.clock-medium .header-context .clock { font-size: 40px; }
+.home-header.clock-large .header-context .clock { font-size: 52px; }
+.home-header .header-context .date { font-size: 12px; }
+.home-header .header-context .header-weather { flex: none; width: 100%; max-width: none; padding: 4px 8px; }
+.home-header .header-context .header-weather.is-current { grid-template-columns: minmax(0, 1fr); }
+.home-header .header-context .header-weather:not(.is-current) { grid-template-columns: minmax(0, 1fr); }
+.header-context .header-weather-now { gap: 10px; }
+.home-header .header-context .temp { font-size: 30px; }
+.home-header .header-context .weather-text { gap: 0; font-size: 11px; }
+.header-board-vitals { flex: 1 1 480px; min-width: min(100%, 480px); }
+.header-board-vitals .section { margin-bottom: 0; padding: 8px 16px 10px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.header-board-vitals .section-head { padding-bottom: 6px; }
+.header-board-vitals .section-head h2 { font-size: 16px; }
+.header-board-vitals .section-action { font-size: 12px; }
+.header-board-vitals .vw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: 8px; gap: 16px; }
 .header-board-vitals .vw { min-width: 0; }
-.header-board-vitals .vw-label { overflow-wrap: anywhere; }
-.home-header:has(.header-board-vitals) .masthead-status { flex: 0 1 400px; }
-.home-header:has(.header-board-vitals) .masthead-time { padding-left: 0; border-left: 0; }
+.header-board-vitals .vw-label { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-board-vitals .spark { height: 16px; }
+.home-header .masthead-status { flex: 0 1 auto; }
+@media (min-width: 1280px) {
+  .home-header.is-quiet .masthead-status { flex: 0 0 auto; max-width: none; }
+  .home-header.is-quiet .status-line { white-space: nowrap; }
+}
+@media (max-width: 1279px) {
+  .home-header .masthead-status { flex-basis: 100%; max-width: none; }
+}
 @media (max-width: 760px) {
   .header-board-vitals { flex-basis: 100%; min-width: 0; }
   .header-board-vitals .vw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-header:has(.header-board-vitals) .masthead-status { flex-basis: 100%; }
+  .header-context { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .home-header .header-context .header-weather { width: auto; flex: 1 1 180px; }
+  .home-header .header-context .masthead-time { flex-direction: column; align-items: flex-start; }
 }
+.header-switches { display: flex; flex-wrap: wrap; gap: 16px 28px; margin-block: 20px 12px; }
+.header-options-details { margin-block: 16px; }
+.header-options-details > summary { cursor: pointer; color: var(--ink-2); }
+.header-options-details .header-options { margin-top: 16px; }
+.board-header-settings { margin-right: auto; color: var(--ink-3); font-size: 13px; }
 
 /* Arrange the same visible board: controls float without changing card geometry. */
 .board-wrap.is-editing { padding-bottom: 180px; }
@@ -9485,3 +9514,38 @@ button.ha-act:hover {
 
 .cell[data-type='recent'] .poster-type { padding: clamp(6px, calc(var(--fit-poster-height, 280px) / 20), 14px); }
 .cell[data-type='recent'] .poster-type span { overflow-wrap: anywhere; font-size: clamp(11px, calc(var(--fit-poster-height, 285px) / 15), 19px); }
+
+/* Outlines frame the card, leaving its 24px bottom gutter clear. */
+.is-editing .cell, .cell.is-dragging { outline: none; }
+.is-editing .cell::after { content: ''; position: absolute; inset: -6px -6px 18px; border: 1px dashed var(--line); border-radius: var(--radius-lg); pointer-events: none; }
+.cell.is-dragging::after, .cell.is-resizing::after { border-color: var(--accent); }
+.cell-resize { bottom: 24px; opacity: 0; pointer-events: none; }
+.cell:is(:hover, :focus-within, .is-resizing) .cell-resize { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .cell-resize { opacity: 1; pointer-events: auto; } }
+
+/* One line per desktop list row; metadata keeps a dependable baseline. */
+.feeds-brief .feedlist a { min-height: 68px; align-content: center; }
+.feeds-brief .feed-title { line-height: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feeds-brief .feed-meta { flex-wrap: nowrap; line-height: 18px; }
+.feeds-brief .feed-meta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feeds-brief .feed-meta time { flex: none; }
+.upcoming-brief .agenda-compact .rel > a,
+.upcoming-brief .agenda-compact .rel > div { min-height: 36px; align-items: center; }
+.upcoming-brief .agenda-compact .agenda-day h3 { line-height: 12px; padding: 14px 0 6px; }
+.upcoming-brief .agenda-compact .rel-main { display: flex; align-items: baseline; gap: 8px; }
+.upcoming-brief .agenda-compact .rel-title { flex: 0 1 auto; }
+.upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; max-width: 50%; margin-left: 0; }
+.upcoming-brief .rel-time, .upcoming-brief .rel-src { white-space: nowrap; }
+@media (max-width: 760px) {
+  .feeds-brief .feed-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
+}
+
+.header-context .weather-text,
+.header-context .weather-text strong,
+.header-context .weather-text small { line-height: 14px; }
+.home-header .header-context .date { line-height: 16px; }
+
+.header-board-vitals:empty { display: none; }
+.feeds-brief .feed-meta time { margin-left: auto; }
+
+@media (max-width: 760px) { .upcoming-brief .agenda-compact .rel > a { min-height: 44px; } }

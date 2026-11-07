@@ -85,7 +85,7 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
 shows, or turn on Fit the window to trim lists to one screen. Recently
-added keeps its whole poster row; if the board still runs over, Customize
+added keeps its whole poster row; if the board still runs over, Arrange board
 says by how much. Add more boards and name them: one for the TV, one for the rack.
 Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors. Call it whatever your household
@@ -95,12 +95,11 @@ calls it.
 playback details and a link to the configured app. Time and remaining time
 appear when the service reports them.
 
-**Choose a compact or basic header.** Compact shows status, CPU and memory,
-current weather and a small clock. Basic keeps time and date. Settings,
-Home and units adjusts each part on this device, including an optional
-hourly weather chart and storage. Hiding status shows the existing Needs
-attention widget as a card on this device. Add Weather through Customize;
-header choices do not rewrite your saved board.
+**A compact header by default.** Status stays beside server graphs, with
+time and date above weather in a shared column. Header settings on Home
+opens the on/off switches in Settings, Home. Sizes and forecast detail
+are optional adjustments. Arrange board changes the shared widget layout;
+header controls change this device and leave saved boards intact.
 
 **An otter keeps watch.** The otter beside the status follows your server: calm
 when all is quiet, eyes open when updates wait, asleep at night, looking up

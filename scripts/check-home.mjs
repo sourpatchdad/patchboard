@@ -25,10 +25,17 @@ try {
   }
   assert(browser, 'Install Chrome/Chromium or set CHROMIUM_PATH');
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, colorScheme: 'dark' });
+  let headerCase = 'demo';
   await page.route('**/api/snapshot', async (route) => {
     const response = await route.fetch();
     const snapshot = await response.json();
     snapshot.sources.miniflux.data.unread = 1006;
+    if (headerCase !== 'demo') {
+      snapshot.alerts = headerCase === 'blind' ? [{ id: 'src-nextcloud', source: 'nextcloud', level: 'info', title: "Can't reach Nextcloud", detail: 'Timed out after 8s', since: Date.now() - 120000, href: '/settings?tab=connections' }] : [];
+      const sample = snapshot.sources.docker.data.containers[0];
+      snapshot.sources.docker.data.containers = Array.from({ length: 60 }, (_, i) => ({ ...sample, name: `container-${i}`, state: 'running' }));
+      snapshot.sources.weather.data.alerts = [];
+    }
     await route.fulfill({ response, json: snapshot });
   });
   await page.route('**/api/events', (route) => route.abort());
@@ -52,20 +59,64 @@ try {
   await fits();
   await page.waitForTimeout(800);
   const original = await board();
+  assert(!original.board.widgets.some((w) => w.type === 'vitals'), 'a fresh board uses header stats without a duplicate Server card');
+  headerCase = 'quiet';
+  await go();
+  for (const width of [2048, 1920, 1440, 1280]) {
+    await page.setViewportSize({ width, height: 1080 });
+    await page.waitForTimeout(300);
+    const geometry = await page.evaluate(() => {
+      const header = document.querySelector('.masthead');
+      const status = header.querySelector('.status-line');
+      const clock = header.querySelector('.masthead-time').getBoundingClientRect();
+      const weather = header.querySelector('.header-weather').getBoundingClientRect();
+      return { height: header.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(status).lineHeight), statusHeight: status.getBoundingClientRect().height, timeBottom: clock.bottom, weatherTop: weather.top, overflow: document.documentElement.scrollWidth - innerWidth };
+    });
+    assert.match(await page.locator('.status-line').innerText(), /All quiet. 60 containers running./);
+    assert(geometry.statusHeight <= geometry.lineHeight * 1.2, `${width}px quiet status stays on one line`);
+    assert(geometry.height <= 132, `${width}px default header stays compact: ${geometry.height}px`);
+    assert(geometry.timeBottom <= geometry.weatherTop, 'time and date sit above weather');
+    assert.equal(geometry.overflow, 0);
+  }
+  await page.setViewportSize({ width: 402, height: 874 });
+  await page.waitForTimeout(300);
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'default header fits a phone without sideways scrolling');
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  headerCase = 'blind';
+  await go();
+  assert.equal(await page.locator('.status-line').innerText(), "Can't reach Nextcloud.");
+  assert(!await page.locator('.home').innerText().then((text) => text.includes('Nothing wrong')));
+  await page.evaluate(() => localStorage.setItem('pb-appearance', JSON.stringify({ homeStatusSize: 'hidden', homeServer: 'card' })));
+  await go();
+  assert.equal(await page.locator('.attention .all-clear strong').innerText(), 'Connection problem.');
+  await page.evaluate(() => localStorage.setItem('pb-appearance', JSON.stringify({ homeServer: 'summary' })));
+  headerCase = 'demo';
+  await go();
+  assert.equal(await page.locator('.header-board-vitals').count(), 1, 'older numeric preferences adopt the graphical header');
+  await fits();
+  await page.waitForTimeout(500);
   const positions = () => page.locator('.board > .cell').evaluateAll((cells) => Object.fromEntries(cells.map((cell) => {
     const r = cell.getBoundingClientRect();
     return [cell.id, { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height }];
   })));
   const viewing = await positions();
-  await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.getByRole('button', { name: /^Arrange board/ }).click();
   await page.waitForTimeout(300);
   const editing = await positions();
+  const outlines = await page.locator('.board > .cell').evaluateAll((cells) => cells.map((cell) => {
+    const r = cell.getBoundingClientRect(); const s = getComputedStyle(cell, '::after');
+    return { left: r.left + parseFloat(s.left), right: r.right - parseFloat(s.right), top: r.top + parseFloat(s.top), bottom: r.bottom - parseFloat(s.bottom) };
+  }));
+  for (let i = 0; i < outlines.length; i++) for (let j = i + 1; j < outlines.length; j++) {
+    const a = outlines[i], b = outlines[j];
+    assert(Math.min(a.right, b.right) <= Math.max(a.left, b.left) || Math.min(a.bottom, b.bottom) <= Math.max(a.top, b.top), 'editing outlines leave clear gutters');
+  }
   assert.deepEqual(Object.keys(editing), Object.keys(viewing), 'Customize does not add placeholder widgets');
   for (const id of Object.keys(viewing)) for (const axis of ['x', 'y', 'width', 'height']) {
     assert(Math.abs(viewing[id][axis] - editing[id][axis]) < 4, `${id} keeps its ${axis} when Customize opens: ${viewing[id][axis]} vs ${editing[id][axis]}`);
   }
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.getByRole('button', { name: /^Arrange board/ }).click();
   await page.locator('#w-feeds').hover();
   const grip = await page.locator('#w-feeds [data-grip="cell"]').boundingBox();
   const grid = await page.locator('.board').boundingBox();
@@ -77,7 +128,7 @@ try {
   await page.waitForTimeout(400);
   const arranged = await positions();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await page.getByRole('button', { name: /^Customize/ }).waitFor();
+  await page.getByRole('button', { name: /^Arrange board/ }).waitFor();
   assert.equal((await board()).board.widgets.find((w) => w.id === 'feeds').column, 3, 'the selected column is saved');
   await page.waitForTimeout(250);
   const afterSave = await positions();
@@ -90,17 +141,33 @@ try {
   assert.equal(await page.locator('.nav-badge').innerText(), '1,006');
   assert.match(await page.locator('#w-feeds .section-count').innerText(), /1,006 unread/);
   await page.goto(base + '/settings?tab=home');
-  await page.getByRole('button', { name: 'Server card', exact: true }).click();
+  await page.getByLabel('Show server details', { exact: true }).uncheck();
+  await go();
+  assert.equal(await page.locator('.header-board-vitals').count(), 0, 'header stats can be turned off');
+  await page.getByRole('link', { name: 'Header settings', exact: true }).click();
+  await page.getByLabel('Show server details', { exact: true }).check();
+  await page.getByLabel('Show time and date', { exact: true }).uncheck();
+  await page.getByLabel('Show weather', { exact: true }).uncheck();
+  await go();
+  assert.equal(await page.locator('.header-context').isVisible(), false, 'turning time and weather off leaves no empty column');
+  await page.getByRole('link', { name: 'Header settings', exact: true }).click();
+  for (const label of ['Show status', 'Show server details', 'Show time and date', 'Show weather']) await page.getByLabel(label, { exact: true }).uncheck();
+  await go();
+  assert.equal(await page.locator('.masthead').count(), 0, 'all header parts can be switched off');
+  await page.getByRole('link', { name: 'Header settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Restore default header', exact: true }).click();
   await go();
   const headerCard = page.locator('.header-board-vitals');
   await headerCard.waitFor();
   assert.equal(await headerCard.locator('.vw').count(), 4, 'full card keeps CPU, memory, storage and uptime');
   assert.equal(await headerCard.getByRole('link', { name: 'Details', exact: true }).count(), 1);
-  await page.locator('#w-vitals').waitFor();
-  assert.equal(await headerCard.locator('svg').count(), await page.locator('#w-vitals svg').count(), 'header keeps the same graphics');
+  await headerCard.locator('.spark-wrap').waitFor();
+  assert.equal(await headerCard.locator('.spark-wrap').count(), 1, 'CPU history remains visible');
+  assert.equal(await headerCard.locator('.split').count(), 1, 'memory breakdown remains visible');
+  assert.equal(await headerCard.locator('.meter').count(), 1, 'storage bar remains visible');
   assert.deepEqual(await board(), original, 'choosing a header card does not remove the board copy');
   await page.goto(base + '/settings?tab=home');
-  await page.getByRole('button', { name: 'Use compact header', exact: true }).click();
+  await page.getByRole('button', { name: 'Restore default header', exact: true }).click();
   await go();
   await fits();
   const initialFeeds = await page.locator('#w-feeds li').count();
@@ -158,7 +225,7 @@ try {
   await page.keyboard.press('Escape');
   await dialog.waitFor({ state: 'detached' });
   assert(await page.getByRole('button', { name: 'New board', exact: true }).evaluate((el) => el === document.activeElement), 'focus returns to New board');
-  await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.getByRole('button', { name: /^Arrange board/ }).click();
   await page.getByRole('button', { name: 'Reading settings', exact: true }).focus();
   await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
   await page.getByRole('dialog', { name: 'Reading settings' }).waitFor();
@@ -175,8 +242,24 @@ try {
   await page.locator('.skip-link').focus();
   await page.keyboard.press('Enter');
   assert(await page.locator('#main-content').evaluate((el) => el === document.activeElement), 'Skip to content moves focus to main');
+  await page.setViewportSize({ width: 1920, height: 700 });
+  await action('/api/boards/home', { version: 1, columns: 3, widgets: [
+    { id: 'feeds', type: 'feeds', size: 'm', span: 1, config: { limit: '3' } },
+    { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { limit: '4' } },
+    { id: 'recent', type: 'recent', size: 'xl', span: 3, config: { limit: '12' } },
+  ] });
+  await go();
+  await page.waitForTimeout(300);
+  const readingRows = await page.locator('#w-feeds .feedlist a').evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height));
+  assert(Math.max(...readingRows) - Math.min(...readingRows) < 1, 'Reading rows use a consistent height');
+  const ages = await page.locator('#w-feeds .feed-meta time').evaluateAll((times) => times.map((time) => time.getBoundingClientRect().right));
+  assert(Math.max(...ages) - Math.min(...ages) < 1, 'Reading ages line up in one column');
+  const edges = await page.locator('#w-feeds .cell-body, #w-upcoming .cell-body').evaluateAll((cards) => cards.map((card) => card.getBoundingClientRect().bottom));
+  assert(Math.abs(edges[0] - edges[1]) < 2, 'Reading and This week align when their content is close in height');
+  const shelfTop = await page.locator('#w-recent').evaluate((card) => card.getBoundingClientRect().top);
+  assert(Math.max(...edges) < shelfTop, 'aligning card edges preserves the full-width row below');
   assert.deepEqual(errors, []);
-  console.log('Home, Fit, header graphics, grouped counts, stable edit previews, saved column placement, poster rows and keyboard paths passed.');
+  console.log('Compact header, clear failure states, settings toggles, aligned lists, editing gutters, saved placement, poster rows and keyboard paths passed.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.exitCode !== null ? resolve() : (server.once('exit', resolve), server.kill()));

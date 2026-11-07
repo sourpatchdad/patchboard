@@ -5,17 +5,12 @@ they match the current code.
 
 ## Home
 
-The compact header shows the otter beside the status, CPU and memory,
-current weather and a small clock. Settings, Home and units offers Use
-compact header and Use basic header. Basic keeps just time and date.
-Each part also has its own controls on this device: status and clock sizes
-or Hide, server metrics with optional storage, and Hide, Current, Forecast
-or Hourly chart weather. CPU and memory open Server's resource section;
-storage opens its storage section. The hourly chart shows temperature and
-rain for the next 12 hours, falling back to daily forecasts without hourly
-data. Existing saved hourly choices stay in place. Hiding status shows the
-existing Needs attention widget as a card on this device. Add Weather
-through Customize; header presets do not rewrite the saved board.
+The default header places status beside full server graphs, then time and
+date above weather in a shared column. The quiet status stays on one line
+on a desktop. Header settings on Home opens Settings, Home: four clear
+on/off switches, with sizing and forecasts in Sizes and forecast details.
+Header preferences apply to this device. Arrange board controls the shared
+widget layout, and existing saved boards are preserved.
 Below it sits a board of widgets on the columns you choose. Right now shows who is watching Plex,
 Jellyfin or Emby and what each download client is doing, with a Pause button
 per client. Recently added merges every server newest first. A file Plex and
@@ -45,7 +40,7 @@ it sits beside "All quiet" and keeps watch. Settings, Look hides it.
 
 **Needs attention** sits in Home's header, with problem links wrapping under the
 status line, worst first, with three showing and the rest a click away. To
-keep it as a card on the board instead, open Customize, then its settings,
+keep it as a card on the board instead, open Arrange board, then its settings,
 and pick A card on the board. Hiding header status also shows this widget
 as a card on this device, without changing its saved setting.
 
@@ -126,7 +121,7 @@ message.
 
 ## Making it yours
 
-**Customize the board.** Drag widgets, drag an edge to resize, choose the
+**Arrange the board.** Drag widgets, drag an edge to resize, choose the
 columns, or start over from a layout. Drag into a column, above or below
 its neighbors; the layout updates while you drag. Hover or focus a card for
 its controls, or choose a Column in its settings. Editing keeps the full
@@ -134,13 +129,13 @@ card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Fit the window trims lists until the
 board ends at the bottom of the screen. Recently added keeps every selected
 poster in one horizontal row, rather than losing titles to fit. If lists
-alone cannot fit the board, Customize reports how far it runs over. Fit
+alone cannot fit the board, Arrange board reports how far it runs over. Fit
 recalculates when the window width or header height changes. New board,
 at the foot of any board, adds another with
 its own name, starting empty or from a layout; tabs over the board switch
 between them.
 
-![Customize](screenshots/customize.webp)
+![Arrange board with clear card gutters](screenshots/customize.webp)
 
 **Widget settings:** a name, how many items, how wide, which look.
 
@@ -211,9 +206,9 @@ behind; Patchboard names the integrations worth connecting instead.
 
 ### Server details in the header
 
-In Settings, Home and units, choose **Server card** under Server metrics.
-It puts the same CPU history, memory breakdown, storage bar, uptime and
-Details link into the header. Then use Customize on Home to remove the
-board copy and save. The header choice is per device; the saved board is shared.
+Server details are in the header by default, including CPU history, memory,
+storage, uptime and the Details link. Use Header settings on Home to turn
+parts off for this device. If your saved board still has a Server card,
+Arrange board can remove that copy explicitly.
 
-![The complete Server card sharing the header with status, weather and time](screenshots/home-header-server.webp)
+![Server graphs with status and time above weather](screenshots/home-header-server.webp)
