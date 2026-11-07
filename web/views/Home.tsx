@@ -2,6 +2,7 @@
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
 import { moodFor } from '../../shared/otter.ts';
+import { StreamRow } from '../components/StreamRow.tsx';
 import { Mascot } from '../components/Otter.tsx';
 import { HOME_ID, STARTERS } from '../../shared/board.ts';
 import { forThisServer } from '../board/ready.ts';
@@ -438,25 +439,7 @@ export function NowPlaying() {
             <AppLink container={m.container}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</AppLink>
           </h3>
           {m.data.streams.slice(0, limit).map((s, i) => (
-            <div className="stream" key={i}>
-              <div className="stream-line">
-                <span className="stream-title">
-                  {s.title}
-                  {s.subtitle && (
-                    <span className="stream-sub">
-                      {' '}
-                      <Episode text={s.subtitle} />
-                    </span>
-                  )}
-                </span>
-                <span className="stream-user">
-                  {s.user}
-                  {s.state === 'paused' ? ', paused' : ''}
-                  {s.transcode ? ', transcoding' : ''}
-                </span>
-              </div>
-              <Meter value={s.progress} level={s.state === 'paused' ? 'warn' : 'ok'} />
-            </div>
+            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
           ))}
         </div>
       ))}
@@ -467,16 +450,7 @@ export function NowPlaying() {
             {l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}
           </h3>
           {l.data!.streams.slice(0, limit).map((s, i) => (
-            <div className="stream" key={i}>
-              <div className="stream-line">
-                <span className="stream-title">
-                  {s.title}
-                  {s.subtitle && <span className="stream-sub"> {s.subtitle}</span>}
-                </span>
-                <span className="stream-user">{s.user}</span>
-              </div>
-              {s.progress >= 0 && <Meter value={s.progress} level="ok" />}
-            </div>
+            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} />
           ))}
         </div>
       ))}

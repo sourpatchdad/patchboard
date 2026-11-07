@@ -10,7 +10,8 @@ and to act on it, without thinking about the server to use it. Four promises
 hold it to that:
 
 1. **It answers before you ask.** In five seconds: is anything broken, what's
-   new, what's coming. Healthy things stay quiet. Color means trouble.
+   new, what's coming. Healthy things stay quiet. Color means trouble,
+   except for the playback service colors described below.
 2. **Every glance leads to an action.** A number opens what's behind it. A
    stopped container is two clicks from its logs, a restart or a rollback.
 3. **It's yours without config files.** Someone who has never opened YAML can
@@ -28,6 +29,12 @@ one click.
 - **Exceptions, not inventory.** A healthy app gets an icon and a quiet
   number. Space goes to what's broken, new, in progress or upcoming. A widget
   stays neutral until a threshold is crossed.
+- **Playback identity.** Playback rows and previews use service colors:
+  Plex gold, Jellyfin purple, Emby green, Audiobookshelf amber, Navidrome
+  cyan and Tracearr blue. This is a narrow exception to healthy-neutral
+  color. Paused and buffering states keep explicit text. Previews show
+  artwork, never imply live video, and omit progress the service does not
+  report. Hover, keyboard focus and touch reach the same details.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
 - **Status first.** Home starts with the otter beside the whole status

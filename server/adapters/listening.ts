@@ -18,13 +18,16 @@ export function fromAudiobookshelf(r: { usersOnline?: { id?: string; username?: 
       user: s.user?.username ?? names.get(s.userId) ?? 'Someone',
       title: s.displayTitle ?? 'Something',
       subtitle: s.displayAuthor,
-      progress: s.duration ? Math.min(100, ((s.currentTime ?? 0) / s.duration) * 100) : 0,
+      progress: Number.isFinite(s.currentTime) && s.currentTime! >= 0 && Number.isFinite(s.duration) && s.duration! > 0
+        ? Math.min(100, (s.currentTime! / s.duration!) * 100) : -1,
+      ...(Number.isFinite(s.currentTime) && s.currentTime! >= 0 ? { positionSec: s.currentTime! } : {}),
+      ...(Number.isFinite(s.duration) && s.duration! > 0 ? { durationSec: s.duration! } : {}),
       state: 'playing' as const,
       transcode: false,
     }));
 }
 
-type SubEntry = { username?: string; title?: string; artist?: string; album?: string; minutesAgo?: number };
+type SubEntry = { username?: string; title?: string; artist?: string; album?: string; minutesAgo?: number; duration?: number };
 
 /** Played within the last ten minutes counts. Subsonic gives no position, so no progress bar. */
 export function fromSubsonic(r: { 'subsonic-response'?: { status?: string; error?: { message?: string }; nowPlaying?: { entry?: SubEntry[] } } }): Stream[] {
@@ -32,7 +35,7 @@ export function fromSubsonic(r: { 'subsonic-response'?: { status?: string; error
   if (s?.status === 'failed') throw new Error(s.error?.message ?? 'Navidrome refused the request');
   return (s?.nowPlaying?.entry ?? [])
     .filter((e) => (e.minutesAgo ?? 0) < 10)
-    .map((e) => ({ user: e.username ?? 'Someone', title: e.title ?? 'A track', subtitle: [e.artist, e.album].filter(Boolean).join(', ') || undefined, progress: -1, state: 'playing' as const, transcode: false }));
+    .map((e) => ({ user: e.username ?? 'Someone', title: e.title ?? 'A track', subtitle: [e.artist, e.album].filter(Boolean).join(', ') || undefined, progress: -1, ...(Number.isFinite(e.duration) && e.duration! > 0 ? { durationSec: e.duration! } : {}), state: 'playing' as const, transcode: false }));
 }
 
 export function audiobookshelfAdapter(): Adapter<ListeningData> {

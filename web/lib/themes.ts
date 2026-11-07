@@ -7,6 +7,17 @@
 // `crit` must stay clearly apart from `accent`, and `ink3` must stay readable
 // on `bg` (aim for 5:1 or better).
 
+/** Playback brands identify the source. Warnings keep their own text and status colors. */
+export const MEDIA_COLORS = {
+  plex: { dark: '#e5a00d', light: '#986800' },
+  jellyfin: { dark: '#aa72d8', light: '#7940a3' },
+  emby: { dark: '#62bc50', light: '#347c26' },
+  tracearr: { dark: '#53a8f5', light: '#246fb5' },
+  audiobookshelf: { dark: '#dbb45c', light: '#886615' },
+  navidrome: { dark: '#53b6dc', light: '#257494' },
+};
+export type MediaService = keyof typeof MEDIA_COLORS;
+
 export interface Tokens {
   bg: string;
   raised: string;

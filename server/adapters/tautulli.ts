@@ -11,6 +11,7 @@ interface TautulliResponse<T> {
 }
 
 interface Session {
+  rating_key?: string;
   friendly_name: string;
   media_type: string;
   title: string;
@@ -18,7 +19,9 @@ interface Session {
   parent_media_index?: string;
   media_index?: string;
   full_title: string;
-  progress_percent: string;
+  progress_percent?: string;
+  view_offset?: string | number;
+  duration?: string | number;
   state: string;
   transcode_decision?: string;
   thumb?: string;
@@ -55,6 +58,26 @@ const img = (path?: string) => (path ? `/api/img/tautulli?path=${encodeURICompon
 const sxe = (s?: string, e?: string) =>
   s && e ? `S${s.padStart(2, '0')}E${e.padStart(2, '0')}` : undefined;
 
+/** Tautulli supplies playback offsets and duration in milliseconds. */
+export function toTautulliStream(s: Session): Stream {
+  const ep = s.media_type === 'episode';
+  const position = s.view_offset === undefined || s.view_offset === '' ? NaN : Number(s.view_offset);
+  const duration = s.duration === undefined || s.duration === '' ? NaN : Number(s.duration);
+  const progress = s.progress_percent === undefined || s.progress_percent.trim() === '' ? NaN : Number(s.progress_percent);
+  return {
+    ...(s.rating_key ? { itemId: s.rating_key } : {}),
+    user: s.friendly_name,
+    title: ep ? (s.grandparent_title ?? s.title) : s.title,
+    subtitle: ep ? [sxe(s.parent_media_index, s.media_index), s.title].filter(Boolean).join(' ') : undefined,
+    progress: Number.isFinite(progress) && progress >= 0 ? Math.min(100, progress) : -1,
+    ...(Number.isFinite(position) && position >= 0 ? { positionSec: position / 1000 } : {}),
+    ...(Number.isFinite(duration) && duration > 0 ? { durationSec: duration / 1000 } : {}),
+    state: (['playing', 'paused', 'buffering'].includes(s.state) ? s.state : 'playing') as Stream['state'],
+    transcode: s.transcode_decision === 'transcode',
+    thumb: img(ep ? s.grandparent_thumb : s.thumb),
+  };
+}
+
 /**
  * Where a title opens in Plex's web app, after its address and before the
  * item's rating key. Plex addresses items by its server's machine id.
@@ -85,18 +108,7 @@ export function tautulliAdapter(): Adapter<TautulliData> {
         call<{ recently_added: Added[] }>('get_recently_added', '&count=30'),
         serverId(),
       ]);
-      const streams: Stream[] = activity.sessions.map((s) => {
-        const ep = s.media_type === 'episode';
-        return {
-          user: s.friendly_name,
-          title: ep ? (s.grandparent_title ?? s.title) : s.title,
-          subtitle: ep ? [sxe(s.parent_media_index, s.media_index), s.title].filter(Boolean).join(' ') : undefined,
-          progress: Number(s.progress_percent) || 0,
-          state: (['playing', 'paused', 'buffering'].includes(s.state) ? s.state : 'playing') as Stream['state'],
-          transcode: s.transcode_decision === 'transcode',
-          thumb: img(ep ? s.grandparent_thumb : s.thumb),
-        };
-      });
+      const streams = activity.sessions.map(toTautulliStream);
       const recent: RecentItem[] = added.recently_added.map((a) => {
         const ep = a.media_type === 'episode';
         const season = a.media_type === 'season';

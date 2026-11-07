@@ -390,10 +390,15 @@ export interface ArrData {
 }
 
 export interface Stream {
+  /** The library item, when the source can open its own title. */
+  itemId?: string;
   user: string;
   title: string;
   subtitle?: string;
   progress: number;
+  /** Playback timing supplied by the source, in seconds. */
+  positionSec?: number;
+  durationSec?: number;
   state: 'playing' | 'paused' | 'buffering';
   transcode: boolean;
   thumb?: string;

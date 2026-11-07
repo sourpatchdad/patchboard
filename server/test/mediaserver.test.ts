@@ -22,7 +22,7 @@ const server = createServer((req, res) => {
       ]);
     case '/Sessions':
       return json([
-        { UserName: 'Sam', NowPlayingItem: { Id: 'e1', Name: 'Cold Open', Type: 'Episode', SeriesName: 'Severance', SeriesId: 's1', ParentIndexNumber: 2, IndexNumber: 5, RunTimeTicks: 1000 }, PlayState: { PositionTicks: 250, IsPaused: true, PlayMethod: 'Transcode' } },
+        { UserName: 'Sam', NowPlayingItem: { Id: 'e1', Name: 'Cold Open', Type: 'Episode', SeriesName: 'Severance', SeriesId: 's1', ParentIndexNumber: 2, IndexNumber: 5, RunTimeTicks: 36_000_000_000 }, PlayState: { PositionTicks: 9_000_000_000, IsPaused: true, PlayMethod: 'Transcode' } },
         { UserName: 'Idle phone' },
       ]);
     case '/Items/Latest':
@@ -56,7 +56,7 @@ test('Jellyfin: streams, newest additions first, Next up, for the first admin', 
   const d = await adapter.mediaServerAdapter('jellyfin').fetch();
   assert.match(lastAuth, /^MediaBrowser .*Token="jf-key"/);
   assert.deepEqual(d.streams, [
-    { user: 'Sam', title: 'Severance', subtitle: 'S02E05 Cold Open', progress: 25, state: 'paused', transcode: true, thumb: '/api/img/jellyfin?id=s1' },
+    { itemId: 'e1', user: 'Sam', title: 'Severance', subtitle: 'S02E05 Cold Open', progress: 25, positionSec: 900, durationSec: 3600, state: 'paused', transcode: true, thumb: '/api/img/jellyfin?id=s1' },
   ]);
   assert.deepEqual(d.recent.map((r) => [r.title, r.subtitle]), [['Fallout', '8 new'], ['Dune: Part Two', '2024']]);
   assert.equal(d.nextUp[0].title, 'Andor');
@@ -69,6 +69,24 @@ test('Emby sends X-Emby-Token and uses the per-user Latest route', async () => {
   // The fake only serves /Items/Latest, so Emby's per-user route 404s: the error must surface, not be swallowed.
   await assert.rejects(adapter.mediaServerAdapter('emby').fetch(), /404/);
   assert.equal(lastAuth, KEY);
+});
+
+test('media timing preserves a real zero position and omits missing or invalid ticks', () => {
+  const item = { Id: 'm1', Name: 'Movie', Type: 'Movie' };
+  const start = adapter.toStream('emby', { NowPlayingItem: { ...item, RunTimeTicks: 10_000_000 }, PlayState: { PositionTicks: 0 } });
+  assert.equal(start?.positionSec, 0);
+  assert.equal(start?.durationSec, 1);
+  assert.equal(start?.progress, 0);
+  for (const session of [
+    { NowPlayingItem: item },
+    { NowPlayingItem: { ...item, RunTimeTicks: -1 }, PlayState: { PositionTicks: Infinity } },
+  ]) {
+    const stream = adapter.toStream('jellyfin', session);
+    assert.equal(stream?.positionSec, undefined);
+    assert.equal(stream?.durationSec, undefined);
+    assert.equal(stream?.progress, -1);
+  }
+  assert.equal(adapter.toStream('jellyfin', { NowPlayingItem: { ...item, RunTimeTicks: 10_000_000 } })?.progress, -1);
 });
 
 test('posters proxy by id only, with the key in a header', async () => {

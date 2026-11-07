@@ -16,6 +16,13 @@ per client. Recently added merges every server newest first. A file Plex and
 Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
 name it a little differently.
 
+Hover, focus or tap a playback row in Right now to see its artwork and
+playback details. This is artwork, not a live video frame. Time played and
+remaining appear where reported; Navidrome does not invent missing progress.
+Open the configured app from the preview. Close it with Escape, Close or a
+tap outside. Service colors identify Plex, Jellyfin, Emby, Audiobookshelf
+and Navidrome; Tracearr has its own marker for aggregate activity.
+
 ![Home](screenshots/home.webp)
 
 ![The otter's moods and what brings each one on](screenshots/otter-moods.webp)

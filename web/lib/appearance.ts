@@ -7,7 +7,7 @@
 
 import { moodFor, OTTER, otterSrc } from '../../shared/otter.ts';
 import { useSyncExternalStore } from 'react';
-import { contrast, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
+import { contrast, MEDIA_COLORS, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
 export type Scheme = 'auto' | 'dark' | 'light';
 export type IconMode = 'mono' | 'color';
@@ -145,6 +145,7 @@ function varsFor(a: Appearance, scheme: 'dark' | 'light'): Record<string, string
     '--display-tracking': fonts.tracking,
     '--clock-weight': String(fonts.clock),
   };
+  for (const [name, colors] of Object.entries(MEDIA_COLORS)) v[`--media-${name}`] = colors[scheme];
   // Flat themes take their sockets from the surfaces; the patch-bay theme keeps its own hardware colors from CSS.
   if (!def?.hardware) {
     Object.assign(v, { '--rack': t.raised, '--socket': t.surface, '--socket-hi': t.surface, '--screw': 'transparent', '--tape': 'transparent', '--tape-ink': t.ink3 });

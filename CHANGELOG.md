@@ -16,6 +16,11 @@ The first public release, 1.0.0. What's in it:
   The board starts right under the header; Customize waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing
   downloading.
+  Hover, focus or tap a playback row for an artwork preview, reported
+  playback time and remaining time, and a link to the configured app.
+  Escape, Close or a tap outside dismisses it. Service colors identify
+  playback sources; paused and buffering states stay explicit. Navidrome
+  omits unavailable progress, and Tracearr remains aggregate activity.
   A widget made wider flows its list into columns instead of stretching
   one line across the screen.
   App tiles speak for more integrations: who's listening, requests waiting,

@@ -692,7 +692,7 @@ function AppPanel({ name }: { name: string }) {
   }
   if (name === 'tracearr' && tracearr) {
     return (
-      <Section title="In Tracearr" action={{ label: 'Open Tracearr', href: tracearr.webUrl }}>
+      <Section title="In Tracearr" className="tracearr-panel" action={{ label: 'Open Tracearr', href: tracearr.webUrl }}>
         <dl className="ledger">
           {tracearr.servers.map((s) => (
             <Row key={s.id} k={s.name}>

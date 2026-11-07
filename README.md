@@ -91,6 +91,10 @@ Every other page has a Customize button too. Six themes, each dark and
 light, or build your own from three colors. Call it whatever your household
 calls it.
 
+**See what is playing.** Hover, focus or tap a playback row for its artwork,
+playback details and a link to the configured app. Time and remaining time
+appear when the service reports them.
+
 **The header starts with what needs you.** The otter sits beside the whole
 status summary. Settings, Home and units lets this device choose the status
 size, clock size or no clock, and a weather summary or the next 12 hours of

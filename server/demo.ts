@@ -316,10 +316,13 @@ const demoMail = (): FastmailData => ({
   ],
 });
 
+/** Invented timing uses the same position as the visible progress bar. */
+const demoTiming = (progress: number, durationSec: number) => ({ progress, positionSec: Math.round((progress / 100) * durationSec), durationSec });
+
 const demoPlex = (): TautulliData => ({
   streams: [
-    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', progress: Math.round(jitter(48, 2)), state: 'playing', transcode: false },
-    { user: 'Kit', title: 'Poor Things', progress: 81, state: 'paused', transcode: true },
+    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoTiming(Math.round(jitter(48, 2)), 3000), state: 'playing', transcode: false, thumb: poster('Severance') },
+    { user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused', transcode: true, thumb: poster('Poor Things') },
   ],
   recent: [
     { id: 'p1', type: 'episode', title: 'The Bear', thumb: poster('The Bear'), subtitle: 'S04E03', addedAt: Date.now() - 3 * H },
@@ -335,7 +338,7 @@ const demoPlex = (): TautulliData => ({
 });
 
 const demoJellyfin = (): MediaServerData => ({
-  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', progress: Math.round(jitter(22, 2)), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
+  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoTiming(Math.round(jitter(22, 2)), 2700), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
   recent: [
     { id: 'j1', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E10', addedAt: Date.now() - 5 * H },
     // The same file on Plex too: Home shows it once, labeled Plex + Jellyfin.
@@ -656,7 +659,7 @@ export function demoAdapters(): Adapter[] {
     demo<ArrData>('bazarr', 'Bazarr', 5 * MINUTE, () => ({ upcoming: [], queueTotal: 23, problems: [], health: [] })),
     demo<NextcloudData>('nextcloud', 'Nextcloud', 5 * MINUTE, () => ({ version: '30.0.2', files: 128_403, users: 4, activeToday: 2, appUpdates: 0, webUrl: 'http://nextcloud.local' })),
     demo<ListeningData>('navidrome', 'Navidrome', 20 * SECOND, () => ({
-      streams: [{ user: 'Jo', title: 'Nights', subtitle: 'Frank Ocean, Blonde', progress: -1, state: 'playing', transcode: false }],
+      streams: [{ user: 'Jo', title: 'Nights', subtitle: 'Frank Ocean, Blonde', progress: -1, durationSec: 307, state: 'playing', transcode: false }],
     })),
     demo<BooksData>('books', 'Hardcover', 30 * MINUTE, () => ({
       source: 'Hardcover',
@@ -685,7 +688,7 @@ export function demoAdapters(): Adapter[] {
       };
     }),
     demo<ListeningData>('audiobookshelf', 'Audiobookshelf', 20 * SECOND, () => ({
-      streams: [{ user: 'Sam', title: 'Project Hail Mary', subtitle: 'Andy Weir', progress: 62 + ((Date.now() / 60_000) % 5), state: 'playing', transcode: false }],
+      streams: [{ user: 'Sam', title: 'Project Hail Mary', subtitle: 'Andy Weir', ...demoTiming(62 + ((Date.now() / 60_000) % 5), 57960), state: 'playing', transcode: false }],
     })),
     demo<UnifiData>('unifi', 'UniFi', MINUTE, () => ({
       clients: 37,

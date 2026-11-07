@@ -63,10 +63,14 @@ export function toStream(kind: MediaKind, s: Session): Stream | null {
   const ep = it.Type === 'Episode';
   const pos = s.PlayState?.PositionTicks ?? 0;
   return {
+    itemId: it.Id,
     user: s.UserName ?? 'Someone',
     title: ep ? (it.SeriesName ?? it.Name) : it.Name,
     subtitle: ep ? [sxe(it.ParentIndexNumber, it.IndexNumber), it.Name].filter(Boolean).join(' ') : undefined,
-    progress: it.RunTimeTicks ? Math.min(100, Math.round((pos / it.RunTimeTicks) * 100)) : 0,
+    progress: Number.isFinite(s.PlayState?.PositionTicks) && pos >= 0 && Number.isFinite(it.RunTimeTicks) && it.RunTimeTicks! > 0
+      ? Math.min(100, Math.round((pos / it.RunTimeTicks!) * 100)) : -1,
+    ...(Number.isFinite(s.PlayState?.PositionTicks) && pos >= 0 ? { positionSec: pos / 10_000_000 } : {}),
+    ...(Number.isFinite(it.RunTimeTicks) && it.RunTimeTicks! > 0 ? { durationSec: it.RunTimeTicks! / 10_000_000 } : {}),
     state: s.PlayState?.IsPaused ? 'paused' : 'playing',
     transcode: s.PlayState?.PlayMethod === 'Transcode' || s.TranscodingInfo?.IsVideoDirect === false,
     thumb: img(kind, it),
