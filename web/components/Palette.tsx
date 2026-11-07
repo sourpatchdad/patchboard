@@ -2,6 +2,7 @@
 // view, container log, unread article and inbox message, with web search as
 // the fallback. It replaces the wall of tiles as the main way to launch things.
 
+import { useModal } from '../lib/modal.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { FastmailData, MinifluxData } from '../../shared/types.ts';
@@ -40,6 +41,7 @@ function score(query: string, text: string): number {
 }
 
 export function Palette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose, open);
   const { snap } = useStore();
   const navigate = useNavigate();
   const [q, setQ] = useState('');
@@ -129,7 +131,7 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <div className="palette-backdrop" onMouseDown={onClose}>
-      <div className="palette" role="dialog" aria-modal="true" aria-label="Jump to" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="palette" ref={modal} role="dialog" aria-modal="true" aria-label="Jump to" onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           autoFocus
@@ -151,6 +153,10 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
               onClose();
             }
           }}
+          role="combobox"
+          aria-label="Jump to"
+          aria-expanded="true"
+          aria-autocomplete="list"
           aria-controls="palette-results"
           aria-activedescendant={results[sel] ? `pal-${results[sel].id}` : undefined}
         />

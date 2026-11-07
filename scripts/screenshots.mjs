@@ -20,9 +20,9 @@ const DESKTOP = { width: 1920, height: 1080 };
 const PHONE = { width: 402, height: 874 };
 
 async function launch() {
-  for (const channel of ['chrome', 'msedge', undefined]) {
+  for (const channel of ['chrome', 'msedge', 'chromium', undefined]) {
     try {
-      return await chromium.launch(channel ? { channel } : {});
+      return await chromium.launch(channel === 'chromium' ? { executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium' } : channel ? { channel } : {});
     } catch {
       /* try the next one */
     }

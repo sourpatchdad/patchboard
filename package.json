@@ -26,6 +26,7 @@
     "docs": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts",
     "docs:check": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts --check",
     "screenshots": "node scripts/screenshots.mjs",
+    "test:ui": "npm run build && node scripts/check-home.mjs",
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"require('fs').rmSync('data-test',{recursive:true,force:true})\"",
     "test": "cross-env DATA_DIR=./data-test DOCS_PATH=server/test/fixtures LOGS_PATH=server/test/fixtures CHECK_DOMAINS=example.org node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"server/test/*.test.ts\""

@@ -5,6 +5,7 @@
 // stored on the server, so every device shows the same one; phones show it
 // as a single column in the same order.
 
+import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -122,18 +123,26 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
   }, [on, viewport, widgets]);
   useEffect(() => {
     if (!on || !el) return;
-    const masthead = el.closest('.home')?.querySelector('.masthead');
-    if (!masthead) return;
-    // Header preferences and live alerts can change the available room
-    // without changing the board's own width or height. Start over so a
-    // smaller header also restores rows that previously needed trimming.
+    const home = el.closest('.home');
+    if (!home) return;
+    // Only available room matters. Observing the board's parent also catches
+    // Welcome disappearing and board tabs appearing, without resetting when
+    // Fit itself changes the board's height.
+    let room = '';
     const ro = new ResizeObserver(() => {
+      const foot = el.parentElement?.querySelector<HTMLElement>('.board-foot');
+      const next = `${el.getBoundingClientRect().top + window.scrollY}:${el.clientWidth}:${foot?.getBoundingClientRect().height ?? 0}`;
+      if (next === room) return;
+      room = next;
       setTrim({});
       setOver(0);
       lastCut.current = null;
       noGain.current = new Set();
     });
-    ro.observe(masthead);
+    ro.observe(home);
+    for (const child of home.children) if (!child.contains(el)) ro.observe(child);
+    const foot = el.parentElement?.querySelector('.board-foot');
+    if (foot) ro.observe(foot);
     return () => ro.disconnect();
   }, [on, el]);
   useEffect(() => {
@@ -142,7 +151,9 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     const check = () => {
       // Page coordinates, so a scrolled page measures the same as one at the top.
       // The foot (Customize, New board) stays on screen too.
-      const floor = window.innerHeight - 48 - window.scrollY;
+      const foot = el.parentElement?.querySelector<HTMLElement>('.board-foot');
+      const reserve = foot ? foot.getBoundingClientRect().height + parseFloat(getComputedStyle(foot).marginTop) : 0;
+      const floor = window.innerHeight - reserve - 20 - window.scrollY;
       const cells = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((c) => ({ c, r: c.getBoundingClientRect(), w: widgets.find((x) => `w-${x.id}` === c.id) }));
       const shown = (x: Widget) => trim[x.id] ?? Number(x.config?.limit ?? WIDGET_INFO[x.type].options.limit?.[0] ?? 0);
       // A cut that saved far less than the rows it took (a poster row loses posters, not
@@ -299,7 +310,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
             />
             <span className="board-bar-hint">Drag to move, drag the right edge to widen, Settings to rename or trim.</span>
-            {error && <span className="crit-text">{error}</span>}
+            {error && <span className="crit-text" role="alert">{error}</span>}
             {notice && !error && <span className="drawer-note">{notice}</span>}
             <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
               Cancel
@@ -335,7 +346,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
             </label>
-            {draft.fit && short > 40 && (
+            {draft.fit && short > 4 && (
               <span className="drawer-note">
                 {short} px past the window with lists at their shortest. {tiles ? 'Apps as icons, or a widget on another board, would make room.' : 'A widget on another board would make room.'}
               </span>
@@ -392,7 +403,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         </div>
       )}
 
-      <div className="board" ref={setBoardEl} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+      <div className="board" ref={setBoardEl} data-cols={cols} data-fit={!!board?.fit && !editing && cols > 1 || undefined} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
         {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card' || homeStatusSize === 'hidden').map((w, i) => (
           <Cell
             key={w.id}
@@ -798,6 +809,7 @@ function ContainerWidget({ name }: { name: string }) {
 function NewBoard({ onClose }: { onClose: () => void }) {
   const { snap } = useStore();
   const navigate = useNavigate();
+  const modal = useModal<HTMLFormElement>(onClose);
   const [name, setName] = useState('');
   const [pick, setPick] = useState('empty');
   const [error, setError] = useState('');
@@ -820,6 +832,7 @@ function NewBoard({ onClose }: { onClose: () => void }) {
       <form
         className="palette drawer"
         role="dialog"
+        ref={modal}
         aria-label="New board"
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
@@ -833,12 +846,12 @@ function NewBoard({ onClose }: { onClose: () => void }) {
             Close
           </button>
         </header>
-        <input className="field palette-input" placeholder="Name, like Media or Server room" maxLength={32} value={name} onChange={(e) => (setName(e.target.value), setError(''))} autoFocus />
+        <input className="field palette-input" aria-label="Board name" placeholder="Name, like Media or Server room" maxLength={32} value={name} onChange={(e) => (setName(e.target.value), setError(''))} autoFocus />
         <p className="drawer-sub">Start with</p>
-        <ul className="drawer-list" role="radiogroup" aria-label="Start with">
+        <ul className="drawer-list" aria-label="Start with">
           {choices.map((c) => (
             <li key={c.id}>
-              <button type="button" role="radio" aria-checked={pick === c.id} onClick={() => setPick(c.id)}>
+              <button type="button" aria-pressed={pick === c.id} onClick={() => setPick(c.id)}>
                 <strong>{c.name}</strong>
                 <span>{c.about}</span>
               </button>
@@ -850,7 +863,7 @@ function NewBoard({ onClose }: { onClose: () => void }) {
             const gone = leftOut((choices.find((c) => c.id === pick) ?? choices[0]).board, snap);
             return gone.length ? <span className="drawer-note">Leaves out {gone.join(', ')} until their integrations are set up.</span> : null;
           })()}
-          {error && <span className="crit-text">{error}</span>}
+          {error && <span className="crit-text" role="alert">{error}</span>}
           <button type="submit" className="button board-save" disabled={busy}>
             {busy ? 'Creating...' : 'Create board'}
           </button>
@@ -862,6 +875,7 @@ function NewBoard({ onClose }: { onClose: () => void }) {
 
 function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () => void; onAdd: (w: Widget) => void }) {
   const { snap } = useStore();
+  const modal = useModal<HTMLDivElement>(onClose);
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
   const present = new Set(board.widgets.map((w) => w.type));
@@ -880,7 +894,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer" role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer" ref={modal} role="dialog" aria-label="Add a widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{picking ? 'Which container?' : 'Add a widget'}</h2>
           <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : onClose}>
@@ -948,6 +962,7 @@ function SettingsDrawer({
   onChange: (cfg: Record<string, string> | undefined) => void;
   onSpan: (n: number) => void;
 }) {
+  const modal = useModal<HTMLDivElement>(onClose);
   const info = WIDGET_INFO[w.type];
   const o = info.options;
   const cfg = w.config ?? {};
@@ -961,7 +976,7 @@ function SettingsDrawer({
   };
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer widget-settings" role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{cfg.title || info.name}</h2>
           <button type="button" className="text-button" onClick={onClose} title="Back to the board; its Save keeps this">

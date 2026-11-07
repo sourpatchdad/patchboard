@@ -68,11 +68,14 @@ export function Shell() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const modal = document.querySelector('[aria-modal="true"]');
+      if (modal && modal.getAttribute('aria-label') !== 'Jump to') return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPalette((p) => !p);
         return;
       }
+      if (document.querySelector('[aria-modal="true"]')) return;
       if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'Escape') setHelp(false);
       if (e.key === '/') {
@@ -102,6 +105,7 @@ export function Shell() {
 
   return (
     <div className="shell">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <PullRefresh />
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
@@ -156,7 +160,7 @@ export function Shell() {
         </div>
       </header>
 
-      <main className="main">
+      <main className="main" id="main-content" tabIndex={-1}>
         {auth && !snap ? (
           <SignIn mode={auth} />
         ) : failed && !snap ? (

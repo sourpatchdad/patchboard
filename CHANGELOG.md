@@ -2,7 +2,16 @@
 
 ## Unreleased
 
-The first public release, 1.0.0. What's in it:
+- Fit reserves the actual space for Customize and New board, responds to
+  Welcome and board-tab changes, and tightens Right now's source spacing.
+  Small remaining overflows are explained in Customize. Saved boards and
+  full horizontal poster rows stay intact.
+- Board drawers and Jump to contain keyboard focus, close with Escape and
+  return focus to their opener. Background controls are unavailable while
+  a drawer is open. Board names and search have screen-reader labels;
+  Skip to content bypasses navigation.
+
+What's in Patchboard:
 
 - **Home** offers compact and basic headers. Compact shows the otter beside
   status, CPU and memory, current weather and a small clock. Basic keeps

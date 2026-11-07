@@ -132,7 +132,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
             <a className="status-line" href={alerts.length ? '#w-attention' : quietTo} onClick={(e) => {
               if (!alerts.length) return;
               e.preventDefault();
-              document.getElementById('w-attention')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              document.getElementById('w-attention')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
             }}>{status.text}</a>
           ) : (
             <h2 className="status-line">{status.text}</h2>
@@ -236,7 +236,7 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
       })}
       {list.length > SHOWN && (
         <li className="head-alert-more">
-          <button type="button" className="text-button" onClick={() => setAll(!all)}>
+          <button type="button" className="text-button" aria-expanded={all} onClick={() => setAll(!all)}>
             {all ? 'Show fewer' : `${list.length - SHOWN} more`}
           </button>
         </li>

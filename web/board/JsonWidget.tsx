@@ -2,6 +2,7 @@
 // server for its widget by id (never by URL). The editor previews a draft
 // configuration through the server before anything is saved.
 
+import { useModal } from '../lib/modal.ts';
 import { useEffect, useState } from 'react';
 import { FORMATS, type FieldFormat, type JsonField, type JsonWidgetConfig, toneFor } from '../../shared/jsonwidget.ts';
 import { ago, duration, size } from '../lib/format.ts';
@@ -94,6 +95,7 @@ const EMPTY_FIELD: JsonField = { label: '', path: '', format: 'number' };
 
 /** Build and test a configuration. Calls onSave with the validated JSON string. */
 export function JsonEditor({ initial, onSave, onClose }: { initial: JsonWidgetConfig | null; onSave: (json: string) => void; onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose);
   const [cfg, setCfg] = useState<JsonWidgetConfig>(
     initial ?? { title: '', url: '', headers: {}, interval: 60, fields: [{ ...EMPTY_FIELD }] },
   );
@@ -128,7 +130,7 @@ export function JsonEditor({ initial, onSave, onClose }: { initial: JsonWidgetCo
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer jw-editor" role="dialog" aria-label="API numbers widget" onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer jw-editor" ref={modal} role="dialog" aria-label="API numbers widget" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>API numbers</h2>
           <button type="button" className="text-button" onClick={onClose}>

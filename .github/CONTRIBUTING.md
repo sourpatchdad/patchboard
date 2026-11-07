@@ -24,9 +24,15 @@ and apps, copy `examples/env.example` to `.env`, fill in what you run, and use
 npm run typecheck
 npm test
 npm run docs:check
+npm run test:ui
 ```
 
-CI runs those three, builds the image, scans history for committed keys,
+The UI check builds the app and starts an isolated demo database. It needs
+Chrome, Chromium (`CHROMIUM_PATH` can select it), or a browser installed with
+`npx playwright-core install chromium`. It checks Fit, saved boards, poster
+rows, responsive layout and keyboard paths.
+
+CI runs these checks, builds the image, scans history for committed keys,
 and fails when code changes without a CHANGELOG.md entry. The pull request
 template has the rest of the checklist.
 

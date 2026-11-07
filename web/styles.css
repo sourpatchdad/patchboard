@@ -9148,7 +9148,7 @@ button.ha-act:hover {
   color: var(--ink-3);
 }
 
-.drawer-list button[aria-checked='true'] {
+.drawer-list button:is([aria-checked='true'], [aria-pressed='true']) {
   border-color: var(--accent);
   background: var(--surface);
 }
@@ -9439,3 +9439,10 @@ button.ha-act:hover {
   .playback-trigger { min-height: 44px; align-content: center; }
   .playback-trigger .stream-user { max-width: 40%; overflow-wrap: anywhere; flex-shrink: 1; }
 }
+
+/* A keyboard user can reach the page without traversing every view. */
+.skip-link { position: fixed; top: 8px; left: 16px; z-index: 1000; padding: 10px 16px; color: var(--ink); background: var(--raised); border: 1px solid var(--accent); border-radius: var(--radius); transform: translateY(-160%); }
+.skip-link:focus { transform: translateY(0); }
+
+/* Fit tightens spacing between sources before it shortens their lists. */
+.board[data-fit='true'] .now-block { padding-block: 8px; }

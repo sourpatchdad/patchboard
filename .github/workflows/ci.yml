@@ -22,6 +22,8 @@ jobs:
       - run: npm test
       - run: npm run docs:check
       - run: npm run build
+      - run: npx playwright-core install --with-deps chromium
+      - run: node scripts/check-home.mjs
 
   # Code that changes without a CHANGELOG entry fails: the docs move with it.
   changelog:

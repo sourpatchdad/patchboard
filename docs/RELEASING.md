@@ -40,16 +40,18 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
 2. Pick the version: fixes bump the patch (1.2.1), features bump the minor
    (1.3.0), and a change that breaks a setup bumps the major.
 3. On `dev`, set `version` in `package.json` and rename `## Unreleased` in
-   CHANGELOG.md to `## 1.3.0 (date)`.
-4. Run `npm run typecheck`, `npm test`, `npm run docs:check`, and
-   `npm run screenshots` when the change shows on screen.
+   CHANGELOG.md to `## 1.3.0 (date)`. Update the root and package version
+   in `package-lock.json` too.
+4. Run `npm run typecheck`, `npm test`, `npm run docs:check`,
+   `npm run build`, and `npm run screenshots` when the change shows on screen.
+   Run `npm run test:ui` for Home, Fit or board keyboard changes.
 5. Merge `dev` into `main`, then tag and push:
 
    ```sh
    git checkout main
    git merge --ff-only dev
    git tag v1.3.0
-   git push origin main v1.3.0
+   git push --atomic origin main dev v1.3.0
    ```
 
 The release workflow builds the image, moves `latest`, `1` and `1.3`, and
