@@ -192,9 +192,9 @@ export function Settings() {
           <div><span>Status size</span>{seg('homeStatusSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
           <div><span>Clock size</span>{seg('homeClockSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
           <div><span>Weather</span>{seg('homeWeather', [['hidden', 'Hide'], ['current', 'Current'], ['summary', 'Forecast'], ['hourly', 'Hourly chart']])}</div>
-          <div><span>Server metrics</span>{seg('homeServer', [['hidden', 'Hide'], ['summary', 'CPU and memory'], ['full', 'CPU, memory and storage']])}</div>
+          <div><span>Server metrics</span>{seg('homeServer', [['hidden', 'Hide'], ['summary', 'CPU and memory'], ['full', 'CPU, memory and storage'], ['card', 'Server card']])}</div>
         </div>
-        <p className="settings-note">Compact shows status, server metrics, weather and time. Basic keeps time and date. With status hidden, Needs attention appears on the board. Add Weather from Customize on Home. Adjust each part below. Saved on this device.</p>
+        <p className="settings-note">Compact shows status, server metrics, weather and time. Basic keeps time and date. With status hidden, Needs attention appears on the board. Add Weather from Customize on Home. Server card puts the complete Server widget here, including its graphs and uptime. You can then remove the board copy in Customize. Adjust each part below. Saved on this device.</p>
       </Section>
 
       <Section title="Units and time">

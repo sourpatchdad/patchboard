@@ -7,7 +7,7 @@
 
 import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   type Board as BoardData,
@@ -101,8 +101,9 @@ function useBoard(id: string) {
  * until it fits or nothing more can go. Starts over when the window's size
  * changes or the board is saved.
  */
-function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; over: number } {
+function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
   const [trim, setTrim] = useState<Record<string, number>>({});
+  const [posters, setPosters] = useState<Record<string, number>>({});
   /** Pixels still past the window once nothing more can be trimmed. */
   const [over, setOver] = useState(0);
   const [viewport, setViewport] = useState(() => `${window.innerWidth}:${window.innerHeight}`);
@@ -115,12 +116,14 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
   const lastCut = useRef<{ id: string; before?: number; height: number; expect: number } | null>(null);
   /** Widgets whose cuts bought nothing (a poster row, a list already shorter than its count). */
   const noGain = useRef(new Set<string>());
+  const shape = JSON.stringify(widgets.map(({ id, type, size, span, config }) => ({ id, type, size, span, config })).sort((a, b) => a.id.localeCompare(b.id)));
   useEffect(() => {
     setTrim({});
+    setPosters({});
     setOver(0);
     lastCut.current = null;
     noGain.current = new Set();
-  }, [on, viewport, widgets]);
+  }, [on, viewport, shape]);
   useEffect(() => {
     if (!on || !el) return;
     const home = el.closest('.home');
@@ -135,6 +138,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       if (next === room) return;
       room = next;
       setTrim({});
+      setPosters({});
       setOver(0);
       lastCut.current = null;
       noGain.current = new Set();
@@ -156,13 +160,13 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       const floor = window.innerHeight - reserve - 20 - window.scrollY;
       const cells = [...el.querySelectorAll<HTMLElement>(':scope > .cell')].map((c) => ({ c, r: c.getBoundingClientRect(), w: widgets.find((x) => `w-${x.id}` === c.id) }));
       const shown = (x: Widget) => trim[x.id] ?? Number(x.config?.limit ?? WIDGET_INFO[x.type].options.limit?.[0] ?? 0);
-      // A cut that saved far less than the rows it took (a poster row loses posters, not
-      // height) only hid things: put them back and leave that widget alone.
+      // Restore cuts that bought no height. Fixed headings can make a useful
+      // removed row much smaller than the widget average, so measure the gain.
       const cut = lastCut.current;
       if (cut) {
         lastCut.current = null;
         const now = cells.find((x) => x.w?.id === cut.id);
-        if (now && cut.height - now.r.height < cut.expect * 0.4) {
+        if (now && cut.height - now.r.height < Math.min(4, cut.expect * 0.4)) {
           noGain.current.add(cut.id);
           setTrim((t) => {
             const next = { ...t };
@@ -203,6 +207,16 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
         setTrim((t) => ({ ...t, [pick.w.id]: Math.max(pick.min, pick.items - step) }));
         return;
       }
+      // Keep every item in a horizontal shelf. When rows alone cannot fit,
+      // reduce artwork size with its aspect ratio intact, never its count.
+      for (const low of over) {
+        const shelf = cells.find((x) => x.w?.type === 'recent' && x.r.top <= low.r.top && x.r.left < low.r.right && x.r.right > low.r.left && (x.c.querySelector('.posters .poster')?.getBoundingClientRect().height ?? 0) > 109);
+        const art = shelf?.c.querySelector('.posters .poster')?.getBoundingClientRect();
+        if (shelf?.w && art) {
+          setPosters((p) => ({ ...p, [shelf.w!.id]: Math.max(108, Math.floor(art.height - (low.r.bottom - floor) - 4)) }));
+          return;
+        }
+      }
       setOver(over.length ? Math.round(over[0].r.bottom - floor) : 0);
     };
     const queue = () => {
@@ -216,8 +230,8 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       ro.disconnect();
       window.clearTimeout(timer);
     };
-  }, [on, el, widgets, trim]);
-  return on ? { trim, over } : { trim: {}, over: 0 };
+  }, [on, el, widgets, trim, posters]);
+  return on ? { trim, posters, over } : { trim: {}, posters: {}, over: 0 };
 }
 
 export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: number; onWidgets?: (types: string[]) => void }) {
@@ -260,19 +274,35 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   }, [boardEl]);
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
-  const { trim, over } = useFit(!!board?.fit && !editing && cols > 1, boardEl, board?.widgets ?? NONE);
-  // What fit couldn't place, kept from the board as last shown, for Customize to mention.
-  const [short, setShort] = useState(0);
-  useEffect(() => {
-    if (!editing) setShort(over);
-  }, [over, editing]);
-  const sort = useDragSort('cell', (drag, over) => {
-    const ws = draft?.widgets ?? [];
-    move(
-      ws.findIndex((w) => w.id === drag),
-      ws.findIndex((w) => w.id === over),
-    );
-  });
+  const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE);
+  const short = over;
+  const sort = useDragSort('cell', () => {}, { onPoint: (drag, x, y) => {
+    if (!boardEl || !draft) return;
+    const rect = boardEl.getBoundingClientRect();
+    const cells = [...boardEl.querySelectorAll<HTMLElement>(':scope > .cell')].map((el) => ({ id: el.id.slice(2), rect: el.getBoundingClientRect() }));
+    const moving = draft.widgets.find((w) => w.id === drag);
+    if (!moving) return;
+    const span = Math.min(spanOf(moving, chosen), cols);
+    const unit = (rect.width + GAP_PX) / cols;
+    const column = Math.max(1, Math.min(cols - span + 1, Math.floor((x - rect.left) / unit) + 1));
+    const peers = cells.filter((c) => c.id !== drag && c.rect.left < rect.left + (column - 1 + span) * unit - GAP_PX && c.rect.right > rect.left + (column - 1) * unit).sort((a, b) => a.rect.top - b.rect.top);
+    const before = peers.find((c) => y < c.rect.top + c.rect.height / 2);
+    const after = before ? null : peers.at(-1);
+    setDraft((d) => {
+      if (!d) return d;
+      // Pin the current columns on the first placement, so other columns do
+      // not get repacked merely because this card became shorter or moved.
+      const ws = d.widgets.map((w) => {
+        const cell = cells.find((c) => c.id === w.id);
+        return { ...w, column: w.id === drag ? column : w.column ?? (cell ? Math.round((cell.rect.left - rect.left) / unit) + 1 : undefined) };
+      });
+      const from = ws.findIndex((w) => w.id === drag);
+      const [widget] = ws.splice(from, 1);
+      const target = before ? ws.findIndex((w) => w.id === before.id) : after ? ws.findIndex((w) => w.id === after.id) + 1 : Math.min(from, ws.length);
+      ws.splice(Math.max(0, target), 0, widget);
+      return JSON.stringify(ws) === JSON.stringify(d.widgets) ? d : { ...d, widgets: ws };
+    });
+  } });
   if (missing)
     return (
       <Empty>
@@ -290,6 +320,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       next.splice(to, 0, item);
       return next;
     });
+  const visibleWidgets = shown.widgets.filter((w) => w.type !== 'attention' || w.config?.style === 'card' || homeStatusSize === 'hidden');
   const home = id === HOME_ID;
   /** Apps shown as tiles, which take far more room than icons. */
   const tiles = shown.widgets.some((w) => w.type === 'apps' && (w.config?.style || homeApps) !== 'patchbay');
@@ -309,7 +340,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               placeholder="Name this board"
               onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
             />
-            <span className="board-bar-hint">Drag to move, drag the right edge to widen, Settings to rename or trim.</span>
+            <span className="board-bar-hint">Drag into a column, then above or below another card. Hover or focus for controls.</span>
             {error && <span className="crit-text" role="alert">{error}</span>}
             {notice && !error && <span className="drawer-note">{notice}</span>}
             <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
@@ -331,6 +362,9 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
               Add widget
             </button>
+            {draft.widgets.filter((w) => w.type === 'attention' && w.config?.style !== 'card' && homeStatusSize !== 'hidden').map((w) => (
+              <button key={w.id} type="button" className="button button-quiet" onClick={() => setSetting(w.id)}>Needs attention settings</button>
+            ))}
             <span className="board-cols" role="group" aria-label="Columns">
               <span>Columns</span>
               <span className="seg">
@@ -403,19 +437,23 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         </div>
       )}
 
-      <div className="board" ref={setBoardEl} data-cols={cols} data-fit={!!board?.fit && !editing && cols > 1 || undefined} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card' || homeStatusSize === 'hidden').map((w, i) => (
-          <Cell
+      <div className="board" ref={setBoardEl} data-cols={cols} data-fit={!!shown.fit && cols > 1 || undefined} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+        {visibleWidgets.map((w) => {
+          const peers = w.column ? visibleWidgets.filter((other) => other.column === w.column) : visibleWidgets;
+          return (<Cell
             key={w.id}
             w={w}
             editing={editing}
-            index={i}
-            count={shown.widgets.length}
+            index={peers.indexOf(w)}
+            count={peers.length}
             span={Math.min(spanOf(w, chosen), cols)}
             cols={cols}
             chosen={chosen}
             limit={trim[w.id]}
-            onMove={move}
+            posterHeight={posters[w.id]}
+            onMove={(from, to) => {
+              if (peers[from] && peers[to]) move(shown.widgets.indexOf(peers[from]), shown.widgets.indexOf(peers[to]));
+            }}
             onSpan={(n) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, span: n } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
@@ -423,12 +461,12 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             dragging={sort.dragging === w.id}
           >
             <WidgetBody w={w} board={id} now={now} editing={editing} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
-          </Cell>
-        ))}
+          </Cell>);
+        })}
       </div>
 
-      {!editing && !snap?.readOnly && (
-        <div className="board-foot">
+      {!snap?.readOnly && (
+        <div className="board-foot" aria-hidden={editing || undefined} inert={editing || undefined}>
           <button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             {custom ? 'Customize' : 'Customize this board'}
           </button>
@@ -457,6 +495,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           w={draft.widgets.find((x) => x.id === setting)!}
           onClose={() => setSetting(null)}
           columns={chosen}
+          onColumn={(column) => update((ws) => ws.map((x) => x.id === setting ? { ...x, column } : x))}
           onChange={(cfg) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, config: cfg } : x)))}
           onSpan={(n) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, span: n } : x)))}
         />
@@ -497,6 +536,7 @@ function Cell(props: {
   chosen: number;
   /** Items shown when fitting the window trimmed this widget. */
   limit?: number;
+  posterHeight?: number;
   children: ReactNode;
   onMove: (from: number, to: number) => void;
   onSpan: (n: number) => void;
@@ -535,7 +575,7 @@ function Cell(props: {
       data-span={props.span}
       data-type={w.type}
       id={`w-${w.id}`}
-      style={{ gridRowEnd: `span ${rows}`, gridColumn: `span ${props.span}` }}
+      style={{ gridRowEnd: `span ${rows}`, gridColumn: w.column ? `${Math.max(1, Math.min(w.column, props.cols - props.span + 1))} / span ${props.span}` : `span ${props.span}` }}
     >
       <div ref={inner} className="cell-inner">
         {editing && (
@@ -617,7 +657,7 @@ function Cell(props: {
             </span>
           </span>
         )}
-        <div className="cell-body" inert={editing || undefined}>
+        <div className="cell-body" inert={editing || undefined} style={{ '--fit-poster-height': props.posterHeight ? `${props.posterHeight}px` : undefined } as CSSProperties}>
           <WidgetCtx.Provider
             value={{
               title: w.config?.title,
@@ -714,7 +754,7 @@ function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: strin
 }
 
 /** The server at a glance, each number with its last 24 hours, each leading to its own section. */
-function Vitals() {
+export function Vitals() {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
   const { data: nas } = useSource<TruenasData>('truenas');
@@ -951,6 +991,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
  */
 function SettingsDrawer({
   w,
+  onColumn,
   columns,
   onClose,
   onChange,
@@ -961,6 +1002,7 @@ function SettingsDrawer({
   onClose: () => void;
   onChange: (cfg: Record<string, string> | undefined) => void;
   onSpan: (n: number) => void;
+  onColumn: (n: number | undefined) => void;
 }) {
   const modal = useModal<HTMLDivElement>(onClose);
   const info = WIDGET_INFO[w.type];
@@ -983,6 +1025,12 @@ function SettingsDrawer({
             Apply
           </button>
         </header>
+        <label className="settings-label">Column
+          <select className="field" value={w.column ?? ''} onChange={(e) => onColumn(e.target.value ? Number(e.target.value) : undefined)}>
+            <option value="">Automatic</option>
+            {Array.from({ length: Math.max(1, columns - spanOf(w, columns) + 1) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+          </select>
+        </label>
         <p className="settings-note">{info.about}</p>
         <div className="ws-form">
           {o.title !== false && (

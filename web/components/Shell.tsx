@@ -1,3 +1,4 @@
+import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { moodFor } from '../../shared/otter.ts';
@@ -126,7 +127,7 @@ export function Shell() {
                 </svg>
               )}
               <span>{n.label}</span>
-              {n.to === '/feeds' && unreadFeeds > 0 && <span className="nav-badge">{unreadFeeds}</span>}
+              {n.to === '/feeds' && unreadFeeds > 0 && <span className="nav-badge">{count(unreadFeeds)}</span>}
             </NavLink>
           ))}
         </nav>

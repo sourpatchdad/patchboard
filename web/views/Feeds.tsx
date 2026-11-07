@@ -8,7 +8,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { FeedEntry, FeedsResponse } from '../../shared/types.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { Empty } from '../components/ui.tsx';
-import { ago } from '../lib/format.ts';
+import { ago, count } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 
@@ -220,7 +220,7 @@ export function Feeds() {
       <aside className="reader-list" aria-label="Unread articles">
         <header className="feeds-head">
           <h1 className="page-title">Reading</h1>
-          <span className="section-count">{total != null ? `${total} unread${category !== 'All' ? ` in ${category}` : ''}` : ''}</span>
+          <span className="section-count">{total != null ? `${count(total)} unread${category !== 'All' ? ` in ${category}` : ''}` : ''}</span>
           <CustomizePage
             page="feeds"
             title="Reading"
@@ -238,7 +238,7 @@ export function Feeds() {
             </button>
             {cats.map((c) => (
               <button key={c.id} type="button" role="tab" aria-selected={c.title === category} className="chip" onClick={() => setCategory(c.title)} disabled={!c.unread && c.title !== category}>
-                {c.title} <span className="chip-count">{c.unread}</span>
+                {c.title} <span className="chip-count">{count(c.unread)}</span>
               </button>
             ))}
           </div>
@@ -260,7 +260,7 @@ export function Feeds() {
                 <option value="">All feeds</option>
                 {data!.feeds!.map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.title} ({f.unread})
+                    {f.title} ({count(f.unread)})
                   </option>
                 ))}
               </select>
@@ -293,7 +293,7 @@ export function Feeds() {
           {!snap?.readOnly &&
             (confirmAll ? (
               <span className="feeds-confirm">
-                Mark {filtered ? unreadShown.length : total} read?
+                Mark {count((filtered ? unreadShown.length : total) ?? 0)} read?
                 <button type="button" className="text-button" onClick={() => void markAll()}>
                   Mark read
                 </button>
@@ -328,7 +328,7 @@ export function Feeds() {
             </li>
           ))}
         </ul>
-        {data && data.total > data.entries.length && <p className="feeds-more">Showing the newest {data.entries.length}. Mark some read to see the rest.</p>}
+        {data && data.total > data.entries.length && <p className="feeds-more">Showing the newest {count(data.entries.length)}. Mark some read to see the rest.</p>}
       </aside>
 
       <article className="reader" ref={readerRef} aria-live="polite">
@@ -369,7 +369,7 @@ function Edition({ entries, total, now, onPick, single }: { entries: FeedEntry[]
     <div className="edition">
       <p className="edition-date">
         {new Date(now).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-        {total != null && <span>, {total} unread</span>}. Press <kbd>j</kbd> to read from the top.
+        {total != null && <span>, {count(total)} unread</span>}. Press <kbd>j</kbd> to read from the top.
       </p>
       <button type="button" className="edition-lead" onClick={() => onPick(lead.id)}>
         <Thumb src={lead.image} className="edition-lead-img" />

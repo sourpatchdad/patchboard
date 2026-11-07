@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Fit can shrink poster artwork after trimming vertical lists, preserving
+  each cover's proportions and every item in the full horizontal row.
+
+- Board dragging places a card in a column and above or below its neighbors,
+  with a live layout preview. Columns stay where you place them after Save,
+  with automatic clamping on narrower screens. Existing boards keep their
+  arrangement until you move a card. Widget settings also offer a Column
+  picker for keyboard placement.
+
+- Customize preserves fitted item counts, full card heights and the visible
+  widget set. Its controls float over the board and its arrange bar stays
+  at the bottom, so entering edit mode no longer repacks the layout.
+  Needs attention settings remain available without inserting a placeholder
+  card. Fit keeps useful height savings even in widgets with large headings.
+
+- Home's Server metrics now offers Server card: the complete card in the
+  header, with its CPU graph, memory breakdown, storage bar, uptime and
+  Details link. Remove the board copy through Customize when you are ready.
+  This device preference leaves saved boards intact.
+- Reading counts use locale grouping throughout navigation, Home and the
+  reader: 1,006 unread instead of 1006. Shared plural counts do the same.
+
 - Fit reserves the actual space for Customize and New board, responds to
   Welcome and board-tab changes, and tightens Right now's source spacing.
   Small remaining overflows are explained in Customize. Saved boards and

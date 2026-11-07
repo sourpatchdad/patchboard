@@ -54,6 +54,8 @@ export interface Widget {
   size: WidgetSize;
   /** Columns this widget spans, 1 to the board's columns. Wins over size. */
   span?: number;
+  /** Preferred starting column. Narrow screens clamp it to the available columns. */
+  column?: number;
   /**
    * Settings. Per type (container, json) plus the common ones: title (the
    * header), limit (items shown), style, days. All strings.
@@ -301,7 +303,8 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
     const common = commonOptions(info, w.config);
     if (Object.keys(common).length) config = { ...(config ?? {}), ...common };
     const span = Number.isInteger(w.span) && (w.span as number) >= 1 && (w.span as number) <= 6 ? (w.span as number) : undefined;
-    widgets.push({ id: w.id, type: w.type as WidgetType, size, ...(span ? { span } : {}), ...(config ? { config } : {}) });
+    const column = Number.isInteger(w.column) && (w.column as number) >= 1 && (w.column as number) <= 6 ? w.column : undefined;
+    widgets.push({ ...(column ? { column } : {}), id: w.id, type: w.type as WidgetType, size, ...(span ? { span } : {}), ...(config ? { config } : {}) });
   }
   // Needs attention is part of what Patchboard is; it can move but not leave.
   if (!widgets.some((w) => w.type === 'attention')) widgets.unshift({ id: 'attention', type: 'attention', size: 'm' });

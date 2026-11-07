@@ -7,11 +7,11 @@
 
 import { type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react';
 
-export function useDragSort(attr: string, onOver: (dragId: string, overId: string) => void, opts: { onDone?: () => void; gripOnly?: boolean } = {}) {
+export function useDragSort(attr: string, onOver: (dragId: string, overId: string) => void, opts: { onDone?: () => void; gripOnly?: boolean; onPoint?: (id: string, x: number, y: number) => void } = {}) {
   const [dragging, setDragging] = useState<string | null>(null);
   const s = useRef<{ id: string; x: number; y: number; started: boolean; last?: string } | null>(null);
-  const cb = useRef({ onOver, onDone: opts.onDone });
-  cb.current = { onOver, onDone: opts.onDone };
+  const cb = useRef({ onOver, onDone: opts.onDone, onPoint: opts.onPoint });
+  cb.current = { onOver, onDone: opts.onDone, onPoint: opts.onPoint };
 
   useEffect(() => {
     let raf = 0;
@@ -30,9 +30,10 @@ export function useDragSort(attr: string, onOver: (dragId: string, overId: strin
         document.body.classList.add('is-sorting');
       }
       e.preventDefault();
+      cb.current.onPoint?.(d.id, e.clientX, e.clientY);
       const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>(`[data-${attr}]`);
       const over = el?.dataset[attr];
-      if (over && over !== d.id && over !== d.last) {
+      if (!cb.current.onPoint && over && over !== d.id && over !== d.last) {
         d.last = over;
         cb.current.onOver(d.id, over);
       } else if (!over) d.last = undefined;

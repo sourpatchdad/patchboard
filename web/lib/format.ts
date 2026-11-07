@@ -24,8 +24,13 @@ export function agoLong(t: number | string, now = Date.now()): string {
   return plural(Math.floor(diff / DAY), 'day') + ' ago';
 }
 
+/** Group counts using the reader's locale, without abbreviating them. */
+export function count(n: number): string {
+  return n.toLocaleString();
+}
+
 export function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`;
+  return `${count(n)} ${word}${n === 1 ? '' : 's'}`;
 }
 
 const startOfDay = (t: number) => {

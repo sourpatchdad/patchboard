@@ -114,3 +114,14 @@ test('TrueNAS reads Check the certificate from Settings like every other integra
   assert.equal(on, true);
   assert.equal(off, false);
 });
+
+
+test('widget placement survives saving and importing without changing legacy boards', () => {
+  const v = validateBoard({ ...DEFAULT_BOARD, widgets: DEFAULT_BOARD.widgets.map((w) => ({ ...w, column: 3 })) });
+  assert.ok('board' in v);
+  assert(v.board.widgets.every((w) => w.column === 3));
+  const invalid = validateBoard({ ...DEFAULT_BOARD, widgets: DEFAULT_BOARD.widgets.map((w) => ({ ...w, column: 99 })) });
+  assert.ok('board' in invalid);
+  assert(invalid.board.widgets.every((w) => w.column === undefined));
+  assert.deepEqual(validateBoard(DEFAULT_BOARD), { board: DEFAULT_BOARD });
+});

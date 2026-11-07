@@ -9446,3 +9446,42 @@ button.ha-act:hover {
 
 /* Fit tightens spacing between sources before it shortens their lists. */
 .board[data-fit='true'] .now-block { padding-block: 8px; }
+
+/* The complete Server card can share the header, keeping its graphs and links. */
+.header-board-vitals { flex: 1 1 680px; min-width: min(100%, 580px); }
+.header-board-vitals .section { margin-bottom: 0; padding: 16px 20px 18px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.header-board-vitals .section-head h2 { font-size: 19px; }
+.header-board-vitals .vw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.header-board-vitals .vw { min-width: 0; }
+.header-board-vitals .vw-label { overflow-wrap: anywhere; }
+.home-header:has(.header-board-vitals) .masthead-status { flex: 0 1 400px; }
+.home-header:has(.header-board-vitals) .masthead-time { padding-left: 0; border-left: 0; }
+@media (max-width: 760px) {
+  .header-board-vitals { flex-basis: 100%; min-width: 0; }
+  .header-board-vitals .vw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-header:has(.header-board-vitals) .masthead-status { flex-basis: 100%; }
+}
+
+/* Arrange the same visible board: controls float without changing card geometry. */
+.board-wrap.is-editing { padding-bottom: 180px; }
+.is-editing .cell-inner { padding: 0 0 24px; }
+.is-editing .cell-body { opacity: 1; max-height: none; overflow: visible; mask-image: none; }
+.is-editing .board-bar { position: fixed; top: auto; bottom: 16px; left: 32px; right: 32px; max-height: 38vh; overflow: auto; margin: 0; background: var(--raised); backdrop-filter: none; }
+.cell-tools { position: absolute; z-index: 3; top: 8px; left: 8px; right: 8px; flex-wrap: wrap; margin: 0; opacity: 0; pointer-events: none; box-shadow: 0 4px 12px color-mix(in srgb, var(--bg) 65%, transparent); }
+.cell:is(:hover, :focus-within) .cell-tools { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .cell-tools { opacity: 1; pointer-events: auto; } }
+@media (max-width: 760px) {
+  .is-editing .board-bar { left: 16px; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+
+.cell-tools button { scroll-margin-block: 100px 220px; }
+.is-sorting .cell-tools { opacity: 0; pointer-events: none; }
+
+.is-editing .board-foot { visibility: hidden; }
+.cell.is-dragging { outline: 2px dashed var(--accent); outline-offset: 0; }
+
+/* Fit may make artwork smaller, while retaining the complete horizontal row. */
+.cell[data-type='recent'] .posters .poster { width: min(100%, calc(var(--fit-poster-height, 9999px) * 2 / 3)); max-height: var(--fit-poster-height, none); margin-inline: auto; }
+
+.cell[data-type='recent'] .poster-type { padding: clamp(6px, calc(var(--fit-poster-height, 280px) / 20), 14px); }
+.cell[data-type='recent'] .poster-type span { overflow-wrap: anywhere; font-size: clamp(11px, calc(var(--fit-poster-height, 285px) / 15), 19px); }

@@ -30,10 +30,11 @@ import type {
   TruenasData,
   WeatherData,
 } from '../../shared/types.ts';
-import { Board } from '../board/Board.tsx';
+import { Board, Vitals } from '../board/Board.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { Empty, Episode, Icon, Ident, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
+  count,
   ago,
   agoLong,
   clock,
@@ -141,7 +142,8 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
           <Overnight now={now} />
         </div>
       </div>}
-      {homeServer !== 'hidden' && <HeaderServer storage={homeServer === 'full'} />}
+      {homeServer === 'card' ? <div className="header-board-vitals"><Vitals /></div>
+        : homeServer !== 'hidden' && <HeaderServer storage={homeServer === 'full'} />}
       {weather && !weatherOnBoard && homeWeather !== 'hidden' && (
         <Link to="/weather" className={`masthead-weather header-weather is-${homeWeather}`} title="Open the hourly forecast and weather alerts">
           <div className="header-weather-now">
@@ -337,7 +339,7 @@ export function Inbox({ now }: { now: number }) {
     <Section
       title="Inbox"
       className="inbox"
-      count={data ? (data.unread ? `${data.unread} unread` : 'Nothing unread') : undefined}
+      count={data ? (data.unread ? `${count(data.unread)} unread` : 'Nothing unread') : undefined}
       action={data ? { label: 'Open Fastmail', href: data.webUrl } : undefined}
       source={state}
     >
@@ -370,7 +372,7 @@ export function FeedsBrief({ now }: { now: number }) {
     <Section
       title="Reading"
       className="feeds-brief"
-      count={data ? `${data.unread} unread` : undefined}
+      count={data ? `${count(data.unread)} unread` : undefined}
       action={data?.unread ? { label: 'Read all', to: '/feeds' } : undefined}
       source={state}
     >

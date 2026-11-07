@@ -42,21 +42,29 @@ one click.
   not stretch a chart to fill the screen. Compact shows status, CPU and
   memory, current weather and a small clock; Basic keeps time and date.
   Presets and individual controls apply per device and leave saved boards
-  alone. When status is hidden, the existing Needs attention widget renders
+  alone. Server card reuses the complete Server widget in the header,
+  including its graphics and Details link; removing the board copy stays
+  an explicit Customize action. When status is hidden, the existing Needs attention widget renders
   as a card on this device. Weather can be added through Customize.
   Weather charts show temperature and rain with times and units.
 - **Fit without losing the row.** Fit can shorten vertical lists. A single
   horizontal poster row keeps its selected items. Recalculate on width
   changes and changes to the space above the board. Reserve the measured
   footer height, and report any remaining overflow. Fit is a temporary view
-  adjustment and never rewrites the saved board.
+  adjustment and never rewrites the saved board. If list cuts are insufficient,
+  artwork can shrink with its proportions intact; every poster remains in
+  the horizontal row.
 - **Use the width.** The board has the columns you choose; each widget lays
   itself out for the width it gets (container queries), so nothing clips.
 - **The UI sits on top of files.** Apps, groups, icons, live numbers, the
   board and page settings live in Patchboard's database. services.yaml and
   Docker labels keep working underneath, and the UI never rewrites them.
 - **One pattern per job.** Every page customizes through the same panel;
-  every list sorts through the same control; sorts live in the URL.
+  every list sorts through the same control; sorts live in the URL. Customize
+  keeps the viewed card sizes and fitted item counts, with floating controls
+  and a bottom arrange bar. Hidden header widgets stay out of the grid.
+  Dragging assigns a starting column and relative vertical position, so
+  neighboring columns stay stable; narrower screens clamp the column.
 - **Keyboard access.** Board drawers contain focus, Escape closes them,
   and focus returns to the opener. The background is inert while a drawer
   is open. Skip to content bypasses the navigation.

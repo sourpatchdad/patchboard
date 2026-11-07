@@ -228,6 +228,7 @@ try {
   await page.evaluate(() => scrollTo(0, 0));
   await settle(page, 600);
   await shoot(page, 'customize');
+  await page.getByRole('button', { name: 'Reading settings' }).focus();
   await page.getByRole('button', { name: 'Reading settings' }).click();
   await settle(page, 400);
   await shoot(page, 'widget-settings');
@@ -285,6 +286,13 @@ try {
     await shoot(p, `theme-${theme}-${scheme}`);
     await ctx.close();
   }
+
+  const cardContext = await context(browser, { viewport: DESKTOP, colorScheme: 'dark' }, { homeServer: 'card' });
+  const cardPage = await cardContext.newPage();
+  await cardPage.goto(demo.base + '/');
+  await settle(cardPage);
+  await shootEl(cardPage.locator('.masthead'), 'home-header-server');
+  await cardContext.close();
 
   console.log('The otter');
   // Each mood and what brings it on, from the images the app itself uses.

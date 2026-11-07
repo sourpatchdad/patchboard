@@ -25,6 +25,13 @@ try {
   }
   assert(browser, 'Install Chrome/Chromium or set CHROMIUM_PATH');
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, colorScheme: 'dark' });
+  await page.route('**/api/snapshot', async (route) => {
+    const response = await route.fetch();
+    const snapshot = await response.json();
+    snapshot.sources.miniflux.data.unread = 1006;
+    await route.fulfill({ response, json: snapshot });
+  });
+  await page.route('**/api/events', (route) => route.abort());
   const errors = [];
   page.on('pageerror', (err) => errors.push(err.message));
   const go = async (path = '/') => { await page.goto(base + path); await page.locator('.board .cell').first().waitFor(); };
@@ -43,7 +50,59 @@ try {
   assert(created.ok(), 'a second board adds the tabs above Home');
   await go();
   await fits();
+  await page.waitForTimeout(800);
   const original = await board();
+  const positions = () => page.locator('.board > .cell').evaluateAll((cells) => Object.fromEntries(cells.map((cell) => {
+    const r = cell.getBoundingClientRect();
+    return [cell.id, { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height }];
+  })));
+  const viewing = await positions();
+  await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.waitForTimeout(300);
+  const editing = await positions();
+  assert.deepEqual(Object.keys(editing), Object.keys(viewing), 'Customize does not add placeholder widgets');
+  for (const id of Object.keys(viewing)) for (const axis of ['x', 'y', 'width', 'height']) {
+    assert(Math.abs(viewing[id][axis] - editing[id][axis]) < 4, `${id} keeps its ${axis} when Customize opens: ${viewing[id][axis]} vs ${editing[id][axis]}`);
+  }
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.locator('#w-feeds').hover();
+  const grip = await page.locator('#w-feeds [data-grip="cell"]').boundingBox();
+  const grid = await page.locator('.board').boundingBox();
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grid.x + grid.width * 0.84, Math.max(140, grip.y - 100), { steps: 12 });
+  await page.mouse.up();
+  assert.equal(await page.locator('#w-feeds').evaluate((el) => getComputedStyle(el).gridColumnStart), '3', 'dragging places Reading in the selected column');
+  await page.waitForTimeout(400);
+  const arranged = await positions();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: /^Customize/ }).waitFor();
+  assert.equal((await board()).board.widgets.find((w) => w.id === 'feeds').column, 3, 'the selected column is saved');
+  await page.waitForTimeout(250);
+  const afterSave = await positions();
+  for (const id of Object.keys(arranged)) for (const axis of ['x', 'y', 'width', 'height']) {
+    assert(Math.abs(arranged[id][axis] - afterSave[id][axis]) < 4, `${id} matches its arranged preview after Save: ${axis}`);
+  }
+  if (original.custom) await action('/api/boards/home', original.board);
+  else await page.request.delete(base + '/api/boards/home', { headers: { 'X-Patchboard': 'action' } });
+  await go();
+  assert.equal(await page.locator('.nav-badge').innerText(), '1,006');
+  assert.match(await page.locator('#w-feeds .section-count').innerText(), /1,006 unread/);
+  await page.goto(base + '/settings?tab=home');
+  await page.getByRole('button', { name: 'Server card', exact: true }).click();
+  await go();
+  const headerCard = page.locator('.header-board-vitals');
+  await headerCard.waitFor();
+  assert.equal(await headerCard.locator('.vw').count(), 4, 'full card keeps CPU, memory, storage and uptime');
+  assert.equal(await headerCard.getByRole('link', { name: 'Details', exact: true }).count(), 1);
+  await page.locator('#w-vitals').waitFor();
+  assert.equal(await headerCard.locator('svg').count(), await page.locator('#w-vitals svg').count(), 'header keeps the same graphics');
+  assert.deepEqual(await board(), original, 'choosing a header card does not remove the board copy');
+  await page.goto(base + '/settings?tab=home');
+  await page.getByRole('button', { name: 'Use compact header', exact: true }).click();
+  await go();
+  await fits();
   const initialFeeds = await page.locator('#w-feeds li').count();
   // Changing available space above the board must trim, then restore rows.
   await page.evaluate(() => {
@@ -100,6 +159,7 @@ try {
   await dialog.waitFor({ state: 'detached' });
   assert(await page.getByRole('button', { name: 'New board', exact: true }).evaluate((el) => el === document.activeElement), 'focus returns to New board');
   await page.getByRole('button', { name: /^Customize/ }).click();
+  await page.getByRole('button', { name: 'Reading settings', exact: true }).focus();
   await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
   await page.getByRole('dialog', { name: 'Reading settings' }).waitFor();
   await page.keyboard.press('Escape');
@@ -116,7 +176,7 @@ try {
   await page.keyboard.press('Enter');
   assert(await page.locator('#main-content').evaluate((el) => el === document.activeElement), 'Skip to content moves focus to main');
   assert.deepEqual(errors, []);
-  console.log('Home, Fit, saved boards, poster rows, phone layout and keyboard paths passed.');
+  console.log('Home, Fit, header graphics, grouped counts, stable edit previews, saved column placement, poster rows and keyboard paths passed.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.exitCode !== null ? resolve() : (server.once('exit', resolve), server.kill()));

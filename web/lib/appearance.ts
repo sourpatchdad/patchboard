@@ -35,7 +35,7 @@ export interface Appearance {
   homeClockSize: 'hidden' | 'small' | 'medium' | 'large';
   homeStatusSize: 'hidden' | 'small' | 'medium' | 'large';
   homeWeather: 'hidden' | 'current' | 'summary' | 'hourly';
-  homeServer: 'hidden' | 'summary' | 'full';
+  homeServer: 'hidden' | 'summary' | 'full' | 'card';
   clock24: boolean;
   temp: TempUnit;
   hidden: HomeSection[];

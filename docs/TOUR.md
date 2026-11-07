@@ -127,7 +127,11 @@ message.
 ## Making it yours
 
 **Customize the board.** Drag widgets, drag an edge to resize, choose the
-columns, or start over from a layout. Fit the window trims lists until the
+columns, or start over from a layout. Drag into a column, above or below
+its neighbors; the layout updates while you drag. Hover or focus a card for
+its controls, or choose a Column in its settings. Editing keeps the full
+card preview and the same fitted counts; the arrange bar floats at the
+bottom instead of pushing the board down. Fit the window trims lists until the
 board ends at the bottom of the screen. Recently added keeps every selected
 poster in one horizontal row, rather than losing titles to fit. If lists
 alone cannot fit the board, Customize reports how far it runs over. Fit
@@ -204,3 +208,12 @@ and your apps, groups, icons and links come over. Its widget keys stay
 behind; Patchboard names the integrations worth connecting instead.
 
 ![Import from Homepage](screenshots/import-homepage.webp)
+
+### Server details in the header
+
+In Settings, Home and units, choose **Server card** under Server metrics.
+It puts the same CPU history, memory breakdown, storage bar, uptime and
+Details link into the header. Then use Customize on Home to remove the
+board copy and save. The header choice is per device; the saved board is shared.
+
+![The complete Server card sharing the header with status, weather and time](screenshots/home-header-server.webp)
