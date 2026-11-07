@@ -95,10 +95,12 @@ calls it.
 playback details and a link to the configured app. Time and remaining time
 appear when the service reports them.
 
-**The header starts with what needs you.** The otter sits beside the whole
-status summary. Settings, Home and units lets this device choose the status
-size, clock size or no clock, and a weather summary or the next 12 hours of
-temperature and rain.
+**Choose a compact or basic header.** Compact shows status, CPU and memory,
+current weather and a small clock. Basic keeps time and date. Settings,
+Home and units adjusts each part on this device, including an optional
+hourly weather chart and storage. Hiding status shows the existing Needs
+attention widget as a card on this device. Add Weather through Customize;
+header choices do not rewrite your saved board.
 
 **An otter keeps watch.** The otter beside the status follows your server: calm
 when all is quiet, eyes open when updates wait, asleep at night, looking up

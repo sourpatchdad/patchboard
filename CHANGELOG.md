@@ -4,14 +4,19 @@
 
 The first public release, 1.0.0. What's in it:
 
-- **Home** starts with the otter beside "All quiet" or "4 things need you",
-  with each problem linked to its fix, then weather and the clock.
-  Settings, Home and units offers Small, Medium and Large status sizes,
-  clock sizes from Small to Large or Hide (Medium by default), and Hide,
-  Summary or Hourly chart weather on this device.
-  The default chart shows the next 12 hours of temperature and rain, with
-  daily forecasts when hourly data is unavailable. Below it, a board you
-  arrange: apps with live numbers, Right now,
+- **Home** offers compact and basic headers. Compact shows the otter beside
+  status, CPU and memory, current weather and a small clock. Basic keeps
+  time and date. Settings, Home and units adjusts each part on this device,
+  including status and clock sizes or Hide, optional storage, and Current,
+  Forecast or Hourly chart weather. Header pieces keep compact widths and
+  wrap instead of stretching across spare space. CPU and memory link to
+  Server's resources; storage links to its storage section.
+  The optional chart shows the next 12 hours of temperature and rain, with
+  daily forecasts without hourly data. Saved hourly preferences stay in
+  place. Presets do not rewrite saved boards. Hiding status shows the
+  existing Needs attention widget as a card on this device; add Weather
+  separately through Customize. Below the header, a board you arrange:
+  apps with live numbers, Right now,
   This week, Reading, mail, the server, changes, recently added and more.
   The board starts right under the header; Customize waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing

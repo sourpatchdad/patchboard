@@ -2,6 +2,7 @@
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
 import { moodFor } from '../../shared/otter.ts';
+import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
 import { Mascot } from '../components/Otter.tsx';
 import { HOME_ID, STARTERS } from '../../shared/board.ts';
@@ -94,7 +95,7 @@ function HomeSkeleton() {
 function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weatherOnBoard: boolean; attentionCard: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
-  const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather } = useAppearance();
+  const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather, homeServer } = useAppearance();
   const d = new Date(now);
   const time = d
     .toLocaleTimeString(undefined, { hour: clock24 ? '2-digit' : 'numeric', minute: '2-digit', hour12: !clock24 })
@@ -122,7 +123,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
 
   return (
     <header className={`masthead home-header status-${homeStatusSize} clock-${homeClockSize}`}>
-      <div className={`masthead-status tone-${status.tone}`}>
+      {homeStatusSize !== 'hidden' && <div className={`masthead-status tone-${status.tone}`}>
         <Mascot mood={mood} size={homeStatusSize === 'large' ? 88 : homeStatusSize === 'small' ? 56 : 72} className="status-mascot" />
         <div className="status-copy">
           {!attentionCard && !alerts.length ? (
@@ -139,7 +140,8 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
           {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
           <Overnight now={now} />
         </div>
-      </div>
+      </div>}
+      {homeServer !== 'hidden' && <HeaderServer storage={homeServer === 'full'} />}
       {weather && !weatherOnBoard && homeWeather !== 'hidden' && (
         <Link to="/weather" className={`masthead-weather header-weather is-${homeWeather}`} title="Open the hourly forecast and weather alerts">
           <div className="header-weather-now">
@@ -148,9 +150,10 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
               <strong>{weather.label}</strong>
               <span>{weatherText(weather.codeNow)}</span>
               <small>High {deg(weather.days[0]?.high ?? weather.tempNow, unit)}° · Low {deg(weather.days[0]?.low ?? weather.tempNow, unit)}°</small>
+              {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
             </span>
           </div>
-          {homeWeather === 'hourly' && (weather.hours?.length ?? 0) > 1 ? (
+          {homeWeather !== 'current' && (homeWeather === 'hourly' && (weather.hours?.length ?? 0) > 1 ? (
             <HeaderWeatherChart weather={weather} clock24={clock24} unit={unit} />
           ) : (
             <ol className="header-forecast" aria-label="Next three days">
@@ -162,8 +165,7 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
                 </li>
               ))}
             </ol>
-          )}
-          {(weather.alerts ?? []).length > 0 && <span className="masthead-alert">{weather.alerts![0].event}</span>}
+          ))}
         </Link>
       )}
       {homeClockSize !== 'hidden' && (
@@ -202,7 +204,7 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
 }
 
 /**
- * Needs attention in the header: one line per problem under the status line,
+ * Needs attention in the header: compact problem links under the status line,
  * worst first, each one a link to its fix. Three show; the rest open in place.
  */
 function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {

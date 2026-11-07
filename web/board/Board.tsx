@@ -213,10 +213,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const { snap } = useStore();
   const navigate = useNavigate();
   const { board, custom, missing, save } = useBoard(id);
-  const { homeApps } = useAppearance();
+  const { homeApps, homeStatusSize } = useAppearance();
   // An alert that points at a widget (#w-power) lands on it once the board is drawn.
   useLanding(!!board);
-  const types = board?.widgets.map((w) => (w.type === 'attention' && w.config?.style === 'card' ? 'attention-card' : w.type)).join(',') ?? '';
+  const types = board?.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)).join(',') ?? '';
   useEffect(() => {
     if (board) onWidgets?.(types.split(','));
   }, [types]);
@@ -393,7 +393,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       )}
 
       <div className="board" ref={setBoardEl} data-cols={cols} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card').map((w, i) => (
+        {shown.widgets.filter((w) => editing || w.type !== 'attention' || w.config?.style === 'card' || homeStatusSize === 'hidden').map((w, i) => (
           <Cell
             key={w.id}
             w={w}
@@ -626,13 +626,13 @@ function Cell(props: {
 
 function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: string; now: number; saved: boolean; editing?: boolean }) {
   const { snap } = useStore();
-  const { homeApps } = useAppearance();
+  const { homeApps, homeStatusSize } = useAppearance();
   if (!snap) return null;
   switch (w.type) {
     case 'apps':
       return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} /> : <AppTiles legend />;
     case 'attention':
-      if (w.config?.style !== 'card')
+      if (w.config?.style !== 'card' && homeStatusSize !== 'hidden')
         return editing ? (
           <Section title="Needs attention" className="attention">
             <p className="settings-note">Shows in the header, under the status line. Its settings put it back on the board as a card.</p>

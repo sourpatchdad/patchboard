@@ -5,11 +5,17 @@ they match the current code.
 
 ## Home
 
-The header starts with the otter beside the status summary and anything
-that needs you, then weather and the clock. Settings, Home and units changes
-these on this device: Small, Medium or Large status, Hide, Small, Medium or
-Large clock, and Hide, Summary or Hourly chart weather. The default chart shows temperature and
-rain for the next 12 hours, with daily forecasts when hourly data is absent.
+The compact header shows the otter beside the status, CPU and memory,
+current weather and a small clock. Settings, Home and units offers Use
+compact header and Use basic header. Basic keeps just time and date.
+Each part also has its own controls on this device: status and clock sizes
+or Hide, server metrics with optional storage, and Hide, Current, Forecast
+or Hourly chart weather. CPU and memory open Server's resource section;
+storage opens its storage section. The hourly chart shows temperature and
+rain for the next 12 hours, falling back to daily forecasts without hourly
+data. Existing saved hourly choices stay in place. Hiding status shows the
+existing Needs attention widget as a card on this device. Add Weather
+through Customize; header presets do not rewrite the saved board.
 Below it sits a board of widgets on the columns you choose. Right now shows who is watching Plex,
 Jellyfin or Emby and what each download client is doing, with a Pause button
 per client. Recently added merges every server newest first. A file Plex and
@@ -23,7 +29,11 @@ Open the configured app from the preview. Close it with Escape, Close or a
 tap outside. Service colors identify Plex, Jellyfin, Emby, Audiobookshelf
 and Navidrome; Tracearr has its own marker for aggregate activity.
 
-![Home](screenshots/home.webp)
+![Home with the compact header](screenshots/home.webp)
+
+![Home with the basic header](screenshots/home-basic.webp)
+
+![Playback details on hover, focus or tap](screenshots/playback-preview.webp)
 
 ![The otter's moods and what brings each one on](screenshots/otter-moods.webp)
 
@@ -33,10 +43,11 @@ amber dot, worried with a red one. The
 tab title counts what needs you, as in "(2) Patchboard". When nothing does,
 it sits beside "All quiet" and keeps watch. Settings, Look hides it.
 
-**Needs attention** sits in Home's header, one line per problem under the
+**Needs attention** sits in Home's header, with problem links wrapping under the
 status line, worst first, with three showing and the rest a click away. To
 keep it as a card on the board instead, open Customize, then its settings,
-and pick A card on the board.
+and pick A card on the board. Hiding header status also shows this widget
+as a card on this device, without changing its saved setting.
 
 ## Pages
 

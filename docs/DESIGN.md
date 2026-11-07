@@ -37,8 +37,13 @@ one click.
   report. Hover, keyboard focus and touch reach the same details.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
-- **Status first.** Home starts with the otter beside the whole status
-  summary, then weather and the clock. Header sizes are per-device choices.
+- **Compact pieces.** Home's header keeps status, server metrics, weather
+  and time together at their content widths, wrapping when needed. It does
+  not stretch a chart to fill the screen. Compact shows status, CPU and
+  memory, current weather and a small clock; Basic keeps time and date.
+  Presets and individual controls apply per device and leave saved boards
+  alone. When status is hidden, the existing Needs attention widget renders
+  as a card on this device. Weather can be added through Customize.
   Weather charts show temperature and rain with times and units.
 - **Fit without losing the row.** Fit can shorten vertical lists. A single
   horizontal poster row keeps its selected items. Recalculate on width

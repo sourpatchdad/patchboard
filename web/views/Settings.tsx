@@ -184,12 +184,17 @@ export function Settings() {
       </Section>
 
       <Section title="Home header">
-        <div className="header-options">
-          <div><span>Status size</span>{seg('homeStatusSize', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
-          <div><span>Clock size</span>{seg('homeClockSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
-          <div><span>Weather</span>{seg('homeWeather', [['hidden', 'Hide'], ['summary', 'Summary'], ['hourly', 'Hourly chart']])}</div>
+        <div className="header-presets">
+          <button type="button" className="btn" onClick={() => setAppearance({ homeStatusSize: 'medium', homeServer: 'summary', homeWeather: 'current', homeClockSize: 'small' })}>Use compact header</button>
+          <button type="button" className="btn" onClick={() => setAppearance({ homeStatusSize: 'hidden', homeServer: 'hidden', homeWeather: 'hidden', homeClockSize: 'small' })}>Use basic header</button>
         </div>
-        <p className="settings-note">Status comes first. Pick a smaller clock or an hourly temperature and rain chart. Saved on this device.</p>
+        <div className="header-options">
+          <div><span>Status size</span>{seg('homeStatusSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
+          <div><span>Clock size</span>{seg('homeClockSize', [['hidden', 'Hide'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])}</div>
+          <div><span>Weather</span>{seg('homeWeather', [['hidden', 'Hide'], ['current', 'Current'], ['summary', 'Forecast'], ['hourly', 'Hourly chart']])}</div>
+          <div><span>Server metrics</span>{seg('homeServer', [['hidden', 'Hide'], ['summary', 'CPU and memory'], ['full', 'CPU, memory and storage']])}</div>
+        </div>
+        <p className="settings-note">Compact shows status, server metrics, weather and time. Basic keeps time and date. With status hidden, Needs attention appears on the board. Add Weather from Customize on Home. Adjust each part below. Saved on this device.</p>
       </Section>
 
       <Section title="Units and time">

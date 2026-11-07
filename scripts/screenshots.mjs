@@ -119,6 +119,11 @@ try {
   // The hero: Home as a fresh install arranges it, on one 1920 by 1080 screen.
   await go('/', 3000);
   await shoot(page, 'home');
+  await page.getByRole('button', { name: /Plex: Severance/ }).first().hover();
+  await settle(page, 400);
+  await shoot(page, 'playback-preview');
+  await page.keyboard.press('Escape');
+  await page.mouse.move(0, 0);
   await go('/server');
   await shoot(page, 'server', { fullPage: true });
   await go('/stacks');
@@ -327,6 +332,13 @@ try {
     await settle(pp);
     await shoot(pp, name);
   }
+  const basic = await context(browser, { viewport: DESKTOP, colorScheme: 'dark' }, {
+    homeStatusSize: 'hidden', homeServer: 'hidden', homeWeather: 'hidden', homeClockSize: 'small',
+  });
+  const bp = await basic.newPage();
+  await bp.goto(demo.base + '/');
+  await settle(bp);
+  await shoot(bp, 'home-basic', { fullPage: true });
 } finally {
   await browser.close();
   await Promise.all([demo.stop(), fresh.stop()]);
