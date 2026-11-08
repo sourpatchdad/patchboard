@@ -14,7 +14,20 @@ permissions:
   contents: read
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Validate version and release notes before publishing
+        env:
+          TAG: ${{ github.ref_name }}
+        run: node scripts/release-check.ts "$TAG"
+
   image:
+    needs: preflight
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,14 +90,16 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
       - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
         run: |
           v="${TAG#v}"
-          awk -v v="$v" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' CHANGELOG.md > notes.md
-          if [ ! -s notes.md ]; then echo "CHANGELOG.md has no section for $v" >&2; exit 1; fi
+          node scripts/release-check.ts "$TAG" notes.md
           pre=""
-          case "$v" in *-*) pre="--prerelease" ;; esac
+          case "${v%%+*}" in *-*) pre="--prerelease" ;; esac
           gh release create "$TAG" --title "Patchboard $v" --notes-file notes.md --verify-tag $pre

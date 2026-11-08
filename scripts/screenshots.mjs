@@ -221,6 +221,11 @@ try {
   await shoot(page, 'jump-to');
   await page.keyboard.press('Escape');
 
+  await page.locator('.wordmark').focus();
+  await page.keyboard.press('?');
+  await shootEl(page.getByRole('dialog', { name: 'Keyboard shortcuts' }), 'keyboard-shortcuts');
+  await page.keyboard.press('Escape');
+
   console.log('Making it yours');
   await go('/');
   await page.getByRole('button', { name: /Arrange board/ }).click();

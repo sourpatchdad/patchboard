@@ -1,3 +1,4 @@
+import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -96,12 +97,6 @@ export function Shell() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  useEffect(() => {
-    const locked = palette || help;
-    document.documentElement.classList.toggle('is-locked', locked);
-    return () => document.documentElement.classList.remove('is-locked');
-  }, [palette, help]);
-
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
 
   return (
@@ -182,21 +177,26 @@ export function Shell() {
       </button>
 
       <Palette open={palette} onClose={() => setPalette(false)} />
-      {help && (
-        <div className="palette-backdrop" onClick={() => setHelp(false)}>
-          <div className="palette shortcuts" role="dialog" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()}>
-            <h2>Keyboard</h2>
-            <dl>
-              <div><dt><kbd>{mac ? '⌘' : 'Ctrl'} K</kbd> <kbd>/</kbd></dt><dd>Jump to anything</dd></div>
-              {Object.entries(GO).map(([k, [, label]]) => (
-                <div key={k}><dt><kbd>g</kbd> <kbd>{k}</kbd></dt><dd>{label}</dd></div>
-              ))}
-              <div><dt><kbd>j</kbd> <kbd>k</kbd> <kbd>o</kbd> <kbd>u</kbd></dt><dd>Feeds: next, previous, open, back to the list</dd></div>
-              <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
-            </dl>
-          </div>
-        </div>
-      )}
+      {help && <KeyboardHelp mac={mac} onClose={() => setHelp(false)} />}
+    </div>
+  );
+}
+
+function KeyboardHelp({ mac, onClose }: { mac: boolean; onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose);
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="palette shortcuts" ref={modal} onKeyDown={(e) => { if (e.key === '?') { e.preventDefault(); e.stopPropagation(); onClose(); } }} role="dialog" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()}>
+        <header className="drawer-head"><h2>Keyboard</h2><button type="button" className="text-button" onClick={onClose}>Close</button></header>
+        <dl>
+          <div><dt><kbd>{mac ? '⌘' : 'Ctrl'} K</kbd> <kbd>/</kbd></dt><dd>Jump to anything</dd></div>
+          {Object.entries(GO).map(([k, [, label]]) => (
+            <div key={k}><dt><kbd>g</kbd> <kbd>{k}</kbd></dt><dd>{label}</dd></div>
+          ))}
+          <div><dt><kbd>j</kbd> <kbd>k</kbd> <kbd>o</kbd> <kbd>u</kbd></dt><dd>Feeds: next, previous, open, back to the list</dd></div>
+          <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+        </dl>
+      </div>
     </div>
   );
 }

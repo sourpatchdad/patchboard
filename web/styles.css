@@ -9554,3 +9554,5 @@ button.ha-act:hover {
 .feeds-brief .feed-meta time { margin-left: auto; }
 
 @media (max-width: 760px) { .upcoming-brief .agenda-compact .rel > a { min-height: 44px; } }
+
+.shortcuts .drawer-head h2 { margin: 0; }

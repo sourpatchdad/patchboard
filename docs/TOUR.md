@@ -120,6 +120,12 @@ message.
 
 ![Jump to](screenshots/jump-to.webp)
 
+Press `?` for keyboard shortcuts. Help and the editors contain focus, close
+with Escape, and return focus to where you opened them. Closing an editor
+without saving leaves its settings intact.
+
+![Keyboard help with a visible Close button](screenshots/keyboard-shortcuts.webp)
+
 ## Making it yours
 
 **Arrange the board.** Drag widgets, drag an edge to resize, choose the

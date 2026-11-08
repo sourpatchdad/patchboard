@@ -1,6 +1,7 @@
 // Paste (or pick) Homepage's services.yaml and bookmarks.yaml; see what would
 // come over as you type; add it beside the apps already in Patchboard.
 
+import { useModal } from '../lib/modal.ts';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { INTEGRATIONS } from '../../shared/integrations.ts';
@@ -28,6 +29,7 @@ async function send(services: string, bookmarks: string, apply: boolean): Promis
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export function HomepageImport({ onClose }: { onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose);
   const [services, setServices] = useState('');
   const [bookmarks, setBookmarks] = useState('');
   const [preview, setPreview] = useState<Summary | null>(null);
@@ -69,7 +71,7 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer widget-settings page-panel hp-import" role="dialog" aria-label="Import from Homepage" onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings page-panel hp-import" ref={modal} role="dialog" aria-label="Import from Homepage" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>Import from Homepage</h2>
           <button type="button" className="text-button" onClick={onClose}>
@@ -102,7 +104,7 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
               <input type="file" accept=".yaml,.yml,text/yaml" multiple onChange={(e) => void pick(e.target.files)} />
             </label>
 
-            {error && <p className="crit-text">{error}</p>}
+            {error && <p className="crit-text" role="alert">{error}</p>}
             {preview && (
               <div className="adopt">
                 <p>

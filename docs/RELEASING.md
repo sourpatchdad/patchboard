@@ -45,7 +45,10 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
 4. Run `npm run typecheck`, `npm test`, `npm run docs:check`,
    `npm run build`, and `npm run screenshots` when the change shows on screen.
    Run `npm run test:ui` for Home, Fit or board keyboard changes.
-5. Merge `dev` into `main`, then tag and push:
+5. Run `npm run release:check -- v1.3.0`. It checks the tag against
+   `package.json` and both lockfile versions, and requires one matching,
+   nonempty changelog section.
+6. Merge `dev` into `main`, then tag and push:
 
    ```sh
    git checkout main
@@ -54,6 +57,8 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
    git push --atomic origin main dev v1.3.0
    ```
 
-The release workflow builds the image, moves `latest`, `1` and `1.3`, and
+The release workflow runs this preflight before publishing any image.
+A version or notes mismatch stops the publication jobs. Once validated, it
+builds the image, moves `latest`, `1` and `1.3`, and
 publishes the GitHub Release. It fails when CHANGELOG.md has no section for
 the tag.

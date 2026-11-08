@@ -5,6 +5,7 @@
 // give anything an icon, including an uploaded one. Nothing is saved until
 // Save; the result is one layout stored on the server.
 
+import { useModal } from '../lib/modal.ts';
 import { useMemo, useRef, useState } from 'react';
 import type { JsonWidgetConfig } from '../../shared/jsonwidget.ts';
 import type { AddedApp, AppOrder } from '../../shared/order.ts';
@@ -497,6 +498,7 @@ function AppForm({
   onClose: () => void;
   onSave: (app: Service, group: string, stat: JsonWidgetConfig | null) => void;
 }) {
+  const modal = useModal<HTMLDivElement>(onClose);
   const ours = app.source === 'ui';
   const [v, setV] = useState<Service>(app);
   const [g, setG] = useState(group);
@@ -548,7 +550,7 @@ function AppForm({
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer widget-settings" role="dialog" aria-label={isNew ? 'Add an app' : `Edit ${app.name}`} onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={isNew ? 'Add an app' : `Edit ${app.name}`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{isNew ? 'Add an app' : ours ? `Edit ${app.name}` : app.name}</h2>
           <button type="button" className="text-button" onClick={onClose}>
@@ -623,7 +625,7 @@ function AppForm({
           <button type="button" className="button board-save" onClick={() => void done()}>
             {isNew ? 'Add' : 'Apply'}
           </button>
-          {err && <span className="crit-text">{err}</span>}
+          {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
       </div>
     </div>

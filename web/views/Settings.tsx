@@ -4,7 +4,7 @@
 
 import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
@@ -871,6 +871,7 @@ function Integrations() {
  * or sharing a layout. Keys aren't in it.
  */
 function SetupFile() {
+  const fileInput = useRef<HTMLInputElement>(null);
   const readOnly = !!useStore().snap?.readOnly;
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -902,16 +903,16 @@ function SetupFile() {
           Download setup
         </a>
         {!readOnly && (
-          <label className="button button-quiet file-button">
-            Import a setup file
-            <input type="file" accept="application/json,.json" hidden onChange={(e) => {
-                const f = e.target.files?.[0];
-                // Cleared, so choosing the same file again after Cancel still counts.
-                e.target.value = '';
-                if (f) void load(f);
-              }}
+          <>
+            <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>Import a setup file</button>
+            <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => {
+              const f = e.target.files?.[0];
+              // Cleared, so choosing the same file again after Cancel still counts.
+              e.target.value = '';
+              if (f) void load(f);
+            }}
             />
-          </label>
+          </>
         )}
       </div>
       {pending && (

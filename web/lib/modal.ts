@@ -12,6 +12,14 @@ export function useModal<T extends HTMLElement>(onClose: () => void, open = true
     const dialog = ref.current;
     if (!open || !dialog) return;
     const previous = origin.current;
+    const root = document.documentElement;
+    const wasLocked = root.classList.contains('is-locked');
+    const padding = root.style.paddingRight;
+    if (!wasLocked) {
+      const gutter = window.innerWidth - root.clientWidth;
+      if (gutter > 0) root.style.paddingRight = `${parseFloat(getComputedStyle(root).paddingRight) + gutter}px`;
+      root.classList.add('is-locked');
+    }
     const focusable = () => [...dialog.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]')]
       .filter((el) => el.tabIndex >= 0 && !el.matches(':disabled') && !el.closest('[inert]') && el.getClientRects().length > 0);
     dialog.setAttribute('aria-modal', 'true');
@@ -46,6 +54,10 @@ export function useModal<T extends HTMLElement>(onClose: () => void, open = true
     return () => {
       dialog.removeEventListener('keydown', key);
       for (const el of background) el.inert = false;
+      if (!wasLocked) {
+        root.classList.remove('is-locked');
+        root.style.paddingRight = padding;
+      }
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
     };
   }, [open]);

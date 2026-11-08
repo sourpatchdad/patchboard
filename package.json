@@ -24,6 +24,7 @@
     "import-homepage": "node scripts/import-homepage.ts",
     "icons": "node scripts/make-icons.mjs",
     "docs": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts",
+    "release:check": "node scripts/release-check.ts",
     "docs:check": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts --check",
     "screenshots": "node scripts/screenshots.mjs",
     "test:ui": "npm run build && node scripts/check-home.mjs",

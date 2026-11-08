@@ -2,6 +2,7 @@
 // drag into order, and lists of things to hide (feeds, shows, stacks). Saved
 // on the server when you press Done, so every device and Home widget follows.
 
+import { useModal } from '../lib/modal.ts';
 import { useState } from 'react';
 import type { PageId, PageSettings } from '../../shared/pages.ts';
 import { moved, useDragSort } from '../lib/dragsort.ts';
@@ -48,6 +49,7 @@ export function CustomizePage({ page, title, sections, lists }: { page: PageId; 
 }
 
 function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId; title: string; sections: SectionDef[]; lists: HideList[]; saved: PageSettings; onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose);
   const ids = sections.map((s) => s.id);
   const initialOrder = [...(saved.order ?? []).filter((x) => ids.includes(x)), ...ids.filter((x) => !(saved.order ?? []).includes(x))];
   const [order, setOrder] = useState(initialOrder);
@@ -87,7 +89,7 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer widget-settings page-panel" role="dialog" aria-label={`Customize ${title}`} onClick={(e) => e.stopPropagation()}>
+      <div className="palette drawer widget-settings page-panel" ref={modal} role="dialog" aria-label={`Customize ${title}`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>Customize {title}</h2>
           <button type="button" className="text-button" onClick={onClose}>
@@ -164,7 +166,7 @@ function Panel({ page, title, sections, lists, saved, onClose }: { page: PageId;
           <button type="button" className="button board-save" disabled={busy} onClick={() => void done()}>
             {busy ? 'Saving...' : 'Save'}
           </button>
-          {err && <span className="crit-text">{err}</span>}
+          {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
       </div>
     </div>

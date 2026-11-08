@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Release tags must match the package and both lockfile versions, with one
+  exact changelog section containing release notes. This preflight runs
+  before publishing images, and the release page uses the same validated
+  notes rather than a loose version-pattern match.
+
+- App editing, page customization, Homepage import and keyboard help now
+  contain keyboard focus, close with Escape, and return focus to their
+  opener. Background scrolling is locked without shifting the board.
+  Form errors are announced, keyboard help has a visible Close button, and
+  importing a setup file works from the keyboard.
+
 - Status, server details, and time with weather now use matching header
   cards with aligned top and bottom edges. Time and weather are centered
   together inside one card, with a single outer edge and no nested box.
