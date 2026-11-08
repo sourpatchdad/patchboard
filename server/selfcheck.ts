@@ -55,6 +55,17 @@ export function localDigests(repoDigests: string[] | undefined): string[] {
   return (repoDigests ?? []).map((d) => d.split('@')[1]).filter((d): d is string => !!d);
 }
 
+/**
+ * Where to read what changed: a version tag's release notes, or the commits
+ * behind edge (main) and dev. GitHub's registry only.
+ */
+export function changesLink(ref: string): string | undefined {
+  const r = parseRef(ref);
+  if (r?.registry !== 'ghcr.io') return undefined;
+  const repo = `https://github.com/${r.repo.split('/').slice(0, 2).join('/')}`;
+  return r.tag === 'edge' ? `${repo}/commits/main` : r.tag === 'dev' ? `${repo}/commits/dev` : `${repo}/releases`;
+}
+
 /** A newer image is out when the registry's digest is none of ours. */
 export function isNewer(remote: string | null, local: string[]): boolean {
   return !!remote && local.length > 0 && !local.includes(remote);

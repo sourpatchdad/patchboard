@@ -30,7 +30,7 @@ import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
 import { clearUpdate, flagUpdate } from './updates.ts';
 import { redact } from './redact.ts';
-import { isNewer, localDigests, parseRef, remoteDigest } from './selfcheck.ts';
+import { changesLink, isNewer, localDigests, remoteDigest } from './selfcheck.ts';
 
 interface Inspect {
   Name?: string;
@@ -54,6 +54,15 @@ function dockerJson<T>(path: string): Promise<T> {
 }
 
 const inspect = (name: string) => dockerJson<Inspect>(`/containers/${encodeURIComponent(name)}/json`);
+
+/** How jobs reach Docker. Tests swap in a stand-in CLI and shorter waits. */
+const runner = { command: 'docker', prefix: [] as string[], cli: dockerCli, pollMs: 3000, healthMs: 120_000 };
+
+/** Tests only: a stand-in docker CLI, CLI presence and health timing. Also forgets which container is Patchboard. */
+export function useDockerForTests(o: Partial<typeof runner>): void {
+  Object.assign(runner, o);
+  selfName = undefined;
+}
 
 let selfName: string | null | undefined;
 
@@ -84,9 +93,7 @@ export async function checkSelfImage(containers: Container[]): Promise<boolean> 
     const ref = r.Config.Image;
     const img = await dockerJson<{ RepoDigests?: string[] }>(`/images/${encodeURIComponent(r.Image)}/json`);
     if (!isNewer(await remoteDigest(ref), localDigests(img.RepoDigests))) return false;
-    const where = parseRef(ref);
-    const link = where?.registry === 'ghcr.io' ? `https://github.com/${where.repo.split('/').slice(0, 2).join('/')}/releases` : undefined;
-    return flagUpdate(c, link);
+    return flagUpdate(c, changesLink(ref));
   } catch {
     return false;
   }
@@ -130,7 +137,7 @@ export function helperArgs(o: { sock: string; dir: string; files: string[]; imag
 
 /** Whether a container can be updated from Patchboard, and why not. */
 export async function eligibility(c: Container): Promise<UpdateEligibility> {
-  if (!dockerCli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
+  if (!runner.cli) return { ok: false, reason: 'This is the slim image, which has no Docker CLI. Use the full image to update from Patchboard.' };
   if (c.name === (await whoAmI()) && !(await selfSocket())) {
     return { ok: false, reason: 'Updating Patchboard from here needs the Docker socket mounted. Behind a socket proxy, run docker compose pull and up -d in its folder.' };
   }
@@ -206,7 +213,7 @@ function run(j: UpdateJob & { listeners: Set<(j: UpdateJob) => void> }, args: st
     // Minimal environment on purpose: see the note at the top of the file.
     const env: Record<string, string> = { PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin', HOME: '/tmp' };
     if (config.dockerHost) env.DOCKER_HOST = config.dockerHost;
-    const child = spawn('docker', args, { cwd, env });
+    const child = spawn(runner.command, [...runner.prefix, ...args], { cwd, env });
     const onData = (buf: Buffer) => {
       for (const line of buf.toString('utf8').split(/\r?\n|\r/)) {
         const t = line.trim();
@@ -222,11 +229,11 @@ function run(j: UpdateJob & { listeners: Set<(j: UpdateJob) => void> }, args: st
   });
 }
 
-async function waitHealthy(name: string, isAnswering: () => Promise<boolean | null>, timeoutMs = 120_000): Promise<string> {
+async function waitHealthy(name: string, isAnswering: () => Promise<boolean | null>, timeoutMs = runner.healthMs): Promise<string> {
   const end = Date.now() + timeoutMs;
   let lastHealth = '';
   while (Date.now() < end) {
-    await new Promise((r) => setTimeout(r, 3000));
+    await new Promise((r) => setTimeout(r, runner.pollMs));
     try {
       const r = await inspect(name);
       if (r.State.Status !== 'running') continue;
@@ -240,16 +247,24 @@ async function waitHealthy(name: string, isAnswering: () => Promise<boolean | nu
       // Mid-recreate the container briefly doesn't exist.
     }
   }
-  throw new Error(`Not healthy after ${timeoutMs / 1000} s (${lastHealth || 'not running'})`);
+  throw new Error(`Not healthy after ${Math.round(timeoutMs / 1000)} s (${lastHealth || 'not running'})`);
 }
 
 type Job = UpdateJob & { listeners: Set<(j: UpdateJob) => void>; oldImageId?: string; compose?: string[] };
 
 export async function startUpdate(c: Container, isAnswering: () => Promise<boolean | null>, onDone: () => void): Promise<UpdateJob> {
-  if (running) throw new Error(`Another update is running (${jobs.get(running)?.container}).`);
-  const el = await eligibility(c);
-  if (!el.ok) throw new Error(el.reason);
-  const r = await inspect(c.name);
+  if (running) throw new Error(`Another update is running (${jobs.get(running)?.container ?? 'starting'}).`);
+  // Claim the slot before the first await, so two quick clicks can't both start.
+  running = 'starting';
+  let r: Inspect;
+  try {
+    const el = await eligibility(c);
+    if (!el.ok) throw new Error(el.reason);
+    r = await inspect(c.name);
+  } catch (err) {
+    running = null;
+    throw err;
+  }
   const labels = r.Config.Labels ?? {};
   const dir = labels['com.docker.compose.project.working_dir'];
   const project = labels['com.docker.compose.project'];
@@ -328,8 +343,17 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
 export async function startRollback(fromJobId: string, onDone: () => void): Promise<UpdateJob> {
   const prev = jobs.get(fromJobId);
   if (!prev?.oldImageId || !prev.compose) throw new Error('Nothing to roll back to.');
+  // Only after a recreate: a failed pull left the container on its old image.
+  if (prev.steps.find((s) => s.key === 'recreate')?.status === 'waiting') throw new Error('Nothing changed, so there is nothing to roll back.');
   if (running) throw new Error('Another update is running.');
-  const r = await inspect(prev.container);
+  running = 'starting';
+  let r: Inspect;
+  try {
+    r = await inspect(prev.container);
+  } catch (err) {
+    running = null;
+    throw err;
+  }
   const labels = r.Config.Labels ?? {};
   const dir = labels['com.docker.compose.project.working_dir'];
   const service = labels['com.docker.compose.service'];

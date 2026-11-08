@@ -1,8 +1,9 @@
 // Notifications through ntfy, Gotify, Pushover, Discord, email or a webhook, opt-in. A problem in Needs
 // attention is sent once it has lasted two minutes, so a container that
 // restarts on its own never buzzes a phone, and once more when it clears.
-// What was sent is remembered across restarts, so a restart doesn't resend
-// everything that is still wrong. Messages go only to the server you set.
+// What was sent is remembered per channel and across restarts, so a restart
+// doesn't resend everything still wrong, and one broken channel doesn't make
+// the others repeat themselves. Messages go only to the servers you set.
 
 import type { Alert } from '../shared/types.ts';
 import { config } from './config.ts';
@@ -30,11 +31,13 @@ const DISCORD_COLOR = { critical: 0xef5b4c, warn: 0xf0a43a, resolved: 0x4caf7a, 
 
 export type Channel = 'ntfy' | 'gotify' | 'pushover' | 'discord' | 'email' | 'webhook';
 
+const CHANNELS: Channel[] = ['ntfy', 'gotify', 'pushover', 'discord', 'email', 'webhook'];
+
+/** The channels set up now. */
+export const channels = (): Channel[] => CHANNELS.filter((c) => !!config.notify[c]);
+
 /** Any notifier set up at all. */
-export const anyNotifier = (): boolean => {
-  const n = config.notify;
-  return !!(n.ntfy || n.gotify || n.pushover || n.discord || n.email || n.webhook);
-};
+export const anyNotifier = (): boolean => channels().length > 0;
 
 function clickUrl(href: string | undefined): string | undefined {
   if (!href) return config.notify.publicUrl;
@@ -131,7 +134,29 @@ export interface State {
   sent: Record<string, string>;
 }
 
-const state: State = { seen: new Map(), sent: kvGet<Record<string, string>>('notify-sent') ?? {} };
+/** First sightings, shared by every channel. */
+let seen = new Map<string, number>();
+/** What each channel has delivered: alert id to the title to use when it clears. */
+let sentBy: Partial<Record<Channel, Record<string, string>>> = loadSent();
+/** The last failure each channel logged, so a down server logs once, not every tick. */
+const lastError: Partial<Record<Channel, string>> = {};
+
+function loadSent(): Partial<Record<Channel, Record<string, string>>> {
+  const raw = kvGet<Record<string, unknown>>('notify-sent') ?? {};
+  // Before per-channel records it was one map of id to title: every channel had sent it.
+  if (Object.values(raw).some((v) => typeof v === 'string')) {
+    const flat = raw as Record<string, string>;
+    return Object.fromEntries(CHANNELS.map((c) => [c, { ...flat }]));
+  }
+  return raw as Partial<Record<Channel, Record<string, string>>>;
+}
+
+/** Tests only: forget what was seen and sent. */
+export function resetNotifyForTests(): void {
+  seen = new Map();
+  sentBy = {};
+  kvSet('notify-sent', {});
+}
 
 /** A message tied to the alert it opens or closes. */
 export interface Planned extends Message {
@@ -166,21 +191,30 @@ export function delivered(m: Planned, s: State): void {
 
 let sending = false;
 
-/** Called whenever alerts change and every 30 seconds, so a settled alert goes out on time. */
-export async function notifyAlerts(alerts: Alert[]): Promise<void> {
+/**
+ * Called whenever alerts change and every 30 seconds, so a settled alert goes
+ * out on time. Each channel goes through the plan on its own: one that fails
+ * keeps its messages for the next tick, and the rest carry on.
+ */
+export async function notifyAlerts(alerts: Alert[], now = Date.now()): Promise<void> {
   if (config.demo || !anyNotifier() || sending) return;
   sending = true;
   try {
-    for (const m of plan(alerts, Date.now(), state, config.notify.level)) {
-      try {
-        await send(m);
-      } catch (err) {
-        // Left unsent, so the next tick tries again.
-        console.warn(`notify: ${(err as Error).message}`);
-        return;
+    for (const ch of channels()) {
+      const s: State = { seen, sent: (sentBy[ch] ??= {}) };
+      for (const m of plan(alerts, now, s, config.notify.level)) {
+        try {
+          await send(m, ch);
+          delete lastError[ch];
+        } catch (err) {
+          const msg = (err as Error).message;
+          if (lastError[ch] !== msg) console.warn(`notify: ${ch}: ${msg}`);
+          lastError[ch] = msg;
+          break;
+        }
+        delivered(m, s);
+        kvSet('notify-sent', sentBy);
       }
-      delivered(m, state);
-      kvSet('notify-sent', state.sent);
     }
   } finally {
     sending = false;

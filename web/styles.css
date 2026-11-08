@@ -3606,18 +3606,6 @@ a.vitals:hover .vital-label {
   cursor: progress;
 }
 
-/* Armed: the second click will act. Stop arms in the error tone. */
-.button-quiet.is-armed {
-  color: var(--head);
-  border-color: var(--warn);
-  box-shadow: inset 0 0 0 1px var(--warn);
-}
-
-.button-quiet.is-danger.is-armed {
-  border-color: var(--crit);
-  box-shadow: inset 0 0 0 1px var(--crit);
-}
-
 /* The result floats under the buttons, so it never moves them. */
 .ctr-actions-result {
   position: absolute;

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Updates: two quick clicks on Update start one update, not two. Roll back
+  appears only once the container was recreated, since a failed pull
+  changes nothing, and it is a press and hold like Stop and Restart. When
+  Patchboard finds a newer image of itself, the link opens the commits
+  behind edge or dev, or the release notes for a version.
+- Notifications: each channel keeps its own record of what it sent. One
+  that fails, such as a deleted Discord webhook, retries on its own and
+  catches up when it's back; the others never repeat a message. A channel
+  that keeps failing logs its error once.
+
 - Enlarged text no longer overlaps in Home weather, Reading metadata or
   calendar times. Calendar rows share expanding time and source columns.
   Browser checks now exercise actual 200% and 400% zoom, reachable editor

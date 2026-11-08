@@ -71,7 +71,6 @@ export function UpdateButton({ busy, onStart }: { name: string; busy: boolean; o
 const MARK: Record<string, string> = { waiting: '', running: '', done: '✓', failed: '✕', skipped: '–' };
 
 export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: UpdateJob | null; error: string; onRollback: (id: string) => void; onDismiss: () => void }) {
-  const [armed, setArmed] = useState(false);
   if (!job && !error) return null;
   if (!job) {
     return (
@@ -118,18 +117,11 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
         </details>
       )}
       <div className="update-foot">
-        {job.status === 'failed' && job.kind === 'update' && job.from && (
-          <button
-            type="button"
-            className={`button button-quiet ${armed ? 'is-armed' : ''}`}
-            onClick={() => {
-              if (!armed) return setArmed(true);
-              setArmed(false);
-              onRollback(job.id);
-            }}
-          >
-            {armed ? `Go back to ${job.from}?` : `Roll back to ${job.from}`}
-          </button>
+        {/* Only once the container was recreated: a failed pull changed nothing. */}
+        {job.status === 'failed' && job.kind === 'update' && job.from && job.steps.find((s) => s.key === 'recreate')?.status !== 'waiting' && (
+          <HoldButton hint="Hold to roll back" onConfirm={() => onRollback(job.id)}>
+            {`Roll back to ${job.from}`}
+          </HoldButton>
         )}
         {job.status !== 'running' && (
           <button type="button" className="text-button" onClick={onDismiss}>
