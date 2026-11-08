@@ -510,7 +510,7 @@ export function NowPlaying() {
                   <span className="stream-title torrent-name">{t.name}</span>
                   <span className="stream-user">{t.speed ? eta(t.etaSec) || speed(t.speed) : 'Queued'}</span>
                 </div>
-                <Meter value={t.progress * 100} level="ok" />
+                <Meter label={`${t.name} download progress`} value={t.progress * 100} level="ok" />
               </div>
             ))}
           {d.data.kind !== 'usenet' && !d.data.paused && (

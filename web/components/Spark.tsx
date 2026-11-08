@@ -17,7 +17,7 @@ export function Spark({
   label: string;
 }) {
   if (!data || data.length < 2) {
-    return <div className="spark spark-empty" style={{ height }} aria-label={`${label}: not enough history yet`} />;
+    return <div className="spark spark-empty" style={{ height }} role="img" aria-label={`${label}: not enough history yet`} />;
   }
   const t0 = data[0][0];
   const t1 = data[data.length - 1][0];

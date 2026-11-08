@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Usage and playback bars now expose names with their percentage values.
+  Empty charts announce when history is unavailable. High-contrast palettes
+  retain usage bars, memory segments and the boundaries of Home header cards.
+  CI checks accessible names, landmarks, narrow reflow and high-contrast graphics.
+
 - Release tags must match the package and both lockfile versions, with one
   exact changelog section containing release notes. This preflight runs
   before publishing images, and the release page uses the same validated

@@ -9556,3 +9556,22 @@ button.ha-act:hover {
 @media (max-width: 760px) { .upcoming-brief .agenda-compact .rel > a { min-height: 44px; } }
 
 .shortcuts .drawer-head h2 { margin: 0; }
+
+/* System colors keep usage graphics and card grouping legible in high contrast. */
+@media (forced-colors: active) {
+  .section, .home-header > .masthead-status, .header-context {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+  .meter {
+    forced-color-adjust: none;
+    background: Canvas;
+    box-shadow: inset 0 0 0 1px CanvasText;
+  }
+  .meter > span, .playback .meter > span, .spark-now { forced-color-adjust: none; background: CanvasText; }
+  .split > span { forced-color-adjust: none; background: CanvasText; }
+  .split .split-mid { background: Highlight; }
+  .split .split-faint { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; }
+  .spark polyline { stroke: CanvasText; }
+  .spark-base { stroke: GrayText; }
+}

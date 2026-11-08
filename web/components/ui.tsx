@@ -135,9 +135,9 @@ export function Poster({ title, thumb, small = false }: { title: string; thumb?:
   );
 }
 
-export function Meter({ value, level }: { value: number; level?: 'ok' | 'warn' | 'crit' }) {
+export function Meter({ value, level, label }: { value: number; level?: 'ok' | 'warn' | 'crit'; label: string }) {
   return (
-    <span className={`meter meter-${level ?? 'ok'}`} role="meter" aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}>
+    <span className={`meter meter-${level ?? 'ok'}`} role="meter" aria-label={label} aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}>
       <span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
     </span>
   );

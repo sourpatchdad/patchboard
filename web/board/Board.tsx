@@ -845,7 +845,7 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
           <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots">
             <Roll className="vw-num" value={`${Math.round(storage)}%`} />
             <span className="vw-label" title={pool ? `Storage on ${pool.name}` : 'Storage'}>Storage{pool ? ` on ${pool.name}` : ''}</span>
-            <Meter value={storage} level={storageLevel(storage, limits)} />
+            <Meter label={pool ? `Storage used on ${pool.name}` : 'Storage used'} value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}
         {/* Uptime has nowhere more to say, so it isn't a link. */}

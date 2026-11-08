@@ -297,6 +297,8 @@ try {
   await cardPage.goto(demo.base + '/');
   await settle(cardPage);
   await shootEl(cardPage.locator('.masthead'), 'home-header-server');
+  await cardPage.emulateMedia({ forcedColors: 'active' });
+  await shootEl(cardPage.locator('.masthead'), 'home-header-contrast');
   await cardContext.close();
 
   console.log('The otter');

@@ -112,7 +112,7 @@ function PoolSection({ pool, snapshots, now }: { pool: Pool; snapshots: number |
           {size(pool.freeBytes)} free.
         </span>
       </div>
-      <Meter value={pool.usedPct} level={level} />
+      <Meter label={`Storage used on ${pool.name}`} value={pool.usedPct} level={level} />
       <p className="forecast-line">{forecast(h['pool.used'], pool, now)}</p>
       <Spark data={h['pool.used']} height={40} min={Math.min(...(h['pool.used'] ?? [[0, 0]]).map((p) => p[1])) * 0.98} label="Pool used, last 90 days" />
       <dl className="ledger">

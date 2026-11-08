@@ -23,8 +23,8 @@ What comes next. CHANGELOG.md has what has shipped.
 ### Polish
 
 - [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
-  - Covered: Home and editor keyboard paths, focus return, cancelled drafts, and theme text contrast checks.
-  - Remaining: a screen-reader walkthrough, zoom, and forced-color checks.
+  - Covered: Home and editor keyboard paths, focus return, cancelled drafts, theme text contrast, accessible names, narrow reflow, and forced-color graphics.
+  - Remaining: a spoken screen-reader walkthrough and real browser/text-only zoom. See [Accessibility checks](ACCESSIBILITY.md).
 - [ ] Translations
 - [ ] A read-only API for scripts and AI tools
 

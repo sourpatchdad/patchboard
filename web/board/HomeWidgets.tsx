@@ -220,7 +220,7 @@ export function CarWidget() {
               <span className="car-range">{c.rangeMi} mi</span>
             </div>
             <div className="car-bar">
-              <Meter value={c.battery} level={low ? 'warn' : 'ok'} />
+              <Meter label={`${c.name} battery charge`} value={c.battery} level={low ? 'warn' : 'ok'} />
               <i className="car-limit" style={{ left: `${c.limit}%` }} title={`Charge limit ${c.limit}%`} />
             </div>
             <p className="car-line">
@@ -779,7 +779,7 @@ export function StorageWidget() {
                 return (
                   <li key={v.name}>
                     <span className="nas-vol-name">{v.name}</span>
-                    <Meter value={pct} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : level(pct)} />
+                    <Meter label={`${n.name}: ${v.name} storage used`} value={pct} level={v.status === 'failed' ? 'crit' : v.status === 'warn' ? 'warn' : level(pct)} />
                     <span className="mono nas-vol-num">
                       {Math.round(pct)}% of {size(v.total)}
                     </span>
@@ -826,7 +826,7 @@ export function PowerWidget() {
                   {u.lowBattery ? 'Battery nearly empty' : u.onBattery ? 'On battery' : u.replaceBattery ? 'Replace battery' : u.charging ? 'Charging' : 'On mains'}
                 </span>
               </span>
-              {u.charge != null && <Meter value={u.charge} level={u.charge < 30 ? 'crit' : u.charge < 60 ? 'warn' : 'ok'} />}
+              {u.charge != null && <Meter label={`${u.name} battery charge`} value={u.charge} level={u.charge < 30 ? 'crit' : u.charge < 60 ? 'warn' : 'ok'} />}
               <span className="ups-nums mono">
                 {u.charge != null && <span>{Math.round(u.charge)}%</span>}
                 {u.runtimeSec != null && <span>{mins(u.runtimeSec)} left</span>}
@@ -868,17 +868,17 @@ export function HostsWidget() {
             {h.ok ? (
               <>
                 <span className="host-stat">
-                  <Meter value={h.cpuPct} level={level(h.cpuPct)} />
+                  <Meter label={`${h.name} CPU usage`} value={h.cpuPct} level={level(h.cpuPct)} />
                   <span className="mono">{Math.round(h.cpuPct)}% CPU</span>
                 </span>
                 <span className="host-stat">
-                  <Meter value={h.memPct} level={level(h.memPct)} />
+                  <Meter label={`${h.name} memory usage`} value={h.memPct} level={level(h.memPct)} />
                   <span className="mono">{Math.round(h.memPct)}% mem</span>
                 </span>
                 <span className="host-stat">
                   {h.disks[0] ? (
                     <>
-                      <Meter value={h.disks[0].pct} level={level(h.disks[0].pct)} />
+                      <Meter label={`${h.name}: ${h.disks[0].mount} storage used`} value={h.disks[0].pct} level={level(h.disks[0].pct)} />
                       <span className="mono" title={h.disks[0].mount}>
                         {Math.round(h.disks[0].pct)}% {h.disks[0].mount === '/' ? 'disk' : h.disks[0].mount.split('/').pop()}
                       </span>
@@ -1025,11 +1025,11 @@ export function ProxmoxWidget({ now: _now }: { now: number }) {
             {n.online ? (
               <>
                 <span className="pve-node-stat">
-                  <Meter value={n.cpu * 100} level={level(n.cpu)} />
+                  <Meter label={`${n.name} CPU usage`} value={n.cpu * 100} level={level(n.cpu)} />
                   <span className="mono">{pct(n.cpu * 100)} CPU</span>
                 </span>
                 <span className="pve-node-stat">
-                  <Meter value={n.maxmem ? (n.mem / n.maxmem) * 100 : 0} level={level(n.maxmem ? n.mem / n.maxmem : 0)} />
+                  <Meter label={`${n.name} memory usage`} value={n.maxmem ? (n.mem / n.maxmem) * 100 : 0} level={level(n.maxmem ? n.mem / n.maxmem : 0)} />
                   <span className="mono">
                     {size(n.mem)} of {size(n.maxmem)}
                   </span>

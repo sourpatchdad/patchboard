@@ -138,7 +138,7 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
           <span className="stream-title">{s.title}{s.subtitle && <span className="stream-sub"> <Episode text={s.subtitle} /></span>}</span>
           <span className="stream-user">{s.user}{s.state !== 'playing' && `, ${s.state}`}{s.transcode && ', transcoding'}</span>
         </span>
-        {progress !== null && <Meter value={progress} />}
+        {progress !== null && <Meter label={`${s.title} playback progress`} value={progress} />}
       </button>
       {open && createPortal(
         <div
@@ -174,7 +174,7 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
             </div>
           </div>
           {progress !== null && <>
-            <Meter value={progress} />
+            <Meter label={`${s.title} playback progress`} value={progress} />
             <div className="playback-timing">
               <span>{s.positionSec != null && s.durationSec != null ? `${elapsed(s.positionSec)} / ${elapsed(s.durationSec)}` : 'Playback progress'}</span>
               <strong>{Math.round(progress)}%</strong>
