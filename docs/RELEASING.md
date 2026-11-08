@@ -28,6 +28,12 @@ so updating a container from Patchboard is off. Everything else works the
 same. Pick it for a read-only install or a small disk. `edge` and `dev`
 have no slim build.
 
+## Before 1.0.0
+
+Until launch there are no version tags. `dev` and `main` build `dev` and
+`edge`, `package.json` says 0.9.0, and CHANGELOG.md collects everything
+under `## Unreleased`. Launch is the first tag, `v1.0.0`, cut as below.
+
 ## Day to day
 
 Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
