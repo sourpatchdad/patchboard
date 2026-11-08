@@ -9530,13 +9530,13 @@ button.ha-act:hover {
 
 /* One line per desktop list row; metadata keeps a dependable baseline. */
 .feeds-brief .feedlist a { min-height: 68px; align-content: center; }
-.feeds-brief .feed-title { line-height: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feeds-brief .feed-meta { flex-wrap: nowrap; line-height: 18px; }
+.feeds-brief .feed-title { min-height: 21px; line-height: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feeds-brief .feed-meta { min-height: 18px; flex-wrap: nowrap; line-height: normal; }
 .feeds-brief .feed-meta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .feeds-brief .feed-meta time { flex: none; }
 .upcoming-brief .agenda-compact .rel > a,
 .upcoming-brief .agenda-compact .rel > div { min-height: 36px; align-items: center; }
-.upcoming-brief .agenda-compact .agenda-day h3 { line-height: 12px; padding: 14px 0 6px; }
+.upcoming-brief .agenda-compact .agenda-day h3 { line-height: 1; padding: 14px 0 6px; }
 .upcoming-brief .agenda-compact .rel-main { display: flex; align-items: baseline; gap: 8px; }
 .upcoming-brief .agenda-compact .rel-title { flex: 0 1 auto; }
 .upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; max-width: 50%; margin-left: 0; }
@@ -9547,8 +9547,8 @@ button.ha-act:hover {
 
 .header-context .weather-text,
 .header-context .weather-text strong,
-.header-context .weather-text small { line-height: 14px; }
-.home-header .header-context .date { line-height: 16px; }
+.header-context .weather-text small { line-height: normal; }
+.home-header .header-context .date { line-height: normal; }
 
 .header-board-vitals:empty { display: none; }
 .feeds-brief .feed-meta time { margin-left: auto; }
@@ -9575,3 +9575,12 @@ button.ha-act:hover {
   .spark polyline { stroke: CanvasText; }
   .spark-base { stroke: GrayText; }
 }
+
+/* Shared intrinsic tracks keep calendar times clear when text is enlarged. */
+.agenda-compact { display: grid; grid-template-columns: minmax(62px, max-content) minmax(0, 1fr) minmax(0, max-content); column-gap: 12px; }
+.agenda-compact .agenda-day,
+.agenda-compact .agenda-day > ul,
+.agenda-compact .rel,
+.agenda-compact .rel > a,
+.agenda-compact .rel > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
+.agenda-compact .agenda-day > h3 { grid-column: 1 / -1; }

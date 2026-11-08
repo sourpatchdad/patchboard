@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Enlarged text no longer overlaps in Home weather, Reading metadata or
+  calendar times. Calendar rows share expanding time and source columns.
+  Browser checks now exercise actual 200% and 400% zoom, reachable editor
+  actions and a 24px minimum font without changing saved boards.
+
 - Usage and playback bars now expose names with their percentage values.
   Empty charts announce when history is unavailable. High-contrast palettes
   retain usage bars, memory segments and the boundaries of Home header cards.

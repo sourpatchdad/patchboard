@@ -46,6 +46,7 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
    `npm run build`, and `npm run screenshots` when the change shows on screen.
    Run `npm run test:ui` for Home, Fit or board keyboard changes, and
    `npm run test:a11y` for accessible names, reflow and high-contrast graphics.
+   Run `npm run test:zoom` for actual browser zoom and enlarged-text checks.
    See [Accessibility checks](ACCESSIBILITY.md) for coverage and manual checks.
 5. Run `npm run release:check -- v1.3.0`. It checks the tag against
    `package.json` and both lockfile versions, and requires one matching,
