@@ -3616,16 +3616,6 @@ a.vitals:hover .vital-label {
   color: var(--ink-3);
 }
 
-.update-note {
-  flex-basis: 100%;
-  font-size: 13px;
-  color: var(--warn);
-}
-
-.update-note a {
-  color: inherit;
-}
-
 .tag-update {
   color: var(--warn);
   border-color: color-mix(in srgb, var(--warn) 45%, transparent);
@@ -8906,6 +8896,10 @@ button.ha-act:hover {
 }
 
 .app-version {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
   margin: 40px 0 8px;
   font-size: 13px;
   color: var(--ink-3);
@@ -9572,3 +9566,38 @@ button.ha-act:hover {
 .agenda-compact .rel > a,
 .agenda-compact .rel > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
 .agenda-compact .agenda-day > h3 { grid-column: 1 / -1; }
+
+/* An update waiting: one line under the container's state. */
+.update-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--warn);
+}
+
+/* Stacks, updates view: Update beside the row it belongs to. */
+.stack-rows li.has-act {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stack-rows li.has-act > .srow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.srow-act {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.row-update-note {
+  font-size: 13px;
+  white-space: nowrap;
+}

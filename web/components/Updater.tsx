@@ -1,11 +1,14 @@
-// Update from the UI: a button (two-step confirm, like the other actions) and
-// a live panel that follows the job: pull, recreate, wait for healthy. A
-// failed update offers the previous image back.
+// Update from the UI: a press-and-hold button, one notice when an update
+// waits, a compact action for list rows, and a live panel that follows the
+// job: pull, recreate, wait for healthy. A failed update offers the previous
+// image back.
 
 import { HoldButton } from './Hold.tsx';
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { UpdateJob } from '../../shared/types.ts';
-import { duration } from '../lib/format.ts';
+import { agoLong, duration } from '../lib/format.ts';
+import { useNow, useStore } from '../lib/store.tsx';
 import { Section } from './ui.tsx';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
@@ -59,12 +62,66 @@ export function useUpdateJob(name: string) {
   };
 }
 
-export function UpdateButton({ busy, onStart }: { name: string; busy: boolean; onStart: () => void }) {
-  // Recreating the container takes it down for a moment, so it's a press and hold.
+/** Update, as a press and hold: recreating takes the container down for a moment. It stands out when an update waits. */
+export function UpdateButton({ busy, onStart, waiting = false }: { name: string; busy: boolean; onStart: () => void; waiting?: boolean }) {
   return (
-    <HoldButton disabled={busy} hint="Hold to update" onConfirm={onStart}>
+    <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy} hint="Hold to update" onConfirm={onStart}>
       {busy ? 'Updating...' : 'Update'}
     </HoldButton>
+  );
+}
+
+/** One line under a container's state when it has an update waiting, or a newer copy already pulled. */
+export function UpdateNotice({ name, stale }: { name: string; stale?: boolean }) {
+  const { snap } = useStore();
+  const now = useNow(60_000);
+  const u = snap?.updates[name];
+  const ro = !!snap?.readOnly;
+  if (stale) return <p className="update-notice">A newer copy is downloaded and this container still runs the old one.{!ro && ' Update switches it over.'}</p>;
+  if (!u) return null;
+  return (
+    <p className="update-notice">
+      Update available, found {agoLong(u.at, now)}.
+      {u.link && u.link !== '#' && (
+        <a href={u.link} target="_blank" rel="noreferrer">
+          What changed
+        </a>
+      )}
+      {!ro && (
+        <button
+          type="button"
+          className="text-button"
+          title="Clear the mark if you already run the newest image"
+          onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
+        >
+          Dismiss
+        </button>
+      )}
+    </p>
+  );
+}
+
+/** Update from a list row: the button, then the step it's on, then how it ended. */
+export function RowUpdate({ name }: { name: string }) {
+  const u = useUpdateJob(name);
+  const j = u.job;
+  if (j?.status === 'running') return <span className="row-update-note">{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
+  if (j?.status === 'done') return <span className="row-update-note ok-text">Updated</span>;
+  if (j?.status === 'failed')
+    return (
+      <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text">
+        Failed. Open it
+      </Link>
+    );
+  return (
+    <>
+      {u.error && (
+        <Link to={`/c/${encodeURIComponent(name)}`} className="row-update-note crit-text" title={u.error}>
+          Can't update here
+        </Link>
+      )}
+      <UpdateButton name={name} busy={false} waiting onStart={() => void u.start()} />
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 // Patchboard watches its own image, so a new release shows up without Diun.
 // It asks the registry what digest its tag (edge, latest, 1) points at now and
 // compares that with the image it runs. Public images need no login on GitHub's
-// registry or Docker Hub; a private one simply never reports anything.
+// registry or Docker Hub; for a private one it says it can't check.
 
 import { request } from './http.ts';
 
@@ -33,20 +33,32 @@ const ACCEPT = [
   'application/vnd.docker.distribution.manifest.v2+json',
 ].join(', ');
 
-/** The digest the registry serves for this tag now, or null if it won't say. */
-export async function remoteDigest(ref: string): Promise<string | null> {
+const PRIVATE = 'The registry wants a sign-in for this image, so Patchboard can\'t see new versions. Public images need none.';
+
+/** The digest the registry serves for this tag now, or why it can't say. */
+export async function remoteDigest(ref: string): Promise<{ digest: string } | { reason: string }> {
   const r = parseRef(ref);
-  if (!r) return null;
+  if (!r) return { reason: 'Patchboard checks images on GitHub\'s registry and Docker Hub only.' };
+  let token: string | undefined;
   try {
-    const tok = (await (await request(TOKEN_URL[r.registry](r.repo))).json()) as { token?: string };
-    if (!tok.token) return null;
+    token = ((await (await request(TOKEN_URL[r.registry](r.repo))).json()) as { token?: string }).token;
+  } catch (err) {
+    const status = (err as { status?: number }).status;
+    return { reason: status === 401 || status === 403 ? PRIVATE : 'Couldn\'t reach the registry.' };
+  }
+  if (!token) return { reason: PRIVATE };
+  try {
     const res = await request(`https://${r.registry}/v2/${r.repo}/manifests/${r.tag}`, {
       method: 'HEAD',
-      headers: { Authorization: `Bearer ${tok.token}`, Accept: ACCEPT },
+      headers: { Authorization: `Bearer ${token}`, Accept: ACCEPT },
     });
-    return res.headers.get('docker-content-digest');
-  } catch {
-    return null;
+    const digest = res.headers.get('docker-content-digest');
+    return digest ? { digest } : { reason: 'The registry didn\'t say which image the tag points at.' };
+  } catch (err) {
+    const status = (err as { status?: number }).status;
+    if (status === 401 || status === 403) return { reason: PRIVATE };
+    if (status === 404) return { reason: `The registry has no ${r.tag} tag for this image.` };
+    return { reason: 'Couldn\'t reach the registry.' };
   }
 }
 
@@ -69,4 +81,11 @@ export function changesLink(ref: string): string | undefined {
 /** A newer image is out when the registry's digest is none of ours. */
 export function isNewer(remote: string | null, local: string[]): boolean {
   return !!remote && local.length > 0 && !local.includes(remote);
+}
+
+/** What one check found, given the registry's answer and the running image's digests. */
+export function verdict(remote: { digest: string } | { reason: string }, local: string[], at = Date.now()): import('../shared/types.ts').SelfCheck {
+  if ('reason' in remote) return { at, state: 'unknown', reason: remote.reason };
+  if (!local.length) return { at, state: 'unknown', reason: 'This image was built here, so there is nothing to compare.' };
+  return { at, state: isNewer(remote.digest, local) ? 'newer' : 'current' };
 }

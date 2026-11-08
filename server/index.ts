@@ -77,7 +77,7 @@ import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
-import { eligibility, getJob, latestJobFor, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
+import { checkSelfImage, eligibility, getJob, latestJobFor, selfCheckStatus, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog, getYamlCatalog, setCatalogOrder } from './catalog.ts';
 import { catalogYaml } from '../shared/catalog-yaml.ts';
@@ -871,6 +871,14 @@ app.get('/api/jobs/:id', (c) => {
     });
     stop();
   });
+});
+
+// Check for a newer Patchboard now, instead of waiting for the six-hourly look.
+app.post('/api/self/check', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (config.demo) return c.json({ check: { at: Date.now(), state: 'current' } });
+  if (await checkSelfImage(hub.containers())) hub.emitUpdates();
+  return c.json({ check: selfCheckStatus() });
 });
 
 // Diun's webhook notifier posts here (see compose/diun). Tailnet-only, like

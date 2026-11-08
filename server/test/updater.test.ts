@@ -15,7 +15,7 @@ import type { Container, UpdateJob } from '../../shared/types.ts';
 import { withConfig } from '../config.ts';
 import { clearUpdate, pendingUpdates, recordDiunNotice } from '../updates.ts';
 import { changesLink } from '../selfcheck.ts';
-import { checkSelfImage, eligibility, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
+import { checkSelfImage, eligibility, selfCheckStatus, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'pb-update-'));
 const composeFile = join(dir, 'compose.yml');
@@ -267,16 +267,21 @@ test('Patchboard spots a newer image of itself on the registry, and links to wha
   globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
     const u = String(url);
     if (u.startsWith('https://ghcr.io/token')) return new Response(JSON.stringify({ token: 't' }));
-    if (u === 'https://ghcr.io/v2/sourpatchdad/patchboard/manifests/edge' && init?.method === 'HEAD') return new Response(null, { headers: { 'docker-content-digest': served } });
+    if (u === 'https://ghcr.io/v2/sourpatchdad/patchboard/manifests/edge' && init?.method === 'HEAD') return served ? new Response(null, { headers: { 'docker-content-digest': served } }) : new Response(null, { status: 401 });
     return new Response(null, { status: 404 });
   }) as typeof fetch;
   try {
     clearUpdate('patchboard');
     const me = { ...ctr('patchboard'), image: PB } as Container;
     assert.equal(await docker(() => checkSelfImage([me])), false, 'the registry serves the image it runs');
+    assert.equal(selfCheckStatus()?.state, 'current');
+    served = '';
+    assert.equal(await docker(() => checkSelfImage([me])), false);
+    assert.match(selfCheckStatus()?.reason ?? '', /sign-in/, 'a private image says why it cannot check');
     served = 'sha256:new';
     assert.equal(await docker(() => checkSelfImage([me])), true, 'a new digest on its tag');
     assert.equal(pendingUpdates().patchboard?.link, 'https://github.com/sourpatchdad/patchboard/commits/main');
+    assert.equal(selfCheckStatus()?.state, 'newer');
     assert.equal(await docker(() => checkSelfImage([me])), false, 'flagged once, not every check');
   } finally {
     globalThis.fetch = realFetch;

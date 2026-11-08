@@ -7,6 +7,12 @@
   changes nothing, and it is a press and hold like Stop and Restart. When
   Patchboard finds a newer image of itself, the link opens the commits
   behind edge or dev, or the release notes for a version.
+  A waiting update shows under the container's state, with What changed
+  and Dismiss, and its Update button stands out; without one it stays
+  quiet. The Stacks updates view updates each container from its row.
+  Settings says whether Patchboard is up to date, has Check now, and
+  updates it in place. When it can't check, such as for a private image,
+  it says why instead of staying silent.
 - Notifications: each channel keeps its own record of what it sent. One
   that fails, such as a deleted Discord webhook, retries on its own and
   catches up when it's back; the others never repeat a message. A channel

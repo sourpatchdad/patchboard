@@ -13,6 +13,7 @@ import { containerMap, ctrState, type JackState, serviceFor, shortStatus } from 
 import { useSource, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
+import { RowUpdate } from '../components/Updater.tsx';
 
 const LOOSE = 'Standalone';
 type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
@@ -154,20 +155,27 @@ export function Stacks() {
                 const svc = serviceFor(snap, c.name);
                 const st = ctrState(c, svc);
                 const load = s[c.name];
+                // Updating from the row, where the update is the reason the row is here.
+                const act = onlyUpdates && !!snap.updates[c.name] && !snap.readOnly && !!snap.features?.includes('updates');
                 return (
-                  <li key={c.name}>
+                  <li key={c.name} className={act ? 'has-act' : undefined}>
                     <Link to={`/c/${c.name}`} className="srow" data-state={st}>
                       <span className="srow-id">
                         <span className="srow-icon">{svc?.icon ? <Icon name={svc.name} icon={svc.icon} size={18} /> : <span className="dot" />}</span>
                         <span className="srow-name">{c.name}</span>
                         {svc && svc.name.toLowerCase() !== c.name && <span className="srow-app">{svc.name}</span>}
-                        {snap.updates[c.name] && <span className="tag tag-update" title="Diun found a newer image">update</span>}
+                        {snap.updates[c.name] && !act && <span className="tag tag-update" title="A newer image is out">update</span>}
                       </span>
                       <HealthStrip states={uptime?.containers[c.name]} days={uptime?.days ?? []} label={`${c.name}, last 14 days`} />
                       <span className="srow-status">{st === 'idle' && svc?.expectStopped ? 'Scheduled job, finished' : c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
                       <span className="srow-num">{load ? pct(load.cpu) : ''}</span>
                       <span className="srow-num">{load ? size(load.memBytes) : ''}</span>
                     </Link>
+                    {act && (
+                      <span className="srow-act">
+                        <RowUpdate name={c.name} />
+                      </span>
+                    )}
                   </li>
                 );
               })}

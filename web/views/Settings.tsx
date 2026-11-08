@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
-import type { CatalogAudit } from '../../shared/types.ts';
+import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
@@ -27,8 +27,9 @@ import {
   useAppearance,
 } from '../lib/appearance.ts';
 import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
-import { useStore } from '../lib/store.tsx';
+import { useNow, useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
+import { UpdateButton, useUpdateJob } from '../components/Updater.tsx';
 
 type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
 const TABS: [Tab, string, string][] = [
@@ -251,20 +252,57 @@ export function Settings() {
 }
 
 /** Which Patchboard this is, and the way to the newer one when Diun has seen it. */
+/** Patchboard's version, whether a newer image is out, and updating it from here. */
 function AppVersion() {
   const { snap } = useStore();
+  const now = useNow(60_000);
+  const [check, setCheck] = useState<SelfCheck | undefined>();
+  const [busy, setBusy] = useState(false);
   const me = snap?.self;
   if (!me) return null;
-  const update = me.container ? snap.updates[me.container] : undefined;
+  const c = check ?? me.check;
+  const newer = !!(me.container && snap.updates[me.container]);
+  const ro = !!snap.readOnly;
+  const status = newer
+    ? 'A newer image is out.'
+    : c?.state === 'current'
+      ? `Up to date, checked ${agoLong(c.at, now)}.`
+      : c?.state === 'unknown'
+        ? `Can't check for updates. ${c.reason ?? ''}`
+        : 'Not checked yet.';
+  const checkNow = async () => {
+    setBusy(true);
+    const res = await fetch('/api/self/check', { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);
+    const body = res?.ok ? ((await res.json()) as { check?: SelfCheck }) : null;
+    if (body?.check) setCheck(body.check);
+    setBusy(false);
+  };
   return (
-    <p className="app-version">
-      Patchboard {me.version}
-      {update && me.container && (
-        <>
-          . A newer image is out: <Link to={`/c/${encodeURIComponent(me.container)}`}>update it from its page</Link>, or run docker compose pull and up -d in its folder.
-        </>
+    <div className="app-version">
+      <span>Patchboard {me.version}</span>
+      <span className={newer ? 'warn-text' : undefined}>{status}</span>
+      {!ro && (
+        <button type="button" className="text-button" disabled={busy} onClick={() => void checkNow()}>
+          {busy ? 'Checking...' : 'Check now'}
+        </button>
       )}
-    </p>
+      {!ro && me.container && snap.features?.includes('updates') && <SelfUpdate name={me.container} waiting={newer} />}
+    </div>
+  );
+}
+
+/** Update Patchboard from Settings: the same job as its container page, followed in one line. */
+function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }) {
+  const u = useUpdateJob(name);
+  const j = u.job;
+  if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
+  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">The update failed. Open it</Link>;
+  if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>Already the newest image.</span>;
+  return (
+    <>
+      <UpdateButton name={name} busy={false} waiting={waiting} onStart={() => void u.start()} />
+      {u.error && <span className="crit-text">{u.error}</span>}
+    </>
   );
 }
 

@@ -22,7 +22,7 @@ import type {
 } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
-import { checkSelfImage, composeMounted, whoAmI } from './updater.ts';
+import { checkSelfImage, composeMounted, selfCheckStatus, whoAmI } from './updater.ts';
 import { notifyAlerts } from './notify.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
@@ -262,7 +262,7 @@ export class Hub {
       catalog: getCatalog(),
       updates: pendingUpdates(),
       readOnly: config.readOnly,
-      self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer },
+      self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },
       limits: { poolWarnPct: config.poolWarnPct, poolCritPct: config.poolCritPct, diskWarnC: config.diskWarnC, diskCritC: config.diskCritC },
       pages: kvGet('pages') ?? {},
       brand: kvGet('brand') ?? {},

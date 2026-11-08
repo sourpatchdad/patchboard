@@ -1056,7 +1056,7 @@ export interface Snapshot {
   /** What each page shows (its Customize button). */
   pages?: import('./pages.ts').Pages;
   /** This Patchboard: its version, and its own container's name when it runs in Docker. */
-  self?: { version: string; container: string | null };
+  self?: { version: string; container: string | null; check?: SelfCheck };
   /** The name in the header and the tab, and whether the otter sits beside it. */
   brand?: Brand;
   /** The boards, Home first, for the tabs over the board. */
@@ -1079,6 +1079,14 @@ export type ServerEvent =
   | { type: 'pages'; pages: import('./pages.ts').Pages }
   | { type: 'brand'; brand: Brand }
   | { type: 'boards'; boards: import('./board.ts').BoardRef[]; changed?: string };
+
+/** The last time Patchboard asked its registry about its own image, and what it heard. */
+export interface SelfCheck {
+  at: number;
+  state: 'current' | 'newer' | 'unknown';
+  /** Why it couldn't tell, in a sentence. */
+  reason?: string;
+}
 
 export interface Brand {
   /** Empty means Patchboard. */

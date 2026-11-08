@@ -27,7 +27,7 @@ import type {
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
 import { ContainerActions } from '../components/Actions.tsx';
-import { UpdateButton, UpdatePanel, useUpdateJob } from '../components/Updater.tsx';
+import { UpdateButton, UpdateNotice, UpdatePanel, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
@@ -104,38 +104,6 @@ export function ContainerPage() {
                   {svc && checkFor(snap, svc.name) && <AnswersRow name={svc.name} now={now} />}
                   <Row k="Image">
                     <span className="mono wrap">{d.image}</span>
-                    {ctr.staleImage && (
-                      <span className="update-note">
-                        A newer copy is already downloaded and this container still runs the old one.
-                        {!snap.readOnly && ' Update switches it over.'}
-                      </span>
-                    )}
-                    {snap.updates[name] && !ctr.staleImage && (
-                      <span className="update-note">
-                        Update available, found {ago(snap.updates[name].at, now)}
-                        {!snap.readOnly && (
-                          <>
-                            {' '}
-                            <button
-                              type="button"
-                              className="text-button"
-                              title="Clear this mark if you already run the newest image"
-                              onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
-                            >
-                              Dismiss
-                            </button>
-                          </>
-                        )}
-                        {snap.updates[name].link && snap.updates[name].link !== '#' && (
-                          <>
-                            {' '}
-                            <a href={snap.updates[name].link} target="_blank" rel="noreferrer">
-                              registry
-                            </a>
-                          </>
-                        )}
-                      </span>
-                    )}
                   </Row>
                   {d.imageCreated && <Row k="Image built">{agoLong(d.imageCreated, now)}</Row>}
                   <Row k="Created">{shortDate(d.created)}</Row>
@@ -226,10 +194,14 @@ export function ContainerPage() {
           {number && <span className={`detail-number tone-${number.tone}`}>{number.text}</span>}
         </p>
         <div className="ctr-actions-wrap">
-          {!snap.readOnly && detail.data?.update?.ok && <UpdateButton name={name} busy={upd.job?.status === 'running'} onStart={() => void upd.start()} />}
+          {!snap.readOnly && detail.data?.update?.ok && (
+            <UpdateButton name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
+          )}
           {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === (snap.self?.container ?? 'patchboard')} />}
         </div>
       </div>
+
+      <UpdateNotice name={name} stale={ctr.staleImage} />
 
       <div className="health-row">
         <HealthStrip states={uptime?.containers[name]} days={uptime?.days ?? []} label={`${name}, last 30 days`} large />

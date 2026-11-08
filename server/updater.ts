@@ -30,7 +30,8 @@ import { config, dockerTarget } from './config.ts';
 import { recordEvent } from './db.ts';
 import { clearUpdate, flagUpdate } from './updates.ts';
 import { redact } from './redact.ts';
-import { changesLink, isNewer, localDigests, remoteDigest } from './selfcheck.ts';
+import { changesLink, localDigests, remoteDigest, verdict } from './selfcheck.ts';
+import type { SelfCheck } from '../shared/types.ts';
 
 interface Inspect {
   Name?: string;
@@ -80,21 +81,31 @@ export async function whoAmI(): Promise<string | null> {
   return selfName;
 }
 
+let lastCheck: SelfCheck | undefined;
+
+/** What the last look at Patchboard's own image found, for Settings. */
+export const selfCheckStatus = (): SelfCheck | undefined => lastCheck;
+
 /**
  * Ask the registry whether Patchboard's own tag has moved past the image it
- * runs, and flag it if so. True when it flagged something new.
+ * runs, and flag it if so. True when it flagged something new. The result,
+ * including why it couldn't tell, is kept for Settings.
  */
 export async function checkSelfImage(containers: Container[]): Promise<boolean> {
   const me = await whoAmI();
   const c = me ? containers.find((x) => x.name === me) : undefined;
-  if (!c) return false;
+  if (!c) {
+    lastCheck = { at: Date.now(), state: 'unknown', reason: 'Patchboard isn\'t running in Docker here, so it has no image to check.' };
+    return false;
+  }
   try {
     const r = await inspect(c.name);
     const ref = r.Config.Image;
     const img = await dockerJson<{ RepoDigests?: string[] }>(`/images/${encodeURIComponent(r.Image)}/json`);
-    if (!isNewer(await remoteDigest(ref), localDigests(img.RepoDigests))) return false;
-    return flagUpdate(c, changesLink(ref));
+    lastCheck = verdict(await remoteDigest(ref), localDigests(img.RepoDigests));
+    return lastCheck.state === 'newer' && flagUpdate(c, changesLink(ref));
   } catch {
+    lastCheck = { at: Date.now(), state: 'unknown', reason: 'Couldn\'t read Patchboard\'s own container from Docker.' };
     return false;
   }
 }
