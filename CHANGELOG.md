@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- A widget whose integration fails says what broke, in words a phone can
+  read ("Miniflux: Timed out after 8s"), and links to Check the
+  connection in Settings.
+- Settings opened from a widget have Cancel and Save. Escape or a click
+  outside throws the change away.
+- Leaving the page or switching boards with unsaved arranging asks first.
+- Reading sorts with the same buttons as Logs and Stacks: Newest, Oldest,
+  Quick reads.
+- Help sits where you look for it: in Jump to (a tour, setting up
+  integrations, keyboard shortcuts), in the phone's More, and beside the
+  version in Settings.
+
 - Cameras: a widget for Frigate. Each camera's newest frame, refreshed
   every 20 seconds, with Offline when one stops; tap for its live view in
   Frigate. Cameras that detect add today's people, cars and animals, with

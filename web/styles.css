@@ -10147,3 +10147,21 @@ a.req-come:hover .req-title {
   text-underline-offset: 4px;
   text-decoration-color: var(--ink-3);
 }
+
+/* A widget whose integration failed says why, and links to its settings. */
+.section-error {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.drawer-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.feeds-clear {
+  align-self: center;
+}

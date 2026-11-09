@@ -3,6 +3,7 @@ import { WidgetCtx } from '../board/widget-context.ts';
 import { type ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SourceState } from '../../shared/types.ts';
+import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { ago } from '../lib/format.ts';
 import { iconUrl } from '../lib/services.ts';
 
@@ -25,9 +26,7 @@ export function Section(props: {
         <h2>{title}</h2>
         {count != null && <span className="section-count">{count}</span>}
         {source && !source.ok && source.error && (
-          <span className="section-stale" title={source.error}>
-            {source.updatedAt ? `Stale, last updated ${ago(source.updatedAt)}` : 'Not reachable'}
-          </span>
+          <span className="section-stale">{source.updatedAt ? `Stale, last updated ${ago(source.updatedAt)}` : 'Not reachable'}</span>
         )}
         {action &&
           (action.onClick ? (
@@ -44,6 +43,13 @@ export function Section(props: {
             </a>
           ))}
       </header>
+      {/* What broke, in words a phone can read, and the way to fix it. */}
+      {source && !source.ok && source.error && (
+        <p className="section-error">
+          {INTEGRATIONS.find((i) => i.id === source.id)?.name ?? source.label}: {source.error.replace(/\.$/, '')}.{' '}
+          <Link to={`/settings?tab=connections&setup=${encodeURIComponent(source.id)}`}>Check the connection</Link>
+        </p>
+      )}
       {children}
     </section>
   );

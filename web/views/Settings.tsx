@@ -2,6 +2,7 @@
 // every device; everything else is a per-device preference (appearance.ts).
 // Themes are data in themes.ts, so this page renders whatever is there.
 
+import { HELP } from '../lib/docs.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useRef, useState } from 'react';
@@ -287,6 +288,20 @@ function AppVersion() {
         </button>
       )}
       {!ro && me.container && snap.features?.includes('updates') && <SelfUpdate name={me.container} waiting={newer} />}
+      <span className="app-help">
+        Help:{' '}
+        <a href={HELP.tour} target="_blank" rel="noreferrer">
+          tour
+        </a>
+        ,{' '}
+        <a href={HELP.integrations} target="_blank" rel="noreferrer">
+          integrations
+        </a>
+        ,{' '}
+        <a href={HELP.configuration} target="_blank" rel="noreferrer">
+          configuration
+        </a>
+      </span>
     </div>
   );
 }

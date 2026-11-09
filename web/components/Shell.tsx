@@ -9,6 +9,7 @@ import { useStore } from '../lib/store.tsx';
 import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
+import { HELP } from '../lib/docs.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -193,7 +194,7 @@ export function Shell() {
         </svg>
       </button>
 
-      <Palette open={palette} onClose={() => setPalette(false)} />
+      <Palette open={palette} onClose={() => setPalette(false)} onKeys={() => (setPalette(false), setHelp(true))} />
       {moreOpen && <MoreSheet items={more} unread={unreadFeeds} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
       {help && <KeyboardHelp mac={mac} onClose={() => setHelp(false)} />}
     </div>
@@ -216,6 +217,9 @@ function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; la
           <button type="button" className="more-link" onClick={onJump}>
             <span>Jump to anything</span>
           </button>
+          <a className="more-link" href={HELP.tour} target="_blank" rel="noreferrer" onClick={onClose}>
+            <span>Help</span>
+          </a>
         </nav>
         <button type="button" className="button more-close" onClick={onClose}>
           Close

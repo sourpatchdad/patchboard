@@ -8,7 +8,7 @@
 import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
 import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useBlocker, useNavigate } from 'react-router-dom';
 import {
   type Board as BoardData,
   cleanBoardName,
@@ -313,6 +313,21 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     setNotice('');
   }, [id]);
   const editing = draft !== null;
+  // Unsaved arranging asks before it's thrown away: leaving the page, the
+  // tab, or switching boards.
+  const dirty = editing && !quick && JSON.stringify(draft) !== JSON.stringify(board);
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    if (window.confirm('Leave without saving your changes to this board?')) blocker.proceed();
+    else blocker.reset();
+  }, [blocker.state]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   const shown = draft ?? board;
   // Columns: the board's choice, fewer when the window can't fit them.
   const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
@@ -547,6 +562,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       {setting && draft && draft.widgets.some((x) => x.id === setting) && (
         <SettingsDrawer
           w={draft.widgets.find((x) => x.id === setting)!}
+          onCancel={quick ? () => (setSetting(null), setQuick(false), setDraft(null)) : undefined}
           onClose={() => {
             setSetting(null);
             if (!quick) return;
@@ -1087,15 +1103,19 @@ function SettingsDrawer({
   onClose,
   onChange,
   onSpan,
+  onCancel,
 }: {
   w: Widget;
   columns: number;
   onClose: () => void;
+  /** Opened from the widget itself: Escape and Cancel throw the change away; Save keeps it. */
+  onCancel?: () => void;
   onChange: (cfg: Record<string, string> | undefined) => void;
   onSpan: (n: number) => void;
   onColumn: (n: number | undefined) => void;
 }) {
-  const modal = useModal<HTMLDivElement>(onClose);
+  const dismiss = onCancel ?? onClose;
+  const modal = useModal<HTMLDivElement>(dismiss);
   const info = WIDGET_INFO[w.type];
   const o = info.options;
   const cfg = w.config ?? {};
@@ -1108,13 +1128,24 @@ function SettingsDrawer({
     onChange(Object.keys(next).length ? next : undefined);
   };
   return (
-    <div className="palette-backdrop" onClick={onClose}>
+    <div className="palette-backdrop" onClick={dismiss}>
       <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={`${info.name} settings`} onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>{cfg.title || info.name}</h2>
-          <button type="button" className="text-button" onClick={onClose} title="Back to the board; its Save keeps this">
-            Apply
-          </button>
+          {onCancel ? (
+            <span className="drawer-head-actions">
+              <button type="button" className="text-button" onClick={onCancel}>
+                Cancel
+              </button>
+              <button type="button" className="button board-save" onClick={onClose}>
+                Save
+              </button>
+            </span>
+          ) : (
+            <button type="button" className="text-button" onClick={onClose} title="Back to the board; its Save keeps this">
+              Apply
+            </button>
+          )}
         </header>
         <label className="settings-label">Column
           <select className="field" value={w.column ?? ''} onChange={(e) => onColumn(e.target.value ? Number(e.target.value) : undefined)}>

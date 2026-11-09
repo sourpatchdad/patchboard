@@ -275,25 +275,29 @@ export function Feeds() {
               <option value="week">Last 7 days</option>
             </select>
           </label>
-          <label>
-            <span className="sr-only">Sort</span>
-            <select className="field field-small" value={sort} onChange={(e) => setSort(e.target.value as FeedSort)}>
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="quick">Quick reads first</option>
-            </select>
-          </label>
+          {filtered && (
+            <button type="button" className="text-button feeds-clear" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
           </div>
         </div>
 
         <div className="feeds-bar">
-          {filtered ? (
-            <button type="button" className="text-button" onClick={clearFilters}>
-              Clear filters
-            </button>
-          ) : (
-            <span />
-          )}
+          {/* The same sort control as Logs and Stacks. */}
+          <div className="seg seg-small" role="group" aria-label="Sort articles">
+            {(
+              [
+                ['newest', 'Newest'],
+                ['oldest', 'Oldest'],
+                ['quick', 'Quick reads'],
+              ] as [FeedSort, string][]
+            ).map(([v, label]) => (
+              <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+                {label}
+              </button>
+            ))}
+          </div>
           {!snap?.readOnly &&
             (confirmAll ? (
               <span className="feeds-confirm">

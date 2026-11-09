@@ -2,6 +2,7 @@
 // view, container log, unread article and inbox message, with web search as
 // the fallback. It replaces the wall of tiles as the main way to launch things.
 
+import { HELP } from '../lib/docs.ts';
 import { useModal } from '../lib/modal.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +41,7 @@ function score(query: string, text: string): number {
   return s - t.length / 10;
 }
 
-export function Palette({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () => void; onKeys?: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose, open);
   const { snap } = useStore();
   const navigate = useNavigate();
@@ -70,6 +71,9 @@ export function Palette({ open, onClose }: { open: boolean; onClose: () => void 
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
       { id: 'v-apps', label: 'Apps', hint: 'View', run: go('/apps') },
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },
+      { id: 'h-tour', label: 'Help: a tour of every page', hint: 'Help', run: openUrl(HELP.tour) },
+      { id: 'h-integrations', label: 'Help: setting up integrations', hint: 'Help', run: openUrl(HELP.integrations) },
+      ...(onKeys ? [{ id: 'h-keys', label: 'Keyboard shortcuts', hint: 'Help', run: onKeys }] : []),
       { id: 'a-dark', label: 'Dark mode', hint: 'Appearance', run: () => setAppearance({ scheme: 'dark' }) },
       { id: 'a-light', label: 'Light mode', hint: 'Appearance', run: () => setAppearance({ scheme: 'light' }) },
       ...THEMES.map((t) => ({ id: `a-${t.id}`, label: `${t.name} theme`, hint: 'Appearance', run: () => setAppearance({ theme: t.id }) })),
