@@ -418,9 +418,15 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <button type="button" className="text-button board-tools-toggle" aria-expanded={tools} onClick={() => setTools(!tools)}>
               {tools ? 'Fewer tools' : 'Tools'}
             </button>
-            <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
-              Cancel
-            </button>
+            {dirty ? (
+              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''))}>
+                Discard changes
+              </HoldButton>
+            ) : (
+              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
+                Cancel
+              </button>
+            )}
             <button
               type="button"
               className="button board-save"
@@ -444,7 +450,16 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <span>Columns</span>
               <span className="seg">
                 {[2, 3, 4, 5, 6].map((n) => (
-                  <button key={n} type="button" aria-pressed={chosen === n} onClick={() => setDraft((d) => (d ? { ...d, columns: n } : d))}>
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={chosen === n}
+                    onClick={() => {
+                      const y = window.scrollY;
+                      setDraft((d) => (d ? { ...d, columns: n } : d));
+                      requestAnimationFrame(() => window.scrollTo({ top: y }));
+                    }}
+                  >
                     {n}
                   </button>
                 ))}
@@ -1072,7 +1087,20 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
           </button>
         </header>
         {!picking && (
-          <input className="field palette-input" type="search" placeholder="Search widgets: plex, disks, cameras" aria-label="Search widgets" value={find} onChange={(e) => setFind(e.target.value)} autoFocus />
+          <input
+            className="field palette-input"
+            type="search"
+            placeholder="Search widgets: plex, disks, cameras"
+            aria-label="Search widgets"
+            value={find}
+            onChange={(e) => setFind(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowDown') return;
+              e.preventDefault();
+              e.currentTarget.parentElement?.querySelector<HTMLElement>('.drawer-list button, .drawer-list a')?.focus();
+            }}
+            autoFocus
+          />
         )}
         {!picking ? (
           <ul className="drawer-list">

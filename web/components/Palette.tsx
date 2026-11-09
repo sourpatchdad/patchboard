@@ -158,7 +158,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   }, [items, q]);
 
   useEffect(() => {
-    setSel(0);
+    setSel(results[0]?.id === 'none' ? 1 : 0);
     setArmed(null);
   }, [q]);
   useEffect(() => {
@@ -190,7 +190,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
               setSel((s) => Math.min(s + 1, results.length - 1));
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
-              setSel((s) => Math.max(s - 1, 0));
+              setSel((s) => Math.max(s - 1, results[0]?.id === 'none' ? 1 : 0));
             } else if (e.key === 'Enter') {
               e.preventDefault();
               choose(results[sel]);
@@ -206,7 +206,11 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           aria-activedescendant={results[sel] ? `pal-${results[sel].id}` : undefined}
         />
         <ul className="palette-results" id="palette-results" role="listbox" ref={listRef}>
-          {results.map((it, i) => (
+          {results.map((it, i) => it.id === 'none' ? (
+            <li key="none" className="palette-none" role="presentation">
+              {it.label}
+            </li>
+          ) : (
             <li
               key={it.id}
               id={`pal-${it.id}`}

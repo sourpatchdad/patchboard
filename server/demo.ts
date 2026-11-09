@@ -996,6 +996,20 @@ const LOG_LINES = [
   'INFO  Housekeeping: removed 3 orphaned records',
 ];
 
+/** What each demo app writes: the arr apps search indexers; the rest serve, scan and tidy. */
+const APP_LINES: Record<string, string[]> = {
+  plex: ['INFO  Library scan complete: Movies', 'INFO  Transcoder: session ended', 'INFO  GET /library/sections 200', 'INFO  Butler: optimizing database', 'WARN  Slow query on metadata_items (812 ms)'],
+  jellyfin: ['INFO  Scheduled task "Scan Media Library" completed', 'INFO  Playback started: Slow Horses S05E02', 'INFO  GET /System/Info 200 4ms', 'INFO  Image cache cleaned: 12 files'],
+  unpackerr: ['INFO  Checking Sonarr queue: 0 items to extract', 'INFO  Checking Radarr queue: 1 item to extract', 'INFO  Extraction finished: 2 files'],
+  qbittorrent: ['INFO  Torrent finished: The.Bear.S04E03', 'INFO  Tracker announce OK', 'WARN  Tracker timed out, retrying in 300 s'],
+  immich: ['INFO  Thumbnail generation queued: 14 assets', 'INFO  Smart search index updated', 'INFO  GET /api/server/ping 200 1ms'],
+};
+function linesFor(name: string): string[] {
+  if (/sonarr|radarr|prowlarr|bazarr|lidarr|readarr/.test(name)) return LOG_LINES;
+  const key = Object.keys(APP_LINES).find((k) => name.includes(k));
+  return key ? APP_LINES[key] : ['INFO  Started', 'INFO  GET /health 200 2ms', 'INFO  Housekeeping: removed 3 orphaned records', 'INFO  Config reloaded'];
+}
+
 /** Fake log stream for the Logs view in demo mode. */
 export function demoLogs(
   name: string,
@@ -1011,8 +1025,9 @@ export function demoLogs(
   const n = Math.min(tail, 60);
   const running = demoContainers().find((c) => c.name === name)?.state === 'running';
   const end = running ? 0 : Date.now() - (demoStoppedAt[name] ?? Date.now());
+  const lines = linesFor(name);
   for (let i = n; i > 0; i--) {
-    onLine({ stream: 'out', text: `${stamp(end + i * 41_000)} [${name}] ${LOG_LINES[(i * 3 + i * i) % LOG_LINES.length]}` });
+    onLine({ stream: 'out', text: `${stamp(end + i * 41_000)} [${name}] ${lines[(i * 3 + i * i) % lines.length]}` });
     if (name === 'unpackerr' && i === Math.ceil(n / 3)) {
       onLine({ stream: 'err', text: `${stamp(end + i * 41_000 - 5_000)} [unpackerr] ERROR open /downloads/complete: permission denied` });
     }
@@ -1025,7 +1040,7 @@ export function demoLogs(
         clearInterval(t);
         return resolve();
       }
-      const line = LOG_LINES[Math.floor(Math.random() * LOG_LINES.length)];
+      const line = lines[Math.floor(Math.random() * lines.length)];
       onLine({ stream: line.startsWith('WARN') ? 'err' : 'out', text: `${stamp()} [${name}] ${line}` });
     }, 2200);
     signal.addEventListener('abort', () => {

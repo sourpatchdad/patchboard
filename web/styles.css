@@ -1253,14 +1253,14 @@ a.jack:focus-visible {
 
 /* Agenda (Home and Upcoming) */
 
-.agenda-day h3 {
+.agenda-day :is(h2, h3) {
   font: 400 12px/1 var(--f-mono);
   color: var(--ink-3);
   padding: 18px 0 6px;
 }
 
-.agenda-day.is-today h3,
-.agenda-compact .agenda-day:first-child h3 {
+.agenda-day.is-today :is(h2, h3),
+.agenda-compact .agenda-day:first-child :is(h2, h3) {
   color: var(--accent);
 }
 
@@ -1317,7 +1317,7 @@ a.jack:focus-visible {
   padding: 6px 0;
 }
 
-.agenda-compact .agenda-day h3 {
+.agenda-compact .agenda-day :is(h2, h3) {
   padding-top: 14px;
 }
 
@@ -5234,13 +5234,13 @@ a.jw-title:hover {
   box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px var(--line-soft);
 }
 
-.agenda-grid .agenda-day h3 {
+.agenda-grid .agenda-day :is(h2, h3) {
   display: flex;
   justify-content: space-between;
   padding: 12px 0 4px;
 }
 
-.agenda-grid .agenda-day h3 span {
+.agenda-grid .agenda-day :is(h2, h3) span {
   color: var(--ink-3);
 }
 
@@ -6613,7 +6613,7 @@ a.date:hover {
   box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px var(--line-soft);
 }
 
-.cal-day h3 {
+.cal-day :is(h2, h3) {
   display: flex;
   justify-content: space-between;
   margin: 0 0 4px;
@@ -6621,7 +6621,7 @@ a.date:hover {
   color: var(--ink-3);
 }
 
-.cal-day.is-today h3 {
+.cal-day.is-today :is(h2, h3) {
   color: var(--accent);
 }
 
@@ -8436,7 +8436,7 @@ button.ha-act:hover {
   a.ident,
   .head-alert a,
   a.overnight,
-  .home-header a.date,
+  a.date,
   .crumbs a {
     position: relative;
   }
@@ -8446,7 +8446,7 @@ button.ha-act:hover {
   a.ident::after,
   .head-alert a::after,
   a.overnight::after,
-  .home-header a.date::after,
+  a.date::after,
   .now-head a::after,
   .crumbs a::after {
     content: '';
@@ -9579,7 +9579,7 @@ button.ha-act:hover {
 .feeds-brief .feed-meta time { flex: none; }
 .upcoming-brief .agenda-compact .rel > a,
 .upcoming-brief .agenda-compact .rel > div { min-height: 36px; align-items: center; }
-.upcoming-brief .agenda-compact .agenda-day h3 { line-height: 1; padding: 14px 0 6px; }
+.upcoming-brief .agenda-compact .agenda-day :is(h2, h3) { line-height: 1; padding: 14px 0 6px; }
 .upcoming-brief .agenda-compact .rel-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
 .upcoming-brief .agenda-compact .rel-title { flex: 0 1 auto; }
 .upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; margin-left: 0; }
@@ -9624,7 +9624,7 @@ button.ha-act:hover {
 .agenda-compact .rel,
 .agenda-compact .rel > a,
 .agenda-compact .rel > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
-.agenda-compact .agenda-day > h3 { grid-column: 1 / -1; }
+.agenda-compact .agenda-day > :is(h2, h3) { grid-column: 1 / -1; }
 
 /* An update waiting: one line under the container's state. */
 .update-notice {
@@ -10553,4 +10553,37 @@ a.req-come:hover .req-title {
 
 .dl-group .dl-list {
   margin-bottom: 0;
+}
+
+/* 15. A confirmed hold drops its tooltip; a busy button has no hint to give. */
+@media (hover: hover) {
+  .hold:disabled::after {
+    opacity: 0;
+  }
+}
+
+/* 16. Widget settings: Column sits as a field like the rest. */
+.widget-settings .settings-label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+/* 9. The narrowest phones: the header's server numbers two by two. */
+@media (max-width: 480px) {
+  .header-board-vitals .vw-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+  }
+}
+
+/* 17. Phone Reading: the sort row lines up with the filters; categories fade at the edge they scroll. */
+@media (max-width: 760px) {
+  .feeds-bar {
+    padding-inline: 20px;
+  }
+
+  .feeds-cats {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
 }

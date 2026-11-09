@@ -756,11 +756,12 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
   if (!i) return c.json({ error: 'That integration is set up in the environment only' }, 404);
   // One test per integration every two seconds: enough for a person, useless for a port scan.
   if (Date.now() - (lastTest.get(i.id) ?? 0) < 2000) return c.json({ error: 'One test at a time. Try again in a moment.' }, 429);
-  lastTest.set(i.id, Date.now());
   const checked = checkValues(i, (await c.req.json().catch(() => null))?.values ?? {});
   if ('error' in checked) return c.json({ ok: false, error: checked.error });
   const gaps = missing(i, checked.values);
   if (gaps.length) return c.json({ ok: false, error: fillIn(gaps) });
+  // Only a test that reaches out counts toward the pause between tests.
+  lastTest.set(i.id, Date.now());
   recordAudit(who(c), 'setup.test', i.id);
   if (config.demo) return c.json({ ok: true, summary: 'Demo mode: nothing to connect to, so this always passes.' });
   try {
@@ -942,6 +943,7 @@ app.post('/api/containers/:name/update', async (c) => {
   const ctr = hub.containers().find((x) => x.name === name);
   if (!ctr) return c.json({ error: 'No such container' }, 404);
   const done = () => {
+    hub.emitUpdates();
     void hub.pollNow('docker');
     void hub.pollNow('checks');
     hub.refreshChanges();

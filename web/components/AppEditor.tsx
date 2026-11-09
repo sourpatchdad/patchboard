@@ -338,7 +338,7 @@ export function EditApps({
               <span className="tile-name">{b.name}</span>
               <span className="tile-stat mono">{hostOf(b.href)}</span>
             </span>
-            <button
+            <button aria-label={`${b.source === 'ui' ? 'Remove' : 'Hide'} ${b.name}`}
               type="button"
               className="cell-btn tile-add"
               onClick={() =>

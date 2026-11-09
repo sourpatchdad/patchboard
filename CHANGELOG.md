@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Fixed: Tab got stuck on Right now. Focusing a playing item opened its
+  details and pulled Tab into them; now Enter or Down opens them and Tab
+  always moves on.
+- An update clears its "Update available" mark as soon as it finishes.
+- Arrange board's Cancel becomes a held Discard changes once you've
+  changed something; changing columns keeps your place on the page.
+- Add widget: Down from the search moves into the list. Integration setup
+  opens on its first field, and a test refused for a missing field doesn't
+  make the next one wait.
+- Screen readers: Upcoming's days are headings one level under the page,
+  read as "Wednesday, 2 releases"; Edit apps names each Hide and Remove
+  button by its app; Jump to's "Nothing here matches" is a note, not an
+  option.
+- Smaller things: a busy hold button drops its tooltip, a widget's Column
+  setting sits as a field, the narrowest phones show the header's server
+  numbers two by two, Reading's sort row lines up and its categories fade
+  where they scroll, and the header date has a full tap area. Demo apps
+  write their own kind of logs.
+
 - Fixed: tapping a hold button once, then holding it, failed: its hint is
   wider than its label, and the label changing under the finger ended the
   hold. A hold now keeps the pointer until you let go.

@@ -77,10 +77,11 @@ export function Upcoming() {
       <div className="agenda agenda-grid">
         {[...byDay].map(([day, { off, list }]) => (
           <section className={`agenda-day ${off === 0 ? 'is-today' : ''}`} key={day} aria-label={day}>
-            <h3>
+            <h2 className="agenda-day-head">
               {day}
-              <span>{groupDrops(list).length}</span>
-            </h3>
+              <span aria-hidden>{groupDrops(list).length}</span>
+              <span className="sr-only">, {plural(groupDrops(list).length, 'release')}</span>
+            </h2>
             <ul>
               {groupDrops(list).map((it) => (
                 <ReleaseRow key={it.id} it={it} art />
@@ -130,10 +131,15 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
             aria-label={d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
             className={`cal-day ${off === 0 ? 'is-today' : ''} ${list.length ? '' : 'is-empty'}`}
           >
-            <h3>
+            <h2 className="agenda-day-head">
               <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
-              {list.length > 1 && <small>{list.length}</small>}
-            </h3>
+              {list.length > 1 && (
+                <>
+                  <small aria-hidden>{list.length}</small>
+                  <span className="sr-only">, {list.length} releases</span>
+                </>
+              )}
+            </h2>
             {list.length > 0 && <DayList list={list} />}
           </section>
         );

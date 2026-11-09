@@ -461,6 +461,8 @@ export function startDemoUpdate(name: string, onDone: () => void): UpdateJob {
       j.status = 'done';
       j.finishedAt = Date.now();
       clearInterval(tick);
+      // Updated: the mark goes, as a real update clears it once the new image runs.
+      clearUpdate(name);
       recordEvent('container.action', name, 'update');
       onDone();
     }

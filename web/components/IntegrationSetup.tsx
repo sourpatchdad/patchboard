@@ -106,7 +106,7 @@ export function IntegrationForm({
         void save();
       }}
     >
-      {setup.fields.map((f) => (
+      {setup.fields.map((f, idx) => (
         <label key={f.name} className="setup-field">
           <span>
             {f.label}
@@ -132,6 +132,8 @@ export function IntegrationForm({
           ) : (
             <input
               className="field"
+              // Opening setup lands on the first thing to fill in.
+              autoFocus={idx === setup.fields.findIndex((x) => !x.locked)}
               type={f.kind === 'secret' ? 'password' : f.kind === 'url' ? 'url' : 'text'}
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}

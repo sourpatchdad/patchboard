@@ -114,13 +114,14 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
           if (e.pointerType === 'mouse' && !open && dismissedPointer && !atDismissedPointer(e)) { dismissedPointer = undefined; cancelLeave(); setOpen(true); }
         }}
         onPointerLeave={hoverOut}
-        onFocus={(e) => {
-          if (skipFocus.current) { skipFocus.current = false; return; }
-          if (e.currentTarget.matches(':focus-visible')) setOpen(true);
+        // Keyboard: Enter or Down opens the details; Tab always moves on to the
+        // next thing on the page, so a row is never a trap.
+        onFocus={() => {
+          if (skipFocus.current) skipFocus.current = false;
         }}
         onBlur={(e) => { if (!card.current?.contains(e.relatedTarget as Node)) close(); }}
         onKeyDown={(e) => {
-          if (e.key === 'ArrowDown' || (e.key === 'Tab' && open && !e.shiftKey)) {
+          if (e.key === 'ArrowDown') {
             e.preventDefault();
             cancelLeave();
             setPinned(true);
