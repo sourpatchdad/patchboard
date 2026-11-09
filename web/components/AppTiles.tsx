@@ -49,7 +49,7 @@ export function AppTiles({
         return (
           <section className="tile-group" key={g.name} aria-label={g.name}>
             <header className="tile-group-head">
-              <h3>{g.name}</h3>
+              <h2>{g.name}</h2>
               {trouble > 0 && <span className="tile-group-trouble">{trouble} {trouble === 1 ? 'needs' : 'need'} attention</span>}
             </header>
             <ul className="tile-grid">

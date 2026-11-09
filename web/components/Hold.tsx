@@ -10,6 +10,7 @@ export function HoldButton({
   onConfirm,
   children,
   hint,
+  label,
   danger,
   disabled,
   className = 'button button-quiet',
@@ -18,6 +19,8 @@ export function HoldButton({
   children: ReactNode;
   /** Shown after a tap that was too short, e.g. "Hold to stop". */
   hint: string;
+  /** The accessible name, when the visible word alone is ambiguous: "Remove The.Bear...". */
+  label?: string;
   danger?: boolean;
   disabled?: boolean;
   className?: string;
@@ -79,12 +82,22 @@ export function HoldButton({
       className={`${className} hold ${holding ? 'is-holding' : ''} ${danger ? 'is-danger' : ''}`}
       disabled={disabled}
       data-hint={hint}
-      aria-label={typeof children === 'string' ? `${children}: press and hold` : undefined}
+      aria-label={label ? `${label}: press and hold` : typeof children === 'string' ? `${children}: press and hold` : undefined}
       onPointerDown={(e) => {
-        if (e.button === 0) start();
+        if (e.button !== 0) return;
+        // Captured, the hold survives the label changing under the finger
+        // (the hint is wider than "Remove"); letting go anywhere ends it.
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          /* an old browser: pointerleave still ends it */
+        }
+        start();
       }}
       onPointerUp={stop}
-      onPointerLeave={stop}
+      onPointerLeave={(e) => {
+        if (!e.currentTarget.hasPointerCapture?.(e.pointerId)) stop();
+      }}
       onPointerCancel={stop}
       onBlur={cancel}
       onContextMenu={(e) => e.preventDefault()}
@@ -100,13 +113,6 @@ export function HoldButton({
       style={{ ['--hold-ms' as string]: `${HOLD_MS}ms` }}
     >
       <span className="hold-fill" aria-hidden />
-      {/* A ring a quarter full: press and hold, before you've tried a click. */}
-      {!className.includes('text-button') && (
-        <svg className="hold-glyph" viewBox="0 0 12 12" width="12" height="12" aria-hidden>
-          <circle cx="6" cy="6" r="4.6" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.6" />
-          <path d="M6 1.4A4.6 4.6 0 0 1 10.6 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      )}
       <span className="hold-label">{hinted ? hint : children}</span>
     </button>
   );

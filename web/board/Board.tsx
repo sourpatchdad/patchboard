@@ -578,6 +578,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       {setting && draft && draft.widgets.some((x) => x.id === setting) && (
         <SettingsDrawer
           w={draft.widgets.find((x) => x.id === setting)!}
+          fitShows={trim[setting]}
           onCancel={quick ? () => (setSetting(null), setQuick(false), setDraft(null)) : undefined}
           onClose={() => {
             setSetting(null);
@@ -1129,9 +1130,12 @@ function SettingsDrawer({
   onChange,
   onSpan,
   onCancel,
+  fitShows,
 }: {
   w: Widget;
   columns: number;
+  /** Fit the window is showing fewer than the setting right now. */
+  fitShows?: number;
   onClose: () => void;
   /** Opened from the widget itself: Escape and Cancel throw the change away; Save keeps it. */
   onCancel?: () => void;
@@ -1192,7 +1196,7 @@ function SettingsDrawer({
             <span>Columns wide, of {columns}</span>
             <span className="seg" role="group" aria-label="Columns wide">
               {Array.from({ length: columns }, (_, k) => k + 1).map((n) => (
-                <button key={n} type="button" aria-pressed={spanOf(w, columns) === n} onClick={() => onSpan(n)}>
+                <button key={n} type="button" aria-pressed={spanOf(w, columns) === n} aria-label={n === columns ? 'Full width' : `${n} of ${columns} columns wide`} onClick={() => onSpan(n)}>
                   {spanLabel(n, columns)}
                 </button>
               ))}
@@ -1211,6 +1215,9 @@ function SettingsDrawer({
                 aria-invalid={badLimit || undefined}
                 onChange={(e) => set('limit', e.target.value)}
               />
+              {!badLimit && fitShows !== undefined && fitShows < Number(cfg.limit || o.limit[0]) && (
+                <small className="ws-hint">Fit the window shows {fitShows} right now, to keep the board on one screen.</small>
+              )}
               {badLimit && (
                 <small className="ws-hint warn-text" role="alert">
                   Use a whole number from {o.limit[1]} to {o.limit[2]}. Until then it shows {o.limit[0]}.

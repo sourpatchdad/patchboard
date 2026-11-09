@@ -487,9 +487,11 @@ export function stoppedDetail(status: string, image: string): string {
   const what =
     code === undefined
       ? status.replace(/\s+(about\s+)?(an?|\d+)\s+\w+\s+ago$/i, '')
-      : code === '0'
+      : code === '0' || code === '143'
         ? 'Exited cleanly'
-        : `Exited with code ${code}`;
+        : code === '137'
+          ? "Killed when it didn't stop in time"
+          : `Exited with code ${code}`;
   return `${what}. ${image}`;
 }
 

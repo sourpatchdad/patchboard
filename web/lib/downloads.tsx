@@ -55,7 +55,7 @@ export function PauseButton({ client }: { client: DownloadClient }) {
   }
   return (
     <>
-      <button type="button" className="text-button now-action" disabled={busy} onClick={() => void go()} title={`${action === 'pause' ? 'Pause' : 'Resume'} every download in ${client.label}`}>
+      <button type="button" className="text-button now-action" disabled={busy} onClick={() => void go()} title={`${action === 'pause' ? 'Pause' : 'Resume'} every download in ${client.label}`} aria-label={`${action === 'pause' ? 'Pause' : 'Resume'} everything in ${client.label}`}>
         {busy ? (action === 'pause' ? 'Pausing' : 'Resuming') : action === 'pause' ? 'Pause' : 'Resume'}
       </button>
       {error && <span className="crit-text now-error">{error}</span>}

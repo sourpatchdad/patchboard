@@ -196,7 +196,12 @@ export function Feeds() {
       if (e.key === 'j') select(visible[Math.min(idx + 1, visible.length - 1)]?.id ?? null);
       else if (e.key === 'k') select(visible[Math.max(idx - 1, 0)]?.id ?? null);
       else if (e.key === 'o' && selected) window.open(selected.url, '_blank', 'noopener');
-      else if (e.key === 'u' || (e.key === 'Escape' && selected)) select(null);
+      else if (e.key === 'u' || (e.key === 'Escape' && selected)) {
+        // Back to the list, with focus on the article you just left.
+        const left = selectedId;
+        select(null);
+        setTimeout(() => document.querySelector<HTMLElement>(`[data-entry="${left}"]`)?.focus(), 30);
+      }
       else return;
       e.preventDefault();
     };
@@ -335,7 +340,7 @@ export function Feeds() {
         <ul className="entries">
           {visible.map((e) => (
             <li key={e.id}>
-              <button type="button" className={`entry ${e.id === selectedId ? 'is-selected' : ''} ${read.has(e.id) ? 'is-read' : ''} ${e.image ? 'has-thumb' : ''}`} onClick={() => select(e.id)}>
+              <button type="button" data-entry={e.id} className={`entry ${e.id === selectedId ? 'is-selected' : ''} ${read.has(e.id) ? 'is-read' : ''} ${e.image ? 'has-thumb' : ''}`} onClick={() => select(e.id)}>
                 <span className="entry-title">{e.title}</span>
                 <span className="feed-meta">
                   <span>{e.feed}</span>

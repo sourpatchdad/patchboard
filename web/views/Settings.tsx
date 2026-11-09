@@ -248,7 +248,7 @@ export function Settings() {
       {tab === 'look' && <Portability />}
       {tab === 'connections' && (
         <>
-          <div className="seg seg-small settings-parts span-all" role="tablist" aria-label="Connections">
+          <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label="Connections">
             {PARTS.map(([v, label]) => (
               <button key={v} type="button" role="tab" aria-selected={part === v} aria-pressed={part === v} onClick={() => setPart(v)}>
                 {label}

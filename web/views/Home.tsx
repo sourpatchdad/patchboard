@@ -60,6 +60,10 @@ export function Home() {
   if (!snap) return <HomeSkeleton />;
   return (
     <div className="home">
+      {/* The page's name for screen readers and headings lists; the board says it visually. */}
+      <h1 className="sr-only">
+        {snap.brand?.name || 'Patchboard'}, {board === HOME_ID ? 'Home' : (snap.boards?.find((b) => b.id === board)?.name ?? 'board')}
+      </h1>
       <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} />
       {board === HOME_ID && <Welcome />}
       <BoardTabs />

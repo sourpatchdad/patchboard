@@ -93,6 +93,8 @@ test('backups: a failed item and a missed night both warn', () => {
 test('stoppedDetail drops the time Docker repeats', () => {
   assert.equal(stoppedDetail('Exited (1) 2 hours ago', 'golift/unpackerr:latest'), 'Exited with code 1. golift/unpackerr:latest');
   assert.equal(stoppedDetail('Exited (0) 9 hours ago', 'x:1'), 'Exited cleanly. x:1');
+  assert.equal(stoppedDetail('Exited (143) 2 minutes ago', 'x:1'), 'Exited cleanly. x:1', "Docker's own stop signal is a clean stop");
+  assert.equal(stoppedDetail('Exited (137) 2 minutes ago', 'x:1'), "Killed when it didn't stop in time. x:1");
 });
 
 test('checkUrl: private and tailnet addresses are checked, public sites are not', () => {

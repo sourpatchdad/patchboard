@@ -141,6 +141,9 @@ export const demoStoppedAt: Record<string, number> = { unpackerr: DEMO_BOOT - 2 
 
 /** Start, stop and restart in demo mode change what the demo shows. */
 const demoActed = new Map<string, { state: 'running' | 'exited'; at: number }>();
+/** Stopped from the demo (not crashed). */
+export const demoStopped = (name: string) => demoActed.get(name)?.state === 'exited';
+
 /** When a container started, for the ones started from the demo. */
 export const demoStartedAt: Record<string, number> = {};
 export function demoContainerAction(name: string, action: 'start' | 'stop' | 'restart'): void {
@@ -663,9 +666,10 @@ export function demoAdapters(): Adapter[] {
       const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
       return {
         label: 'Riverside',
-        tempNow: 17,
+        // Now matches the hourly line's first point.
+        tempNow: Math.round(14 + 8 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)),
         codeNow: 1,
-        feelsNow: 16,
+        feelsNow: Math.round(14 + 8 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)) - 1,
         windNow: 14,
         humidityNow: 58,
         isDay: true,
@@ -1016,6 +1020,11 @@ export function demoLogs(
   if (!running) return Promise.resolve();
   return new Promise((resolve) => {
     const t = setInterval(() => {
+      // Stopped meanwhile: the stream ends, as Docker's does.
+      if (demoContainers().find((c) => c.name === name)?.state !== 'running') {
+        clearInterval(t);
+        return resolve();
+      }
       const line = LOG_LINES[Math.floor(Math.random() * LOG_LINES.length)];
       onLine({ stream: line.startsWith('WARN') ? 'err' : 'out', text: `${stamp()} [${name}] ${line}` });
     }, 2200);

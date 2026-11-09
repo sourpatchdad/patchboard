@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Fixed: tapping a hold button once, then holding it, failed: its hint is
+  wider than its label, and the label changing under the finger ended the
+  hold. A hold now keeps the pointer until you let go.
+- Hold buttons show a short track under the label, a quarter lit, in place
+  of the ring that looked like a loading spinner.
+- A container stopped with Docker's stop signal (exit code 143) reads
+  "Stopped, cleanly" everywhere; 137 reads as killed when it didn't stop in
+  time. A container page's logs reconnect when it starts or stops, and its
+  buttons lock while an update or an action is in progress.
+- Downloads groups each client's items under it, names every button by its
+  item ("Pause The.Bear..."), and says what Remove removed.
+- Widget settings say when Fit the window is showing fewer items than set.
+  Width buttons have full names for screen readers.
+- Every page names itself in the tab title ("Stacks - HomeNAS"), Home
+  has a page heading for screen readers, and app groups sit one level
+  under the page's heading.
+- Focus stays put: Escape from an article in Reading and opening Edit apps
+  no longer drop focus. Settings, Connections's parts look like the other
+  Settings tabs.
+
 - A stopped container shows its last lines with "It stopped here", where
   it used to say "No output": every line now reaches the page before the
   stream closes. A stopped container leads with Start.

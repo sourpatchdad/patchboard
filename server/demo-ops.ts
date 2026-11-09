@@ -2,7 +2,7 @@
 // stats, TrueNAS, inspect detail, runbook sections and chart history. Kept apart
 // from demo.ts (media, mail, feeds) so each file stays readable.
 
-import { demoStartedAt, demoStoppedAt } from './demo.ts';
+import { demoStartedAt, demoStopped, demoStoppedAt } from './demo.ts';
 import { readPath, type JsonWidgetConfig } from '../shared/jsonwidget.ts';
 import type { BackupRun, BackupsData, Catalog, ChecksData, Container, ContainerDetail, RunbookSection, StatsData, TruenasData } from '../shared/types.ts';
 
@@ -37,6 +37,8 @@ export const DEPENDS: Record<string, string[]> = {
 };
 
 export const IMAGES: Record<string, string> = {
+  unpackerr: 'golift/unpackerr:latest',
+  recyclarr: 'recyclarr/recyclarr:7',
   plex: 'plexinc/pms-docker:latest',
   jellyfin: 'jellyfin/jellyfin:latest',
   'immich-server': 'ghcr.io/immich-app/immich-server:release',
@@ -157,7 +159,8 @@ export function demoInspect(name: string, all: Container[]): ContainerDetail | n
     created: c.created ?? Date.now() - 6 * D,
     startedAt: running ? (demoStartedAt[name] ?? c.created ?? Date.now() - 6 * D) : null,
     finishedAt: running ? null : (demoStoppedAt[name] ?? Date.now() - 9 * H),
-    exitCode: running ? null : name === 'unpackerr' ? 1 : 0,
+    // A stop from the demo exits cleanly; unpackerr's own crash keeps its code 1.
+    exitCode: running ? null : name === 'unpackerr' && !demoStopped(name) ? 1 : 0,
     restartCount: name === 'unpackerr' ? 3 : 0,
     restartPolicy: name === 'recyclarr' ? 'no' : 'unless-stopped',
     state: c.state,

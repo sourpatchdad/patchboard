@@ -12,7 +12,7 @@ export const VERB: Record<Action, [string, string]> = {
   restart: ['Restart', 'Restarting'],
 };
 
-export function ContainerActions({ name, running, self, onSent }: { name: string; running: boolean; self?: boolean; onSent?: (action: Action) => void }) {
+export function ContainerActions({ name, running, self, onSent, locked }: { name: string; running: boolean; self?: boolean; onSent?: (action: Action) => void; locked?: boolean }) {
   const [busy, setBusy] = useState<Action | null>(null);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -49,11 +49,11 @@ export function ContainerActions({ name, running, self, onSent }: { name: string
     <div className="ctr-actions">
       {actions.map((a) =>
         a === 'start' ? (
-          <button key={a} type="button" className="button button-quiet" disabled={!!busy} onClick={() => void run(a)} aria-live="polite">
+          <button key={a} type="button" className="button button-quiet" disabled={!!busy || locked} onClick={() => void run(a)} aria-live="polite">
             {busy === a ? `${VERB[a][1]}...` : VERB[a][0]}
           </button>
         ) : (
-          <HoldButton key={a} danger={a === 'stop'} disabled={!!busy} hint={`Hold to ${VERB[a][0].toLowerCase()}`} onConfirm={() => void run(a)}>
+          <HoldButton key={a} danger={a === 'stop'} disabled={!!busy || locked} hint={`Hold to ${VERB[a][0].toLowerCase()}`} onConfirm={() => void run(a)}>
             {busy === a ? `${VERB[a][1]}...` : VERB[a][0]}
           </HoldButton>
         ),

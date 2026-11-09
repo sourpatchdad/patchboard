@@ -211,10 +211,19 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
  */
 let status: { level: 'critical' | 'warn' | null; count: number } = { level: null, count: 0 };
 let appName = 'Patchboard';
+let pageName = '';
 
 const showTitle = () => {
-  if (typeof document !== 'undefined') document.title = status.count ? `(${status.count}) ${appName}` : appName;
+  if (typeof document === 'undefined') return;
+  const name = pageName ? `${pageName} - ${appName}` : appName;
+  document.title = status.count ? `(${status.count}) ${name}` : name;
 };
+
+/** The page in the tab title, "Stacks - HomeNAS"; empty on Home. */
+export function setPageName(name: string): void {
+  pageName = name;
+  showTitle();
+}
 
 /** The name in the tab, set in Settings, Look. */
 export function setAppName(name: string): void {

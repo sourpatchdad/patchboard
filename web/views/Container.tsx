@@ -223,7 +223,7 @@ export function ContainerPage() {
               <UpdateButton key="update" name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
             );
             const running = ctr.state === 'running' || ctr.state === 'restarting';
-            const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} />;
+            const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} locked={upd.job?.status === 'running' || (!!pending && !pending.stuck)} />;
             // In reading and tab order too: a stopped container leads with Start.
             return running ? [update, actions] : [actions, update];
           })()}
@@ -255,7 +255,7 @@ export function ContainerPage() {
         {/* The live logs sit beside the fix, so 2 AM needs no scrolling. */}
         <aside className="detail-side">
           <Section title="Logs" action={{ label: 'Full logs', to: `/logs/${name}` }} className="side-logs">
-            <LogTail name={name} />
+            <LogTail key={ctr.state} name={name} />
           </Section>
           {!calm && details}
         </aside>
@@ -325,7 +325,8 @@ function stateSentence(state: string, health: string | null, d: ContainerDetail 
   if (state === 'restarting') return `Restart-looping.${restarts}`;
   if (state === 'paused') return 'Paused.';
   const when = d?.finishedAt ? ` ${agoLong(d.finishedAt, now)}` : '';
-  const code = d?.exitCode != null ? (d.exitCode === 0 ? ', cleanly' : ` with exit code ${d.exitCode}`) : '';
+  // 143 and 137 are Docker's own stop (SIGTERM) and kill (SIGKILL): a stop, not a crash.
+  const code = d?.exitCode == null ? '' : d.exitCode === 0 || d.exitCode === 143 ? ', cleanly' : d.exitCode === 137 ? ', killed when it didn\'t stop in time' : ` with exit code ${d.exitCode}`;
   return `${expectStopped ? 'Finished' : 'Stopped'}${when}${code}.${expectStopped ? ' It runs on a schedule.' : ''}${restarts}`;
 }
 

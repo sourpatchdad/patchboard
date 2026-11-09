@@ -3,7 +3,7 @@ import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { moodFor } from '../../shared/otter.ts';
-import { setAppName, setStatus } from '../lib/appearance.ts';
+import { setAppName, setPageName, setStatus } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
 import { Otter } from './Otter.tsx';
@@ -76,6 +76,12 @@ export function Shell() {
   worstAlert.current = ['critical', 'warn', 'info'].map((l) => snap?.alerts.find((x) => x.level === l && x.href)).find(Boolean);
   const name = snap?.brand?.name || 'Patchboard';
   useEffect(() => setAppName(name), [name]);
+  // Each page names itself in the tab, so history and tabs tell them apart.
+  useEffect(() => {
+    const p = location.pathname;
+    const page = p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : p.startsWith('/logs') ? 'Logs' : p.startsWith('/b/') ? '' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p] ?? '';
+    setPageName(page);
+  }, [location.pathname]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
