@@ -1293,9 +1293,6 @@ a.jack:focus-visible {
 .rel-sub {
   font-size: 14px;
   color: var(--ink-2);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .rel-src {
@@ -1326,9 +1323,6 @@ a.jack:focus-visible {
 
 .agenda-compact .rel-main {
   display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .agenda-compact .rel-sub {
@@ -3003,9 +2997,7 @@ a.vitals:hover .vital-label {
 
 .disk-model {
   color: var(--ink-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .disk-size,
@@ -3845,11 +3837,10 @@ a.vitals:hover .vital-label {
   min-width: 0;
 }
 
+/* Titles and episode names wrap rather than lose their end. */
 .rel-title,
 .rel-sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .detail-ident .ident,
@@ -6588,10 +6579,6 @@ a.date:hover {
   background: transparent;
 }
 
-.cal-day.is-past {
-  opacity: 0.4;
-}
-
 .cal-day.is-today {
   box-shadow: inset 0 2px 0 var(--accent), inset 0 0 0 1px var(--line-soft);
 }
@@ -6681,14 +6668,9 @@ a.date:hover {
   overflow: visible;
 }
 
-/* The calendar speaks for itself: the source line steps aside to save a row. */
 @media (min-width: 1100px) {
   .upcoming-page:has(.cal-grid) {
     padding-bottom: 20px;
-  }
-
-  .lede-row .cal-lede {
-    display: none;
   }
 
   /* Customize joins the title row instead of a row of its own. */
@@ -6816,9 +6798,7 @@ a.date:hover {
 
   .detail-side .disk-model {
     grid-area: 1 / 3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   .detail-side .disk-size {
@@ -7239,25 +7219,22 @@ button.ha-act:hover {
 
 .net .drive-name {
   font: 500 13.5px var(--f-body);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .net .drive-model {
   text-align: right;
 }
 
-.pt-list li {
+.drive-list.pt-list li {
   grid-template-columns: 8px minmax(0, 1.1fr) minmax(0, 1fr) auto auto;
 }
 
 .pt-list .drive-name {
   font: 600 13.5px var(--f-body);
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .pt-list .drive-num {
@@ -7560,6 +7537,8 @@ button.ha-act:hover {
 .drive-name {
   color: var(--head);
   font-size: 12.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .drive-model {
@@ -9510,22 +9489,20 @@ button.ha-act:hover {
 .cell:is(:hover, :focus-within, .is-resizing) .cell-resize { opacity: 1; pointer-events: auto; }
 @media (hover: none) { .cell-resize { opacity: 1; pointer-events: auto; } }
 
-/* One line per desktop list row; metadata keeps a dependable baseline. */
+/* A title gets two lines before it shortens; metadata keeps a dependable baseline. */
 .feeds-brief .feedlist a { min-height: 68px; align-content: center; }
-.feeds-brief .feed-title { min-height: 21px; line-height: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feeds-brief .feed-title { min-height: 21px; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .feeds-brief .feed-meta { min-height: 18px; flex-wrap: nowrap; line-height: normal; }
 .feeds-brief .feed-meta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .feeds-brief .feed-meta time { flex: none; }
 .upcoming-brief .agenda-compact .rel > a,
 .upcoming-brief .agenda-compact .rel > div { min-height: 36px; align-items: center; }
 .upcoming-brief .agenda-compact .agenda-day h3 { line-height: 1; padding: 14px 0 6px; }
-.upcoming-brief .agenda-compact .rel-main { display: flex; align-items: baseline; gap: 8px; }
+.upcoming-brief .agenda-compact .rel-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
 .upcoming-brief .agenda-compact .rel-title { flex: 0 1 auto; }
-.upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; max-width: 50%; margin-left: 0; }
+.upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; margin-left: 0; }
 .upcoming-brief .rel-time, .upcoming-brief .rel-src { white-space: nowrap; }
-@media (max-width: 760px) {
-  .feeds-brief .feed-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
-}
+
 
 .header-context .weather-text,
 .header-context .weather-text strong,
@@ -9650,9 +9627,11 @@ button.ha-act:hover {
 
 .dl-name {
   min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font: 400 13px/1.4 var(--f-mono);
   color: var(--ink);
 }
@@ -9686,20 +9665,19 @@ button.ha-act:hover {
   }
 }
 
-/* This week: Search beside a release that's out and still missing. */
+/* This week: Search sits where the source label is, so the row keeps its
+   shared columns. The button's title names the source. */
 .rel.is-missing {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+  position: relative;
 }
 
-.rel.is-missing > a,
-.rel.is-missing > div {
-  flex: 1 1 auto;
-  min-width: 0;
+.rel.is-missing .rel-src {
+  visibility: hidden;
 }
 
 .rel-search {
-  flex: none;
+  position: absolute;
+  top: 6px;
+  right: 0;
   font-size: 12.5px;
 }

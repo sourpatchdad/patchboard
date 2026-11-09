@@ -62,8 +62,9 @@ memory.
 
 ![Stacks](screenshots/stacks.webp)
 
-**Upcoming:** Sonarr, Radarr and Trakt in one calendar, Monday to Sunday,
-with posters and no doubles. A phone gets a day-by-day list.
+**Upcoming:** Sonarr, Radarr and Trakt in one calendar that starts today,
+two weeks in two rows, with posters and no doubles. A phone gets a
+day-by-day list.
 
 ![Upcoming](screenshots/upcoming.webp)
 

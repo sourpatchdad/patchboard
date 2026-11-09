@@ -46,7 +46,6 @@ export function Upcoming() {
         )}
       </div>
       <div className="lede-row">
-        <p className="page-lede cal-lede">Episodes and films from Sonarr, Radarr and your Trakt calendar.</p>
         <CustomizePage
           page="upcoming"
           title="Upcoming"
@@ -96,18 +95,16 @@ export function Upcoming() {
 const DAY_MS = 86_400_000;
 
 /**
- * Wide screens: a real calendar. Monday to Sunday, every day of the weeks
- * ahead in its place, empty days quiet, so rows line up and you read a week
- * across. Narrow screens use the day list below instead.
+ * Wide screens: a calendar that starts today, seven days a row, every day
+ * ahead in its place and empty days quiet. Past days would only take a row,
+ * so two weeks are two rows. Narrow screens use the day list below instead.
  */
 function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const start = new Date(today);
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
   const last = Math.max(13, ...items.map((it) => dayOffset(it.when, now)));
-  const end = new Date(today.getTime() + last * DAY_MS);
-  end.setDate(end.getDate() + (7 - ((end.getDay() + 6) % 7) - 1));
+  const end = new Date(today.getTime() + (Math.ceil((last + 1) / 7) * 7 - 1) * DAY_MS);
   const days: Date[] = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
   const byDate = new Map<string, ReleaseItem[]>();
@@ -130,7 +127,7 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
             key={d.toDateString()}
             role="gridcell"
             aria-label={d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-            className={`cal-day ${off === 0 ? 'is-today' : ''} ${off < 0 ? 'is-past' : ''} ${list.length ? '' : 'is-empty'}`}
+            className={`cal-day ${off === 0 ? 'is-today' : ''} ${list.length ? '' : 'is-empty'}`}
           >
             <h3>
               <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>

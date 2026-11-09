@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Nothing hides behind an ellipsis any more: episode titles and grouped
+  seasons in This week, article titles in Reading (two lines), release
+  names in Downloads, host names in Docker hosts and Network, and drive
+  models on the Server page wrap instead of being cut. Docker hosts gives
+  names the wide column it was meant to have. Upcoming starts today, so two
+  weeks fit in two rows with no empty past days. The Search button in This
+  week sits in the source column and keeps the row's alignment.
+
 - Downloads, a new widget: every unfinished download across your clients,
   with Pause, Resume and Remove for each qBittorrent torrent (the files
   stay) and Limit speed for its alternative limits, plus whatever Sonarr or
