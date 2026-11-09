@@ -134,9 +134,9 @@ try {
   await shoot(page, 'upcoming');
   await go('/weather');
   await shoot(page, 'weather');
-  await go('/feeds');
+  await go('/reading');
   await shoot(page, 'reading-edition');
-  await go('/feeds?e=1');
+  await go('/reading?e=1');
   await shoot(page, 'reading');
 
   // The house, then the network, as boards of their own, then back to the default.
@@ -240,7 +240,7 @@ try {
 
   await page.locator('.wordmark').focus();
   await page.keyboard.press('?');
-  await shootEl(page.getByRole('dialog', { name: 'Keyboard shortcuts' }), 'keyboard-shortcuts');
+  await shootEl(page.getByRole('dialog', { name: 'Help' }), 'keyboard-shortcuts');
   await page.keyboard.press('Escape');
 
   console.log('Making it yours');

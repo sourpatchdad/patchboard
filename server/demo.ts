@@ -135,6 +135,28 @@ export const demoCatalog: Catalog = {
   ],
 };
 
+/** When the demo started: stops are dated from here, so every page agrees. */
+const DEMO_BOOT = Date.now();
+export const demoStoppedAt: Record<string, number> = { unpackerr: DEMO_BOOT - 2 * H - 5 * 60_000, recyclarr: DEMO_BOOT - 9 * H - 5 * 60_000 };
+
+/** Start, stop and restart in demo mode change what the demo shows. */
+const demoActed = new Map<string, { state: 'running' | 'exited'; at: number }>();
+/** When a container started, for the ones started from the demo. */
+export const demoStartedAt: Record<string, number> = {};
+export function demoContainerAction(name: string, action: 'start' | 'stop' | 'restart'): void {
+  // A moment later, the way Docker answers: the poll after the action sees it.
+  setTimeout(() => {
+    demoActed.set(name, { state: action === 'stop' ? 'exited' : 'running', at: Date.now() });
+    if (action === 'stop') demoStoppedAt[name] = Date.now();
+    else demoStartedAt[name] = Date.now();
+  }, 1500);
+}
+
+const sinceText = (ms: number) => {
+  const m = Math.max(1, Math.round((Date.now() - ms) / 60_000));
+  return m < 60 ? `${m} minute${m === 1 ? '' : 's'} ago` : `${Math.floor(m / 60)} hour${m < 120 ? '' : 's'} ago`;
+};
+
 export function demoContainers(): Container[] {
   const names = demoCatalog.groups.flatMap((g) => g.services.map((s) => s.container!)).filter(Boolean);
   names.push('immich-postgres', 'immich-redis', 'cloudflared', 'mosquitto', 'caddy');
@@ -146,10 +168,15 @@ export function demoContainers(): Container[] {
         dependsOn: DEPENDS[name],
         created: Date.now() - (name === 'plex' ? 4 * H : 6 * D),
       };
+      const acted = demoActed.get(name);
+      if (acted?.state === 'running' && (name === 'unpackerr' || name === 'recyclarr'))
+        return { id: name === 'unpackerr' ? 'a1b2c3d4e5f6' : 'f6e5d4c3b2a1', name, image: name === 'unpackerr' ? `golift/${name}:latest` : `recyclarr/${name}:7`, state: 'running', status: 'Up Less than a second', health: null, ...meta };
+      if (acted?.state === 'exited')
+        return { id: Math.abs(hash(name)).toString(16).padStart(12, '0').slice(0, 12), name, image: IMAGES[name] ?? `lscr.io/linuxserver/${name}:latest`, state: 'exited', status: `Exited (0) ${sinceText(acted.at)}`, health: null, ...meta };
       if (name === 'unpackerr')
-        return { id: 'a1b2c3d4e5f6', name, image: `golift/${name}:latest`, state: 'exited', status: 'Exited (1) 2 hours ago', health: null, ...meta };
+        return { id: 'a1b2c3d4e5f6', name, image: `golift/${name}:latest`, state: 'exited', status: `Exited (1) ${sinceText(demoStoppedAt.unpackerr)}`, health: null, ...meta };
       if (name === 'recyclarr')
-        return { id: 'f6e5d4c3b2a1', name, image: `recyclarr/${name}:7`, state: 'exited', status: 'Exited (0) 9 hours ago', health: null, ...meta };
+        return { id: 'f6e5d4c3b2a1', name, image: `recyclarr/${name}:7`, state: 'exited', status: `Exited (0) ${sinceText(demoStoppedAt.recyclarr)}`, health: null, ...meta };
       const healthy = ['immich-server', 'immich-postgres', 'vaultwarden', 'paperless', 'plex', 'frigate'].includes(name);
       return {
         id: Math.abs(hash(name)).toString(16).padStart(12, '0').slice(0, 12),
@@ -157,7 +184,7 @@ export function demoContainers(): Container[] {
         labels: name === 'caddy' ? { name: 'Caddy', group: 'Tools', icon: 'caddy.png', href: '#' } : undefined,
         image: IMAGES[name] ?? `lscr.io/linuxserver/${name}:latest`,
         state: 'running',
-        status: `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,
+        status: acted?.state === 'running' ? `Up ${Date.now() - acted.at < 60_000 ? 'Less than a second' : sinceText(acted.at).replace(/ ago$/, '')}` : `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,
         health: healthy ? ('healthy' as const) : null,
         // Pulled last night, never recreated: still on the old copy.
         ...(name === 'immich-postgres' ? { staleImage: true } : {}),
@@ -974,12 +1001,15 @@ export function demoLogs(
   const stamp = (offsetMs = 0) => ((at = Date.now() - offsetMs), new Date(at).toISOString().replace('T', ' ').slice(0, 19));
   const onLine = (l: { stream: 'out' | 'err'; text: string }) => emit({ ...l, at });
   const n = Math.min(tail, 60);
+  const running = demoContainers().find((c) => c.name === name)?.state === 'running';
+  const end = running ? 0 : Date.now() - (demoStoppedAt[name] ?? Date.now());
   for (let i = n; i > 0; i--) {
-    onLine({ stream: 'out', text: `${stamp(i * 41_000)} [${name}] ${LOG_LINES[(i * 3 + i * i) % LOG_LINES.length]}` });
+    onLine({ stream: 'out', text: `${stamp(end + i * 41_000)} [${name}] ${LOG_LINES[(i * 3 + i * i) % LOG_LINES.length]}` });
     if (name === 'unpackerr' && i === Math.ceil(n / 3)) {
-      onLine({ stream: 'err', text: `${stamp(i * 41_000 - 5_000)} [unpackerr] ERROR open /downloads/complete: permission denied` });
+      onLine({ stream: 'err', text: `${stamp(end + i * 41_000 - 5_000)} [unpackerr] ERROR open /downloads/complete: permission denied` });
     }
   }
+  if (!running) return Promise.resolve();
   return new Promise((resolve) => {
     const t = setInterval(() => {
       const line = LOG_LINES[Math.floor(Math.random() * LOG_LINES.length)];

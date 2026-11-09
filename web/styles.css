@@ -8849,7 +8849,6 @@ button.ha-act:hover {
 /* Hold to confirm: a fill sweeps across while you hold. */
 .hold {
   position: relative;
-  overflow: hidden;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -8859,6 +8858,7 @@ button.ha-act:hover {
 .hold-fill {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   transform: scaleX(0);
   transform-origin: left;
   background: color-mix(in srgb, var(--warn) 24%, transparent);
@@ -9236,6 +9236,12 @@ button.ha-act:hover {
 
   .detail-grid.has-problem .side-logs {
     order: -1;
+    margin-bottom: 28px;
+  }
+
+  /* With a runbook, the fix leads: its first step reads the logs anyway. */
+  .detail-grid.has-runbook .runbook-urgent {
+    order: -2;
     margin-bottom: 28px;
   }
 }
@@ -10299,4 +10305,117 @@ a.req-come:hover .req-title {
 
 .live-on::before {
   --led: var(--ok);
+}
+
+/* An action on its way: the light pulses amber until Docker answers. */
+.tone-busy .status-led {
+  --led: var(--warn);
+  animation: led-pulse 1.2s ease-in-out infinite;
+}
+
+@media (pointer: coarse) {
+  /* Stacked header links share the space between them: "3 more" stays on
+     top of the backups line's tap area instead of under it. */
+  .head-alert-more .text-button {
+    z-index: 1;
+  }
+
+  a.overnight::after {
+    inset: -4px -8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tone-busy .status-led,
+  .tone-crit .status-led,
+  .led[data-state='crit'] {
+    animation: none;
+  }
+}
+
+/* With a mouse or keyboard, a hold button says so before you press it. */
+@media (hover: hover) {
+  .hold::after {
+    content: attr(data-hint);
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 6px);
+    z-index: 20;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--head);
+    color: var(--bg);
+    font: 500 12px/1.2 var(--f-body);
+    white-space: nowrap;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  .hold:hover::after,
+  .hold:focus-visible::after {
+    opacity: 1;
+    transition-delay: 300ms;
+  }
+
+  .hold.is-holding::after {
+    opacity: 0;
+  }
+}
+
+/* Icons only means names on hover; a touch screen has no hover, so the
+   names show under the icons there. */
+@media (hover: none) {
+  .patchrow.icons-only .jack-label {
+    display: block;
+    max-width: 76px;
+    height: auto;
+    padding: 2px 4px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .patchrow.icons-only .jack::after {
+    display: none;
+  }
+
+  .patchrow.icons-only .bay-jacks .jack {
+    min-width: 64px;
+  }
+}
+
+/* Phone header: the server's four numbers in one row, so the apps and
+   Right now start on the first screen. Labels wrap; nothing is cut. */
+@media (max-width: 760px) {
+  .header-board-vitals .vw-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .header-board-vitals .vw-num {
+    font-size: 19px;
+  }
+
+  .header-board-vitals .vw-label {
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.25;
+  }
+}
+
+.help-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 4px 0 6px;
+}
+
+/* Help lives in the phone's More; the top bar's ? is for wide screens. */
+@media (max-width: 760px) {
+  .topbar-help {
+    display: none;
+  }
 }

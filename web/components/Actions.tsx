@@ -4,15 +4,15 @@
 import { useEffect, useState } from 'react';
 import { HoldButton } from './Hold.tsx';
 
-type Action = 'start' | 'stop' | 'restart';
+export type Action = 'start' | 'stop' | 'restart';
 
-const VERB: Record<Action, [string, string]> = {
+export const VERB: Record<Action, [string, string]> = {
   start: ['Start', 'Starting'],
   stop: ['Stop', 'Stopping'],
   restart: ['Restart', 'Restarting'],
 };
 
-export function ContainerActions({ name, running, self }: { name: string; running: boolean; self?: boolean }) {
+export function ContainerActions({ name, running, self, onSent }: { name: string; running: boolean; self?: boolean; onSent?: (action: Action) => void }) {
   const [busy, setBusy] = useState<Action | null>(null);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -33,7 +33,8 @@ export function ContainerActions({ name, running, self }: { name: string; runnin
       });
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
-      setResult({ ok: true, text: `${VERB[action][0]} sent.` });
+      if (onSent) onSent(action);
+      else setResult({ ok: true, text: `${VERB[action][0]} sent.` });
     } catch (err) {
       // Restarting Patchboard itself drops this request; the page reconnects.
       if (self && action !== 'start') setResult({ ok: true, text: 'Patchboard is restarting. This page reconnects on its own.' });

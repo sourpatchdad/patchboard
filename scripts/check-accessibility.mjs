@@ -34,7 +34,7 @@ try {
     return saved;
   };
   const before = await setup();
-  const paths = ['/', '/server', '/stacks', '/feeds', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=connections'];
+  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=connections'];
   const checkTree = async (scope) => {
     const { nodes } = await cdp.send('Accessibility.getFullAXTree');
     const exposed = nodes.filter((node) => !node.ignored);
@@ -86,7 +86,7 @@ try {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.locator('.wordmark').focus();
     await page.keyboard.press('?');
-    const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    const dialog = page.getByRole('dialog', { name: 'Help' });
     await dialog.waitFor();
     assert(await dialog.evaluate((el) => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; }), 'help fits narrow high-contrast viewport');
     await checkTree('Keyboard shortcuts in forced colors');

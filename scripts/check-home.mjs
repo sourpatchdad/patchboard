@@ -271,8 +271,9 @@ try {
     assert.equal(await overlay.getAttribute('aria-modal'), 'true', `${name} is modal`);
     assert(await overlay.evaluate((el) => el.contains(document.activeElement)), `${name} receives focus`);
     assert(await page.locator('html').evaluate((el) => el.classList.contains('is-locked')), `${name} locks background scrolling`);
-    const first = overlay.getByRole('button', { name: name === 'Keyboard shortcuts' ? 'Close' : 'Cancel', exact: true });
-    const last = overlay.getByRole('button', { name: lastName, exact: true });
+    const first = overlay.getByRole('button', { name: name === 'Help' ? 'Close' : 'Cancel', exact: true });
+    // Help ends on its last guide link; every other editor on a button.
+    const last = name === 'Help' ? overlay.getByRole('link', { name: 'Configuration', exact: true }) : overlay.getByRole('button', { name: lastName, exact: true });
     await first.focus();
     await page.keyboard.press('Shift+Tab');
     assert(await last.evaluate((el) => el === document.activeElement), `${name} wraps backwards`);
@@ -317,9 +318,9 @@ try {
   const helpOrigin = page.locator('.wordmark');
   await helpOrigin.focus();
   await page.keyboard.press('?');
-  await checkOverlay('Keyboard shortcuts', helpOrigin, 'Close');
+  await checkOverlay('Help', helpOrigin, 'Close');
   await page.keyboard.press('?');
-  await page.getByRole('dialog', { name: 'Keyboard shortcuts' }).getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Help' }).getByRole('button', { name: 'Close', exact: true }).click();
   assert.equal(await page.getByRole('dialog').count(), 0, 'keyboard help also has a pointer-accessible Close');
   await page.keyboard.press('?');
   await page.keyboard.press('?');

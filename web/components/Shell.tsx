@@ -19,7 +19,7 @@ const ICONS: Record<string, string> = {
   '/': 'M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z',
   '/server': 'M5 4h14a1 1 0 0 1 1 1v5H4V5a1 1 0 0 1 1-1zM4 14h16v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM8 7h.01M8 17h.01',
   '/stacks': 'M12 3 21 8l-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5',
-  '/feeds': 'M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8M6 19h.01',
+  '/reading': 'M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8M6 19h.01',
   '/upcoming': 'M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4',
   '/apps': 'M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
@@ -29,7 +29,7 @@ const NAV = [
   { to: '/', label: 'Home', end: true },
   { to: '/server', label: 'Server' },
   { to: '/stacks', label: 'Stacks' },
-  { to: '/feeds', label: 'Reading' },
+  { to: '/reading', label: 'Reading' },
   { to: '/upcoming', label: 'Upcoming' },
   { to: '/logs', label: 'Logs', desktop: true },
   { to: '/apps', label: 'Apps', desktop: true },
@@ -40,7 +40,7 @@ const GO: Record<string, [string, string]> = {
   h: ['/', 'Home'],
   s: ['/server', 'Server'],
   k: ['/stacks', 'Stacks'],
-  f: ['/feeds', 'Reading'],
+  f: ['/reading', 'Reading'],
   u: ['/upcoming', 'Upcoming'],
   l: ['/logs', 'Logs'],
   a: ['/apps', 'Apps'],
@@ -72,6 +72,8 @@ export function Shell() {
   useEffect(() => {
     if (snap) setStatus(level, serious.length);
   }, [snap, level, serious.length]);
+  const worstAlert = useRef<{ href?: string } | undefined>(undefined);
+  worstAlert.current = ['critical', 'warn', 'info'].map((l) => snap?.alerts.find((x) => x.level === l && x.href)).find(Boolean);
   const name = snap?.brand?.name || 'Patchboard';
   useEffect(() => setAppName(name), [name]);
 
@@ -92,6 +94,13 @@ export function Shell() {
         setPalette(true);
       } else if (e.key === '?') {
         setHelp((h) => !h);
+      } else if (e.key === '.') {
+        // The worst thing that needs you, straight to its fix.
+        const worst = worstAlert.current;
+        if (worst?.href) {
+          if (/^https?:/.test(worst.href)) window.open(worst.href, '_blank', 'noopener');
+          else navigate(worst.href);
+        }
       } else if (e.key === 'g') {
         gAt.current = Date.now();
       } else if (Date.now() - gAt.current < 1200 && GO[e.key]) {
@@ -106,8 +115,8 @@ export function Shell() {
 
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
-  const phoneTabs = ['/', '/server', '/stacks', reading ? '/feeds' : '/upcoming'];
-  const more: { to: string; label: string }[] = [...NAV.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }];
+  const phoneTabs = ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
+  const more: { to: string; label: string }[] = [...NAV.filter((n) => !phoneTabs.includes(n.to)), { to: '/settings', label: 'Settings' }];
   const inMore = more.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
 
   return (
@@ -133,7 +142,7 @@ export function Shell() {
                 </svg>
               )}
               <span>{n.label}</span>
-              {n.to === '/feeds' && unreadFeeds > 0 && <span className="nav-badge">{count(unreadFeeds)}</span>}
+              {n.to === '/reading' && unreadFeeds > 0 && <span className="nav-badge">{count(unreadFeeds)}</span>}
             </NavLink>
           ))}
           <button type="button" className={`nav-link nav-more ${inMore ? 'active' : ''}`} aria-haspopup="dialog" onClick={() => setMoreOpen(true)}>
@@ -167,6 +176,12 @@ export function Shell() {
             </svg>
             <span className="topbar-label" aria-hidden>Settings</span>
           </NavLink>
+          <button type="button" className="topbar-icon topbar-help" aria-label="Help and keyboard shortcuts" onClick={() => setHelp(true)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.7M12 16.8h.01" />
+            </svg>
+          </button>
           <button type="button" className="jump" onClick={() => setPalette(true)}>
             <span>Jump to</span>
             <kbd>{mac ? '⌘' : 'Ctrl'} K</kbd>
@@ -211,7 +226,7 @@ function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; la
           {items.map((m) => (
             <NavLink key={m.to} to={m.to} className="more-link" onClick={onClose}>
               <span>{m.label}</span>
-              {m.to === '/feeds' && unread > 0 && <span className="nav-badge">{count(unread)}</span>}
+              {m.to === '/reading' && unread > 0 && <span className="nav-badge">{count(unread)}</span>}
             </NavLink>
           ))}
           <button type="button" className="more-link" onClick={onJump}>
@@ -233,15 +248,22 @@ function KeyboardHelp({ mac, onClose }: { mac: boolean; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   return (
     <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette shortcuts" ref={modal} onKeyDown={(e) => { if (e.key === '?') { e.preventDefault(); e.stopPropagation(); onClose(); } }} role="dialog" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()}>
-        <header className="drawer-head"><h2>Keyboard</h2><button type="button" className="text-button" onClick={onClose}>Close</button></header>
+      <div className="palette shortcuts" ref={modal} onKeyDown={(e) => { if (e.key === '?') { e.preventDefault(); e.stopPropagation(); onClose(); } }} role="dialog" aria-label="Help" onClick={(e) => e.stopPropagation()}>
+        <header className="drawer-head"><h2>Help</h2><button type="button" className="text-button" onClick={onClose}>Close</button></header>
+        <p className="help-links">
+          <a href={HELP.tour} target="_blank" rel="noreferrer">A tour of every page</a>
+          <a href={HELP.integrations} target="_blank" rel="noreferrer">Setting up integrations</a>
+          <a href={HELP.configuration} target="_blank" rel="noreferrer">Configuration</a>
+        </p>
+        <h3 className="jw-sub">Keyboard</h3>
         <dl>
           <div><dt><kbd>{mac ? '⌘' : 'Ctrl'} K</kbd> <kbd>/</kbd></dt><dd>Jump to anything</dd></div>
           {Object.entries(GO).map(([k, [, label]]) => (
             <div key={k}><dt><kbd>g</kbd> <kbd>{k}</kbd></dt><dd>{label}</dd></div>
           ))}
-          <div><dt><kbd>j</kbd> <kbd>k</kbd> <kbd>o</kbd> <kbd>u</kbd></dt><dd>Feeds: next, previous, open, back to the list</dd></div>
-          <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+          <div><dt><kbd>j</kbd> <kbd>k</kbd> <kbd>o</kbd> <kbd>u</kbd></dt><dd>Reading: next, previous, open, back to the list</dd></div>
+          <div><dt><kbd>.</kbd></dt><dd>The worst thing that needs you</dd></div>
+          <div><dt><kbd>?</kbd></dt><dd>This help</dd></div>
         </dl>
       </div>
     </div>

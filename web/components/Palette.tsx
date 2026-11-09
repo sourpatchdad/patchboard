@@ -17,7 +17,7 @@ interface Item {
   label: string;
   hint: string;
   icon?: string;
-  run: () => void;
+  run: () => unknown;
 }
 
 /** Subsequence match with a bonus for word starts and contiguous runs. */
@@ -65,7 +65,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'v-home', label: 'Home', hint: 'View', run: go('/') },
       { id: 'v-server', label: 'Server', hint: 'View', run: go('/server') },
       { id: 'v-stacks', label: 'Stacks', hint: 'View', run: go('/stacks') },
-      { id: 'v-feeds', label: 'Reading', hint: 'View', run: go('/feeds') },
+      { id: 'v-feeds', label: 'Reading', hint: 'View', run: go('/reading') },
       { id: 'v-up', label: 'Upcoming', hint: 'View', run: go('/upcoming') },
       { id: 'v-weather', label: 'Weather', hint: 'View', run: go('/weather') },
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
@@ -90,10 +90,32 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       const hint = c.state === 'running' ? `Container${c.project ? ` in ${c.project}` : ''}` : `Container, ${c.state}`;
       out.push({ id: `c-${c.name}`, label: c.name, hint, run: go(`/c/${c.name}`) });
       out.push({ id: `cl-${c.name}`, label: `${c.name} logs`, hint: 'Logs', run: go(`/logs/${c.name}`) });
+      // Actions by name: "restart sonarr". Stop and restart ask first, as the
+      // hold buttons do; the container page then follows it through.
+      if (!snap.readOnly && c.name !== (snap.self?.container ?? 'patchboard')) {
+        for (const a of c.state === 'running' ? (['restart', 'stop'] as const) : (['start'] as const)) {
+          const verb = a.charAt(0).toUpperCase() + a.slice(1);
+          out.push({
+            id: `a-${a}-${c.name}`,
+            label: `${verb} ${c.name}`,
+            hint: 'Action',
+            run: async () => {
+              if (a !== 'start' && !window.confirm(`${verb} ${c.name}?`)) return;
+              const res = await fetch(`/api/containers/${encodeURIComponent(c.name)}/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
+                body: JSON.stringify({ action: a }),
+              });
+              if (!res.ok) return window.alert(`${verb} failed: ${((await res.json().catch(() => ({}))) as { error?: string }).error ?? `HTTP ${res.status}`}`);
+              navigate(`/c/${encodeURIComponent(c.name)}?sent=${a}`);
+            },
+          });
+        }
+      }
     }
     const feeds = snap.sources.miniflux?.data as MinifluxData | null;
     for (const e of feeds?.entries ?? []) {
-      out.push({ id: `f-${e.id}`, label: e.title, hint: e.feed, run: go(`/feeds?e=${e.id}`) });
+      out.push({ id: `f-${e.id}`, label: e.title, hint: e.feed, run: go(`/reading?e=${e.id}`) });
     }
     const mail = snap.sources.fastmail?.data as FastmailData | null;
     for (const m of mail?.messages ?? []) {

@@ -78,6 +78,7 @@ export function HoldButton({
       type="button"
       className={`${className} hold ${holding ? 'is-holding' : ''} ${danger ? 'is-danger' : ''}`}
       disabled={disabled}
+      data-hint={hint}
       aria-label={typeof children === 'string' ? `${children}: press and hold` : undefined}
       onPointerDown={(e) => {
         if (e.button === 0) start();

@@ -2,6 +2,7 @@
 // stats, TrueNAS, inspect detail, runbook sections and chart history. Kept apart
 // from demo.ts (media, mail, feeds) so each file stays readable.
 
+import { demoStartedAt, demoStoppedAt } from './demo.ts';
 import { readPath, type JsonWidgetConfig } from '../shared/jsonwidget.ts';
 import type { BackupRun, BackupsData, Catalog, ChecksData, Container, ContainerDetail, RunbookSection, StatsData, TruenasData } from '../shared/types.ts';
 
@@ -154,8 +155,8 @@ export function demoInspect(name: string, all: Container[]): ContainerDetail | n
     imageId: Math.abs(hash(c.image)).toString(16).padStart(12, '0').slice(0, 12),
     imageCreated: Date.now() - 9 * D,
     created: c.created ?? Date.now() - 6 * D,
-    startedAt: running ? (c.created ?? Date.now() - 6 * D) : null,
-    finishedAt: running ? null : Date.now() - (name === 'unpackerr' ? 2 * H : 9 * H),
+    startedAt: running ? (demoStartedAt[name] ?? c.created ?? Date.now() - 6 * D) : null,
+    finishedAt: running ? null : (demoStoppedAt[name] ?? Date.now() - 9 * H),
     exitCode: running ? null : name === 'unpackerr' ? 1 : 0,
     restartCount: name === 'unpackerr' ? 3 : 0,
     restartPolicy: name === 'recyclarr' ? 'no' : 'unless-stopped',

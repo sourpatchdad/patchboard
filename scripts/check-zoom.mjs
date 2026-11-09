@@ -38,7 +38,7 @@ try {
     return saved;
   };
   const before = await setup();
-  const paths = ['/', '/server', '/stacks', '/feeds', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=connections'];
+  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=connections'];
   const go = async (path) => {
     await page.goto(base + path);
     await page.waitForFunction(() => !!document.querySelector('main h1, main h2'));

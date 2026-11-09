@@ -10,7 +10,7 @@ import { marked } from 'marked';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaServers } from '../lib/media.ts';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type {
   ArrData,
   ContainerDetail,
@@ -26,7 +26,7 @@ import type {
   UptimeData,
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
-import { ContainerActions } from '../components/Actions.tsx';
+import { type Action, ContainerActions, VERB } from '../components/Actions.tsx';
 import { UpdateButton, UpdateNotice, UpdatePanel, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
@@ -59,7 +59,27 @@ export function ContainerPage() {
   const now = useNow(30_000);
   const ctr = containerMap(snap).get(name);
   const svc = serviceFor(snap, name);
-  const detail = useJson<ContainerDetail>(`/api/containers/${encodeURIComponent(name)}`, 30_000);
+  // Refetched when Docker reports a new state, so start and stop times stay true.
+  const detail = useJson<ContainerDetail>(`/api/containers/${encodeURIComponent(name)}?s=${encodeURIComponent(ctr?.status ?? '')}`, 30_000);
+  // Start, stop or restart sent: the state line says so until Docker reports it done.
+  const [pending, setPending] = useState<{ action: Action; status: string; stuck: boolean } | null>(null);
+  // Sent from Jump to: pick it up here and follow it the same way.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    const sent = params.get('sent') as Action | null;
+    if (!sent || !ctr || !(sent in VERB)) return;
+    setPending({ action: sent, status: ctr.status, stuck: false });
+    params.delete('sent');
+    setParams(params, { replace: true });
+  }, [params.get('sent'), !!ctr]);
+  useEffect(() => {
+    if (pending && ctr && ctr.status !== pending.status) setPending(null);
+  }, [ctr?.status]);
+  useEffect(() => {
+    if (!pending || pending.stuck) return;
+    const t = setTimeout(() => setPending((p) => (p ? { ...p, stuck: true } : p)), 30_000);
+    return () => clearTimeout(t);
+  }, [pending?.action, pending?.stuck]);
   const runbook = useJson<{ available: boolean; sections: RunbookSection[] }>(`/api/runbook/${encodeURIComponent(name)}`);
   const { data: stats } = useSource<StatsData>('stats');
   const uptime = useJson<UptimeData>('/api/uptime?days=30', 5 * 60_000).data;
@@ -185,16 +205,22 @@ export function ContainerPage() {
       </header>
 
       <div className="detail-state-row">
-        <p className={`detail-state tone-${problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`}>
+        <p className={`detail-state tone-${pending ? 'busy' : problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`} aria-live="polite">
           <span className="status-led" aria-hidden />
-          <span>{stateSentence(ctr.state, ctr.health, d, now, svc?.expectStopped)}</span>
+          <span>
+            {pending
+              ? pending.stuck
+                ? `${VERB[pending.action][0]} sent, and Docker still reports it ${ctr.state === 'running' ? 'running' : 'stopped'} after 30 seconds.`
+                : `${VERB[pending.action][1]}...`
+              : stateSentence(ctr.state, ctr.health, d, now, svc?.expectStopped)}
+          </span>
           {number && <span className={`detail-number tone-${number.tone}`}>{number.text}</span>}
         </p>
         <div className="ctr-actions-wrap">
           {!snap.readOnly && detail.data?.update?.ok && (
             <UpdateButton name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
           )}
-          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === (snap.self?.container ?? 'patchboard')} />}
+          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} />}
         </div>
       </div>
 
@@ -205,7 +231,7 @@ export function ContainerPage() {
         <span className="health-caption">{healthCaption(uptime, name)}</span>
       </div>
 
-      <div className={`detail-grid ${problem ? 'has-problem' : ''}`}>
+      <div className={`detail-grid ${problem ? 'has-problem' : ''} ${problem && sections.length ? 'has-runbook' : ''}`}>
         <div className="detail-main">
           <UpdatePanel job={upd.job} error={upd.error} onRollback={(id) => void upd.rollback(id)} onDismiss={upd.dismiss} />
           {mine.length > 0 && <Attention alerts={mine} now={now} />}
@@ -286,7 +312,7 @@ function Crumbs({ project }: { project?: string }) {
 function stateSentence(state: string, health: string | null, d: ContainerDetail | null, now: number, expectStopped?: boolean): string {
   const restarts = d && d.restartCount > 0 ? ` Restarted ${plural(d.restartCount, 'time')}.` : '';
   if (state === 'running') {
-    const since = d?.startedAt ? `Running for ${agoLong(d.startedAt, now).replace(/ ago$/, '')}.` : 'Running.';
+    const since = !d?.startedAt ? 'Running.' : now - d.startedAt < 60_000 ? 'Just started.' : `Running for ${agoLong(d.startedAt, now).replace(/ ago$/, '')}.`;
     const h = health === 'healthy' ? ' Healthy.' : health === 'unhealthy' ? ' Failing its health check.' : health === 'starting' ? ' Health check starting.' : '';
     return `${since}${h}${restarts}`;
   }
@@ -698,7 +724,7 @@ function AppPanel({ name }: { name: string }) {
   }
   if (name === 'miniflux' && feeds) {
     return (
-      <Section title="In Miniflux" action={{ label: 'Read', to: '/feeds' }}>
+      <Section title="In Miniflux" action={{ label: 'Read', to: '/reading' }}>
         <dl className="ledger">
           <Row k="Unread">{feeds.unread}</Row>
         </dl>

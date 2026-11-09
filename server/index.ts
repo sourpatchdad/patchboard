@@ -61,7 +61,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -509,7 +509,8 @@ app.post('/api/containers/:name/action', async (c) => {
   if (!hub.containers().some((x) => x.name === name)) return c.json({ error: 'No such container' }, 404);
   recordEvent('container.action', name, action);
   recordAudit(who(c), `container.${action}`, name);
-  if (!config.demo) {
+  if (config.demo) demoContainerAction(name, action);
+  else {
     try {
       await containerAction(name, action as ContainerAction);
     } catch (err) {

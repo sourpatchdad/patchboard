@@ -381,7 +381,7 @@ export function FeedsBrief({ now }: { now: number }) {
       title="Reading"
       className="feeds-brief"
       count={data ? `${count(data.unread)} unread` : undefined}
-      action={data?.unread ? { label: 'Read all', to: '/feeds' } : undefined}
+      action={data?.unread ? { label: 'Read all', to: '/reading' } : undefined}
       source={state}
     >
       {data?.entries.length ? (
@@ -391,7 +391,7 @@ export function FeedsBrief({ now }: { now: number }) {
             .slice(0, limit)
             .map((e) => (
             <li key={e.id}>
-              <Link to={`/feeds?e=${e.id}`} title={e.title}>
+              <Link to={`/reading?e=${e.id}`} title={e.title}>
                 <span className="feed-title">{e.title}</span>
                 <span className="feed-meta">
                   <span title={e.feed}>{e.feed}</span>
@@ -887,7 +887,7 @@ function Welcome() {
             </span>
           ) : found.length ? (
             <span>
-              {found.length} {found.length === 1 ? 'container is' : 'containers are'} running.{' '}
+              {found.length} of your {containerMap(snap).size} containers look like apps you open; databases and helpers are left out.{' '}
               {!snap.readOnly && (
                 <>
                   <button type="button" className="button board-save" disabled={busy} onClick={() => void addAll()}>

@@ -450,7 +450,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             </label>
             {draft.fit && short > 4 && (
               <span className="drawer-note">
-                {short} px past the window with lists at their shortest. {tiles ? 'Apps as icons, or a widget on another board, would make room.' : 'A widget on another board would make room.'}
+                {short < 120 ? 'A little too tall to fit, even with lists at their shortest.' : 'Too tall to fit, even with lists at their shortest.'} {tiles ? 'Apps as icons, or moving a widget to another board, would make room.' : 'Moving a widget to another board would make room.'}
               </span>
             )}
             <select

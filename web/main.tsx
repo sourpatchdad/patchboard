@@ -1,6 +1,6 @@
 import { type ComponentType, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, redirect, RouterProvider } from 'react-router-dom';
 import { Shell } from './components/Shell.tsx';
 import { SnapshotProvider } from './lib/store.tsx';
 import { Home } from './views/Home.tsx';
@@ -27,7 +27,9 @@ const router = createBrowserRouter([
       { path: '/server', lazy: page(() => import('./views/Server.tsx'), 'Server') },
       { path: '/stacks', lazy: page(() => import('./views/Stacks.tsx'), 'Stacks') },
       { path: '/c/:name', lazy: page(() => import('./views/Container.tsx'), 'ContainerPage') },
-      { path: '/feeds', lazy: page(() => import('./views/Feeds.tsx'), 'Feeds') },
+      { path: '/reading', lazy: page(() => import('./views/Feeds.tsx'), 'Feeds') },
+      // The page was /feeds before it was Reading; old bookmarks still land.
+      { path: '/feeds', loader: ({ request }) => redirect(`/reading${new URL(request.url).search}`) },
       { path: '/upcoming', lazy: page(() => import('./views/Upcoming.tsx'), 'Upcoming') },
       { path: '/weather', lazy: page(() => import('./views/Weather.tsx'), 'Weather') },
       { path: '/logs', lazy: page(() => import('./views/Logs.tsx'), 'Logs') },

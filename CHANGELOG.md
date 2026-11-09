@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Start, Stop and Restart show their progress: the state line says
+  "Starting..." with a pulsing light until Docker reports the change, or
+  says plainly if nothing changed after 30 seconds. A container that just
+  started says so.
+- Jump to runs actions by name: "Restart sonarr", "Stop plex", "Start
+  unpackerr". Stop and restart ask first.
+- Help in the top bar on wide screens: guides and every keyboard shortcut.
+  "." opens the worst thing that needs you.
+- Hold buttons say "Hold to restart" when you point at them, before you
+  press.
+- On a touch screen, apps shown as icons carry their names, since there is
+  no hover to show them.
+- On a phone, the header's server numbers sit in one row, and a container
+  with a problem and a runbook shows the runbook before the logs.
+- Reading lives at /reading; /feeds still lands there. Stacks says
+  "Stopped (error 1)" instead of Docker's "Exited (1)". Arrange board says
+  "A little too tall to fit" instead of a pixel count. First run counts the
+  containers that look like apps out of all of them.
+- Fixed: on a phone, tapping "3 more" under Needs attention opened the
+  backups page, because the link below it had a tap area that reached up
+  over it.
+
 - One status light across Patchboard: a light in a patch-panel socket, the
   socket the patch-bay launcher uses. Every board widget wears one before
   its name, showing its integration's health, or for a widget built from
