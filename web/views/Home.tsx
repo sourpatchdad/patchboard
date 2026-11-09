@@ -691,13 +691,14 @@ const actionText: Record<string, string> = {
 };
 
 export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
+  const { snap } = useStore();
   const { limit = 6 } = useWidget();
   if (!changes.length) return null;
   return (
     <Section title="Changes" className="changes-sec" count="last 48 hours">
       <ul className="changes">
         {changes.slice(0, limit).map((c) => (
-          <li key={c.id} className={`change change-${c.kind.split('.')[1]}`}>
+          <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && containerMap(snap).get(c.subject)?.state === 'running' ? 'is-over' : ''}`}>
             <Link to={`/c/${c.subject}`}>
               <span className="change-text">
                 <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind]}

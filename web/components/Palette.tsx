@@ -207,6 +207,10 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           aria-controls="palette-results"
           aria-activedescendant={results[sel] ? `pal-${results[sel].id}` : undefined}
         />
+        {/* No Escape key on a phone: a way out you can tap. */}
+        <button type="button" className="text-button palette-cancel" onClick={onClose}>
+          Cancel
+        </button>
         <ul className="palette-results" id="palette-results" role="listbox" ref={listRef}>
           {results.map((it, i) => it.id === 'none' ? (
             <li key="none" className="palette-none" role="presentation">

@@ -2,6 +2,7 @@
 // edition: a lead story, then a few from each category. Opening an entry marks
 // it read. Keyboard: j/k next/previous, o open original, u back to the edition.
 
+import { HoldButton } from '../components/Hold.tsx';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -63,7 +64,6 @@ export function Feeds() {
     });
     void post('/api/feeds/read', { ids: [id], unread: true });
   };
-  const [confirmAll, setConfirmAll] = useState(false);
   const [sort, setSort] = useUrlChoice<FeedSort>('sort', ['newest', 'oldest', 'quick'], 'newest');
   const category = params.get('cat') ?? 'All';
   // Narrowing beyond a category: one feed, a time window, words in the title.
@@ -110,7 +110,6 @@ export function Feeds() {
     else next.delete(key);
     next.delete('e');
     setParams(next, { replace: true });
-    setConfirmAll(false);
   };
 
   const clearFilters = () => {
@@ -131,7 +130,6 @@ export function Feeds() {
     else next.set('cat', c);
     next.delete('e');
     setParams(next, { replace: true });
-    setConfirmAll(false);
   };
 
   const visible = useMemo(() => {
@@ -154,7 +152,6 @@ export function Feeds() {
   }, []);
 
   async function markAll() {
-    setConfirmAll(false);
     // A filtered view marks only what it shows; the whole category stays as it is.
     if (filtered) {
       markRead(unreadShown.map((e) => e.id));
@@ -314,24 +311,12 @@ export function Feeds() {
               </button>
             ))}
           </div>
-          {!snap?.readOnly &&
-            (confirmAll ? (
-              <span className="feeds-confirm">
-                Mark {count((filtered ? unreadShown.length : total) ?? 0)} read?
-                <button type="button" className="text-button" onClick={() => void markAll()}>
-                  Mark read
-                </button>
-                <button type="button" className="text-button" onClick={() => setConfirmAll(false)}>
-                  Cancel
-                </button>
-              </span>
-            ) : (
-              (total ?? 0) > 0 && (
-                <button type="button" className="text-button" onClick={() => setConfirmAll(true)}>
-                  Mark all read
-                </button>
-              )
-            ))}
+          {/* A hold, like every other change that can't be taken back in one tap. */}
+          {!snap?.readOnly && (total ?? 0) > 0 && (
+            <HoldButton className="text-button" hint={`Hold to mark ${count((filtered ? unreadShown.length : total) ?? 0)} read`} onConfirm={() => void markAll()}>
+              Mark all read
+            </HoldButton>
+          )}
         </div>
 
         {error && <Empty>Couldn't load feeds: {error}</Empty>}

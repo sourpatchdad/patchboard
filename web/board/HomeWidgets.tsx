@@ -1220,6 +1220,8 @@ export function RequestsWidget({ now }: { now: number }) {
   const [done, setDone] = useState<string | null>(null);
   useEffect(() => {
     if (!done) return;
+    // The row you acted on is gone: focus lands on what happened, once.
+    document.getElementById('req-done')?.focus({ preventScroll: true });
     const t = setTimeout(() => setDone(null), 6000);
     return () => clearTimeout(t);
   }, [done]);
@@ -1275,7 +1277,7 @@ export function RequestsWidget({ now }: { now: number }) {
       )}
       {data.requests.length > shown.length && <p className="req-more">{data.requests.length - shown.length} more waiting in Overseerr.</p>}
       {done && (
-        <p className="req-done" role="status">
+        <p className="req-done" role="status" tabIndex={-1} id="req-done">
           {done}
         </p>
       )}

@@ -1,6 +1,7 @@
 // Live container logs straight from the Docker socket, with a hand-off to
 // Dozzle for anything heavier (search across containers, history, merging).
 
+import { useAppearance } from '../lib/appearance.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Empty } from '../components/ui.tsx';
@@ -16,6 +17,7 @@ const RANK: Record<JackState, number> = { down: 0, warn: 1, up: 2, idle: 3, none
 export function Logs() {
   const { name } = useParams();
   const { snap } = useStore();
+  const { clock24 } = useAppearance();
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [listFilter, setListFilter] = useState('');
@@ -111,7 +113,12 @@ export function Logs() {
         <ul className="ctr-list">
           {listed.map((c) => (
             <li key={c.name}>
-              <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={parked.has(c.name) ? 'idle' : c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
+              <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={(() => {
+                if (parked.has(c.name)) return 'idle';
+                if (c.state !== 'running') return 'down';
+                const f = flagged.get(c.name.toLowerCase()) ?? flagged.get((serviceFor(snap, c.name)?.name ?? '').toLowerCase());
+                return f === 'critical' ? 'down' : f || c.health === 'unhealthy' ? 'warn' : 'up';
+              })()}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
                 <span className="ctr-status" title={c.status}>{c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
@@ -162,7 +169,7 @@ export function Logs() {
             >
               {shown.map((l) => (
                 <div key={l.n} className={lineClass(l)}>
-                  {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at)}</time>}
+                  {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at, clock24)}</time>}
                   {l.text || ' '}
                 </div>
               ))}

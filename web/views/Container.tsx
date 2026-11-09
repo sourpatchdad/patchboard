@@ -2,6 +2,7 @@
 // logs, how it's wired, what changed, and the runbook section that applies.
 // When something is wrong, the runbook moves to the top.
 
+import { useAppearance } from '../lib/appearance.ts';
 import { Attention } from './Home.tsx';
 import { QUEUE_NAMES } from '../board/HomeWidgets.tsx';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
@@ -205,7 +206,7 @@ export function ContainerPage() {
       </header>
 
       <div className="detail-state-row">
-        <p className={`detail-state tone-${pending ? 'busy' : problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`} aria-live="polite">
+        <p className={`detail-state tone-${pending ? 'busy' : problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`} aria-live="polite" tabIndex={-1} id="ctr-state">
           <span className="status-led" aria-hidden />
           <span>
             {pending
@@ -223,7 +224,11 @@ export function ContainerPage() {
               <UpdateButton key="update" name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
             );
             const running = ctr.state === 'running' || ctr.state === 'restarting';
-            const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} locked={upd.job?.status === 'running' || (!!pending && !pending.stuck)} />;
+            const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => {
+                setPending({ action, status: ctr.status, stuck: false });
+                // The button you pressed is about to be swapped for another: hold focus on the state line.
+                document.getElementById('ctr-state')?.focus();
+              }} locked={upd.job?.status === 'running' || (!!pending && !pending.stuck)} />;
             // In reading and tab order too: a stopped container leads with Start.
             return running ? [update, actions] : [actions, update];
           })()}
@@ -366,6 +371,7 @@ function Resources({ name, cpu, mem }: { name: string; cpu?: number; mem?: numbe
 
 function LogTail({ name }: { name: string }) {
   const { lines, status, failure } = useLogStream(name, 150, 400);
+  const { clock24 } = useAppearance();
   const ref = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   useEffect(() => {
@@ -382,7 +388,7 @@ function LogTail({ name }: { name: string }) {
     >
       {lines.map((l) => (
         <div key={l.n} className={lineClass(l)}>
-          {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at)}</time>}
+          {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at, clock24)}</time>}
           {l.text || ' '}
         </div>
       ))}

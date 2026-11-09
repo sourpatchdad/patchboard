@@ -3,7 +3,7 @@
 
 import { useSearchParams } from 'react-router-dom';
 
-export function useUrlChoice<T extends string>(key: string, options: readonly T[], fallback: T): [T, (v: T) => void] {
+export function useUrlChoice<T extends string>(key: string, options: readonly T[], fallback: T, push = false): [T, (v: T) => void] {
   const [params, setParams] = useSearchParams();
   const raw = params.get(key);
   const value = raw && (options as readonly string[]).includes(raw) ? (raw as T) : fallback;
@@ -11,7 +11,7 @@ export function useUrlChoice<T extends string>(key: string, options: readonly T[
     const next = new URLSearchParams(params);
     if (v === fallback) next.delete(key);
     else next.set(key, v);
-    setParams(next, { replace: true });
+    setParams(next, { replace: !push });
   };
   return [value, set];
 }

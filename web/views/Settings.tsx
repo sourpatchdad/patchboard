@@ -62,9 +62,9 @@ const TABS: [Tab, string, string][] = [
 
 export function Settings() {
   const a = useAppearance();
-  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look');
+  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look', true);
   // Connections is four pages in one: each part on its own, so none is a long scroll away.
-  const [part, setPart] = useUrlChoice<Part>('part', ['integrations', 'access', 'apps', 'backup'], 'integrations');
+  const [part, setPart] = useUrlChoice<Part>('part', ['integrations', 'access', 'apps', 'backup'], 'integrations', true);
   const { hash, search } = useLocation();
   useEffect(() => {
     if (hash === '#catalog' || new URLSearchParams(search).get('import') === 'homepage') setPart('apps');
@@ -92,7 +92,7 @@ export function Settings() {
       </div>
       <div className="seg settings-tabs" role="tablist" aria-label="Settings" onKeyDown={tabKeys}>
         {TABS.map(([v, label]) => (
-          <button key={v} type="button" role="tab" tabIndex={tab === v ? 0 : -1} aria-selected={tab === v} aria-pressed={tab === v} onClick={() => setTab(v)}>
+          <button key={v} type="button" role="tab" tabIndex={tab === v ? 0 : -1} aria-selected={tab === v} onClick={() => setTab(v)}>
             {label}
           </button>
         ))}
@@ -262,7 +262,7 @@ export function Settings() {
         <>
           <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label="Connections" onKeyDown={tabKeys}>
             {PARTS.map(([v, label]) => (
-              <button key={v} type="button" role="tab" tabIndex={part === v ? 0 : -1} aria-selected={part === v} aria-pressed={part === v} onClick={() => setPart(v)}>
+              <button key={v} type="button" role="tab" tabIndex={part === v ? 0 : -1} aria-selected={part === v} onClick={() => setPart(v)}>
                 {label}
               </button>
             ))}
@@ -973,26 +973,43 @@ function Integrations() {
           ))}
         </span>
       </div>
-      {/* One list, so a row that turns on keeps its open form. Categories in a set order, A to Z inside. */}
-      <ul className="integrations">
-        {CATEGORIES.map(([cat, ids]) => {
-          const q = find.trim().toLowerCase();
-          const list = rows
+      {/* Categories in a set order, A to Z inside, in two columns that stand on
+          their own: opening a form grows only its column, so nothing beside it moves. */}
+      {(() => {
+        const q = find.trim().toLowerCase();
+        const cats = CATEGORIES.map(([cat, ids]) => ({
+          cat,
+          list: rows
             .filter((r) => ids.includes(r.i.id))
             .filter((r) => (show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true))
             .filter((r) => !q || `${r.i.name} ${r.i.adds}`.toLowerCase().includes(q) || open === r.i.id)
-            .sort((a, b) => a.i.name.localeCompare(b.i.name));
-          if (!list.length) return null;
-          return [
-            <li key={`cat-${cat}`} className="integrations-divider">
-              <h3 className="jw-sub">
-                {cat} <span className="int-cat-count">{list.filter((r) => r.st.on).length} on</span>
-              </h3>
-            </li>,
-            ...list.map(row),
-          ];
-        })}
-      </ul>
+            .sort((a, b) => a.i.name.localeCompare(b.i.name)),
+        })).filter((c) => c.list.length);
+        // Balance by rows: each category goes to the shorter column, in order.
+        const cols: (typeof cats)[] = [[], []];
+        const size = [0, 0];
+        for (const c of cats) {
+          const k = size[0] <= size[1] ? 0 : 1;
+          cols[k].push(c);
+          size[k] += c.list.length + 1;
+        }
+        return (
+          <div className="int-cols">
+            {cols.map((col, k) => (
+              <ul className="integrations" key={k}>
+                {col.flatMap(({ cat, list }) => [
+                  <li key={`cat-${cat}`} className="integrations-divider">
+                    <h3 className="jw-sub">
+                      {cat} <span className="int-cat-count">{list.filter((r) => r.st.on).length} on</span>
+                    </h3>
+                  </li>,
+                  ...list.map(row),
+                ])}
+              </ul>
+            ))}
+          </div>
+        );
+      })()}
       {find.trim() && !rows.some((r) => `${r.i.name} ${r.i.adds}`.toLowerCase().includes(find.trim().toLowerCase())) && (
         <p className="settings-note">Nothing called that. App numbers on tiles work for any app with a JSON API: Apps, Edit apps.</p>
       )}

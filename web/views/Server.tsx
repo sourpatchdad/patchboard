@@ -82,8 +82,8 @@ export function Server() {
     <div className="page server">
       <header className="detail-head">
         <div className="detail-titles">
-          <h1 className="page-title">{title}</h1>
-          <p className="detail-ident">{facts.join(', ')}</p>
+          <h1 className="page-title">Server</h1>
+          <p className="detail-ident">{[title !== 'Server' ? title : null, ...facts].filter(Boolean).join(', ')}</p>
         </div>
         <CustomizePage page="server" title="Server" sections={SERVER_SECTIONS} />
       </header>

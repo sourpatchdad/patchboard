@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Back and Forward return to where you were on the page; a new page starts
+  at its top, and a sort or filter change stays put. Settings tabs are
+  steps in history, so Back leaves Connections for the tab before it.
+- Settings, Connections, Integrations is two columns that stand on their
+  own: opening a setup form grows only its column.
+- Focus after actions: a container's state line holds focus when its
+  buttons swap, Approve and Decline move focus to what happened, and
+  Cancel or Discard in Arrange board returns it to Arrange board.
+- Logs lights each container by its problem's tone. Changes greys a stop
+  that's over once the container runs again.
+- Mark all read is a press-and-hold, like the other changes you can't take
+  back in one tap. Jump to on a phone has a Cancel.
+- The Server page's heading is Server, with the machine's name under it.
+  Log times follow the Time format setting. Settings tabs announce
+  selected rather than pressed.
+
 - Fixed: in the two minutes after a stop, before Patchboard settles on it,
   a container with no recorded history showed every watched day as down.
   A stop not yet settled counts from when it began.

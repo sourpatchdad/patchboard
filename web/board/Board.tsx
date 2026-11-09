@@ -434,11 +434,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               {tools ? 'Fewer tools' : 'Tools'}
             </button>
             {dirty ? (
-              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''))}>
+              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''), setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50))}>
                 Discard changes
               </HoldButton>
             ) : (
-              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
+              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''), setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50))}>
                 Cancel
               </button>
             )}

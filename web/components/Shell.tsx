@@ -1,7 +1,7 @@
 import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { moodFor } from '../../shared/otter.ts';
 import { setAppName, setPageName, setStatus } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
@@ -57,6 +57,61 @@ export function Shell() {
   const [help, setHelp] = useState(false);
   // Every board counts as Home in the nav.
   const location = useLocation();
+  const navType = useNavigationType();
+  // Back and Forward return to where you were. Pages load in pieces, so the
+  // position is retried until the page is tall enough to hold it.
+  useEffect(() => {
+    // Patchboard restores positions itself; the browser's own restore runs
+    // before a page has loaded and puts it back at the top.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  }, []);
+  useEffect(() => {
+    const key = location.key;
+    // Saved a moment after scrolling stops: when the next page renders
+    // shorter, the browser clamps the scroll before this listener moves on,
+    // and that clamp must not overwrite where you were.
+    let timer = 0;
+    const save = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        try {
+          sessionStorage.setItem(`pb-scroll:${key}`, String(Math.round(window.scrollY)));
+        } catch {
+          /* private mode: Back starts at the top */
+        }
+      }, 150);
+    };
+    window.addEventListener('scroll', save, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('scroll', save);
+    };
+  }, [location.key]);
+  const lastPath = useRef(location.pathname);
+  useEffect(() => {
+    const moved = lastPath.current !== location.pathname;
+    lastPath.current = location.pathname;
+    if (navType !== 'POP') {
+      // A new page starts at its top; a sort or filter change stays put.
+      if (moved && !location.hash) window.scrollTo(0, 0);
+      return;
+    }
+    let y = 0;
+    try {
+      y = Number(sessionStorage.getItem(`pb-scroll:${location.key}`)) || 0;
+    } catch {
+      /* nothing saved */
+    }
+    if (!y) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      if (document.documentElement.scrollHeight - window.innerHeight >= y - 2 || ++tries > 30) {
+        window.scrollTo(0, y);
+        clearInterval(t);
+      }
+    }, 50);
+    return () => clearInterval(t);
+  }, [location.key]);
   const onBoard = location.pathname.startsWith('/b/');
   const navigate = useNavigate();
   const gAt = useRef(0);

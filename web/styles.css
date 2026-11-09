@@ -8200,7 +8200,7 @@ button.ha-act:hover {
    name, so the whole list fits about one screen. An open form stays in its
    own column, so nothing jumps when you open one. */
 @media (min-width: 1200px) {
-  .integrations {
+  .int-cols {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
@@ -10624,4 +10624,28 @@ a.req-come:hover .req-title {
 
 .ctr[data-state='idle'] .ctr-led {
   --led: transparent;
+}
+
+/* Tabs read selected from aria-selected, the same fill as a pressed segment. */
+.seg [role='tab'][aria-selected='true'] {
+  box-shadow: 0 0 0 2px var(--accent);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--head);
+}
+
+/* A stop that's over: the container runs again, so its light goes quiet. */
+.change.is-over .change-text::before {
+  --led: var(--ink-3);
+}
+
+.palette-cancel {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .palette-cancel {
+    display: block;
+    margin: 8px 4px 0 auto;
+  }
 }
