@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Saving a board pins each card to the column it's shown in, so what you
+  arranged is what stays: a card no longer hops columns when a neighbour
+  grows or shrinks with live data, such as a paused download client.
+
 - Fixed: Tab got stuck on Right now. Focusing a playing item opened its
   details and pulled Tab into them; now Enter or Down opens them and Tab
   always moves on.

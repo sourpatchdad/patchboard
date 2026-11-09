@@ -333,6 +333,21 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const shown = draft ?? board;
   // Columns: the board's choice, fewer when the window can't fit them.
   const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
+  /**
+   * Each card's column as it's shown now, written into the board when it's
+   * saved: what you arranged is what stays, and a card whose neighbours grow
+   * or shrink with live data never hops to another column.
+   */
+  const pinColumns = (ws: Widget[]): Widget[] => {
+    if (!boardEl || cols < 2) return ws;
+    const rect = boardEl.getBoundingClientRect();
+    const unit = (rect.width + GAP_PX) / cols;
+    return ws.map((w) => {
+      if (w.column) return w;
+      const cell = document.getElementById(`w-${w.id}`);
+      return cell ? { ...w, column: Math.max(1, Math.round((cell.getBoundingClientRect().left - rect.left) / unit) + 1) } : w;
+    });
+  };
   const [boardW, setBoardW] = useState(0);
   useEffect(() => {
     if (!boardEl) return;
@@ -431,7 +446,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               type="button"
               className="button board-save"
               onClick={async () => {
-                const err = await save({ ...draft, name: draft.name?.trim() || undefined });
+                const err = await save({ ...draft, widgets: pinColumns(draft.widgets), name: draft.name?.trim() || undefined });
                 if (err) setError(err);
                 else setDraft(null);
               }}
@@ -600,7 +615,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             if (!quick) return;
             setQuick(false);
             const d = draftRef.current;
-            if (d) void save(d).then((err) => (err ? setError(err) : setDraft(null)));
+            if (d) void save({ ...d, widgets: pinColumns(d.widgets) }).then((err) => (err ? setError(err) : setDraft(null)));
           }}
           columns={chosen}
           onColumn={(column) => update((ws) => ws.map((x) => x.id === setting ? { ...x, column } : x))}
