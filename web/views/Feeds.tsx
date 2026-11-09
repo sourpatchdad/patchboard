@@ -196,7 +196,7 @@ export function Feeds() {
       if (e.key === 'j') select(visible[Math.min(idx + 1, visible.length - 1)]?.id ?? null);
       else if (e.key === 'k') select(visible[Math.max(idx - 1, 0)]?.id ?? null);
       else if (e.key === 'o' && selected) window.open(selected.url, '_blank', 'noopener');
-      else if (e.key === 'u') select(null);
+      else if (e.key === 'u' || (e.key === 'Escape' && selected)) select(null);
       else return;
       e.preventDefault();
     };
@@ -377,6 +377,27 @@ export function Feeds() {
               </span>
             </header>
             <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+            {/* The keys j and k, as buttons: the next article without going back to the list. */}
+            <nav className="reader-steps" aria-label="More articles">
+              {(() => {
+                const at = visible.findIndex((x) => x.id === selected.id);
+                const prev = at > 0 ? visible[at - 1] : null;
+                const next = at >= 0 && at < visible.length - 1 ? visible[at + 1] : null;
+                return (
+                  <>
+                    <button type="button" className="button button-quiet" disabled={!prev} onClick={() => prev && select(prev.id)}>
+                      Previous
+                    </button>
+                    <button type="button" className="text-button" onClick={() => select(null)}>
+                      Back to the edition
+                    </button>
+                    <button type="button" className="button button-quiet" disabled={!next} onClick={() => next && select(next.id)}>
+                      Next
+                    </button>
+                  </>
+                );
+              })()}
+            </nav>
           </>
         ) : (
           <Edition entries={unreadShown} total={total} now={now} onPick={select} single={category !== 'All'} />

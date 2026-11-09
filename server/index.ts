@@ -1,4 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
+import type { SeerrData } from '../shared/types.ts';
+import { fieldLabel } from '../shared/setup.ts';
 import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
@@ -471,7 +473,11 @@ app.get('/api/logs/:name', (c) => {
     const follow = config.demo ? demoLogs : followLogs;
     try {
       // Keys an app writes into its own logs are masked before they leave the server.
-      await follow(name, tail, (line) => void stream.writeSSE({ data: JSON.stringify({ ...line, text: redact(line.text) }) }), ac.signal);
+      // A stopped container's logs arrive all at once and the stream ends: wait for every
+      // line to go out before closing, or the last ones are lost.
+      const writes: Promise<void>[] = [];
+      await follow(name, tail, (line) => void writes.push(stream.writeSSE({ data: JSON.stringify({ ...line, text: redact(line.text) }) })), ac.signal);
+      await Promise.all(writes);
     } catch (err) {
       await stream.writeSSE({ event: 'failure', data: JSON.stringify({ message: (err as Error).message }) });
     }
@@ -659,7 +665,8 @@ app.post('/api/requests/:id/:action', async (c) => {
     return c.json({ error: (err as Error).message }, 502);
   }
   pendingIds.delete(id);
-  recordAudit(who(c), `requests.${action}`, String(id));
+  const asked = (hub.snapshot().sources.overseerr?.data as SeerrData | null)?.requests.find((r) => r.id === id)?.title;
+  recordAudit(who(c), `requests.${action}`, String(id), asked);
   void hub.pollNow('overseerr');
   return c.json({ ok: true });
 });
@@ -753,7 +760,7 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
   const checked = checkValues(i, (await c.req.json().catch(() => null))?.values ?? {});
   if ('error' in checked) return c.json({ ok: false, error: checked.error });
   const gaps = missing(i, checked.values);
-  if (gaps.length) return c.json({ ok: false, error: `Fill in ${gaps.map((n) => n).join(', ')} first.` });
+  if (gaps.length) return c.json({ ok: false, error: fillIn(gaps) });
   recordAudit(who(c), 'setup.test', i.id);
   if (config.demo) return c.json({ ok: true, summary: 'Demo mode: nothing to connect to, so this always passes.' });
   try {
@@ -764,6 +771,13 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
   }
 });
 
+/** "Fill in the address and API key first.": the fields' own names, not environment variables. */
+function fillIn(gaps: string[]): string {
+  const names = [...new Set(gaps.map((g) => fieldLabel(g).replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())))];
+  const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+  return `Fill in the ${list} first.`;
+}
+
 app.put('/api/setup/integrations/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const i = setupIntegration(c.req.param('id'));
@@ -772,7 +786,7 @@ app.put('/api/setup/integrations/:id', async (c) => {
   const checked = checkValues(i, (await c.req.json().catch(() => null))?.values ?? {});
   if ('error' in checked) return c.json({ error: checked.error }, 400);
   const gaps = missing(i, checked.values);
-  if (gaps.length) return c.json({ error: `Fill in ${gaps.join(', ')} first.` }, 400);
+  if (gaps.length) return c.json({ error: fillIn(gaps) }, 400);
   saveValues(checked.values);
   recordAudit(who(c), 'setup.save', i.id, Object.keys(checked.values).join(', '));
   hub.replaceAdapters(realAdapters());

@@ -314,7 +314,8 @@ function AppVersion() {
           {busy ? 'Checking...' : 'Check now'}
         </button>
       )}
-      {!ro && me.container && snap.features?.includes('updates') && <SelfUpdate name={me.container} waiting={newer} />}
+      {/* Update shows when there is one, or when Patchboard can't tell; never beside "Up to date". */}
+      {!ro && me.container && snap.features?.includes('updates') && (newer || c?.state !== 'current') && <SelfUpdate name={me.container} waiting={newer} />}
       <span className="app-help">
         Help:{' '}
         <a href={HELP.tour} target="_blank" rel="noreferrer">
@@ -672,7 +673,40 @@ const ACTION_TEXT: Record<string, string> = {
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',
   'auth.failed': 'failed to sign in',
+  'auth.hosts': 'changed the addresses Patchboard answers on',
+  'auth.off': 'turned sign-in off',
+  'board.add': 'added a board',
+  'brand.save': 'renamed the dashboard',
+  'setup.save': 'saved the settings for',
+  'setup.remove': 'removed the integration',
+  'setup.test': 'tested the connection to',
+  'setup.thresholds': 'changed the alert thresholds',
+  'wake': 'woke',
+  'downloads.pause': 'paused every download in',
+  'downloads.resume': 'resumed every download in',
+  'downloads.altspeed': 'switched alternative speed limits in',
+  'downloads.item.pause': 'paused',
+  'downloads.item.resume': 'resumed',
+  'downloads.item.remove': 'removed the download',
+  'arr.search': 'searched again for',
+  'arr.retry': 'tried another release for',
+  'arr.remove': 'removed from the queue',
+  'requests.approve': 'approved',
+  'requests.decline': 'declined',
+  'ha.toggle': 'switched',
+  'ha.run': 'ran',
+  'proxmox.start': 'started',
+  'proxmox.shutdown': 'shut down',
+  'proxmox.reboot': 'rebooted',
 };
+
+/** What an action was done to, in words: a title or name over an id. */
+function auditSubject(r: AuditRow): string | undefined {
+  if (r.action.startsWith('auth.')) return undefined;
+  if (r.action.startsWith('requests.')) return r.detail || `request ${r.target}`;
+  if (r.action.startsWith('setup.') && r.action !== 'setup.thresholds' && r.action !== 'setup.import') return INTEGRATIONS.find((i) => i.id === r.target)?.name ?? r.target;
+  return r.detail && (r.action.startsWith('downloads.item.') || r.action.startsWith('arr.')) ? r.detail : r.target;
+}
 
 /** Who changed what, newest first: every action, update, board edit and sign-in. */
 function Activity() {
@@ -690,11 +724,11 @@ function Activity() {
             <li key={r.id}>
               <span className="mono audit-who">{r.who}</span>
               <span>
-                {ACTION_TEXT[r.action] ?? r.action}
-                {r.target && (r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action === 'update.dismiss') && (
+                {ACTION_TEXT[r.action] ?? r.action.replace(/[._]/g, ' ')}
+                {auditSubject(r) && !['board.save', 'board.reset', 'apps.order', 'apps.order.reset', 'icon.upload', 'pages.save', 'brand.save', 'trakt.connect', 'trakt.disconnect', 'setup.import', 'setup.thresholds'].includes(r.action) && (
                   <>
                     {' '}
-                    <span className="ident">{r.target}</span>
+                    <span className={r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action === 'update.dismiss' ? 'ident' : undefined}>{auditSubject(r)}</span>
                   </>
                 )}
                 {r.detail && r.action.startsWith('auth.') ? <span className="ledger-aside"> from {r.detail}</span> : null}
@@ -816,7 +850,19 @@ function Integrations() {
     const su = setupOf(i.id);
     const locked = su ? su.fields.every((f) => f.locked) : false;
     return (
-      <li key={i.id} id={`int-${i.id}`} className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''} ${st.why ? 'has-why' : ''}`}>
+      <li
+        key={i.id}
+        id={`int-${i.id}`}
+        className={`integration tone-${st.tone} ${open === i.id ? 'is-open' : ''} ${st.why ? 'has-why' : ''}`}
+        onKeyDown={(e) => {
+          // Escape closes an open setup panel, as it closes every other panel.
+          if (e.key === 'Escape' && open === i.id) {
+            e.stopPropagation();
+            setOpen(null);
+            document.querySelector<HTMLButtonElement>(`#int-${i.id} .integration-end .text-button`)?.focus();
+          }
+        }}
+      >
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
           {i.adds}
@@ -829,7 +875,7 @@ function Integrations() {
             {locked && st.on && <small> From the environment</small>}
           </span>
           {su ? (
-            <button type="button" className="text-button" aria-expanded={open === i.id} onClick={() => setOpen(open === i.id ? null : i.id)}>
+            <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={`${open === i.id ? 'Close' : st.on ? 'Settings for' : 'Set up'} ${i.name}`} onClick={() => setOpen(open === i.id ? null : i.id)}>
               {open === i.id ? 'Close' : st.on ? 'Settings' : 'Set up'}
             </button>
           ) : (

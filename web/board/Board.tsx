@@ -404,6 +404,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           <div className="board-bar-row">
             <input
               className="field board-name"
+              // Arrange took focus from a button that is now inert: land here instead.
+              autoFocus={!quick}
               aria-label="Board name"
               maxLength={32}
               value={draft.name ?? (home ? 'Home' : '')}
@@ -541,7 +543,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         })}
       </div>
 
-      <div className="board-foot" aria-hidden={editing || undefined} inert={editing || undefined}>
+      <div className="board-foot" inert={editing || undefined}>
           <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Header settings</Link>
           {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             Arrange board
@@ -560,7 +562,15 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           onAdd={(w) => {
             setAdding(false);
             if (w.type === 'json') setJsonEdit('new');
-            else update((ws) => [...ws, w]);
+            else {
+              update((ws) => [...ws, w]);
+              // Show where it landed, with its controls ready.
+              setTimeout(() => {
+                const el = document.getElementById(`w-${w.id}`);
+                el?.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+                el?.querySelector<HTMLElement>('.cell-tools button')?.focus({ preventScroll: true });
+              }, 60);
+            }
           }}
         />
       )}

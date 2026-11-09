@@ -260,7 +260,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     if (!arr) continue;
     const name = ARR_NAMES[id];
     for (const p of arr.problems) {
-      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, href: appUrl(config[id], '/activity/queue'), source: id });
+      alerts.push({ id: `${id}-q-${p.title}`, level: 'warn', title: `${name} can't import a download`, detail: `${p.message} (${p.title})`, href: appUrl(config[id], '/activity/queue') ?? `/c/${id}`, source: id });
     }
     for (const h of arr.health.filter((h) => h.level === 'error')) {
       alerts.push({ id: `${id}-h-${h.message}`, level: 'warn', title: `${name} health check`, detail: h.message, href: appUrl(config[id], '/system/status'), source: id });
@@ -275,7 +275,7 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   const frigate = data<FrigateData>(sources, 'frigate');
   for (const cam of frigate?.cameras ?? []) {
     if (!cam.online) {
-      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', href: appUrl(config.frigate), source: 'frigate' });
+      alerts.push({ id: `cam-${cam.name}`, level: 'critical', subject: cam.name, title: `${cam.name} camera is offline`, detail: 'Frigate is receiving no frames', href: appUrl(config.frigate) ?? '/c/frigate', source: 'frigate' });
     }
   }
 

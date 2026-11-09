@@ -381,7 +381,7 @@ export function FeedsBrief({ now }: { now: number }) {
       title="Reading"
       className="feeds-brief"
       count={data ? `${count(data.unread)} unread` : undefined}
-      action={data?.unread ? { label: 'Read all', to: '/reading' } : undefined}
+      action={data?.unread ? { label: 'Open Reading', to: '/reading' } : undefined}
       source={state}
     >
       {data?.entries.length ? (
@@ -459,6 +459,12 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
           {m.data.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
           ))}
+          {/* Fit or a small limit cut the list: say so, and lead to the rest. */}
+          {m.data.streams.length > limit && (
+            <p className="now-foot now-more">
+              <AppLink container={m.container}>{m.data.streams.length - limit} more on {m.label}</AppLink>
+            </p>
+          )}
         </div>
       ))}
 
@@ -526,6 +532,11 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
                 <Meter label={`${t.name} download progress`} value={t.progress * 100} level="ok" />
               </div>
             ))}
+          {!d.data.paused && d.data.active.length > limit && (
+            <p className="now-foot now-more">
+              <AppLink container={d.container}>{d.data.active.length - limit} more in {d.label}</AppLink>
+            </p>
+          )}
           {d.data.kind !== 'usenet' && !d.data.paused && (
             <p className="now-foot">
               Seeding {d.data.seeding}, uploading at {speed(d.data.up)}
@@ -580,7 +591,7 @@ export function UpcomingBrief({ now }: { now: number }) {
     byDay.set(label, [...(byDay.get(label) ?? []), it]);
   }
   return (
-    <Section title={days > 7 ? 'Next two weeks' : 'This week'} className="upcoming-brief" count={week.length ? plural(week.length, 'release') : undefined} action={{ label: 'Two weeks', to: '/upcoming' }}>
+    <Section title={days > 7 ? 'Next two weeks' : 'This week'} className="upcoming-brief" count={week.length ? plural(groupDrops(week).length, 'release') : undefined} action={{ label: 'Two weeks', to: '/upcoming' }}>
       {byDay.size ? (
         <div className="agenda agenda-compact">
           {[...byDay].map(([day, list]) => (

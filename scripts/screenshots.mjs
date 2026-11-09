@@ -275,7 +275,7 @@ try {
   await go('/settings?tab=connections');
   await shoot(page, 'integrations', { fullPage: true });
   const emby = page.locator('.integration', { hasText: 'Emby' }).first();
-  await emby.getByRole('button', { name: 'Set up' }).click();
+  await emby.getByRole('button', { name: 'Set up Emby' }).click();
   await emby.getByLabel('Address').fill('http://192.168.1.10:8096');
   await emby.getByLabel('API key').fill('a-key-you-paste');
   await emby.getByRole('button', { name: 'Test connection' }).click();

@@ -690,7 +690,7 @@ export function demoAdapters(): Adapter[] {
           uvMax: [5, 4, 2, 6, 6, 3, 4][i],
           windMax: [18, 22, 30, 12, 15, 41, 20][i],
         })),
-        alerts: [{ event: 'Wind Advisory', headline: 'Wind Advisory until Thursday evening: gusts up to 45 mph', severity: 'Moderate', until: `${dayAt(1, 12).slice(0, 10)}T19:00` }],
+        alerts: [{ event: 'Wind Advisory', headline: `Wind Advisory until ${new Date(dayAt(1, 19)).toLocaleDateString('en-US', { weekday: 'long' })} evening: gusts up to 45 mph`, severity: 'Moderate', until: dayAt(1, 19) }],
       };
     }),
     demo<ArrData>('sonarr', 'Sonarr', 5 * MINUTE, () => ({

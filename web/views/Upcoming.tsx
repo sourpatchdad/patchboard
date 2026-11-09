@@ -33,7 +33,8 @@ export function Upcoming() {
   const releases = groupDrops(ahead);
   const episodes = releases.filter((i) => i.kind === 'episode').length;
   const films = releases.length - episodes;
-  const thisWeek = groupDrops(shown.filter((i) => dayOffset(i.when, now) < 7)).length;
+  // The same count as Home's This week: the next seven days from today, a season drop once.
+  const thisWeek = groupDrops(shown.filter((i) => dayOffset(i.when, now) >= 0 && dayOffset(i.when, now) < 7)).length;
 
   return (
     <div className="page upcoming-page">
@@ -41,7 +42,7 @@ export function Upcoming() {
         <h1 className="page-title">Upcoming</h1>
         {ahead.length > 0 && (
           <span className="section-count">
-            {plural(thisWeek, 'release')} this week, {groupDrops(shown).length} in two weeks
+            {plural(thisWeek, 'release')} in the next 7 days, {groupDrops(shown).length} in two weeks
           </span>
         )}
       </div>

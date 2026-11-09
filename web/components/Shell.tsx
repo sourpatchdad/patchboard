@@ -116,7 +116,7 @@ export function Shell() {
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
   const phoneTabs = ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
-  const more: { to: string; label: string }[] = [...NAV.filter((n) => !phoneTabs.includes(n.to)), { to: '/settings', label: 'Settings' }];
+  const more: { to: string; label: string }[] = [...NAV.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }];
   const inMore = more.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
 
   return (

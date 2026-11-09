@@ -147,7 +147,7 @@ export function Logs() {
                 </div>
               ))}
               {status === 'failed' && <p className="logs-note">Couldn't read logs: {failure}</p>}
-              {status === 'ended' && <p className="logs-note">Stream closed. The container may have stopped. Pick it again to reconnect.</p>}
+              {status === 'ended' && <p className="logs-note">{lines.length ? 'It stopped here. These are its last lines; pick it again once it runs to follow it live.' : 'It has written nothing yet.'}</p>}
               {status === 'streaming' && lines.length === 0 && <p className="logs-note">Waiting for output.</p>}
             </div>
           </>

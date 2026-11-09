@@ -77,6 +77,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
       { id: 'v-apps', label: 'Apps', hint: 'View', run: go('/apps') },
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },
+      ...([['look', 'Look'], ['home', 'Home'], ['alerts', 'Alerts'], ['connections', 'Connections'], ['activity', 'Activity']] as const).map(([t, label]) => ({ id: `set-${t}`, label: `Settings: ${label}`, hint: 'Settings', run: go(`/settings?tab=${t}`) })),
       { id: 'h-tour', label: 'Help: a tour of every page', hint: 'Help', run: openUrl(HELP.tour) },
       { id: 'h-integrations', label: 'Help: setting up integrations', hint: 'Help', run: openUrl(HELP.integrations) },
       ...(onKeys ? [{ id: 'h-keys', label: 'Keyboard shortcuts', hint: 'Help', run: onKeys }] : []),
@@ -138,7 +139,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       .map((it) => {
         const s = Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50);
         // The boost ranks a match; it never makes one.
-        return { it, s: s > 0 ? s + (it.boost ?? 0) : s };
+        return { it, s: s > 0 && q.trim() ? s + (it.boost ?? 0) : s };
       })
       .filter((r) => r.s > 0)
       .sort((a, b) => b.s - a.s)

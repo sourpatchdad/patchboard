@@ -136,7 +136,7 @@ export function IntegrationForm({
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
               disabled={readOnly}
-              placeholder={f.kind === 'secret' ? (f.set ? 'Saved. Type to replace it.' : 'Paste it here') : (f.hint ?? (f.kind === 'url' ? 'http://192.168.1.10:8989' : ''))}
+              placeholder={f.kind === 'secret' ? (f.set ? 'Saved. Type to replace it.' : 'Paste it here') : (f.hint ?? (f.kind === 'url' ? 'For example http://192.168.1.10:port' : ''))}
               value={values[f.name] ?? ''}
               onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
             />

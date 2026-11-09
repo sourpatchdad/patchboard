@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- A stopped container shows its last lines with "It stopped here", where
+  it used to say "No output": every line now reaches the page before the
+  stream closes. A stopped container leads with Start.
+- Right now says "1 more on Plex" when Fit or a limit hides rows, as a link
+  to the app.
+- Every Needs attention item is a link; a camera offline or a stuck import
+  opens its app's page when Patchboard doesn't know the app's address.
+- Activity reads as sentences with their subject: "approved Poor Things",
+  "removed the download The.Bear...", "saved the settings for Emby".
+- Integration setup names the fields it needs ("Fill in the address and
+  API key first"), not environment variables. Each Settings and Set up
+  button names its integration for screen readers, Escape closes an open
+  panel, and the address placeholder is an example, not a port.
+- Reading: Previous, Back to the edition and Next under every article, and
+  Escape goes back. The Reading card's link says Open Reading.
+- Arrange board: focus lands on the board's name, a new widget is scrolled
+  to and focused, and on a phone the bar no longer covers the last cards.
+- Jump to opens on the views, finds every Settings tab, and only ranks a
+  container in trouble first once you type.
+- This week and Upcoming count the same way: the next seven days, a season
+  drop once. Weather is back in the phone's More.
+- Settings shows Update only when there is one, or when Patchboard can't
+  tell. Selected buttons are filled, so they never look merely focused.
+  Grayscale icons stay visible in light themes; the header weather's small
+  lines are 12px; a phone's app rows fade at the edge that scrolls.
+
 - Reading's article view has Keep unread, beside Open original: the
   article goes back to unread in Miniflux and stays that way while you're
   on it.

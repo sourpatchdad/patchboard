@@ -216,11 +216,17 @@ export function ContainerPage() {
           </span>
           {number && <span className={`detail-number tone-${number.tone}`}>{number.text}</span>}
         </p>
-        <div className="ctr-actions-wrap">
-          {!snap.readOnly && detail.data?.update?.ok && (
-            <UpdateButton name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
-          )}
-          {!snap.readOnly && <ContainerActions name={name} running={ctr.state === 'running' || ctr.state === 'restarting'} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} />}
+        {/* Stopped: Start comes first, before Update. */}
+        <div className={`ctr-actions-wrap ${ctr.state === 'running' || ctr.state === 'restarting' ? '' : 'is-stopped'}`}>
+          {(() => {
+            const update = !snap.readOnly && detail.data?.update?.ok && (
+              <UpdateButton key="update" name={name} busy={upd.job?.status === 'running'} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
+            );
+            const running = ctr.state === 'running' || ctr.state === 'restarting';
+            const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => setPending({ action, status: ctr.status, stuck: false })} />;
+            // In reading and tab order too: a stopped container leads with Start.
+            return running ? [update, actions] : [actions, update];
+          })()}
         </div>
       </div>
 
@@ -380,7 +386,8 @@ function LogTail({ name }: { name: string }) {
         </div>
       ))}
       {status === 'failed' && <p className="logs-note">Couldn't read logs: {failure}</p>}
-      {status === 'ended' && lines.length === 0 && <p className="logs-note">No output. The container may not be running.</p>}
+      {status === 'ended' && lines.length === 0 && <p className="logs-note">It has written nothing yet.</p>}
+      {status === 'ended' && lines.length > 0 && <p className="logs-note">It stopped here. These are its last lines.</p>}
       {status === 'streaming' && lines.length === 0 && <p className="logs-note">Waiting for output.</p>}
     </div>
   );
