@@ -10445,3 +10445,38 @@ a.req-come:hover .req-title {
 .settings-parts {
   margin-bottom: 8px;
 }
+
+.reader-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: baseline;
+}
+
+.reader-kept {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* Arranging on a phone: one short bar (name, Tools, Cancel, Save); the
+   rest of the tools open from Tools, so the board stays in view. */
+.board-tools-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .board-tools-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .is-editing .board-bar-hint,
+  .board-bar-tools:not(.is-open) {
+    display: none;
+  }
+
+  .is-editing .board-bar .board-name {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}

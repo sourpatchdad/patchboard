@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Reading's article view has Keep unread, beside Open original: the
+  article goes back to unread in Miniflux and stays that way while you're
+  on it.
+- Widget settings say when a value can't be used: an item count outside
+  its range, or feeds, places or projects with nothing usable in them.
+- Arranging on a phone takes one short bar (name, Tools, Cancel, Save);
+  the rest of the tools open from Tools, so the board stays in view.
+
 - Settings, Connections is four parts instead of one long page:
   Integrations, Sign-in and keys, Apps, and Backup. Links to an
   integration's setup or to the Homepage import still land in place.

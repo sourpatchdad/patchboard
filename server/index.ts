@@ -449,11 +449,13 @@ app.post('/api/feeds/read-all', async (c) => {
 });
 
 app.post('/api/feeds/read', async (c) => {
-  const body = await c.req.json<{ ids: unknown }>();
+  const body = await c.req.json<{ ids: unknown; unread?: unknown }>();
   const ids = Array.isArray(body.ids) ? body.ids.filter((n): n is number => Number.isInteger(n)) : [];
   if (!ids.length) return c.json({ ok: true });
-  if (config.demo) ids.forEach((id) => demoReadIds.add(id));
-  else if (config.miniflux) await markRead(ids);
+  // { unread: true } puts them back: Keep unread in the reader.
+  const unread = body.unread === true;
+  if (config.demo) ids.forEach((id) => (unread ? demoReadIds.delete(id) : demoReadIds.add(id)));
+  else if (config.miniflux) await markRead(ids, unread ? 'unread' : 'read');
   // Refresh the unread count on Home and in the nav without waiting 5 minutes.
   void hub.pollNow('miniflux');
   return c.json({ ok: true });

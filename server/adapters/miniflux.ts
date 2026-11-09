@@ -98,11 +98,11 @@ export async function listEntries(opts: { status: 'unread' | 'all'; limit: numbe
   return { total: r.total, entries: r.entries.map((e) => toEntry(e, true)), categories, feeds };
 }
 
-export async function markRead(ids: number[]): Promise<void> {
+export async function markRead(ids: number[], status: 'read' | 'unread' = 'read'): Promise<void> {
   await request(`${base()}/v1/entries`, {
     method: 'PUT',
     headers: { ...headers(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entry_ids: ids, status: 'read' }),
+    body: JSON.stringify({ entry_ids: ids, status }),
   });
 }
 

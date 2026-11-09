@@ -302,6 +302,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const [setting, setSetting] = useState<string | null>(null);
   /** Settings opened from the widget itself, outside Arrange: closing them saves. */
   const [quick, setQuick] = useState(false);
+  /** Phones: the arrange bar's second row of tools, shown on request. */
+  const [tools, setTools] = useState(false);
   const draftRef = useRef(draft);
   draftRef.current = draft;
   const [error, setError] = useState('');
@@ -411,6 +413,9 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <span className="board-bar-hint">Drag into a column, then above or below another card. Hover or focus for controls.</span>
             {error && <span className="crit-text" role="alert">{error}</span>}
             {notice && !error && <span className="drawer-note">{notice}</span>}
+            <button type="button" className="text-button board-tools-toggle" aria-expanded={tools} onClick={() => setTools(!tools)}>
+              {tools ? 'Fewer tools' : 'Tools'}
+            </button>
             <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''))}>
               Cancel
             </button>
@@ -426,7 +431,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               Save
             </button>
           </div>
-          <div className="board-bar-row board-bar-tools">
+          <div className={`board-bar-row board-bar-tools ${tools ? 'is-open' : ''}`}>
             <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
               Add widget
             </button>
@@ -1132,6 +1137,8 @@ function SettingsDrawer({
   // Apps: the look in effect, this widget's own or the Settings default it follows.
   const { homeApps } = useAppearance();
   const appsLook = cfg.style || homeApps;
+  const limitN = Number(cfg.limit);
+  const badLimit = !!o.limit && !!cfg.limit && !(Number.isInteger(limitN) && limitN >= o.limit[1] && limitN <= o.limit[2]);
   const set = (k: string, v: string) => {
     const next = { ...cfg, [k]: v };
     if (!v) delete next[k];
@@ -1191,8 +1198,14 @@ function SettingsDrawer({
                 max={o.limit[2]}
                 value={cfg.limit ?? ''}
                 placeholder={String(o.limit[0])}
+                aria-invalid={badLimit || undefined}
                 onChange={(e) => set('limit', e.target.value)}
               />
+              {badLimit && (
+                <small className="ws-hint warn-text" role="alert">
+                  Use a whole number from {o.limit[1]} to {o.limit[2]}. Until then it shows {o.limit[0]}.
+                </small>
+              )}
             </label>
           )}
           {(o.fields ?? []).map((f) =>
@@ -1215,7 +1228,13 @@ function SettingsDrawer({
                 ) : (
                   <input className="field" value={cfg[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
                 )}
-                {f.hint && <small className="ws-hint">{f.hint}</small>}
+                {cfg[f.key]?.trim() && f.check(cfg[f.key]) === null ? (
+                  <small className="ws-hint warn-text" role="alert">
+                    Nothing here can be used yet. {f.hint}
+                  </small>
+                ) : (
+                  f.hint && <small className="ws-hint">{f.hint}</small>
+                )}
               </label>
             ),
           )}

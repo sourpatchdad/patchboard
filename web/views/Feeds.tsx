@@ -52,6 +52,17 @@ export function Feeds() {
   const [data, setData] = useState<FeedsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [read, setRead] = useState<Set<number>>(new Set());
+  /** Articles put back with Keep unread: opening them doesn't mark them read again. */
+  const [kept, setKept] = useState<Set<number>>(new Set());
+  const keepUnread = (id: number) => {
+    setKept((k) => new Set([...k, id]));
+    setRead((r) => {
+      const n = new Set(r);
+      n.delete(id);
+      return n;
+    });
+    void post('/api/feeds/read', { ids: [id], unread: true });
+  };
   const [confirmAll, setConfirmAll] = useState(false);
   const [sort, setSort] = useUrlChoice<FeedSort>('sort', ['newest', 'oldest', 'quick'], 'newest');
   const category = params.get('cat') ?? 'All';
@@ -163,18 +174,18 @@ export function Feeds() {
       if (id) next.set('e', String(id));
       else next.delete('e');
       setParams(next, { replace: !!selectedId });
-      if (id) markRead([id]);
+      if (id && !kept.has(id)) markRead([id]);
       readerRef.current?.scrollTo({ top: 0 });
       // On a phone the page itself scrolls: open the article at its top.
       if (matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0 });
     },
-    [params, setParams, markRead, selectedId],
+    [params, setParams, markRead, selectedId, kept],
   );
 
   // Mark read when arriving from Home with ?e= already set.
   useEffect(() => {
-    if (selectedId && !read.has(selectedId) && data?.entries.some((e) => e.id === selectedId)) markRead([selectedId]);
-  }, [selectedId, data, read, markRead]);
+    if (selectedId && !read.has(selectedId) && !kept.has(selectedId) && data?.entries.some((e) => e.id === selectedId)) markRead([selectedId]);
+  }, [selectedId, data, read, kept, markRead]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -351,9 +362,19 @@ export function Feeds() {
                 {selected.readingTime > 0 && `, ${selected.readingTime} min read`}
               </p>
               <h1>{selected.title}</h1>
-              <a className="text-button" href={selected.url} target="_blank" rel="noreferrer">
-                Open original
-              </a>
+              <span className="reader-actions">
+                <a className="text-button" href={selected.url} target="_blank" rel="noreferrer">
+                  Open original
+                </a>
+                {!snap?.readOnly &&
+                  (kept.has(selected.id) ? (
+                    <span className="reader-kept">Kept unread</span>
+                  ) : (
+                    <button type="button" className="text-button" onClick={() => keepUnread(selected.id)}>
+                      Keep unread
+                    </button>
+                  ))}
+              </span>
             </header>
             <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />
           </>
