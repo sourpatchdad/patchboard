@@ -1,7 +1,8 @@
 // Update from the UI: a press-and-hold button, one notice when an update
 // waits, a compact action for list rows, and a live panel that follows the
-// job: pull, recreate, wait for healthy. A failed update offers the previous
-// image back.
+// job: pull, recreate, wait for healthy. Any update that changed the image,
+// failed or not, offers the previous image back, and keeps offering it in
+// one line after you dismiss the panel.
 
 import { HoldButton } from './Hold.tsx';
 import { useCallback, useEffect, useState } from 'react';
@@ -17,6 +18,8 @@ const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 export function useUpdateJob(name: string) {
   const [job, setJob] = useState<UpdateJob | null>(null);
   const [error, setError] = useState('');
+  /** Dismissed: the panel goes, the job stays known so it can still be undone. */
+  const [hidden, setHidden] = useState(false);
 
   const follow = useCallback((id: string) => {
     const es = new EventSource(`/api/jobs/${id}`);
@@ -32,6 +35,7 @@ export function useUpdateJob(name: string) {
   useEffect(() => {
     let stop: (() => void) | undefined;
     setJob(null);
+    setHidden(false);
     void (async () => {
       const j = (await (await fetch(`/api/containers/${encodeURIComponent(name)}/job`)).json()) as UpdateJob | null;
       if (!j) return;
@@ -43,6 +47,7 @@ export function useUpdateJob(name: string) {
 
   const post = async (url: string) => {
     setError('');
+    setHidden(false);
     const res = await fetch(url, { method: 'POST', headers: ACTION });
     const body = (await res.json()) as UpdateJob & { error?: string };
     if (!res.ok) {
@@ -54,12 +59,33 @@ export function useUpdateJob(name: string) {
   };
 
   return {
-    job,
+    job: hidden ? null : job,
+    /** The newest job, shown or dismissed. */
+    last: job,
     error,
     start: () => post(`/api/containers/${encodeURIComponent(name)}/update`),
     rollback: (id: string) => post(`/api/jobs/${id}/rollback`),
-    dismiss: () => setJob(null),
+    dismiss: () => setHidden(true),
   };
+}
+
+/** An update that put a different image in place: the old one can come back. */
+export const undoable = (j: UpdateJob | null | undefined): j is UpdateJob =>
+  !!j && j.kind === 'update' && j.status !== 'running' && !!j.from && j.from !== j.to && j.steps.find((s) => s.key === 'recreate')?.status !== 'waiting';
+
+/** After the panel is dismissed: one line that keeps the way back. */
+export function UpdateUndo({ job, onRollback }: { job: UpdateJob | null; onRollback: (id: string) => void }) {
+  const { snap } = useStore();
+  const now = useNow(60_000);
+  if (!undoable(job) || job.status !== 'done' || snap?.readOnly) return null;
+  return (
+    <p className="update-notice">
+      Updated {agoLong(job.finishedAt ?? job.startedAt, now)} from <code>{job.from}</code>
+      <HoldButton className="text-button" hint="Hold to roll back" label={`Roll back to ${job.from}`} onConfirm={() => onRollback(job.id)}>
+        Roll back
+      </HoldButton>
+    </p>
+  );
 }
 
 /** Update, as a press and hold: recreating takes the container down for a moment. It stands out when an update waits. */
@@ -174,9 +200,10 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
         </details>
       )}
       <div className="update-foot">
-        {/* Only once the container was recreated: a failed pull changed nothing. */}
-        {job.status === 'failed' && job.kind === 'update' && job.from && job.steps.find((s) => s.key === 'recreate')?.status !== 'waiting' && (
-          <HoldButton hint="Hold to roll back" onConfirm={() => onRollback(job.id)}>
+        {/* Only once the container was recreated: a failed pull changed nothing.
+            After a good update it's the quiet choice; after a failed one, the first. */}
+        {undoable(job) && (
+          <HoldButton className={job.status === 'failed' ? 'button' : 'button button-quiet'} hint="Hold to roll back" onConfirm={() => onRollback(job.id)}>
             {`Roll back to ${job.from}`}
           </HoldButton>
         )}

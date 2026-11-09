@@ -574,7 +574,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'updates',
     name: 'Updates from the UI',
-    adds: 'Pull and recreate one compose service from its page, watch each step, roll back if it fails.',
+    adds: 'Pull and recreate one compose service from its page, watch each step, and roll back to the previous image afterwards if it fails or misbehaves.',
     env: [],
     optional: ['COMPOSE_ROOT'],
     where: 'Mount your compose folders read-only at the same path as on the host.',

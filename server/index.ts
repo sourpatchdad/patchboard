@@ -80,7 +80,7 @@ import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
-import { checkSelfImage, eligibility, getJob, latestJobFor, selfCheckStatus, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
+import { checkSelfImage, eligibility, getJob, latestJobFor, selfCheckStatus, startDemoRollback, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
 import { checkUrl } from './adapters/checks.ts';
 import { getCatalog, getYamlCatalog, setCatalogOrder } from './catalog.ts';
 import { catalogYaml } from '../shared/catalog-yaml.ts';
@@ -978,11 +978,10 @@ app.post('/api/containers/:name/update', async (c) => {
 
 app.post('/api/jobs/:id/rollback', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  if (config.demo) return c.json({ error: 'Not available in the demo' }, 400);
   recordAudit(who(c), 'container.rollback', c.req.param('id'));
   try {
     return c.json(
-      await startRollback(c.req.param('id'), () => {
+      await (config.demo ? startDemoRollback : startRollback)(c.req.param('id'), () => {
         void hub.pollNow('docker');
         hub.refreshChanges();
       }),

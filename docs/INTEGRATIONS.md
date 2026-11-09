@@ -144,7 +144,7 @@ from `.env` into Patchboard later, see
 | **Frigate** | Cameras: each one's newest frame on the board, online or offline, and what the cameras that detect saw today. | `FRIGATE_URL` | Frigate’s address; its API needs no key on the local network. |
 | **Backup logs** | Nightly backups as a grid of nights per job, and a one-line overnight summary on Home. | nothing to set; optional `LOGS_PATH` | Mount the folder your backup scripts log to at /logs, read-only (docs/CONFIGURATION.md has the format). |
 | **Diun** | Marks containers with a newer image; the mark clears once the container runs it. | nothing to set; optional `HOOK_TOKEN` | Point Diun’s webhook notifier at http://<patchboard>/api/hooks/diun. With a password on, Settings, Sign-in shows the address with its token. |
-| **Updates from the UI** | Pull and recreate one compose service from its page, watch each step, roll back if it fails. | nothing to set; optional `COMPOSE_ROOT` | Mount your compose folders read-only at the same path as on the host. |
+| **Updates from the UI** | Pull and recreate one compose service from its page, watch each step, and roll back to the previous image afterwards if it fails or misbehaves. | nothing to set; optional `COMPOSE_ROOT` | Mount your compose folders read-only at the same path as on the host. |
 | **Runbook** | The matching section of your RUNBOOK.md on each container page, moved to the top when it’s in trouble. | nothing to set; optional `DOCS_PATH` | Mount the folder holding RUNBOOK.md at /docs, read-only. |
 | **Dozzle** | An “Open in Dozzle” hand-off from logs, for searching across containers. | `DOZZLE_URL` | Dozzle’s address. |
 <!-- /generated -->

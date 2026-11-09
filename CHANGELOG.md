@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Roll back after a good update too: the update panel offers the previous
+  image, and once dismissed a line under the container's state keeps the
+  way back. The demo runs rollbacks.
+- A container in trouble: its facts sit under the fix, Wiring and History
+  beside the logs, so neither column runs half empty. On narrow screens
+  the order stays fix, logs, facts.
+- Edit apps: moving an app from its menu keeps focus on it in its new group
+  and says where it went.
+- Add widget sorts its list under Everyday, Media, Server, and House and
+  network.
+
 - A link to part of a page (a Server stat, a setting) marks the section's
   heading and rule in the accent until you move on, instead of a glowing
   ring that faded out.

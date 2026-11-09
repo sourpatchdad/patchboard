@@ -7,7 +7,7 @@
 
 import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
-import { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useBlocker, useNavigate } from 'react-router-dom';
 import {
   type Board as BoardData,
@@ -1081,6 +1081,15 @@ function NewBoard({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Add widget sorts its list into a few kinds, so 40 widgets read as four short lists. */
+const KINDS: [string, WidgetType[]][] = [
+  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'bookmarks', 'search', 'clocks', 'weather']],
+  ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'books', 'photos']],
+  ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
+  ['House and network', ['homeassistant', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
+];
+const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
+
 function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () => void; onAdd: (w: Widget) => void }) {
   const { snap } = useStore();
   const modal = useModal<HTMLDivElement>(onClose);
@@ -1133,19 +1142,30 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
         )}
         {!picking ? (
           <ul className="drawer-list">
-            {types.map((t) => (
-              <li key={t}>
-                <button
-                  type="button"
-                  onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size }))}
-                >
-                  <strong>{WIDGET_INFO[t].name}</strong>
-                  <span>{WIDGET_INFO[t].about}</span>
-                </button>
-              </li>
-            ))}
+            {[...KINDS.map(([k]) => k), 'Other'].map((kind) => {
+              const list = types.filter((t) => kindOf(t) === kind);
+              if (!list.length) return null;
+              return (
+                <Fragment key={kind}>
+                  <li className="drawer-sub drawer-kind" role="presentation">
+                    {kind}
+                  </li>
+                  {list.map((t) => (
+                    <li key={t}>
+                      <button
+                        type="button"
+                        onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size }))}
+                      >
+                        <strong>{WIDGET_INFO[t].name}</strong>
+                        <span>{WIDGET_INFO[t].about}</span>
+                      </button>
+                    </li>
+                  ))}
+                </Fragment>
+              );
+            })}
             {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Everything is already on the board.'}</li>}
-            {waiting.length > 0 && <li className="drawer-sub">Set up first</li>}
+            {waiting.length > 0 && <li className="drawer-sub drawer-kind" role="presentation">Set up first</li>}
             {waiting.map((t) => (
               <li key={t} className="is-waiting">
                 <Link to={setupHref(t)} onClick={onClose}>

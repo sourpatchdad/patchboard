@@ -10815,3 +10815,36 @@ a.req-title:hover {
   display: grid;
   place-items: center;
 }
+
+/* One column, something wrong: the fix, then the logs, then the facts. */
+@media (max-width: 1080px) {
+  .detail-grid.is-trouble {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-grid.is-trouble > .detail-main,
+  .detail-grid.is-trouble > .detail-side {
+    display: contents;
+  }
+
+  .detail-grid.is-trouble .detail-facts {
+    order: 1;
+  }
+
+  .detail-grid.is-trouble .detail-later {
+    order: 2;
+  }
+}
+
+/* Add widget: a heading over each kind, lined up with the widget names. */
+.drawer-kind {
+  padding: 0 12px;
+  margin-top: 14px;
+  font: 500 11.5px/1.4 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.drawer-kind:first-child {
+  margin-top: 4px;
+}

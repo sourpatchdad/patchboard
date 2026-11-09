@@ -427,6 +427,51 @@ export async function startRollback(fromJobId: string, onDone: () => void): Prom
   return publicJob(j);
 }
 
+/** Demo mode: a rollback with the same steps as the real one, timed. */
+export function startDemoRollback(fromJobId: string, onDone: () => void): UpdateJob {
+  const prev = jobs.get(fromJobId);
+  if (!prev?.from || !prev.to || prev.from === prev.to) throw new Error('Nothing to roll back to.');
+  const j: Job = {
+    id: randomUUID(),
+    container: prev.container,
+    kind: 'rollback',
+    status: 'running',
+    steps: [
+      { key: 'tag', label: 'Point the tag back at the previous image', status: 'running' },
+      { key: 'recreate', label: 'Recreate the container', status: 'waiting' },
+      { key: 'healthy', label: 'Wait until it is healthy', status: 'waiting' },
+    ],
+    log: [],
+    startedAt: Date.now(),
+    from: prev.to,
+    to: prev.from,
+    listeners: new Set(),
+  };
+  jobs.set(j.id, j);
+  let i = 0;
+  const tick = setInterval(() => {
+    if (i === 1) {
+      step(j, 'tag', 'done');
+      step(j, 'recreate', 'running');
+      j.log.push(` Container ${prev.container}  Recreate`);
+    } else if (i === 3) {
+      step(j, 'recreate', 'done');
+      step(j, 'healthy', 'running');
+      j.log.push(` Container ${prev.container}  Started`);
+    } else if (i === 5) {
+      step(j, 'healthy', 'done', 'healthy');
+      j.status = 'done';
+      j.finishedAt = Date.now();
+      clearInterval(tick);
+      recordEvent('container.action', prev.container, 'rollback');
+      onDone();
+    }
+    emit(j);
+    i++;
+  }, 900);
+  return publicJob(j);
+}
+
 /** Demo mode: the same job shape, with timed steps and no Docker. */
 export function startDemoUpdate(name: string, onDone: () => void): UpdateJob {
   const j: Job = {

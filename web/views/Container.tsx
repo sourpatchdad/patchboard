@@ -28,7 +28,7 @@ import type {
 } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
 import { type Action, ContainerActions, VERB } from '../components/Actions.tsx';
-import { UpdateButton, UpdateNotice, UpdatePanel, useUpdateJob } from '../components/Updater.tsx';
+import { UpdateButton, UpdateNotice, UpdatePanel, UpdateUndo, useUpdateJob } from '../components/Updater.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
@@ -114,9 +114,11 @@ export function ContainerPage() {
   const number = svc ? numberText(nums[svc.name]) : null;
 
   // Calm: no trouble, no update running. Then the logs keep the side to
-  // themselves and the details balance the main column.
+  // themselves and the details balance the main column. In trouble, the
+  // container's facts sit under the fix, Wiring and History beside the logs,
+  // so neither column runs empty.
   const calm = !problem && mine.length === 0 && !upd.job;
-  const details = (
+  const facts = (
     <>
             <AppPanel name={name} />
             <Section title="Container">
@@ -158,11 +160,14 @@ export function ContainerPage() {
               )}
             </Section>
 
-            {d && <Wiring d={d} />}
-
-            <Section title="History" count="48 hours">
-              <History name={name} now={now} />
-            </Section>
+    </>
+  );
+  const history = (
+    <>
+      {d && <Wiring d={d} />}
+      <Section title="History" count="48 hours">
+        <History name={name} now={now} />
+      </Section>
     </>
   );
   return (
@@ -236,13 +241,14 @@ export function ContainerPage() {
       </div>
 
       <UpdateNotice name={name} stale={ctr.staleImage} />
+      {!upd.job && <UpdateUndo job={upd.last} onRollback={(id) => void upd.rollback(id)} />}
 
       <div className="health-row">
         <HealthStrip states={uptime?.containers[name]} days={uptime?.days ?? []} label={`${name}, last 30 days`} large />
         <span className="health-caption">{healthCaption(uptime, name)}</span>
       </div>
 
-      <div className={`detail-grid ${problem ? 'has-problem' : ''} ${problem && sections.length ? 'has-runbook' : ''}`}>
+      <div className={`detail-grid ${problem ? 'has-problem' : ''} ${problem && sections.length ? 'has-runbook' : ''} ${calm ? '' : 'is-trouble'}`}>
         <div className="detail-main">
           <UpdatePanel job={upd.job} error={upd.error} onRollback={(id) => void upd.rollback(id)} onDismiss={upd.dismiss} />
           {mine.length > 0 && <Attention alerts={mine} now={now} />}
@@ -253,8 +259,8 @@ export function ContainerPage() {
           {runbook.data && !runbook.data.available && sections.length === 0 && problem && (
             <p className="detail-note">Mount the folder holding RUNBOOK.md at /docs and the matching section shows up here.</p>
           )}
-          {/* Nothing wrong: the app's details sit here, so the columns balance. */}
-          {calm && details}
+          {calm ? facts : <div className="detail-facts">{facts}</div>}
+          {calm && history}
         </div>
 
         {/* The live logs sit beside the fix, so 2 AM needs no scrolling. */}
@@ -262,7 +268,7 @@ export function ContainerPage() {
           <Section title="Logs" action={{ label: 'Full logs', to: `/logs/${name}` }} className="side-logs">
             <LogTail key={ctr.state} name={name} />
           </Section>
-          {!calm && details}
+          {!calm && <div className="detail-later">{history}</div>}
         </aside>
       </div>
     </div>

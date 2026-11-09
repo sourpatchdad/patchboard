@@ -203,8 +203,16 @@ export function EditApps({
   const listed = new Set(groups.flatMap((g) => g.services.map((s) => s.container)).filter(Boolean));
   const adoptable = discovered.filter((d) => !listed.has(d.container) && !allNames.has(d.name));
 
+  /** Said to screen readers after a move from the menu. */
+  const [said, setSaid] = useState('');
   const action = (gi: number, i: number, v: string) => {
     const s = groups[gi].services[i];
+    // A move re-renders the app in its new place: keep focus on its menu there.
+    if (v === 'up' || v === 'down' || v.startsWith('to:')) {
+      const to = v.startsWith('to:') ? groups[Number(v.slice(3))]?.name : groups[gi].name;
+      setSaid(v.startsWith('to:') ? `Moved ${s.name} to ${to || 'the unnamed group'}.` : `Moved ${s.name} ${v === 'up' ? 'earlier' : 'later'} in ${to}.`);
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`select[data-app-menu="${CSS.escape(s.name)}"]`)?.focus());
+    }
     if (v === 'edit') setForm({ app: s, group: groups[gi].name, isNew: false });
     else if (v === 'hide') hide(gi, i);
     else if (v === 'delete') setGroups(groups.map((g, j) => (j === gi ? { ...g, services: g.services.filter((_, k) => k !== i) } : g)));
@@ -266,7 +274,7 @@ export function EditApps({
                 </span>
                 <span className="cell-btn move-to tile-menu" title="Edit, hide or move">
                   ⋯
-                  <select aria-label={`${s.name}: edit, hide or move`} value="" onChange={(e) => action(gi, i, e.target.value)}>
+                  <select aria-label={`${s.name}: edit, hide or move`} data-app-menu={s.name} value="" onChange={(e) => action(gi, i, e.target.value)}>
                     <option value="" disabled>
                       {s.name}
                     </option>
@@ -292,6 +300,10 @@ export function EditApps({
           </ul>
         </section>
       ))}
+
+      <p className="sr-only" role="status">
+        {said}
+      </p>
 
       <div className="tile-group edit-extras">
         <span />
