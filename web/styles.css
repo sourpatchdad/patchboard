@@ -10649,3 +10649,9 @@ a.req-come:hover .req-title {
     margin: 8px 4px 0 auto;
   }
 }
+
+/* 14. The playback details' Close is a real target. */
+.playback-preview .text-button {
+  min-height: 32px;
+  padding-inline: 4px;
+}

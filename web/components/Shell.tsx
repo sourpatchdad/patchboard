@@ -64,6 +64,11 @@ export function Shell() {
     // Patchboard restores positions itself; the browser's own restore runs
     // before a page has loaded and puts it back at the top.
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    try {
+      sessionStorage.removeItem('pb-scroll:default');
+    } catch {
+      /* nothing to clear */
+    }
   }, []);
   useEffect(() => {
     const key = location.key;
@@ -88,7 +93,13 @@ export function Shell() {
     };
   }, [location.key]);
   const lastPath = useRef(location.pathname);
+  const firstRender = useRef(true);
   useEffect(() => {
+    // The page Patchboard opened on: the browser decides, as on any site.
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     const moved = lastPath.current !== location.pathname;
     lastPath.current = location.pathname;
     if (navType !== 'POP') {
@@ -134,8 +145,8 @@ export function Shell() {
   // Each page names itself in the tab, so history and tabs tell them apart.
   useEffect(() => {
     const p = location.pathname;
-    const page = p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : p.startsWith('/logs') ? 'Logs' : p.startsWith('/b/') ? '' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p] ?? '';
-    setPageName(page);
+    const page = p === '/' || p.startsWith('/b/') ? '' : p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : p.startsWith('/logs') ? 'Logs' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p];
+    if (page !== undefined) setPageName(page);
   }, [location.pathname]);
 
   useEffect(() => {

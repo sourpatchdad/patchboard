@@ -419,8 +419,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           <div className="board-bar-row">
             <input
               className="field board-name"
-              // Arrange took focus from a button that is now inert: land here instead.
-              autoFocus={!quick}
+              // Arrange took focus from a button that is now inert: land here
+              // instead, without scrolling the board out from under you.
+              ref={(el) => {
+                if (el && !quick && document.activeElement?.closest('.board-foot')) el.focus({ preventScroll: true });
+              }}
               aria-label="Board name"
               maxLength={32}
               value={draft.name ?? (home ? 'Home' : '')}

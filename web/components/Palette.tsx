@@ -26,22 +26,29 @@ interface Item {
 
 /** Subsequence match with a bonus for word starts and contiguous runs. */
 function score(query: string, text: string): number {
-  const q = query.toLowerCase();
+  const q = query.toLowerCase().trim();
   const t = text.toLowerCase();
   if (!q) return 1;
   if (t.startsWith(q)) return 1000 - t.length;
   const idx = t.indexOf(q);
   if (idx >= 0) return 800 - idx - t.length / 10;
+  // Several words in any order: "sonarr restart" finds "Restart sonarr".
+  const words = q.split(/\s+/).filter(Boolean);
+  if (words.length > 1) return words.every((w) => t.includes(w)) ? 700 - t.length / 10 : -1;
   let s = 0;
   let ti = 0;
   let run = 0;
+  let first = -1;
   for (const ch of q) {
     const found = t.indexOf(ch, ti);
     if (found < 0) return -1;
+    if (first < 0) first = found;
     run = found === ti ? run + 1 : 0;
     s += 10 + run * 5 + (found === 0 || t[found - 1] === ' ' ? 15 : 0);
     ti = found + 1;
   }
+  // Letters scattered across the whole name ("son" in "Stop navidrome") aren't a match.
+  if (ti - first > q.length * 2 + 1) return -1;
   return s - t.length / 10;
 }
 
@@ -55,12 +62,11 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
+  // Cleared as it closes, so the next open starts empty before you type.
   useEffect(() => {
-    if (open) {
-      setQ('');
-      setSel(0);
-      setArmed(null);
-    }
+    setQ('');
+    setSel(0);
+    setArmed(null);
   }, [open]);
 
   const items = useMemo<Item[]>(() => {
@@ -160,7 +166,8 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   }, [items, q]);
 
   useEffect(() => {
-    setSel(results[0]?.id === 'none' ? 1 : 0);
+    // Nothing of yours matches: no default, so Enter can't send the words to a search engine.
+    setSel(results[0]?.id === 'none' ? -1 : 0);
     setArmed(null);
   }, [q]);
   useEffect(() => {
@@ -189,7 +196,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           onKeyDown={(e) => {
             if (e.key === 'ArrowDown') {
               e.preventDefault();
-              setSel((s) => Math.min(s + 1, results.length - 1));
+              setSel((s) => Math.min(Math.max(s, results[0]?.id === 'none' ? 0 : -1) + 1, results.length - 1));
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
               setSel((s) => Math.max(s - 1, results[0]?.id === 'none' ? 1 : 0));

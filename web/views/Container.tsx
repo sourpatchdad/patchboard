@@ -380,6 +380,8 @@ function LogTail({ name }: { name: string }) {
   return (
     <div
       className="logs-out wrap log-tail"
+      role="log"
+      aria-label={`${name} logs, newest last`}
       ref={ref}
       onScroll={(e) => {
         const el = e.currentTarget;

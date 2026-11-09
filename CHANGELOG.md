@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Fixed: opening Patchboard fresh could land partway down the page, at
+  where the previous full load was left. Only Back and Forward restore a
+  position now.
+- A container you stopped from Patchboard reads as stopped on purpose
+  everywhere: its app icon and tile go dark instead of red, and a page with
+  only notes says "One note below, nothing urgent" instead of "Everything
+  is running".
+- Jump to finds words in any order ("sonarr restart"), ignores letters
+  scattered across a name, starts empty each time, and with nothing of
+  yours matching selects nothing, so Enter can't send your words to a
+  search engine.
+- Integration setup: a failed test puts focus on the first empty field, or
+  back on Test. Arrange board opens without scrolling the board away.
+  Changing Settings tabs drops a Connections part from the address.
+- Smaller: a stopped container's Logs links to its page to start it; the
+  Trakt section is Signed-in accounts; the container page's log preview is
+  one log to screen readers; Not found names itself in the tab; the
+  playback details' Close is a full-size target.
+
 - Edit apps moves focus to its toolbar only when focus had nowhere else to
   go, so it never pulls focus from a field or menu you've already moved to.
 

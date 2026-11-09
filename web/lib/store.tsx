@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { setParked } from './services.ts';
 import type { ServerEvent, Snapshot, SourceId, SourceState } from '../../shared/types.ts';
 
 interface Store {
@@ -53,6 +54,7 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
         if (!res.ok) throw new Error(String(res.status));
         const s = (await res.json()) as Snapshot;
         if (!closed) {
+          setParked(s.alerts);
           setSnap(s);
           setFailed(false);
         }
@@ -70,7 +72,11 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
     es.onerror = () => setLive(false);
     es.onmessage = (m) => {
       const e = JSON.parse(m.data as string) as ServerEvent;
-      setSnap((prev) => (prev ? apply(prev, e) : prev));
+      setSnap((prev) => {
+        const next = prev ? apply(prev, e) : prev;
+        if (next) setParked(next.alerts);
+        return next;
+      });
     };
 
     void load();

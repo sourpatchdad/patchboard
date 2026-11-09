@@ -48,6 +48,15 @@ export function checkText(ck?: ServiceCheck): string {
   return ck.ok ? `answers in ${ck.ms} ms` : `not answering (${ck.error ?? 'no answer'})`;
 }
 
+/**
+ * Containers stopped on purpose from Patchboard (Needs attention's quiet
+ * notes): every light shows them idle, not down. The store keeps it current.
+ */
+let parked = new Set<string>();
+export function setParked(alerts: { id: string; subject?: string }[]): void {
+  parked = new Set(alerts.filter((a) => a.id.startsWith('ctr-parked-') && a.subject).map((a) => a.subject!));
+}
+
 export function jackState(s: Service, containers: Map<string, Container>, ck?: ServiceCheck): JackState {
   const failing = !!ck && !ck.ok && ck.fails >= 2;
   if (!s.container) return failing ? 'warn' : ck?.ok ? 'up' : 'none';
@@ -55,7 +64,7 @@ export function jackState(s: Service, containers: Map<string, Container>, ck?: S
   if (!c) return failing ? 'warn' : 'none';
   if (c.state === 'running') return c.health === 'unhealthy' || failing ? 'warn' : 'up';
   if (c.state === 'restarting') return 'down';
-  return s.expectStopped ? 'idle' : 'down';
+  return s.expectStopped || parked.has(c.name) ? 'idle' : 'down';
 }
 
 export const jackStateText: Record<JackState, string> = {
@@ -84,7 +93,7 @@ export function ctrState(c: Container, svc?: Service): JackState {
   if (c.state === 'running') return c.health === 'unhealthy' ? 'warn' : 'up';
   if (c.state === 'restarting') return 'down';
   if (c.state === 'created') return 'idle';
-  return svc?.expectStopped ? 'idle' : 'down';
+  return svc?.expectStopped || parked.has(c.name) ? 'idle' : 'down';
 }
 
 /** "Up 6 days (healthy)" -> "6 days"; problems keep Docker's full wording. */

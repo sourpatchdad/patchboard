@@ -61,6 +61,11 @@ export function IntegrationForm({
     try {
       const r = await call(`/api/setup/integrations/${integration.id}/test`, 'POST', { values: payload() });
       setResult(r.ok ? { ok: true, text: String(r.summary ?? 'Connected.') } : { ok: false, text: String(r.error ?? 'It did not connect.') });
+      // Something missing: focus the first empty field; otherwise back on Test.
+      requestAnimationFrame(() => {
+        const empty = !r.ok && String(r.error ?? '').startsWith('Fill in') ? [...document.querySelectorAll<HTMLInputElement>(`#int-${integration.id} .setup-field input:not([disabled])`)].find((x) => !x.value) : undefined;
+        (empty ?? document.querySelector<HTMLElement>(`#int-${integration.id} .setup-test`))?.focus();
+      });
     } catch (err) {
       setResult({ ok: false, text: (err as Error).message });
     } finally {
@@ -160,7 +165,7 @@ export function IntegrationForm({
       )}
       {demo && <p className="settings-note">Demo mode: Test works, Save doesn't.</p>}
       <div className="setup-actions">
-        <button type="button" className="button button-quiet" disabled={!!busy || readOnly} onClick={() => void test()}>
+        <button type="button" className="button button-quiet setup-test" disabled={!!busy || readOnly} onClick={() => void test()}>
           {busy === 'test' ? 'Testing' : 'Test connection'}
         </button>
         {editable && (

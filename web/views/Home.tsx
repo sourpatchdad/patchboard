@@ -305,7 +305,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
       <p>
         <strong>{blind ? 'Connection problem.' : 'Nothing needs you.'}</strong>
         <br />
-        {blind ? blind : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+        {blind ? blind : alerts.length ? `${alerts.length === 1 ? 'One note' : `${alerts.length} notes`} below, nothing urgent.` : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
       </p>
     </div>
   );

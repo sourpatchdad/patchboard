@@ -62,7 +62,7 @@ const TABS: [Tab, string, string][] = [
 
 export function Settings() {
   const a = useAppearance();
-  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look', true);
+  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look', true, ['part']);
   // Connections is four pages in one: each part on its own, so none is a long scroll away.
   const [part, setPart] = useUrlChoice<Part>('part', ['integrations', 'access', 'apps', 'backup'], 'integrations', true);
   const { hash, search } = useLocation();
@@ -504,7 +504,7 @@ function Connections() {
 
   if (!s) return null;
   return (
-    <Section title="Connections">
+    <Section title="Signed-in accounts">
       <dl className="ledger">
         <div className="ledger-row">
           <dt>Trakt</dt>
