@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- One status light across Patchboard: a light in a patch-panel socket, the
+  socket the patch-bay launcher uses. Every board widget wears one before
+  its name, showing its integration's health, or for a widget built from
+  several, whether Patchboard is live; a dropped connection turns the board
+  amber at once. Right now, Changes, Logs and a container's state use the
+  same light. Healthy glows quietly; amber and red still mean trouble.
+- On a phone each app group in the patch bay is one row you swipe
+  sideways, so a big launcher takes a few rows instead of a screen.
+
 - A widget whose integration fails says what broke, in words a phone can
   read ("Miniflux: Timed out after 8s"), and links to Check the
   connection in Settings.

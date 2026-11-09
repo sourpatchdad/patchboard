@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import type { SourceState } from '../../shared/types.ts';
 import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { ago } from '../lib/format.ts';
+import { useStore } from '../lib/store.tsx';
 import { iconUrl } from '../lib/services.ts';
 
 export function Section(props: {
@@ -19,10 +20,20 @@ export function Section(props: {
 }) {
   const { count, action, source, className, children, id } = props;
   // Inside a Home widget, the widget's own name (if someone renamed it) wins.
-  const title = useContext(WidgetCtx)?.title || props.title;
+  const widget = useContext(WidgetCtx);
+  const title = widget?.title || props.title;
+  const { live, failed } = useStore();
+  // On the board every widget wears a light: its integration's health, or,
+  // for one built from several, whether Patchboard itself is live.
+  const led: { state: LedState; label: string } | null = source
+    ? { state: source.ok ? 'ok' : source.updatedAt ? 'warn' : 'crit', label: INTEGRATIONS.find((i) => i.id === source.id)?.name ?? source.label }
+    : widget
+      ? { state: live ? 'ok' : failed ? 'crit' : 'warn', label: 'Patchboard' }
+      : null;
   return (
     <section className={`section ${className ?? ''}`} id={id}>
       <header className="section-head">
+        {led && <Led state={led.state} label={led.label} />}
         <h2>{title}</h2>
         {count != null && <span className="section-count">{count}</span>}
         {source && !source.ok && source.error && (
@@ -53,6 +64,18 @@ export function Section(props: {
       {children}
     </section>
   );
+}
+
+export type LedState = 'ok' | 'warn' | 'crit' | 'idle';
+
+const LED_WORDS: Record<LedState, string> = { ok: 'live', warn: 'stale', crit: 'not reachable', idle: 'idle' };
+
+/**
+ * A light in a patch-panel socket: a quiet glow while live, amber when
+ * stale, red when down, dark when idle. The one status mark across Patchboard.
+ */
+export function Led({ state, label }: { state: LedState; label?: string }) {
+  return label ? <span className="led" data-state={state} role="img" aria-label={`${label}: ${LED_WORDS[state]}`} /> : <span className="led" data-state={state} aria-hidden />;
 }
 
 /** Mono is the label layer: identifiers like container names get it. */

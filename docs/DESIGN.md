@@ -105,6 +105,17 @@ Keep `ok`, `warn` and `crit` apart from `accent`, and quiet text (`ink3`) at
 4.5:1 or better on `bg`. The inline script in `web/index.html` paints the
 saved theme before the page loads; keep it in step with `appearance.ts`.
 
+## The status light
+
+Patchboard's one status mark is a light in a patch-panel socket, the same
+socket the patch-bay launcher plugs apps into. A quiet glow means live,
+amber means stale, red means down and glows, and a dark socket means idle.
+Every board widget wears one before its name: its integration's health, or
+for a widget built from several, whether Patchboard itself is live, so a
+dropped connection turns the whole board amber at once. Right now, Changes,
+Logs and a container's state line use the same light at list size. Color
+still means trouble; only the top bar's Live light is green.
+
 ## The otter
 
 An otter peeking over the edge of the water, keeping an eye on your server

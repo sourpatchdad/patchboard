@@ -32,7 +32,7 @@ import type {
 } from '../../shared/types.ts';
 import { Board, Vitals } from '../board/Board.tsx';
 import { useAppearance } from '../lib/appearance.ts';
-import { Empty, Episode, Icon, Ident, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
+import { Empty, Episode, Icon, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   count,
   ago,
@@ -438,6 +438,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {idle.length > 0 && (
         <div className="now-block">
           <h3 className="now-idle">
+            <Led state="idle" />
             Nobody is watching{' '}
             {idle.map((m, i) => (
               <span key={m.id}>
@@ -452,6 +453,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {watching.map((m) => (
         <div className="now-block" key={m.id}>
           <h3>
+            <Led state="ok" />
             <AppLink container={m.container}>{`${plural(m.data.streams.length, 'stream')} on ${m.label}`}</AppLink>
           </h3>
           {m.data.streams.slice(0, limit).map((s, i) => (
@@ -463,6 +465,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {listening.map((l) => (
         <div className="now-block" key={l.id}>
           <h3>
+            <Led state="ok" />
             {l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}
           </h3>
           {l.data!.streams.slice(0, limit).map((s, i) => (
@@ -474,6 +477,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {quietClients.length > 0 && (
         <div className="now-block">
           <h3 className="now-idle">
+            <Led state="idle" />
             Nothing downloading in{' '}
             {quietClients.map((d, i) => (
               <span key={d.id}>
@@ -502,6 +506,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
         return (
         <div className="now-block" key={d.id}>
           <h3 className="now-head">
+            <Led state={d.data.errored.length ? 'crit' : d.data.paused ? 'warn' : d.data.downloading ? 'ok' : 'idle'} />
             <AppLink container={d.container}>
               {d.data.paused
                 ? `${d.label} is paused`

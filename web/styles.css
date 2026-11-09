@@ -5665,14 +5665,44 @@ body.is-sorting * {
   transform: translate(-50%, 0);
 }
 
-/* Icons only on a phone: no label to make room for, so rows sit close. */
+/* On a phone each bay is one row you swipe sideways, so a big launcher
+   takes a few rows instead of a screen, and every group name stays in view.
+   The tape moves onto each label, since a scrolling row can't share one. */
 @media (max-width: 760px) {
+  .bay-jacks,
   .patchrow.icons-only .bay-jacks {
-    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-    gap: 10px 0;
+    display: flex;
+    gap: 6px;
+    margin: 0 -16px;
+    padding: 0 16px 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-left: 16px;
+    scrollbar-width: none;
   }
 
-  .patchrow.icons-only .jack {
+  .bay-jacks::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bay-jacks::after {
+    display: none;
+  }
+
+  .bay-jacks .jack {
+    flex: none;
+    min-width: 64px;
+    scroll-snap-align: start;
+  }
+
+  .bay-jacks .jack-label {
+    border-radius: 2px;
+    background: var(--tape);
+  }
+
+  .patchrow.icons-only .bay-jacks .jack {
+    min-width: 48px;
     min-height: 0;
   }
 }
@@ -10164,4 +10194,109 @@ a.req-come:hover .req-title {
 
 .feeds-clear {
   align-self: center;
+}
+
+/* ---------- The LED: Patchboard's one status mark ----------
+   A light in a patch-panel socket, the same socket the patch-bay launcher
+   uses. A quiet glow while live, amber when stale, red when down, dark when
+   idle: color still means trouble. Smaller marks in lists (Changes, Logs, a container's state) are
+   the same socket at list size. */
+.led,
+.status-led,
+.ctr-led,
+.change-text::before,
+.ctr-link .dot {
+  --led: transparent;
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--led) 0 3px, var(--socket) 3.6px);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.5),
+    0 0 0 1px var(--line);
+}
+
+.led {
+  align-self: center;
+}
+
+.ctr-led,
+.change-text::before,
+.ctr-link .dot {
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+}
+
+.led[data-state='ok'],
+.tone-ok .status-led,
+.ctr-led,
+.change-text::before,
+.ctr-link[data-state='up'] .dot {
+  --led: var(--ink-2);
+}
+
+.led[data-state='warn'],
+.tone-warn .status-led,
+.ctr[data-state='warn'] .ctr-led,
+.change-unhealthy .change-text::before,
+.ctr-link[data-state='warn'] .dot {
+  --led: var(--warn);
+}
+
+.led[data-state='crit'],
+.tone-crit .status-led,
+.ctr[data-state='down'] .ctr-led,
+.change-stopped .change-text::before,
+.ctr-link[data-state='down'] .dot {
+  --led: var(--crit);
+}
+
+.led[data-state='idle'],
+.ctr-link[data-state='idle'] .dot,
+.ctr-link[data-state='none'] .dot {
+  --led: transparent;
+}
+
+/* Only trouble glows. */
+.led[data-state='crit'],
+.tone-crit .status-led {
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.5),
+    0 0 0 1px var(--line),
+    0 0 8px color-mix(in srgb, var(--crit) 55%, transparent);
+}
+
+/* Widget heads: the light sits before the name, like a panel indicator. */
+.section-head .led {
+  margin-right: -2px;
+}
+
+.now-block h3 .led {
+  margin-right: 9px;
+  vertical-align: -1px;
+}
+
+.now-head .led {
+  margin-right: -3px;
+}
+
+/* The top bar's Live mark is the same light: green while live, amber while
+   it reconnects. */
+.live::before,
+.live-on::before {
+  --led: var(--warn);
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, var(--led) 0 3px, var(--socket) 3.6px);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.5),
+    0 0 0 1px var(--line);
+  animation: none;
+}
+
+.live-on::before {
+  --led: var(--ok);
 }
