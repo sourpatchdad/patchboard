@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Edit apps moves focus to its toolbar only when focus had nowhere else to
+  go, so it never pulls focus from a field or menu you've already moved to.
+
 - Back and Forward return to where you were on the page; a new page starts
   at its top, and a sort or filter change stays put. Settings tabs are
   steps in history, so Back leaves Connections for the tab before it.

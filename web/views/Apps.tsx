@@ -38,7 +38,11 @@ export function Apps() {
     }
     setDraft(draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]));
     // The Edit apps button just went away: hand focus to the editing toolbar.
-    setTimeout(() => document.querySelector<HTMLElement>('.arrange-bar')?.focus(), 50);
+    // Only when focus was lost with that button; never take it from somewhere you've moved on to.
+    setTimeout(() => {
+      const at = document.activeElement;
+      if (!at || at === document.body) document.querySelector<HTMLElement>('.arrange-bar')?.focus();
+    }, 50);
   };
   // Home's Apps widget links here with ?arrange=1; a container page with
   // ?edit=<app> (its icon and live number) or ?adopt=<container>.
