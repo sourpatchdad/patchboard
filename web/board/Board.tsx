@@ -102,14 +102,17 @@ function useBoard(id: string) {
 /**
  * Fit the screen: while the board runs past the bottom of the window, take
  * items off the list widget doing the most to push it there, a few at a time,
- * until it fits or nothing more can go. Starts over when the window's size
- * changes or the board is saved.
+ * until it fits or nothing more can go. If it still can't fit, the page
+ * scrolls anyway, so every list gets its full length back. Starts over when
+ * the window's size changes or the board is saved.
  */
 function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
   const [trim, setTrim] = useState<Record<string, number>>({});
   const [posters, setPosters] = useState<Record<string, number>>({});
   /** Pixels still past the window once nothing more can be trimmed. */
   const [over, setOver] = useState(0);
+  /** Trimmed as far as it goes and still too tall: stop, and show lists whole. */
+  const [gaveUp, setGaveUp] = useState(false);
   const [viewport, setViewport] = useState(() => `${window.innerWidth}:${window.innerHeight}`);
   useEffect(() => {
     const onResize = () => setViewport(`${window.innerWidth}:${window.innerHeight}`);
@@ -125,6 +128,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     setTrim({});
     setPosters({});
     setOver(0);
+    setGaveUp(false);
     lastCut.current = null;
     noGain.current = new Set();
   }, [on, viewport, shape]);
@@ -144,6 +148,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       setTrim({});
       setPosters({});
       setOver(0);
+      setGaveUp(false);
       lastCut.current = null;
       noGain.current = new Set();
     });
@@ -154,7 +159,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     return () => ro.disconnect();
   }, [on, el]);
   useEffect(() => {
-    if (!on || !el) return;
+    if (!on || !el || gaveUp) return;
     let timer = 0;
     const check = () => {
       // Page coordinates, so a scrolled page measures the same as one at the top.
@@ -222,6 +227,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
         }
       }
       setOver(over.length ? Math.round(over[0].r.bottom - floor) : 0);
+      if (over.length) setGaveUp(true);
     };
     const queue = () => {
       window.clearTimeout(timer);
@@ -234,8 +240,9 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       ro.disconnect();
       window.clearTimeout(timer);
     };
-  }, [on, el, widgets, trim, posters]);
-  return on ? { trim, posters, over } : { trim: {}, posters: {}, over: 0 };
+  }, [on, el, widgets, trim, posters, gaveUp]);
+  if (!on) return { trim: {}, posters: {}, over: 0 };
+  return gaveUp ? { trim: {}, posters: {}, over } : { trim, posters, over };
 }
 
 /** Align close-sized reading/calendar cards without adding more than 48px. */
@@ -494,7 +501,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             </label>
             {draft.fit && short > 4 && (
               <span className="drawer-note">
-                {short < 120 ? 'A little too tall to fit, even with lists at their shortest.' : 'Too tall to fit, even with lists at their shortest.'} {tiles ? 'Apps as icons, or moving a widget to another board, would make room.' : 'Moving a widget to another board would make room.'}
+                {short < 120 ? 'A little too tall to fit, even with lists at their shortest,' : 'Too tall to fit, even with lists at their shortest,'} so lists stay full length and the page scrolls. {tiles ? 'Apps as icons, or moving a widget to another board, would make room.' : 'Moving a widget to another board would make room.'}
               </span>
             )}
             <select

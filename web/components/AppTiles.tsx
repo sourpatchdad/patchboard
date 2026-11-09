@@ -4,6 +4,7 @@
 // A group header counts only what needs attention, so a quiet group says
 // nothing at all.
 
+import { Roving } from './Roving.tsx';
 import { Link } from 'react-router-dom';
 import type { Service } from '../../shared/types.ts';
 import { appStat } from '../lib/appstat.ts';
@@ -52,11 +53,12 @@ export function AppTiles({
               <h2>{g.name}</h2>
               {trouble > 0 && <span className="tile-group-trouble">{trouble} {trouble === 1 ? 'needs' : 'need'} attention</span>}
             </header>
-            <ul className="tile-grid">
+            {/* One Tab stop per group; arrow keys move between its apps. */}
+            <Roving as="ul" className="tile-grid">
               {list.map((s, i) => (
                 <Tile key={s.name} s={s} stat={stats[i]} />
               ))}
-            </ul>
+            </Roving>
           </section>
         );
       })}

@@ -2315,7 +2315,6 @@ a.app:hover {
 
   .reader-layout.has-selection .reader-list,
   .logs-layout.has-selection .logs-list,
-  .reader-layout:not(.has-selection) .reader,
   .logs-layout:not(.has-selection) .logs-pane {
     display: none;
   }
@@ -5262,10 +5261,6 @@ a.jw-title:hover {
   padding: 28px 32px 64px;
 }
 
-.reader-list .seg-small {
-  margin: 0 20px 8px;
-}
-
 .reader-hint {
   margin: 0 0 18px;
   color: var(--ink-3);
@@ -7111,14 +7106,6 @@ button.ha-act:hover {
   color: var(--ink-3);
 }
 
-/* ---------- Feeds: search, feed and time filters ---------- */
-
-.feeds-filters {
-  display: grid;
-  gap: 8px;
-  padding: 0 20px 10px;
-}
-
 /* Feed, time and order: one row of equal menus under the search. */
 .feeds-selects {
   display: flex;
@@ -8006,16 +7993,6 @@ button.ha-act:hover {
   opacity: 0.7;
 }
 
-.feeds-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--line-soft);
-}
-
 .field-small {
   padding: 5px 8px;
   font-size: 13px;
@@ -8750,33 +8727,26 @@ button.ha-act:hover {
   color: var(--ink-2);
 }
 
-/* A section a link pointed at: it clears the header and lights up briefly. */
+/* A section a link pointed at: it clears the header, and the rule under its
+   heading takes the accent until you scroll, click or type. No glow, no fade. */
 .section[id],
 .integration[id] {
   scroll-margin-top: calc(var(--topbar-h, 64px) + 20px);
 }
 
-.section.is-landing,
+.section-head,
+.integration {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.section.is-landing > .section-head,
 .integration.is-landing {
-  animation: landing 1.8s ease-out;
-  border-radius: var(--radius-lg);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
 }
 
-@keyframes landing {
-  0%,
-  35% {
-    box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 10%, transparent), 0 0 0 11px color-mix(in srgb, var(--accent) 45%, transparent);
-  }
-  100% {
-    box-shadow: 0 0 0 10px transparent, 0 0 0 11px transparent;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .section.is-landing,
-  .integration.is-landing {
-    animation: none;
-  }
+.section.is-landing > .section-head h2 {
+  color: var(--accent);
 }
 
 /* Pull to refresh, in the installed app: a ring slides out from under the
@@ -10580,10 +10550,6 @@ a.req-come:hover .req-title {
 
 /* 17. Phone Reading: the sort row lines up with the filters; categories fade at the edge they scroll. */
 @media (max-width: 760px) {
-  .feeds-bar {
-    padding-inline: 20px;
-  }
-
   .feeds-cats {
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
@@ -10655,4 +10621,197 @@ a.req-come:hover .req-title {
 .playback-preview .text-button {
   min-height: 32px;
   padding-inline: 4px;
+}
+
+/* Reading's tools: one grid with even 10px steps, the same 20px gutter as
+   the heading and the chips, and a rule under it only beside an open article. */
+.feeds-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 16px 20px 18px;
+}
+
+.reader-layout.has-selection .feeds-tools {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.feeds-filters {
+  display: contents;
+}
+
+.feeds-search,
+.feeds-selects {
+  grid-column: 1 / -1;
+}
+
+.feeds-search {
+  width: 100%;
+}
+
+.feeds-sort.seg-small {
+  margin: 0;
+  flex-wrap: nowrap;
+}
+
+.feeds-clear {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.feeds-mark {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+}
+
+.feeds-mark.button,
+.feeds-filter-toggle.button {
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.feeds-filter-toggle {
+  display: none;
+}
+
+.feeds-filter-toggle .chip-count {
+  margin-left: 6px;
+}
+
+.edition-cat-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.edition-cat-head .edition-cat {
+  margin-right: auto;
+}
+
+.edition-rest {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 72ch;
+  border-top: 1px solid var(--line-soft);
+}
+
+.edition-rest .entry {
+  padding-inline: 0;
+}
+
+@media (max-width: 760px) {
+  /* Phone: Filter and sort beside Mark all read; the rest opens under them. */
+  .feeds-tools {
+    padding: 14px 20px 16px;
+  }
+
+  .feeds-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .feeds-mark {
+    grid-row: 1;
+  }
+
+  .feeds-tools:not(.is-open) .feeds-filters > * {
+    display: none;
+  }
+
+  .feeds-sort.seg-small {
+    grid-column: 1 / -1;
+  }
+
+  .reader-layout.is-edition .reader {
+    padding-top: 4px;
+  }
+}
+
+/* Reading's heading keeps one shape: title and Customize on a row, the count under them. */
+.feeds-head {
+  align-items: center;
+}
+
+.feeds-head .section-count {
+  order: 3;
+  flex-basis: 100%;
+}
+
+/* A request waiting for approval: its title opens it in Overseerr, styled like the rows that already link. */
+a.req-title {
+  text-decoration: none;
+}
+
+a.req-title:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--ink-3);
+}
+
+/* Jump to: headings over what it offers before you type, and each app's
+   Details and Logs at the end of its row. */
+.palette-group {
+  padding: 12px 12px 4px;
+  font: 500 11.5px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.palette-group:first-child {
+  padding-top: 6px;
+}
+
+.palette-item:has(.palette-subs) {
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+}
+
+.palette-subs {
+  display: flex;
+  gap: 4px;
+}
+
+.palette-sub {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.palette-sub:hover {
+  border-color: var(--ink-3);
+  color: var(--head);
+}
+
+.palette-sub.is-on {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--head);
+}
+
+.palette-item.is-sub .palette-label {
+  color: var(--ink-2);
+}
+
+/* Quiet until the row is picked or pointed at. */
+.palette-item:not([aria-selected='true']):not(:hover) .palette-sub {
+  opacity: 0;
+}
+
+@media (hover: none) {
+  .palette-item .palette-sub {
+    opacity: 1;
+  }
+}
+
+.palette-icon {
+  display: grid;
+  place-items: center;
 }

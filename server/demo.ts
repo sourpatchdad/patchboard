@@ -210,6 +210,9 @@ const sonarrUpcoming = (): ReleaseItem[] => [
   ...[1, 2, 3, 4, 5, 6].map((e) => ep('Fallout', 2, e, dayAt(4, 3), false)),
 ];
 
+/** Demo rows open a real page: the title on TMDB, where a real install opens Sonarr, Radarr or Overseerr. */
+const tmdb = (title: string, kind: 'movie' | 'tv') => `https://www.themoviedb.org/search/${kind}?query=${encodeURIComponent(title)}`;
+
 function ep(show: string, s: number, e: number, when: string, hasFile: boolean): ReleaseItem {
   const sxe = `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
   return {
@@ -220,7 +223,7 @@ function ep(show: string, s: number, e: number, when: string, hasFile: boolean):
     subtitle: sxe,
     when,
     hasFile,
-    url: '#',
+    url: tmdb(show, 'tv'),
     art: poster(show),
     key: episodeKey(show, s, e),
     alt: [episodeKey(show, s, e)],
@@ -229,20 +232,20 @@ function ep(show: string, s: number, e: number, when: string, hasFile: boolean):
 }
 
 const radarrUpcoming = (): ReleaseItem[] => [
-  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Sinners', art: poster('Sinners'), subtitle: 'Digital release', when: dayAt(2, 0), url: '#', key: 'mv:1:d', alt: ['mv:1'] },
-  { id: 'r2', source: 'radarr', kind: 'movie', title: 'Weapons', art: poster('Weapons'), subtitle: 'In cinemas', when: dayAt(4, 0), url: '#', key: 'mv:2:c' },
-  { id: 'r3', source: 'radarr', kind: 'movie', title: 'One Battle After Another', art: poster('One Battle After Another'), subtitle: 'Digital release', when: dayAt(11, 0), url: '#', key: 'mv:3:d' },
+  { id: 'r1', source: 'radarr', kind: 'movie', title: 'Sinners', art: poster('Sinners'), subtitle: 'Digital release', when: dayAt(2, 0), url: tmdb('Sinners', 'movie'), key: 'mv:1:d', alt: ['mv:1'] },
+  { id: 'r2', source: 'radarr', kind: 'movie', title: 'Weapons', art: poster('Weapons'), subtitle: 'In cinemas', when: dayAt(4, 0), url: tmdb('Weapons', 'movie'), key: 'mv:2:c' },
+  { id: 'r3', source: 'radarr', kind: 'movie', title: 'One Battle After Another', art: poster('One Battle After Another'), subtitle: 'Digital release', when: dayAt(11, 0), url: tmdb('One Battle After Another', 'movie'), key: 'mv:3:d' },
 ];
 
 const traktUpcoming = (): ReleaseItem[] => [
   // Duplicate of a Sonarr item; the client dedupes by key.
   { ...sonarrUpcoming()[0], id: 'trakt-dup', source: 'trakt' },
   // The same show under another name for it (a year in parentheses): matched by title.
-  { id: 'trakt-us', source: 'trakt', kind: 'episode', title: 'Slow Horses (2022)', subtitle: 'S05E01', when: dayAt(3, 21, 30), url: '#', key: 'tv:0:5:1', alt: [episodeKey('Slow Horses (2022)', 5, 1)] },
+  { id: 'trakt-us', source: 'trakt', kind: 'episode', title: 'Slow Horses (2022)', subtitle: 'S05E01', when: dayAt(3, 21, 30), url: tmdb('Slow Horses (2022)', 'tv'), key: 'tv:0:5:1', alt: [episodeKey('Slow Horses (2022)', 5, 1)] },
   // A film Radarr has as a digital release, which Trakt calls just "Release".
-  { id: 'trakt-mv', source: 'trakt', kind: 'movie', title: 'Sinners', subtitle: 'Release', when: dayAt(2, 12), url: '#', key: 'mv:1:Release', alt: ['mv:1'] },
-  { id: 't1', source: 'trakt', kind: 'episode', title: 'Andor', subtitle: 'S03E02', when: dayAt(2, 20), url: '#', key: 'ep:andor:3:2' },
-  { id: 't2', source: 'trakt', kind: 'episode', title: 'The Pitt', subtitle: 'S02E01', when: dayAt(5, 21), url: '#', key: 'ep:pitt:2:1' },
+  { id: 'trakt-mv', source: 'trakt', kind: 'movie', title: 'Sinners', subtitle: 'Release', when: dayAt(2, 12), url: tmdb('Sinners', 'movie'), key: 'mv:1:Release', alt: ['mv:1'] },
+  { id: 't1', source: 'trakt', kind: 'episode', title: 'Andor', subtitle: 'S03E02', when: dayAt(2, 20), url: tmdb('Andor', 'tv'), key: 'ep:andor:3:2' },
+  { id: 't2', source: 'trakt', kind: 'episode', title: 'The Pitt', subtitle: 'S02E01', when: dayAt(5, 21), url: tmdb('The Pitt', 'tv'), key: 'ep:pitt:2:1' },
 ];
 
 /** Entries marked read during this demo session. */
@@ -433,12 +436,12 @@ export async function demoSeerrAct(id: number, action?: 'approve' | 'decline'): 
 }
 
 function demoSeerr(): SeerrData {
-  const requests = demoRequests.filter((r) => !demoDecided.has(r.id));
-  const approved = demoApproved.map((id) => demoRequests.find((r) => r.id === id)).filter((r) => !!r).map((r) => ({ ...r, href: '#' }));
+  const requests = demoRequests.filter((r) => !demoDecided.has(r.id)).map((r) => ({ ...r, href: tmdb(r.title, r.kind) }));
+  const approved = demoApproved.map((id) => demoRequests.find((r) => r.id === id)).filter((r) => !!r);
   const coming = [
-    ...approved,
-    { id: 36, kind: 'movie' as const, title: 'Weapons', year: 2025, by: 'Kit', at: Date.now() - 3 * 24 * H, is4k: false, art: poster('Weapons'), href: '#' },
-    { id: 33, kind: 'tv' as const, title: 'Severance', year: 2022, by: 'Sam', at: Date.now() - 6 * 24 * H, seasons: [2], is4k: false, art: poster('Severance'), href: '#' },
+    ...approved.map((r) => ({ ...r, href: tmdb(r.title, r.kind) })),
+    { id: 36, kind: 'movie' as const, title: 'Weapons', year: 2025, by: 'Kit', at: Date.now() - 3 * 24 * H, is4k: false, art: poster('Weapons'), href: tmdb('Weapons', 'movie') },
+    { id: 33, kind: 'tv' as const, title: 'Severance', year: 2022, by: 'Sam', at: Date.now() - 6 * 24 * H, seasons: [2], is4k: false, art: poster('Severance'), href: tmdb('Severance', 'tv') },
   ];
   return { pending: requests.length, processing: coming.length, requests, coming };
 }

@@ -1253,10 +1253,17 @@ export function RequestsWidget({ now }: { now: number }) {
             <li key={r.id} className="req">
               {r.art ? <img className="req-art" src={r.art} alt="" loading="lazy" /> : <span className="req-art req-art-none" aria-hidden />}
               <div className="req-main">
-                <span className="req-title">
-                  {r.title}
-                  {r.year ? <span className="req-year"> {r.year}</span> : null}
-                </span>
+                {r.href && r.href !== '#' ? (
+                  <a className="req-title" href={r.href} target="_blank" rel="noreferrer">
+                    {r.title}
+                    {r.year ? <span className="req-year"> {r.year}</span> : null}
+                  </a>
+                ) : (
+                  <span className="req-title">
+                    {r.title}
+                    {r.year ? <span className="req-year"> {r.year}</span> : null}
+                  </span>
+                )}
                 <span className="req-sub">
                   {[r.by, ago(r.at, now), r.seasons ? seasonsText(r.seasons) : null, r.is4k ? '4K' : null].filter(Boolean).join(', ')}
                 </span>

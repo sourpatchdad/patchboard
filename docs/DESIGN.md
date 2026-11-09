@@ -58,7 +58,8 @@ one click.
   footer height, and report any remaining overflow. Fit is a temporary view
   adjustment and never rewrites the saved board. If list cuts are insufficient,
   artwork can shrink with its proportions intact; every poster remains in
-  the horizontal row.
+  the horizontal row. When nothing makes it fit, Fit gives every list its
+  full length back: a page that scrolls anyway shouldn't also be cut short.
 - **Use the width.** The board has the columns you choose; each widget lays
   itself out for the width it gets (container queries), so nothing clips.
 - **The UI sits on top of files.** Apps, groups, icons, live numbers, the
@@ -73,7 +74,12 @@ one click.
   Dotted editing outlines surround card content and leave the gutters clear.
 - **Keyboard access.** Board drawers contain focus, Escape closes them,
   and focus returns to the opener. The background is inert while a drawer
-  is open. Skip to content bypasses the navigation.
+  is open. Skip to content bypasses the navigation. Each app group is one
+  Tab stop with arrow keys inside it, so the widgets below are a few
+  presses away, not dozens.
+- **Arriving at a section.** A link to part of a page scrolls there and
+  marks the section's heading and rule in the accent until you scroll,
+  click or type. No glow and no fade.
 - **Words:** plain, short, active. No em dashes. Name the thing.
 
 ## Architecture

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- A link to part of a page (a Server stat, a setting) marks the section's
+  heading and rule in the accent until you move on, instead of a glowing
+  ring that faded out.
+- Reading: with nothing open, the edition is the whole page, with a link
+  to the rest of each category; the article list appears beside an open
+  article only, so the same stories no longer show twice. Search, feed,
+  time and sort sit in one tidy block; on a phone they fold under Filter
+  and sort beside Mark all read. Escape and Back return focus to the
+  edition.
+- Rows in This week, Upcoming and Requests open the item in Sonarr,
+  Radarr, Trakt or Overseerr, and say so to screen readers. A request
+  waiting for approval links to its page, to look before you approve. The
+  demo's rows open the title on TMDB.
+- Jump to: before you type, it lists what needs attention, what you opened
+  last and the main pages. An app and its container are one row: Enter
+  opens it, the right arrow reaches Details and Logs, and "sonarr logs"
+  lands on the logs.
+- Home: each app group is one Tab stop; arrow keys move between its apps
+  (Up and Down follow the rows), Home and End reach the ends.
+- Fit the window: when trimming can't make the board fit, lists keep their
+  full length and the page scrolls, instead of being cut short for nothing.
+
 - Fixed: Forward to a page you'd left at its top opened it partway down.
 - A container you stopped from Patchboard is read as "stopped from
   Patchboard", not as a job that runs on a schedule.

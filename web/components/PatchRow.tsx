@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { useStore } from '../lib/store.tsx';
 import { checkFor, checkText, containerMap, isExternal, jackState, isParked, jackStateText, tapeLabel } from '../lib/services.ts';
+import { Roving } from './Roving.tsx';
 import { Icon } from './ui.tsx';
 
 export function PatchRow({ names = false }: { names?: boolean }) {
@@ -19,7 +20,7 @@ export function PatchRow({ names = false }: { names?: boolean }) {
       {snap.catalog.groups.map((g) => (
         <div className="bay" key={g.name}>
           <span className="bay-name">{g.name}</span>
-          <div className="bay-jacks">
+          <Roving className="bay-jacks">
             {g.services.map((s) => {
               const ck = checkFor(snap, s.name);
               const state = jackState(s, containers, ck);
@@ -54,7 +55,7 @@ export function PatchRow({ names = false }: { names?: boolean }) {
                 </span>
               );
             })}
-          </div>
+          </Roving>
         </div>
       ))}
     </nav>

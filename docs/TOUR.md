@@ -73,9 +73,10 @@ day-by-day list.
 ![Weather](screenshots/weather.webp)
 
 **Reading:** your Miniflux unread as a morning edition: a lead story, then the
-newest from each category, with pictures. Filter by category, sort, or mark a
-category read. Open an article to read it here; `j` and `k` move, `o` opens
-the original.
+newest from each category, with pictures and a link to the rest of each.
+Search, filter by feed or time, sort, or mark a category read; on a phone
+these fold under Filter and sort. Open an article and the list sits beside
+it; `j` and `k` move, `o` opens the original.
 
 ![Reading, the edition](screenshots/reading-edition.webp)
 
@@ -131,11 +132,14 @@ zone the container runs in.
 ![Logs](screenshots/logs.webp)
 
 **Jump to:** `Ctrl K` or `/` reaches any app, page, container, article or
-message.
+message. Before you type, it lists what needs attention and what you opened
+last. Each app is one row: Enter opens it, the right arrow reaches its
+details and logs, and typing "sonarr logs" lands on the logs.
 
 ![Jump to](screenshots/jump-to.webp)
 
-Press `?` for keyboard shortcuts. Help and the editors contain focus, close
+Press `?` for keyboard shortcuts. Each app group on Home is one Tab stop;
+arrow keys move between its apps. Help and the editors contain focus, close
 with Escape, and return focus to where you opened them. Closing an editor
 without saving leaves its settings intact.
 
@@ -151,7 +155,8 @@ card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Fit the window trims lists until the
 board ends at the bottom of the screen. Recently added keeps every selected
 poster in one horizontal row, rather than losing titles to fit. If lists
-alone cannot fit the board, Arrange board reports how far it runs over. Fit
+alone cannot fit the board, they keep their full length, the page scrolls,
+and Arrange board reports how far it runs over. Fit
 recalculates when the window width or header height changes. New board,
 at the foot of any board, adds another with
 its own name, starting empty or from a layout; tabs over the board switch

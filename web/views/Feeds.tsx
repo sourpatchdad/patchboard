@@ -1,6 +1,8 @@
-// A reader over Miniflux. With nothing open, the right side is today's
-// edition: a lead story, then a few from each category. Opening an entry marks
-// it read. Keyboard: j/k next/previous, o open original, u back to the edition.
+// A reader over Miniflux. With nothing open, the page is today's edition: a
+// lead story, then a few from each category, each with a way to the rest. With
+// an article open, the list sits beside it so the next one is a click away.
+// Opening an entry marks it read. Keyboard: j/k next/previous, o open
+// original, u back to the edition.
 
 import { HoldButton } from '../components/Hold.tsx';
 import DOMPurify from 'dompurify';
@@ -73,6 +75,8 @@ export function Feeds() {
   const [typed, setTyped] = useState(query);
   const filtered = !!(feedId || since || query);
   const readerRef = useRef<HTMLElement>(null);
+  /** Phones fold search, feed, time and sort behind one button. */
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const selectedId = Number(params.get('e')) || null;
 
   const fp = snap?.pages?.feeds;
@@ -179,6 +183,13 @@ export function Feeds() {
     [params, setParams, markRead, selectedId, kept],
   );
 
+  /** Back to the edition, with focus on the article you left, or its top once that one is read. */
+  const back = useCallback(() => {
+    const left = selectedId;
+    select(null);
+    setTimeout(() => (document.querySelector<HTMLElement>(`[data-entry="${left}"]`) ?? document.querySelector<HTMLElement>('[data-entry]'))?.focus(), 30);
+  }, [selectedId, select]);
+
   // Mark read when arriving from Home with ?e= already set.
   useEffect(() => {
     if (selectedId && !read.has(selectedId) && !kept.has(selectedId) && data?.entries.some((e) => e.id === selectedId)) markRead([selectedId]);
@@ -194,17 +205,14 @@ export function Feeds() {
       else if (e.key === 'k') select(visible[Math.max(idx - 1, 0)]?.id ?? null);
       else if (e.key === 'o' && selected) window.open(selected.url, '_blank', 'noopener');
       else if (e.key === 'u' || (e.key === 'Escape' && selected)) {
-        // Back to the list, with focus on the article you just left.
-        const left = selectedId;
-        select(null);
-        setTimeout(() => document.querySelector<HTMLElement>(`[data-entry="${left}"]`)?.focus(), 30);
+        back();
       }
       else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, selectedId, selected, select]);
+  }, [visible, selectedId, selected, select, back]);
 
   const html = useMemo(
     () => (selected?.content ? DOMPurify.sanitize(selected.content, { ADD_ATTR: ['target'], FORBID_TAGS: ['style', 'form'] }) : ''),
@@ -229,8 +237,8 @@ export function Feeds() {
   const allCats = [...new Set([...(data?.categories ?? []).map((c) => c.title), ...(fp?.hideCategories ?? [])])].sort();
 
   return (
-    <div className={`reader-layout ${selected ? 'has-selection' : ''}`}>
-      <aside className="reader-list" aria-label="Unread articles">
+    <div className={`reader-layout ${selected ? 'has-selection' : 'is-edition'}`}>
+      <aside className="reader-list" aria-label={selected ? 'Unread articles' : 'Reading'}>
         <header className="feeds-head">
           <h1 className="page-title">Reading</h1>
           <span className="section-count">{total != null ? `${count(total)} unread${category !== 'All' ? ` in ${category}` : ''}` : ''}</span>
@@ -257,63 +265,68 @@ export function Feeds() {
           </div>
         )}
 
-        <div className="feeds-filters">
-          <input
-            className="field field-small feeds-search"
-            type="search"
-            placeholder="Search titles"
-            aria-label="Search titles"
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-          />
-          <div className="feeds-selects">
-          {(data?.feeds?.length ?? 0) > 1 && (
-            <label>
-              <span className="sr-only">Feed</span>
-              <select className="field field-small" value={feedId ?? ''} onChange={(e) => setFilter('feed', e.target.value)}>
-                <option value="">All feeds</option>
-                {data!.feeds!.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.title} ({count(f.unread)})
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <label>
-            <span className="sr-only">Published</span>
-            <select className="field field-small" value={since} onChange={(e) => setFilter('since', e.target.value)}>
-              <option value="">Any time</option>
-              <option value="day">Last 24 hours</option>
-              <option value="week">Last 7 days</option>
-            </select>
-          </label>
-          {filtered && (
-            <button type="button" className="text-button feeds-clear" onClick={clearFilters}>
-              Clear filters
-            </button>
-          )}
-          </div>
-        </div>
-
-        <div className="feeds-bar">
-          {/* The same sort control as Logs and Stacks. */}
-          <div className="seg seg-small" role="group" aria-label="Sort articles">
-            {(
-              [
-                ['newest', 'Newest'],
-                ['oldest', 'Oldest'],
-                ['quick', 'Quick reads'],
-              ] as [FeedSort, string][]
-            ).map(([v, label]) => (
-              <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
-                {label}
+        {/* One block of tools. Wide: search, menus, then sort beside Mark all read.
+            Phone: Filter and sort beside Mark all read; the rest opens under them. */}
+        <div className={`feeds-tools ${filtersOpen ? 'is-open' : ''}`}>
+          <button type="button" className="button button-quiet feeds-filter-toggle" aria-expanded={filtersOpen} aria-controls="feeds-filters" onClick={() => setFiltersOpen((o) => !o)}>
+            {filtersOpen ? 'Hide filters' : 'Filter and sort'}
+            {!filtersOpen && (filtered || sort !== 'newest') && <span className="chip-count">{[feedId, since, query, sort !== 'newest'].filter(Boolean).length}</span>}
+          </button>
+          <div className="feeds-filters" id="feeds-filters">
+            <input
+              className="field field-small feeds-search"
+              type="search"
+              placeholder="Search titles"
+              aria-label="Search titles"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+            />
+            <div className="feeds-selects">
+              {(data?.feeds?.length ?? 0) > 1 && (
+                <label>
+                  <span className="sr-only">Feed</span>
+                  <select className="field field-small" value={feedId ?? ''} onChange={(e) => setFilter('feed', e.target.value)}>
+                    <option value="">All feeds</option>
+                    {data!.feeds!.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.title} ({count(f.unread)})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label>
+                <span className="sr-only">Published</span>
+                <select className="field field-small" value={since} onChange={(e) => setFilter('since', e.target.value)}>
+                  <option value="">Any time</option>
+                  <option value="day">Last 24 hours</option>
+                  <option value="week">Last 7 days</option>
+                </select>
+              </label>
+            </div>
+            {/* The same sort control as Logs and Stacks. */}
+            <div className="seg seg-small feeds-sort" role="group" aria-label="Sort articles">
+              {(
+                [
+                  ['newest', 'Newest'],
+                  ['oldest', 'Oldest'],
+                  ['quick', 'Quick reads'],
+                ] as [FeedSort, string][]
+              ).map(([v, label]) => (
+                <button key={v} type="button" aria-pressed={sort === v} onClick={() => setSort(v)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {filtered && (
+              <button type="button" className="text-button feeds-clear" onClick={clearFilters}>
+                Clear filters
               </button>
-            ))}
+            )}
           </div>
           {/* A hold, like every other change that can't be taken back in one tap. */}
           {!snap?.readOnly && (total ?? 0) > 0 && (
-            <HoldButton className="text-button" hint={`Hold to mark ${count((filtered ? unreadShown.length : total) ?? 0)} read`} onConfirm={() => void markAll()}>
+            <HoldButton className="button button-quiet feeds-mark" hint={`Hold to mark ${count((filtered ? unreadShown.length : total) ?? 0)} read`} onConfirm={() => void markAll()}>
               Mark all read
             </HoldButton>
           )}
@@ -321,7 +334,8 @@ export function Feeds() {
 
         {error && <Empty>Couldn't load feeds: {error}</Empty>}
         {!data && !error && <Empty>Loading feeds.</Empty>}
-        {data && visible.length === 0 && <Empty>You're caught up. New articles show up here as Miniflux fetches them.</Empty>}
+        {/* The full list only beside an open article; with none open, the edition is the list. */}
+        {selected && (
         <ul className="entries">
           {visible.map((e) => (
             <li key={e.id}>
@@ -337,13 +351,13 @@ export function Feeds() {
             </li>
           ))}
         </ul>
-        {data && data.total > data.entries.length && <p className="feeds-more">Showing the newest {count(data.entries.length)}. Mark some read to see the rest.</p>}
+        )}
       </aside>
 
       <article className="reader" ref={readerRef} aria-live="polite">
         {selected ? (
           <>
-            <button type="button" className="text-button reader-back" onClick={() => select(null)}>
+            <button type="button" className="text-button reader-back" onClick={back}>
               Back to the edition
             </button>
             <header className="reader-head">
@@ -378,7 +392,7 @@ export function Feeds() {
                     <button type="button" className="button button-quiet" disabled={!prev} onClick={() => prev && select(prev.id)}>
                       Previous
                     </button>
-                    <button type="button" className="text-button" onClick={() => select(null)}>
+                    <button type="button" className="text-button" onClick={back}>
                       Back to the edition
                     </button>
                     <button type="button" className="button button-quiet" disabled={!next} onClick={() => next && select(next.id)}>
@@ -390,28 +404,53 @@ export function Feeds() {
             </nav>
           </>
         ) : (
-          <Edition entries={unreadShown} total={total} now={now} onPick={select} single={category !== 'All'} />
+          data && (
+            <>
+              <Edition entries={unreadShown} total={total} now={now} onPick={select} onCategory={setCategory} single={category !== 'All'} filtered={filtered} />
+              {data.total > data.entries.length && <p className="feeds-more">Showing the newest {count(data.entries.length)}. Mark some read to see the rest.</p>}
+            </>
+          )
         )}
       </article>
     </div>
   );
 }
 
-/** Today's edition: the newest story with a picture leads, then each category's newest few. */
-function Edition({ entries, total, now, onPick, single }: { entries: FeedEntry[]; total: number | null; now: number; onPick: (id: number) => void; single: boolean }) {
-  if (!entries.length) return <p className="reader-hint">Nothing unread. Pick a category, or come back after Miniflux's next fetch.</p>;
+/** Today's edition: the newest story with a picture leads, then each category's
+ *  newest few and a way to the rest. One category (or a search) shows everything:
+ *  a dozen as cards, the rest as a list. */
+function Edition(props: {
+  entries: FeedEntry[];
+  total: number | null;
+  now: number;
+  onPick: (id: number) => void;
+  onCategory: (c: string) => void;
+  single: boolean;
+  filtered: boolean;
+}) {
+  const { entries, total, now, onPick, onCategory, single, filtered } = props;
+  if (!entries.length)
+    return (
+      <p className="reader-hint">
+        {filtered ? 'Nothing unread matches. Clear the filters to see everything.' : "You're caught up. New articles show up here as Miniflux fetches them."}
+      </p>
+    );
   const lead = entries.find((e) => e.image) ?? entries[0];
   const rest = entries.filter((e) => e.id !== lead.id);
-  const sections: [string, FeedEntry[]][] = single
-    ? [['', rest.slice(0, 12)]]
-    : [...rest.reduce((m, e) => m.set(e.category, [...(m.get(e.category) ?? []), e]), new Map<string, FeedEntry[]>())].map(([c, list]) => [c, list.slice(0, 3)] as [string, FeedEntry[]]);
+  const whole = single || filtered;
+  const sections: [string, FeedEntry[], number][] = whole
+    ? [['', rest.slice(0, 12), 0]]
+    : [...rest.reduce((m, e) => m.set(e.category, [...(m.get(e.category) ?? []), e]), new Map<string, FeedEntry[]>())].map(
+        ([c, list]) => [c, list.slice(0, 3), list.length] as [string, FeedEntry[], number],
+      );
+  const more = whole ? rest.slice(12) : [];
   return (
     <div className="edition">
       <p className="edition-date">
         {new Date(now).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
         {total != null && <span>, {count(total)} unread</span>}. Press <kbd>j</kbd> to read from the top.
       </p>
-      <button type="button" className="edition-lead" onClick={() => onPick(lead.id)}>
+      <button type="button" className="edition-lead" data-entry={lead.id} onClick={() => onPick(lead.id)}>
         <Thumb src={lead.image} className="edition-lead-img" />
         <span className="edition-lead-text">
           <span className="feed-card-meta">
@@ -423,13 +462,22 @@ function Edition({ entries, total, now, onPick, single }: { entries: FeedEntry[]
           {lead.readingTime > 0 && <span className="feed-card-time">{lead.readingTime} min read</span>}
         </span>
       </button>
-      {sections.map(([cat, list]) => (
+      {sections.map(([cat, list, all]) => (
         <section key={cat || 'all'} className="edition-section">
-          {cat && <h2 className="edition-cat">{cat}</h2>}
+          {cat && (
+            <header className="edition-cat-head">
+              <h2 className="edition-cat">{cat}</h2>
+              {all > list.length && (
+                <button type="button" className="text-button" onClick={() => onCategory(cat)}>
+                  All {count(all)} in {cat}
+                </button>
+              )}
+            </header>
+          )}
           <ul className="feed-cards">
             {list.map((e) => (
               <li key={e.id}>
-                <button type="button" className="feed-card" onClick={() => onPick(e.id)}>
+                <button type="button" className="feed-card" data-entry={e.id} onClick={() => onPick(e.id)}>
                   <Thumb src={e.image} className="feed-card-img" />
                   <span className="feed-card-meta">
                     <span>{e.feed}</span>
@@ -443,6 +491,25 @@ function Edition({ entries, total, now, onPick, single }: { entries: FeedEntry[]
           </ul>
         </section>
       ))}
+      {more.length > 0 && (
+        <section className="edition-section">
+          <h2 className="edition-cat">{count(more.length)} more</h2>
+          <ul className="edition-rest">
+            {more.map((e) => (
+              <li key={e.id}>
+                <button type="button" className="entry" data-entry={e.id} onClick={() => onPick(e.id)}>
+                  <span className="entry-title">{e.title}</span>
+                  <span className="feed-meta">
+                    <span>{e.feed}</span>
+                    <time>{ago(e.publishedAt, now)}</time>
+                    {e.readingTime > 0 && <span>{e.readingTime} min</span>}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

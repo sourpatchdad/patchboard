@@ -66,6 +66,8 @@ try {
     await page.emulateMedia({ forcedColors: 'active', colorScheme });
     await page.goto(base + '/');
     await page.locator('.header-board-vitals .meter').waitFor();
+    // Playback bars arrive with the first live snapshot, after the header.
+    await page.locator('.playback .meter > span').first().waitFor();
     assert(await page.evaluate(() => matchMedia('(forced-colors: active)').matches));
     const graphics = await page.evaluate(() => {
       const style = (selector) => getComputedStyle(document.querySelector(selector));

@@ -647,7 +647,9 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
   return (
     <li className={`rel ${it.hasFile ? 'has-file' : ''} ${art ? 'with-art' : ''} ${missing ? 'is-missing' : ''}`}>
       {it.url && it.url !== '#' ? (
-        <a href={it.url} target="_blank" rel="noreferrer" title={[it.title, it.subtitle].filter(Boolean).join(' · ')}>{content}</a>
+        <a href={it.url} target="_blank" rel="noreferrer" aria-label={`${[it.title, it.subtitle].filter(Boolean).join(', ')}${time ? `, ${time}` : ''}${it.hasFile ? ', downloaded' : ''}, open in ${sourceName[it.source]}`}>
+          {content}
+        </a>
       ) : (
         <div>{content}</div>
       )}
