@@ -117,7 +117,7 @@ see who did what.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, Downloads, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, calendar, notes, books, any container or JSON API. |
+| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, calendar, notes, books, any container or JSON API. |
 | **Server** | Pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate (TrueNAS, or any mounted folder). |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |

@@ -2,7 +2,8 @@
 // watching, recently added, and Next up for one user. Posters go through
 // /api/img/{jellyfin,emby} so the API key never reaches the browser.
 
-import type { MediaServerData, RecentItem, Stream } from '../../shared/types.ts';
+import type { MediaServerData, RecentItem, Stream, LibraryCounts, Play } from '../../shared/types.ts';
+import { every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -10,6 +11,7 @@ import { type Adapter, SECOND } from './adapter.ts';
 export type MediaKind = 'jellyfin' | 'emby';
 
 export interface Item {
+  UserData?: { LastPlayedDate?: string };
   Id: string;
   Name: string;
   Type: string;
@@ -95,6 +97,23 @@ export function toRecent(kind: MediaKind, it: Item): RecentItem {
   };
 }
 
+/** Items the chosen user finished lately, as plays. */
+export function toPlays(kind: MediaKind, items: Item[], user: string): Play[] {
+  return items
+    .filter((it) => it.UserData?.LastPlayedDate)
+    .map((it) => ({ ...toPlay(kind, it), user, at: Date.parse(it.UserData!.LastPlayedDate!) }));
+}
+
+function toPlay(kind: MediaKind, it: Item): Omit<Play, 'user' | 'at'> {
+  const r = toRecent(kind, it);
+  return { title: r.title, ...(r.subtitle ? { subtitle: r.subtitle } : {}), itemId: it.Id, thumb: r.thumb };
+}
+
+/** /Items/Counts in the board's words. */
+export function toCounts(c: { MovieCount?: number; SeriesCount?: number; EpisodeCount?: number; SongCount?: number }): LibraryCounts {
+  return { movies: c.MovieCount ?? 0, shows: c.SeriesCount ?? 0, episodes: c.EpisodeCount ?? 0, ...(c.SongCount ? { songs: c.SongCount } : {}) };
+}
+
 export const ITEM_PATH: Record<MediaKind, string> = {
   jellyfin: '/web/#/details?id=',
   emby: '/web/index.html#!/item?id=',
@@ -102,6 +121,7 @@ export const ITEM_PATH: Record<MediaKind, string> = {
 
 export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
   let userId: string | null = null;
+  let userName = 'Someone';
 
   async function user(): Promise<string> {
     if (userId) return userId;
@@ -112,6 +132,7 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
       : (users.find((u) => u.Policy?.IsAdministrator) ?? users[0]);
     if (!pick) throw new Error(want ? `No user named ${settings(kind).user}` : 'No users on the server');
     userId = pick.Id;
+    userName = pick.Name;
     return userId;
   }
 
@@ -128,22 +149,33 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
     return get<Item[]>(kind, `/Users/${uid}/Items/Latest?${q}`);
   }
 
+  const played = every(5 * 60_000, async () => {
+    const uid = await user();
+    const r = await get<{ Items: Item[] }>(kind, `/Users/${uid}/Items?SortBy=DatePlayed&SortOrder=Descending&Filters=IsPlayed&Recursive=true&IncludeItemTypes=Movie,Episode&Limit=15&Fields=DateCreated,ProductionYear`);
+    return toPlays(kind, r.Items, userName);
+  });
+  const counts = every(5 * 60_000, async () => toCounts(await get(kind, '/Items/Counts')));
+
   return {
     id: kind,
     label: kind === 'jellyfin' ? 'Jellyfin' : 'Emby',
     intervalMs: 15 * SECOND,
     async fetch() {
       const uid = await user();
-      const [sessions, added, next] = await Promise.all([
+      const [sessions, added, next, watched, library] = await Promise.all([
         get<Session[]>(kind, '/Sessions?ActiveWithinSeconds=120'),
         latest(uid),
         get<{ Items: Item[] }>(kind, `/Shows/NextUp?UserId=${uid}&Limit=12&Fields=DateCreated`).catch(() => ({ Items: [] as Item[] })),
+        played(),
+        counts(),
       ]);
       return {
         streams: sessions.map((s) => toStream(kind, s)).filter((s): s is Stream => s !== null),
         recent: added.map((it) => toRecent(kind, it)).sort((a, b) => b.addedAt - a.addedAt),
         nextUp: next.Items.map((it) => ({ ...toRecent(kind, it), id: it.Id })),
         itemPath: ITEM_PATH[kind],
+        ...(watched ? { watched } : {}),
+        ...(library ? { library } : {}),
       };
     },
   };

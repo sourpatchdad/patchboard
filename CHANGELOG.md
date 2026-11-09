@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Watched, a new widget: what was played lately on Plex, Jellyfin and Emby,
+  newest first, with who and when; each opens in its app. Listening, a new
+  widget: Audiobookshelf books in progress with how far along, and albums
+  played lately on Navidrome. A media server's page shows how big its
+  library is. History and counts refresh every few minutes, not every poll.
+
 - Nothing hides behind an ellipsis any more: episode titles and grouped
   seasons in This week, article titles in Reading (two lines), release
   names in Downloads, host names in Docker hosts and Network, and drive

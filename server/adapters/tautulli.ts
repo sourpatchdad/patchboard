@@ -1,7 +1,8 @@
 // Tautulli: current Plex streams and recently added media. Poster images are
 // served through /api/img/tautulli so the API key never reaches the browser.
 
-import type { RecentItem, Stream, TautulliData } from '../../shared/types.ts';
+import type { LibraryCounts, Play, RecentItem, Stream, TautulliData } from '../../shared/types.ts';
+import { every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -97,16 +98,62 @@ async function serverId(): Promise<string | null> {
   return machineId;
 }
 
+interface HistoryRow {
+  friendly_name?: string;
+  media_type?: string;
+  title?: string;
+  grandparent_title?: string;
+  parent_media_index?: string | number;
+  media_index?: string | number;
+  date?: number;
+  stopped?: number;
+  rating_key?: string | number;
+  thumb?: string;
+  grandparent_thumb?: string;
+}
+
+/** Tautulli's history as plays: the show for an episode, with its number and name. */
+export function fromHistory(rows: HistoryRow[]): Play[] {
+  return rows.map((r) => {
+    const ep = r.media_type === 'episode';
+    return {
+      user: r.friendly_name ?? 'Someone',
+      title: (ep ? r.grandparent_title : r.title) ?? r.title ?? 'Something',
+      ...(ep ? { subtitle: [sxe(String(r.parent_media_index ?? ''), String(r.media_index ?? '')), r.title].filter(Boolean).join(' ') } : {}),
+      at: ((r.stopped || r.date) ?? 0) * 1000,
+      ...(r.rating_key != null ? { itemId: String(r.rating_key) } : {}),
+      ...(img(ep ? r.grandparent_thumb : r.thumb) ? { thumb: img(ep ? r.grandparent_thumb : r.thumb) } : {}),
+    };
+  });
+}
+
+/** Tautulli's libraries summed by kind: films, shows and their episodes, artists' tracks. */
+export function libraryCounts(libs: { section_type?: string; count?: string | number; child_count?: string | number }[]): LibraryCounts {
+  const n = (v: unknown) => Number(v) || 0;
+  const of = (t: string) => libs.filter((l) => l.section_type === t);
+  const songs = of('artist').reduce((s, l) => s + n(l.child_count), 0);
+  return {
+    movies: of('movie').reduce((s, l) => s + n(l.count), 0),
+    shows: of('show').reduce((s, l) => s + n(l.count), 0),
+    episodes: of('show').reduce((s, l) => s + n(l.child_count), 0),
+    ...(songs ? { songs } : {}),
+  };
+}
+
 export function tautulliAdapter(): Adapter<TautulliData> {
+  const history = every(5 * 60_000, async () => fromHistory((await call<{ data: HistoryRow[] }>('get_history', '&length=15')).data ?? []));
+  const library = every(5 * 60_000, async () => libraryCounts(await call<{ section_type?: string; count?: string; child_count?: string }[]>('get_libraries')));
   return {
     id: 'tautulli',
     label: 'Plex',
     intervalMs: 15 * SECOND,
     async fetch() {
-      const [activity, added, id] = await Promise.all([
+      const [activity, added, id, watched, lib] = await Promise.all([
         call<{ sessions: Session[] }>('get_activity'),
         call<{ recently_added: Added[] }>('get_recently_added', '&count=30'),
         serverId(),
+        history(),
+        library(),
       ]);
       const streams = activity.sessions.map(toTautulliStream);
       const recent: RecentItem[] = added.recently_added.map((a) => {
@@ -125,7 +172,7 @@ export function tautulliAdapter(): Adapter<TautulliData> {
           thumb: img(ep ? a.grandparent_thumb : season ? (a.parent_thumb ?? a.thumb) : a.thumb),
         };
       });
-      return { streams, recent, ...(id ? { itemPath: plexItemPath(id) } : {}) };
+      return { streams, recent, ...(id ? { itemPath: plexItemPath(id) } : {}), ...(watched ? { watched } : {}), ...(lib ? { library: lib } : {}) };
     },
   };
 }

@@ -190,8 +190,9 @@ try {
       { id: 'calendar', type: 'calendar', size: 'm', span: 1 },
       { id: 'notes-1', type: 'notes', size: 's', span: 1, config: { title: 'Kitchen' } },
       { id: 'books', type: 'books', size: 's', span: 1 },
-      { id: 'upcoming', type: 'upcoming', size: 'm', span: 2 },
-      { id: 'now', type: 'now', size: 'm', span: 1 },
+      { id: 'watched', type: 'watched', size: 'm', span: 1 },
+      { id: 'listening', type: 'listening', size: 'm', span: 1 },
+      { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
     ],
   });
   await go('/', 1500);

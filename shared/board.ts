@@ -38,6 +38,8 @@ export type WidgetType =
   | 'books'
   | 'requests'
   | 'downloads'
+  | 'watched'
+  | 'listening'
   | 'container'
   | 'json'
   | 'weather';
@@ -217,6 +219,8 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  watched: { name: 'Watched', about: 'What was played lately on Plex, Jellyfin and Emby, newest first, with who watched and when. Each opens in its app.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 15] } },
+  listening: { name: 'Listening', about: 'Audiobookshelf books in progress, with how far along, and albums played lately on Navidrome.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 8] } },
   downloads: { name: 'Downloads', about: 'Every unfinished download across your clients, with pause, resume and remove, and what Sonarr and Radarr are stuck on, with Try another release. With this on the board, Right now leaves downloads to it.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 30] } },
   requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline. Hidden while none wait.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
   wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines you name in Settings, Connections.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },

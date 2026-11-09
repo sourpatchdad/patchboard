@@ -28,6 +28,7 @@ import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
+import { ListeningWidget, WatchedWidget } from './Media.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -802,6 +803,10 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <RequestsWidget now={now} />;
     case 'downloads':
       return <DownloadsWidget />;
+    case 'watched':
+      return <WatchedWidget now={now} />;
+    case 'listening':
+      return <ListeningWidget now={now} />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':

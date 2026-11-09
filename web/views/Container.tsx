@@ -560,6 +560,18 @@ function AppPanel({ name }: { name: string }) {
         <dl className="ledger">
           <Row k="Streams">{d.streams.length ? d.streams.map((s) => `${s.user}: ${s.title}`).join(', ') : 'Nobody watching'}</Row>
           <Row k="Transcoding">{d.streams.filter((s) => s.transcode).length || 'None'}</Row>
+          {d.library && (
+            <Row k="Library">
+              {[
+                plural(d.library.movies, 'film'),
+                plural(d.library.shows, 'show'),
+                plural(d.library.episodes, 'episode'),
+                d.library.songs ? plural(d.library.songs, 'song') : '',
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </Row>
+          )}
           {d.recent[0] && <Row k="Last added">{d.recent[0].title}</Row>}
           {next.length > 0 && <Row k="Next up">{next.slice(0, 3).map((n) => n.title).join(', ')}</Row>}
         </dl>

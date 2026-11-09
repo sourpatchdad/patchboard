@@ -110,10 +110,11 @@ at the thresholds in Settings, Alerts.
 ![Hosts, Power, Storage, Proxmox, Drives, Docker hosts, Network and Photos on the board](screenshots/machines.webp)
 
 **The household:** a Calendar from any iCal address, Notes with checklists
-the house shares, what you are reading on Hardcover or Goodreads, and who
-is listening on Audiobookshelf or Navidrome in Right now.
+the house shares, what you are reading on Hardcover or Goodreads, what
+everyone watched lately on Plex, Jellyfin and Emby, and the audiobooks in
+progress and albums played lately on Audiobookshelf and Navidrome.
 
-![Calendar, Notes, Books, This week and Right now on the board](screenshots/household.webp)
+![Calendar, Notes, Books, Watched, Listening and This week on the board](screenshots/household.webp)
 
 **Logs:** live from Docker.
 

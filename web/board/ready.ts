@@ -27,6 +27,8 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
     requests: has('overseerr'),
     wake: !!snap?.features?.includes('wake'),
     nextup: has('jellyfin') || has('emby'),
+    watched: has('tautulli') || has('jellyfin') || has('emby'),
+    listening: has('audiobookshelf') || has('navidrome'),
     downloads: ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget', 'sonarr', 'radarr'].some(has),
   };
 }
@@ -53,6 +55,8 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   wake: { label: 'Wake-on-LAN machines', setup: 'wake' },
   nextup: { label: 'Jellyfin or Emby', setup: 'jellyfin' },
   downloads: { label: 'a download client, Sonarr or Radarr', setup: 'qbit' },
+  watched: { label: 'Plex (Tautulli), Jellyfin or Emby', setup: 'tautulli' },
+  listening: { label: 'Audiobookshelf or Navidrome', setup: 'audiobookshelf' },
 };
 
 /** Where to set up what a widget needs. */

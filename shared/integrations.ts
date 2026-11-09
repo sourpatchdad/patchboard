@@ -92,7 +92,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'tautulli',
     name: 'Tautulli (Plex)',
-    adds: 'Who is watching Plex right now, and recently added posters.',
+    adds: 'Who is watching Plex right now, recently added posters, what was watched lately and by whom, and how big the library is.',
     env: ['TAUTULLI_URL', 'TAUTULLI_KEY'],
     where: 'Tautulli: Settings, Web Interface, API Key.',
     source: true,
@@ -100,7 +100,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'jellyfin',
     name: 'Jellyfin',
-    adds: 'Who is watching, recently added and Next up, with posters that open the item in Jellyfin.',
+    adds: 'Who is watching, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin.',
     env: ['JELLYFIN_URL', 'JELLYFIN_KEY'],
     optional: ['JELLYFIN_USER'],
     where: 'Jellyfin: Dashboard, API Keys, +. JELLYFIN_USER picks whose Next up to show; blank uses the first admin.',
@@ -109,7 +109,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'emby',
     name: 'Emby',
-    adds: 'Who is watching, recently added and Next up, with posters that open the item in Emby.',
+    adds: 'Who is watching, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Emby.',
     env: ['EMBY_URL', 'EMBY_KEY'],
     optional: ['EMBY_USER'],
     where: 'Emby: Settings, Advanced, API Keys, New API Key. EMBY_USER works as it does for Jellyfin.',
@@ -382,7 +382,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'audiobookshelf',
     name: 'Audiobookshelf',
-    adds: 'Who is listening, to what, and how far through, in Right now.',
+    adds: 'Who is listening, to what, and how far through, in Right now, and every book in progress in Listening.',
     env: ['AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'],
     where: 'Signed in as an admin: Settings, Users, your user, API token (or Settings, API Keys on newer versions).',
     source: true,
@@ -390,7 +390,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'navidrome',
     name: 'Navidrome',
-    adds: 'Who is listening and to which track, in Right now. Other Subsonic-compatible servers work the same way.',
+    adds: 'Who is listening and to which track, in Right now, and albums played lately in Listening. Other Subsonic-compatible servers work the same way.',
     env: ['NAVIDROME_URL', 'NAVIDROME_USERNAME', 'NAVIDROME_PASSWORD'],
     where: 'Any Navidrome user; an admin sees everyone who is listening.',
     source: true,

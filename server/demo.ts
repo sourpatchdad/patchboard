@@ -339,6 +339,14 @@ const demoPlex = (): TautulliData => ({
     { id: 'p8', type: 'season', title: 'Andor', thumb: poster('Andor'), subtitle: 'Season 2', addedAt: Date.now() - 5 * D },
     { id: 'p9', type: 'movie', title: 'Spider-Man: Across the Spider-Verse', thumb: poster('Spider-Man: Across the Spider-Verse'), subtitle: '2023', addedAt: Date.now() - 6 * D },
   ],
+  watched: [
+    { user: 'Kit', title: 'Dune: Part Two', at: Date.now() - 2 * H, thumb: poster('Dune: Part Two') },
+    { user: 'Sam', title: 'The Bear', subtitle: 'S04E03 Bears', at: Date.now() - 5 * H, thumb: poster('The Bear') },
+    { user: 'Sam', title: 'The Bear', subtitle: 'S04E02 Worms', at: Date.now() - 6 * H, thumb: poster('The Bear') },
+    { user: 'Jo', title: 'Past Lives', at: Date.now() - 26 * H, thumb: poster('Past Lives') },
+    { user: 'Kit', title: 'Shōgun', subtitle: 'S01E07 A Stick of Time', at: Date.now() - 2 * D, thumb: poster('Shōgun') },
+  ],
+  library: { movies: 1204, shows: 212, episodes: 9387, songs: 18420 },
 });
 
 const demoJellyfin = (): MediaServerData => ({
@@ -359,6 +367,11 @@ const demoJellyfin = (): MediaServerData => ({
     { id: 'n6', type: 'episode', title: 'The Last of Us', thumb: poster('The Last of Us'), subtitle: 'S02E03', addedAt: Date.now() - 20 * D },
     { id: 'n7', type: 'episode', title: 'Fallout', thumb: poster('Fallout'), subtitle: 'S01E01', addedAt: Date.now() - 2.5 * D },
   ],
+  watched: [
+    { user: 'Jo', title: 'Slow Horses', subtitle: 'S05E01 Bad Actors', at: Date.now() - 3 * H, thumb: poster('Slow Horses') },
+    { user: 'Jo', title: 'Silo', subtitle: 'S02E09 The Book of Quinn', at: Date.now() - 28 * H, thumb: poster('Silo') },
+  ],
+  library: { movies: 842, shows: 160, episodes: 6120 },
   itemPath: '',
 });
 
@@ -703,6 +716,11 @@ export function demoAdapters(): Adapter[] {
     demo<NextcloudData>('nextcloud', 'Nextcloud', 5 * MINUTE, () => ({ version: '30.0.2', files: 128_403, users: 4, activeToday: 2, appUpdates: 0, webUrl: 'http://nextcloud.local' })),
     demo<ListeningData>('navidrome', 'Navidrome', 20 * SECOND, () => ({
       streams: [{ user: 'Jo', title: 'Nights', subtitle: 'Frank Ocean, Blonde', progress: -1, durationSec: 307, state: 'playing', transcode: false }],
+      albums: [
+        { title: 'Blonde', artist: 'Frank Ocean', at: Date.now() - 0.2 * H },
+        { title: 'In Rainbows', artist: 'Radiohead', at: Date.now() - 20 * H },
+        { title: 'Carrie & Lowell', artist: 'Sufjan Stevens', at: Date.now() - 2 * D },
+      ],
     })),
     demo<BooksData>('books', 'Hardcover', 30 * MINUTE, () => ({
       source: 'Hardcover',
@@ -732,6 +750,11 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<ListeningData>('audiobookshelf', 'Audiobookshelf', 20 * SECOND, () => ({
       streams: [{ user: 'Sam', title: 'Project Hail Mary', subtitle: 'Andy Weir', ...demoTiming(62 + ((Date.now() / 60_000) % 5), 57960), state: 'playing', transcode: false }],
+      inProgress: [
+        { id: 'b1', title: 'Project Hail Mary', author: 'Andy Weir', progress: 0.62, at: Date.now() - 0.1 * H },
+        { id: 'b2', title: 'Piranesi', author: 'Susanna Clarke', progress: 0.31, at: Date.now() - 3 * D },
+        { id: 'b3', title: 'The Wind-Up Bird Chronicle', author: 'Haruki Murakami', progress: 0.08, at: Date.now() - 9 * D },
+      ],
     })),
     demo<UnifiData>('unifi', 'UniFi', MINUTE, () => ({
       clients: 37,

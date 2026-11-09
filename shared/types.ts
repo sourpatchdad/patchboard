@@ -428,9 +428,31 @@ export interface RecentItem {
   thumb?: string;
 }
 
+/** One play on a media server, newest first in a list. */
+export interface Play {
+  user: string;
+  title: string;
+  subtitle?: string;
+  /** When it was played, ms. */
+  at: number;
+  itemId?: string;
+  thumb?: string;
+}
+
+/** What a media server holds. */
+export interface LibraryCounts {
+  movies: number;
+  shows: number;
+  episodes: number;
+  songs?: number;
+}
+
 export interface TautulliData {
   streams: Stream[];
   recent: RecentItem[];
+  /** The last plays, newest first. */
+  watched?: Play[];
+  library?: LibraryCounts;
   /** Plex: after the web app's address, then the item id, opens that title. Missing until Plex's server id is known. */
   itemPath?: string;
 }
@@ -837,8 +859,30 @@ export interface TailnetData {
 }
 
 /** Who is listening: Audiobookshelf or Navidrome. Progress -1 means unknown. */
+/** An audiobook started and not finished. */
+export interface BookProgress {
+  id: string;
+  title: string;
+  author?: string;
+  /** 0 to 1. */
+  progress: number;
+  /** Last listened, ms. */
+  at: number;
+}
+
+/** An album played lately. */
+export interface AlbumPlay {
+  title: string;
+  artist?: string;
+  at?: number;
+}
+
 export interface ListeningData {
   streams: Stream[];
+  /** Audiobookshelf: books in progress, most recent first. */
+  inProgress?: BookProgress[];
+  /** Navidrome: albums played lately. */
+  albums?: AlbumPlay[];
 }
 
 export interface Book {
