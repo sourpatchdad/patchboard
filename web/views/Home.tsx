@@ -404,12 +404,15 @@ export function FeedsBrief({ now }: { now: number }) {
   );
 }
 
-export function NowPlaying() {
+/** What's playing and, unless the Downloads widget is on the board, what's downloading. */
+export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
   // Rows per server or client, so a busy evening doesn't push the board down.
   // Each heading already gives the full count.
   const { limit = 6 } = useWidget();
   const { servers, configured } = useMediaServers();
-  const { clients, configured: anyClient } = useDownloadClients();
+  const all = useDownloadClients();
+  const clients = downloads ? all.clients : [];
+  const anyClient = downloads && all.configured;
   const abs = useSource<ListeningData>('audiobookshelf');
   const navi = useSource<ListeningData>('navidrome');
   const listening = [
@@ -589,6 +592,10 @@ export function UpcomingBrief({ now }: { now: number }) {
 }
 
 export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean }) {
+  const { snap } = useStore();
+  const [search, setSearch] = useState<'idle' | 'busy' | 'sent' | 'failed'>('idle');
+  // Out and still missing: Sonarr or Radarr can go and look for it.
+  const missing = !it.hasFile && it.searchId != null && it.source !== 'trakt' && Date.parse(it.when) <= Date.now();
   const time = it.kind === 'movie' || isDateOnly(it.when) ? '' : clock(it.when);
   const content = (
     <>
@@ -610,11 +617,26 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
     </>
   );
   return (
-    <li className={`rel ${it.hasFile ? 'has-file' : ''} ${art ? 'with-art' : ''}`}>
+    <li className={`rel ${it.hasFile ? 'has-file' : ''} ${art ? 'with-art' : ''} ${missing ? 'is-missing' : ''}`}>
       {it.url && it.url !== '#' ? (
         <a href={it.url} target="_blank" rel="noreferrer" title={[it.title, it.subtitle].filter(Boolean).join(' · ')}>{content}</a>
       ) : (
         <div>{content}</div>
+      )}
+      {missing && !snap?.readOnly && (
+        <button
+          type="button"
+          className="text-button rel-search"
+          disabled={search === 'busy' || search === 'sent'}
+          title={`Ask ${sourceName[it.source]} to search for it now`}
+          onClick={async () => {
+            setSearch('busy');
+            const res = await fetch(`/api/arr/${it.source}/search/${it.searchId}`, { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);
+            setSearch(res?.ok ? 'sent' : 'failed');
+          }}
+        >
+          {search === 'sent' ? 'Searching' : search === 'failed' ? 'Try again' : 'Search'}
+        </button>
       )}
     </li>
   );

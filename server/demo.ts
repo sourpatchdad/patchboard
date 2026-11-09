@@ -52,6 +52,7 @@ import type {
   TraktData,
   TruenasData,
   WeatherData,
+  QueueItem,
 } from '../shared/types.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import { MINUTE, SECOND } from './adapters/adapter.ts';
@@ -167,6 +168,8 @@ export function demoContainers(): Container[] {
 }
 
 const sonarrUpcoming = (): ReleaseItem[] => [
+  // Aired this morning and not downloaded yet: This week offers Search.
+  ep('Andor', 2, 9, dayAt(0, 6), false),
   ep('Severance', 3, 6, dayAt(0, 21), false),
   ep('The Bear', 4, 4, dayAt(1, 20), false),
   ep('Slow Horses', 5, 1, dayAt(3, 21, 30), false),
@@ -191,6 +194,7 @@ function ep(show: string, s: number, e: number, when: string, hasFile: boolean):
     art: poster(show),
     key: episodeKey(show, s, e),
     alt: [episodeKey(show, s, e)],
+    searchId: [...show].reduce((n, ch) => n + ch.charCodeAt(0), 0) * 100 + s * 10 + e,
   };
 }
 
@@ -525,11 +529,41 @@ function demoSab(): QbitData {
   };
 }
 
+/** Demo torrents paused or removed one at a time, and the alternative speed limits. */
+const demoItemPaused = new Set<string>();
+const demoItemRemoved = new Set<string>();
+let demoTurtle = false;
+export function demoItemControl(id: DownloadClientId): ((item: string, action: 'pause' | 'resume' | 'remove') => Promise<void>) | undefined {
+  if (id !== 'qbit') return undefined;
+  return async (item, action) => {
+    if (action === 'remove') demoItemRemoved.add(item);
+    else if (action === 'pause') demoItemPaused.add(item);
+    else demoItemPaused.delete(item);
+  };
+}
+export function demoAltSpeed(id: DownloadClientId): (() => Promise<void>) | undefined {
+  return id === 'qbit' ? async () => void (demoTurtle = !demoTurtle) : undefined;
+}
+/** Demo Sonarr and Radarr: a retried download leaves the queue; searches are accepted. */
+const demoRetried = new Set<number>();
+export function demoArrControl(): { retry(id: number): Promise<void>; searchMissing(): Promise<void>; search(id: number): Promise<void> } {
+  return { retry: async (id) => void demoRetried.add(id), searchMissing: async () => {}, search: async () => {} };
+}
+
 function demoQbit(): QbitData {
   const paused = demoPaused.has('qbit');
-  const s1 = paused ? 0 : jitter(28e6, 6e6);
-  const s2 = paused ? 0 : jitter(9e6, 3e6);
+  const slow = demoTurtle ? 0.15 : 1;
+  const run = (hash: string) => !paused && !demoItemPaused.has(hash);
+  const s1 = run('a1b2') ? jitter(28e6, 6e6) * slow : 0;
+  const s2 = run('c3d4') ? jitter(9e6, 3e6) * slow : 0;
+  const items: QueueItem[] = [
+    { id: 'a1b2', name: 'The.Bear.S04E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, speed: s1, etaSec: s1 ? 340 : -1, state: run('a1b2') ? 'downloading' : 'paused' },
+    { id: 'c3d4', name: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: s2 ? 2900 : -1, state: run('c3d4') ? 'downloading' : 'paused' },
+    { id: 'e5f6', name: 'Slow.Horses.S05E02.1080p.ATVP.WEB-DL', progress: 0.62, speed: 0, etaSec: -1, state: demoItemPaused.has('e5f6') ? 'paused' : 'stalled' },
+  ].filter((i) => !demoItemRemoved.has(i.id)) as QueueItem[];
   return {
+    items,
+    altSpeed: demoTurtle,
     kind: 'torrent',
     paused,
     down: s1 + s2,
@@ -614,13 +648,22 @@ export function demoAdapters(): Adapter[] {
     demo<ArrData>('sonarr', 'Sonarr', 5 * MINUTE, () => ({
       upcoming: sonarrUpcoming(),
       queueTotal: 3,
+      queue: [
+        { id: 101, title: 'The.Bear.S04E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, state: 'downloading' as const },
+        { id: 102, title: 'Silo.S02E10.2160p.ATVP.WEB-DL', progress: 0.8, state: 'downloading' as const },
+        { id: 103, title: 'Slow.Horses.S05E02.1080p.ATVP.WEB-DL', progress: 0.62, state: 'queued' as const },
+      ],
       problems: [],
       health: [],
     })),
     demo<ArrData>('radarr', 'Radarr', 5 * MINUTE, () => ({
       upcoming: radarrUpcoming(),
-      queueTotal: 2,
-      problems: [{ title: 'One.Battle.After.Another.2025.2160p.WEB-DL', message: 'No files found are eligible for import' }],
+      queueTotal: demoRetried.has(201) ? 1 : 2,
+      queue: [
+        { id: 201, title: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 1, state: 'warning' as const, message: 'No files found are eligible for import' },
+        { id: 202, title: 'Sinners.2025.1080p.WEB-DL', progress: 0.12, state: 'downloading' as const },
+      ].filter((q) => !demoRetried.has(q.id)),
+      problems: demoRetried.has(201) ? [] : [{ title: 'One.Battle.After.Another.2025.2160p.WEB-DL', message: 'No files found are eligible for import' }],
       health: [],
     })),
     demo<TraktData>('trakt', 'Trakt', 30 * MINUTE, () => ({ upcoming: traktUpcoming() })),

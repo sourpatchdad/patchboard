@@ -27,6 +27,7 @@ import {
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
+import { DownloadsWidget } from './Downloads.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -506,7 +507,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             bind={editing ? sort.bind(w.id) : undefined}
             dragging={sort.dragging === w.id}
           >
-            <WidgetBody w={w} board={id} now={now} editing={editing} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
+            <WidgetBody w={w} board={id} now={now} editing={editing} downloadsOnBoard={shown.widgets.some((x) => x.type === 'downloads')} saved={!!board?.widgets.some((x) => x.id === w.id && x.config?.json === w.config?.json)} />
           </Cell>);
         })}
       </div>
@@ -730,7 +731,7 @@ function Cell(props: {
   );
 }
 
-function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: string; now: number; saved: boolean; editing?: boolean }) {
+function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Widget; board: string; now: number; saved: boolean; editing?: boolean; downloadsOnBoard?: boolean }) {
   const { snap } = useStore();
   const { homeApps, homeStatusSize } = useAppearance();
   if (!snap) return null;
@@ -748,7 +749,7 @@ function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: strin
     case 'vitals':
       return <Vitals />;
     case 'now':
-      return <NowPlaying />;
+      return <NowPlaying downloads={!downloadsOnBoard} />;
     case 'upcoming':
       return <UpcomingBrief now={now} />;
     case 'inbox':
@@ -799,6 +800,8 @@ function WidgetBody({ w, board, now, saved, editing }: { w: Widget; board: strin
       return <BooksWidget />;
     case 'requests':
       return <RequestsWidget now={now} />;
+    case 'downloads':
+      return <DownloadsWidget />;
     case 'container':
       return <ContainerWidget name={w.config?.container ?? ''} />;
     case 'json':

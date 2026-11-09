@@ -68,7 +68,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'sonarr',
     name: 'Sonarr',
-    adds: 'Episodes on the calendar, the queue, stuck imports and health warnings.',
+    adds: 'Episodes on the calendar, the queue, stuck imports and health warnings. Try another release for a stuck download, Search for an episode that aired without arriving, or search for everything missing.',
     env: ['SONARR_URL', 'SONARR_KEY'],
     where: 'Sonarr: Settings, General, API Key.',
     source: true,
@@ -76,7 +76,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'radarr',
     name: 'Radarr',
-    adds: 'Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings.',
+    adds: 'Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings. Try another release for a stuck download, Search for a film that is out without arriving, or search for everything missing.',
     env: ['RADARR_URL', 'RADARR_KEY'],
     where: 'Radarr: Settings, General, API Key.',
     source: true,
@@ -118,7 +118,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'qbit',
     name: 'qBittorrent',
-    adds: 'Downloads in progress with time left, seeding and stalled torrents, and a Pause button for all of them.',
+    adds: 'Downloads in progress with time left, seeding and stalled torrents. Pause, resume or remove one torrent (its files stay) or pause them all, and turn the alternative speed limits on or off.',
     env: ['QBIT_URL', 'QBIT_USERNAME', 'QBIT_PASSWORD'],
     where: 'Your Web UI login. Patchboard signs in once and backs off on failure, so a wrong password never gets you banned.',
     source: true,

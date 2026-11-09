@@ -204,6 +204,7 @@ try {
     columns: 3,
     widgets: [
       { id: 'requests', type: 'requests', size: 'm', span: 1 },
+      { id: 'downloads', type: 'downloads', size: 'l', span: 2 },
       { id: 'uptime', type: 'uptime', size: 'm', span: 1 },
       { id: 'speed', type: 'speed', size: 's', span: 1 },
       { id: 'dns', type: 'dns', size: 's', span: 1 },

@@ -92,8 +92,11 @@ shows the latest speed test and the last day as a line. Ad blocking shows
 what Pi-hole or AdGuard Home blocked today and pauses it for 5, 30 or 60
 minutes; it turns itself back on when the time runs out. Requests lists
 what people asked for in Overseerr or Jellyseerr, with Approve and Decline.
+Downloads lists every unfinished download with Pause, Resume and Remove, and
+whatever Sonarr or Radarr is stuck on with Try another release. This week
+offers Search for an episode that aired and never arrived.
 
-![Requests, Internet, Uptime and ad blocking on the board](screenshots/network.webp)
+![Requests, Downloads, Internet, Uptime and ad blocking on the board](screenshots/network.webp)
 
 **The machines:** Hosts shows CPU, memory, the fullest disk, network and
 temperature for every machine running Glances. Storage covers Unraid,

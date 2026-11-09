@@ -9601,3 +9601,105 @@ button.ha-act:hover {
   font-size: 13px;
   white-space: nowrap;
 }
+
+/* Downloads: a line per client, then one row per download. */
+.dl-client {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 0 0 8px;
+  font-size: 13.5px;
+}
+
+.dl-client-state {
+  color: var(--ink-3);
+  margin-right: auto;
+}
+
+.dl-client-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.dl-client-actions .now-action {
+  margin-left: 0;
+}
+
+.dl-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.dl-row .meter,
+.dl-why {
+  grid-column: 1 / -1;
+}
+
+.dl-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 13px/1.4 var(--f-mono);
+  color: var(--ink);
+}
+
+.dl-status {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.dl-actions {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.dl-why {
+  font-size: 12.5px;
+}
+
+/* A narrow widget: the name keeps the line, the buttons go under the bar. */
+@container (max-width: 460px) {
+  .dl-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .dl-actions {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* This week: Search beside a release that's out and still missing. */
+.rel.is-missing {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.rel.is-missing > a,
+.rel.is-missing > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rel-search {
+  flex: none;
+  font-size: 12.5px;
+}

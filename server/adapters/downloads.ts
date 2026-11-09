@@ -9,6 +9,8 @@ import { type Adapter, SECOND } from './adapter.ts';
 
 export type DownloadAction = 'pause' | 'resume';
 export type DownloadControl = (action: DownloadAction) => Promise<void>;
+/** What can be done to one download. */
+export type ItemAction = 'pause' | 'resume' | 'remove';
 
 const basic = (user?: string, pass?: string): Record<string, string> =>
   user || pass ? { Authorization: `Basic ${Buffer.from(`${user ?? ''}:${pass ?? ''}`).toString('base64')}` } : {};

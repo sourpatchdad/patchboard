@@ -375,6 +375,19 @@ export interface ReleaseItem {
   alt?: string[];
   /** Poster, through Patchboard's art proxy. */
   art?: string;
+  /** Sonarr's episode id or Radarr's movie id, to search for it from Patchboard. */
+  searchId?: number;
+}
+
+/** One item in Sonarr's or Radarr's download queue. */
+export interface ArrQueueItem {
+  id: number;
+  title: string;
+  /** 0 to 1. */
+  progress: number;
+  state: 'downloading' | 'queued' | 'paused' | 'importing' | 'warning' | 'failed';
+  /** What's wrong, when it's stuck. */
+  message?: string;
 }
 
 export interface ArrProblem {
@@ -385,6 +398,8 @@ export interface ArrProblem {
 export interface ArrData {
   upcoming: ReleaseItem[];
   queueTotal: number;
+  /** The queue, stuck items first, up to 20. */
+  queue?: ArrQueueItem[];
   problems: ArrProblem[];
   health: { level: 'warning' | 'error' | 'notice'; message: string }[];
 }
@@ -886,8 +901,24 @@ export interface CarData {
 export type DownloadClientId = 'qbit' | 'transmission' | 'deluge' | 'sabnzbd' | 'nzbget';
 
 /** Any download client. Usenet clients report no seeding or upload. */
+/** One unfinished download a client can pause, resume or remove. */
+export interface QueueItem {
+  /** The client's own id: a torrent's hash. */
+  id: string;
+  name: string;
+  /** 0 to 1. */
+  progress: number;
+  speed: number;
+  etaSec: number;
+  state: 'downloading' | 'stalled' | 'queued' | 'paused' | 'errored';
+}
+
 export interface QbitData {
   kind?: 'torrent' | 'usenet';
+  /** Unfinished downloads with their ids, errored first, up to 20. Clients that can act on one item report these. */
+  items?: QueueItem[];
+  /** qBittorrent's alternative speed limits are on. */
+  altSpeed?: boolean;
   /** Everything is paused, by Patchboard or by hand. */
   paused?: boolean;
   down: number;

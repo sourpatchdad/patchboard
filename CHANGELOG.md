@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Downloads, a new widget: every unfinished download across your clients,
+  with Pause, Resume and Remove for each qBittorrent torrent (the files
+  stay) and Limit speed for its alternative limits, plus whatever Sonarr or
+  Radarr is stuck on, with why and Try another release, which blocklists it
+  and searches again. With it on the board, Right now leaves downloads to
+  it. This week has Search for an episode or film that is out and still
+  missing, and Sonarr's and Radarr's pages search for everything missing.
+  Declining a request is a press and hold.
+
 - Updates: two quick clicks on Update start one update, not two. Roll back
   appears only once the container was recreated, since a failed pull
   changes nothing, and it is a press and hold like Stop and Restart. When

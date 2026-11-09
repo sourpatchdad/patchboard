@@ -10,7 +10,9 @@ it anywhere.
   read-only mounts of notes and logs, and the APIs you connect.
 - **Change:** start, stop, restart, update or roll back a container; save the
   board, the app layout and page settings; store keys you paste; sign in to
-  Trakt. With those integrations on: pause a download client, toggle the
+  Trakt. With those integrations on: pause, resume or remove a download (its
+  files stay) or pause a whole client, turn qBittorrent's speed limits on or
+  off, try another release or search in Sonarr and Radarr, toggle the
   Home Assistant lights and scenes you pinned, wake a machine you listed,
   pause Pi-hole or AdGuard Home for at most an hour, and approve or decline
   an Overseerr request that is waiting. Each is a POST with

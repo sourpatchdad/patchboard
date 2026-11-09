@@ -8,9 +8,9 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
-import type { ContainerDetail, ProxmoxData } from '../shared/types.ts';
+import type { ArrData, ContainerDetail, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
-import { radarrAdapter, sonarrAdapter } from './adapters/arr.ts';
+import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter } from './adapters/frigate.ts';
@@ -50,7 +50,7 @@ import { haActionFor } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
-import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
+import { delugeClient, DOWNLOAD_CLIENTS, type DownloadControl, type ItemAction, nzbgetClient, sabnzbdClient, transmissionClient } from './adapters/downloads.ts';
 import type { DownloadClientId } from '../shared/types.ts';
 import { traktAdapter } from './adapters/trakt.ts';
 import { truenasAdapter } from './adapters/truenas.ts';
@@ -60,7 +60,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -91,7 +91,18 @@ import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
 
-type Made = { adapter: Adapter; control?: DownloadControl; dns?: DnsControl; seerr?: (id: number, action: 'approve' | 'decline') => Promise<void> };
+type Made = {
+  adapter: Adapter;
+  control?: DownloadControl;
+  item?: (id: string, action: ItemAction) => Promise<void>;
+  altSpeed?: () => Promise<void>;
+  arr?: ArrControl;
+  dns?: DnsControl;
+  seerr?: (id: number, action: 'approve' | 'decline') => Promise<void>;
+};
+const itemControls = new Map<DownloadClientId, (id: string, action: ItemAction) => Promise<void>>();
+const altSpeedControls = new Map<DownloadClientId, () => Promise<void>>();
+const arrControls = new Map<'sonarr' | 'radarr', ArrControl>();
 const dnsControls = new Map<'pihole' | 'adguard', DnsControl>();
 let seerrAct: ((id: number, action: 'approve' | 'decline') => Promise<void>) | null = null;
 
@@ -104,8 +115,8 @@ const FACTORIES: Record<string, () => Made | null> = {
   truenas: () => (config.truenas ? { adapter: truenasAdapter() } : null),
   backups: () => (config.logsPath ? { adapter: backupsAdapter() } : null),
   weather: () => (config.weather ? { adapter: weatherAdapter() } : null),
-  sonarr: () => (config.sonarr ? { adapter: sonarrAdapter() } : null),
-  radarr: () => (config.radarr ? { adapter: radarrAdapter() } : null),
+  sonarr: () => (config.sonarr ? { adapter: sonarrAdapter(), arr: arrControl('sonarr') } : null),
+  radarr: () => (config.radarr ? { adapter: radarrAdapter(), arr: arrControl('radarr') } : null),
   trakt: () => (config.trakt ? { adapter: traktAdapter() } : null),
   tautulli: () => (config.tautulli ? { adapter: tautulliAdapter() } : null),
   jellyfin: () => (config.jellyfin ? { adapter: mediaServerAdapter('jellyfin') } : null),
@@ -163,6 +174,9 @@ const FACTORIES: Record<string, () => Made | null> = {
 function realAdapters(): Adapter[] {
   const list: Adapter[] = [dockerAdapter(), statsAdapter(), systemAdapter(), checksAdapter()];
   downloadControls.clear();
+  itemControls.clear();
+  altSpeedControls.clear();
+  arrControls.clear();
   dnsControls.clear();
   seerrAct = null;
   for (const [id, make] of Object.entries(FACTORIES)) {
@@ -170,6 +184,9 @@ function realAdapters(): Adapter[] {
     if (!m) continue;
     list.push(m.adapter);
     if (m.control) downloadControls.set(id as DownloadClientId, m.control);
+    if (m.item) itemControls.set(id as DownloadClientId, m.item);
+    if (m.altSpeed) altSpeedControls.set(id as DownloadClientId, m.altSpeed);
+    if (m.arr) arrControls.set(id as 'sonarr' | 'radarr', m.arr);
     if (m.dns) dnsControls.set(id as 'pihole' | 'adguard', m.dns);
     if (m.seerr) seerrAct = m.seerr;
   }
@@ -483,6 +500,23 @@ app.post('/api/containers/:name/action', async (c) => {
   return c.json({ ok: true });
 });
 
+// qBittorrent's alternative speed limits, on or off. Registered before the
+// pause-everything route below, whose :action would otherwise catch it.
+app.post('/api/downloads/:id/altspeed', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const control = config.demo ? demoAltSpeed(id) : altSpeedControls.get(id);
+  if (!control) return c.json({ error: 'That client has no alternative speed limits' }, 404);
+  try {
+    await control();
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), 'downloads.altspeed', id);
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
 // Pause or resume every download in one client. Same action header as
 // container actions; READ_ONLY blocks it with every other write.
 app.post('/api/downloads/:id/:action', async (c) => {
@@ -499,6 +533,67 @@ app.post('/api/downloads/:id/:action', async (c) => {
     return c.json({ error: (err as Error).message }, 502);
   }
   recordAudit(who(c), `downloads.${action}`, id);
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// One download: pause, resume or remove (the files stay). Only an item the
+// client reported in its last poll, so a request can't name anything else.
+app.post('/api/downloads/:id/items/:item/:action', async (c) => {
+  const id = c.req.param('id') as DownloadClientId;
+  const item = c.req.param('item');
+  const action = c.req.param('action') as ItemAction;
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!['pause', 'resume', 'remove'].includes(action)) return c.json({ error: 'Unknown action' }, 400);
+  const control = config.demo ? demoItemControl(id) : itemControls.get(id);
+  if (!control) return c.json({ error: "That client can't act on one download" }, 404);
+  const items = (hub.snapshot().sources[id]?.data as QbitData | undefined)?.items ?? [];
+  const found = items.find((i) => i.id === item);
+  if (!found) return c.json({ error: 'That download is gone' }, 404);
+  try {
+    await control(item, action);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `downloads.item.${action}`, id, found.name);
+  void hub.pollNow(id);
+  return c.json({ ok: true });
+});
+
+// Sonarr and Radarr: try another release for a stuck download, search for
+// everything missing, or search for one episode or film. Queue items and
+// releases must be ones Patchboard last saw.
+app.post('/api/arr/:id/:action/:item?', async (c) => {
+  const id = c.req.param('id');
+  const action = c.req.param('action');
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (id !== 'sonarr' && id !== 'radarr') return c.json({ error: 'Unknown app' }, 404);
+  const control = config.demo ? demoArrControl() : arrControls.get(id);
+  if (!control) return c.json({ error: `${id === 'sonarr' ? 'Sonarr' : 'Radarr'} is not set up` }, 404);
+  const data = hub.snapshot().sources[id]?.data as ArrData | undefined;
+  const n = Number(c.req.param('item'));
+  let what = '';
+  try {
+    if (action === 'retry') {
+      const q = data?.queue?.find((x) => x.id === n);
+      if (!q) return c.json({ error: 'That download left the queue' }, 404);
+      what = q.title;
+      await control.retry(n);
+    } else if (action === 'search-missing') {
+      what = 'missing';
+      await control.searchMissing();
+    } else if (action === 'search') {
+      const r = data?.upcoming.find((x) => x.searchId === n);
+      if (!r) return c.json({ error: 'That release is no longer on the calendar' }, 404);
+      what = r.title;
+      await control.search(n);
+    } else {
+      return c.json({ error: 'Unknown action' }, 400);
+    }
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `arr.${action}`, id, what);
   void hub.pollNow(id);
   return c.json({ ok: true });
 });

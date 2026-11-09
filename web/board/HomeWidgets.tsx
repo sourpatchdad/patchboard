@@ -1181,7 +1181,6 @@ export function RequestsWidget({ now }: { now: number }) {
   const { snap } = useStore();
   const { limit = 5, editing } = useWidget();
   const [busy, setBusy] = useState<number | null>(null);
-  const [confirm, setConfirm] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!state || !data) return null;
   // Nothing to approve: the widget steps aside until someone asks for something.
@@ -1191,7 +1190,6 @@ export function RequestsWidget({ now }: { now: number }) {
     setError(null);
     try {
       await post(`/api/requests/${id}/${action}`);
-      setConfirm(null);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -1219,25 +1217,12 @@ export function RequestsWidget({ now }: { now: number }) {
               </div>
               {!snap?.readOnly && (
                 <span className="req-actions">
-                  {confirm === r.id ? (
-                    <>
-                      <button type="button" className="text-button req-decline" disabled={busy === r.id} onClick={() => void act(r.id, 'decline')}>
-                        Decline it
-                      </button>
-                      <button type="button" className="text-button req-quiet" onClick={() => setConfirm(null)}>
-                        Keep
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" className="text-button" disabled={busy === r.id} onClick={() => void act(r.id, 'approve')}>
-                        Approve
-                      </button>
-                      <button type="button" className="text-button req-quiet" disabled={busy === r.id} onClick={() => setConfirm(r.id)}>
-                        Decline
-                      </button>
-                    </>
-                  )}
+                  <button type="button" className="text-button" disabled={busy === r.id} onClick={() => void act(r.id, 'approve')}>
+                    Approve
+                  </button>
+                  <HoldButton className="text-button req-quiet" danger disabled={busy === r.id} hint="Hold to decline" onConfirm={() => void act(r.id, 'decline')}>
+                    Decline
+                  </HoldButton>
                 </span>
               )}
             </li>

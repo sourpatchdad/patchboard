@@ -7,7 +7,7 @@ import { QUEUE_NAMES } from '../board/HomeWidgets.tsx';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaServers } from '../lib/media.ts';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { Link, useParams } from 'react-router-dom';
@@ -516,6 +516,7 @@ function History({ name, now }: { name: string; now: number }) {
 
 /** What the integration knows about this app, for the containers that have one. */
 function AppPanel({ name }: { name: string }) {
+  const readOnly = !!useStore().snap?.readOnly;
   const sonarr = useSource<ArrData>('sonarr').data;
   const radarr = useSource<ArrData>('radarr').data;
   const { servers } = useMediaServers();
@@ -539,6 +540,7 @@ function AppPanel({ name }: { name: string }) {
         <dl className="ledger">
           <Row k="Queue">{plural(arr.queueTotal, 'item')}</Row>
           <Row k="Import problems">{arr.problems.length || 'None'}</Row>
+          {!readOnly && <SearchMissing app={name as 'sonarr' | 'radarr'} />}
           <Row k="Health">{arr.health.length ? arr.health.map((h) => h.message).join(' ') : 'No warnings'}</Row>
           {next && (
             <Row k="Next">
@@ -694,4 +696,25 @@ function AppPanel({ name }: { name: string }) {
     );
   }
   return null;
+}
+
+/** Ask Sonarr or Radarr to search for everything monitored that has no file. */
+function SearchMissing({ app }: { app: 'sonarr' | 'radarr' }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'sent' | 'failed'>('idle');
+  return (
+    <Row k="Missing">
+      <button
+        type="button"
+        className="text-button"
+        disabled={state === 'busy' || state === 'sent'}
+        onClick={async () => {
+          setState('busy');
+          const res = await fetch(`/api/arr/${app}/search-missing`, { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);
+          setState(res?.ok ? 'sent' : 'failed');
+        }}
+      >
+        {state === 'sent' ? `${app === 'sonarr' ? 'Sonarr' : 'Radarr'} is searching` : state === 'failed' ? 'Try again' : 'Search for everything missing'}
+      </button>
+    </Row>
+  );
 }

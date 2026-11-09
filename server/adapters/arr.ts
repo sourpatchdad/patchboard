@@ -2,17 +2,69 @@
 // things: the release calendar, queue items that need a human, and health.
 
 import { rememberArt } from '../art.ts';
-import type { ArrData, ArrProblem, ReleaseItem } from '../../shared/types.ts';
+import type { ArrData, ArrProblem, ArrQueueItem, ReleaseItem } from '../../shared/types.ts';
 import { config } from '../config.ts';
-import { getJson } from '../http.ts';
+import { getJson, request } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 
 interface QueueRecord {
+  id: number;
   title: string;
+  status?: string;
+  size?: number;
+  sizeleft?: number;
   trackedDownloadStatus?: string;
   trackedDownloadState?: string;
   errorMessage?: string;
   statusMessages?: { title: string; messages: string[] }[];
+}
+
+const QUEUE_ORDER: Record<ArrQueueItem['state'], number> = { failed: 0, warning: 1, importing: 2, downloading: 3, queued: 4, paused: 5 };
+
+/** Queue records as rows: stuck first, each with what it's doing and why it's stuck. */
+export function toQueue(records: QueueRecord[]): ArrQueueItem[] {
+  return records
+    .map((r): ArrQueueItem => {
+      const status = (r.status ?? '').toLowerCase();
+      const tracked = (r.trackedDownloadState ?? '').toLowerCase();
+      const state: ArrQueueItem['state'] =
+        r.trackedDownloadStatus === 'error' || status === 'failed' || tracked.startsWith('failed')
+          ? 'failed'
+          : r.trackedDownloadStatus === 'warning' || status === 'warning'
+            ? 'warning'
+            : tracked === 'importpending' || tracked === 'importing'
+              ? 'importing'
+              : status === 'paused'
+                ? 'paused'
+                : status === 'queued' || status === 'delay'
+                  ? 'queued'
+                  : 'downloading';
+      const message = state === 'failed' || state === 'warning' ? r.errorMessage || r.statusMessages?.flatMap((m) => m.messages)[0] || undefined : undefined;
+      return { id: r.id, title: r.title, progress: r.size ? Math.max(0, Math.min(1, 1 - (r.sizeleft ?? 0) / r.size)) : 0, state, ...(message ? { message } : {}) };
+    })
+    .sort((a, b) => QUEUE_ORDER[a.state] - QUEUE_ORDER[b.state])
+    .slice(0, 20);
+}
+
+/** Acting on Sonarr or Radarr: try another release for a stuck download, or search. */
+export interface ArrControl {
+  /** Remove a queue item, blocklist its release, and search for another. */
+  retry(queueId: number): Promise<void>;
+  /** Search for every monitored episode or film that has no file. */
+  searchMissing(): Promise<void>;
+  /** Search for one episode or film. */
+  search(id: number): Promise<void>;
+}
+
+export function arrControl(kind: 'sonarr' | 'radarr'): ArrControl {
+  const { url, key } = config[kind]!;
+  const headers = { 'X-Api-Key': key, 'Content-Type': 'application/json' };
+  const command = (body: Record<string, unknown>) => request(`${url}/api/v3/command`, { method: 'POST', headers, body: JSON.stringify(body) }).then(() => {});
+  return {
+    retry: (queueId) => request(`${url}/api/v3/queue/${queueId}?removeFromClient=true&blocklist=true&skipRedownload=false`, { method: 'DELETE', headers }).then(() => {}),
+    searchMissing: () => command({ name: kind === 'sonarr' ? 'MissingEpisodeSearch' : 'MissingMoviesSearch' }),
+    search: (id) => command(kind === 'sonarr' ? { name: 'EpisodeSearch', episodeIds: [id] } : { name: 'MoviesSearch', movieIds: [id] }),
+  };
 }
 
 interface HealthRecord {
@@ -45,6 +97,7 @@ async function queueAndHealth(base: string, key: string) {
     }));
   return {
     queueTotal: queue.totalRecords,
+    queue: toQueue(queue.records),
     problems,
     health: health
       .filter((h) => h.type !== 'ok')
@@ -99,6 +152,7 @@ export function sonarrAdapter(): Adapter<ArrData> {
           id: `sonarr-${e.id}`,
           source: 'sonarr',
           kind: 'episode',
+          searchId: e.id,
           title: e.series.title,
           subtitle: `S${String(e.seasonNumber).padStart(2, '0')}E${String(e.episodeNumber).padStart(2, '0')} ${e.title ?? ''}`.trim(),
           when: e.airDateUtc!,
@@ -154,6 +208,7 @@ export function radarrAdapter(): Adapter<ArrData> {
             id: `radarr-${m.id}-${label}`,
             source: 'radarr',
             kind: 'movie',
+            searchId: m.id,
             title: m.title,
             subtitle: label,
             when,
