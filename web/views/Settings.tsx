@@ -33,6 +33,13 @@ import { agoLong } from '../lib/format.ts';
 import { UpdateButton, useUpdateJob } from '../components/Updater.tsx';
 
 type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
+type Part = 'integrations' | 'access' | 'apps' | 'backup';
+const PARTS: [Part, string][] = [
+  ['integrations', 'Integrations'],
+  ['access', 'Sign-in and keys'],
+  ['apps', 'Apps'],
+  ['backup', 'Backup'],
+];
 const TABS: [Tab, string, string][] = [
   ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved.'],
   ['home', 'Home', 'Header, app appearance and units for this device. Arrange board on Home changes the shared widget layout.'],
@@ -44,7 +51,12 @@ const TABS: [Tab, string, string][] = [
 export function Settings() {
   const a = useAppearance();
   const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look');
-  const { hash } = useLocation();
+  // Connections is four pages in one: each part on its own, so none is a long scroll away.
+  const [part, setPart] = useUrlChoice<Part>('part', ['integrations', 'access', 'apps', 'backup'], 'integrations');
+  const { hash, search } = useLocation();
+  useEffect(() => {
+    if (hash === '#catalog' || new URLSearchParams(search).get('import') === 'homepage') setPart('apps');
+  }, [hash, search]);
   // Older links point at #catalog.
   useEffect(() => {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
@@ -236,12 +248,27 @@ export function Settings() {
       {tab === 'look' && <Portability />}
       {tab === 'connections' && (
         <>
-          <Integrations />
-          <Connections />
-          <SignIn />
-          <Keys />
-          <CatalogCheck />
-          <SetupFile />
+          <div className="seg seg-small settings-parts span-all" role="tablist" aria-label="Connections">
+            {PARTS.map(([v, label]) => (
+              <button key={v} type="button" role="tab" aria-selected={part === v} aria-pressed={part === v} onClick={() => setPart(v)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {part === 'integrations' && (
+            <>
+              <Integrations />
+              <Connections />
+            </>
+          )}
+          {part === 'access' && (
+            <>
+              <SignIn />
+              <Keys />
+            </>
+          )}
+          {part === 'apps' && <CatalogCheck />}
+          {part === 'backup' && <SetupFile />}
         </>
       )}
       {tab === 'alerts' && <Alerts />}

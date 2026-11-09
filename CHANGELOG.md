@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Settings, Connections is four parts instead of one long page:
+  Integrations, Sign-in and keys, Apps, and Backup. Links to an
+  integration's setup or to the Homepage import still land in place.
+
 - Approve and Decline say what happened ("Approved Poor Things. It's on
   the way.") and the approved title joins On the way at once.
 - Changes shows one line for a start or stop sent from Patchboard, not

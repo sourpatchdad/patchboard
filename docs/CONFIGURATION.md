@@ -7,7 +7,7 @@ You configure almost everything in the UI:
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
 | Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
-| Settings, Connections, Sign-in | A password, and other names you open Patchboard by | Every device |
+| Settings, Connections, Sign-in and keys | A password, and other names you open Patchboard by | Every device |
 | Settings, Look, Name | The name in the header and tab, and the otter beside it | Every device |
 | Settings, Look and Home | Theme, colors, type, density, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
@@ -32,7 +32,7 @@ underneath your UI changes. See [INTEGRATIONS.md](INTEGRATIONS.md) for those.
 After you change a variable, recreate the container with
 `docker compose up -d`.
 
-Settings, Connections, Setup file downloads the UI part (board, apps, page
+Settings, Connections, Backup downloads the UI part (board, apps, page
 settings) as one JSON file and imports it on another server. Keys and
 uploaded icons stay behind.
 
@@ -45,7 +45,7 @@ can take both over, so the UI is the one place you change things.
    integration value in your `.env` is copied into Patchboard's encrypted
    store. The `.env` keeps winning while it still has them, so nothing
    changes yet. Each field it copied now reads "Saved here too".
-2. **Settings, Connections, Catalog: Copy into Patchboard.** Every app in
+2. **Settings, Connections, Apps: Copy into Patchboard.** Every app in
    `services.yaml` becomes one saved in Patchboard, with its group, order,
    short name, icon, check and one-shot flag, and the links join the
    Elsewhere row. Patchboard never edits the file.
@@ -56,7 +56,7 @@ can take both over, so the UI is the one place you change things.
 5. **Recreate Patchboard** with `docker compose up -d`. Apps, links and connections are all still there,
    and from now on you change them in the UI.
 
-To keep a copy in git, Settings, Connections, Catalog has Download
+To keep a copy in git, Settings, Connections, Apps has Download
 services.yaml.
 
 ## Server
@@ -126,7 +126,7 @@ Each turns on by being mounted, read-only, at its place.
 
 Optional. Most installs add apps with one click and Edit apps. A catalog file
 suits anyone who wants the list in git: `config/services.yaml` lists apps in
-groups, plus bookmarks. Settings, Connections, Catalog, Download
+groups, plus bookmarks. Settings, Connections, Apps, Download
 services.yaml gives you your current apps as a starting file.
 
 | Field | |
@@ -139,7 +139,7 @@ services.yaml gives you your current apps as a starting file.
 | `expectStopped` | `true` for one-shot jobs, so their exit raises no alert. |
 | `check` | `false` skips the reachability check; a URL checks that address instead of `href`. |
 
-Patchboard reloads the file when you save it. Settings, Connections, Catalog
+Patchboard reloads the file when you save it. Settings, Connections, Apps
 lists entries that name a missing container and running apps the file doesn't
 list. **Download services.yaml** there writes the apps as you arranged them in
 the UI, ready to commit.

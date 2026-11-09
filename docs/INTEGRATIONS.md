@@ -38,7 +38,7 @@ never rewrite your files.
    labels work as they are. Patchboard ignores `homepage.widget.*`, which
    carry credentials.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
-   place. Settings, Connections, Catalog downloads your current apps as one.
+   place. Settings, Connections, Apps downloads your current apps as one.
    Coming from Homepage? Settings, Connections, Import from Homepage takes
    its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard.
    To keep a file instead, `npm run import-homepage -- /path/to/homepage/config`

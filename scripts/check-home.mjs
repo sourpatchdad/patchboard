@@ -304,11 +304,12 @@ try {
   await checkOverlay('Edit Immich', editMenu, 'Apply');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.deepEqual(await setupState(), unedited, 'Escape leaves app settings untouched');
-  await page.goto(base + '/settings?tab=connections');
+  await page.goto(base + '/settings?tab=connections&part=backup');
   const setupImport = page.getByRole('button', { name: 'Import a setup file', exact: true });
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), setupImport.press('Enter')]);
   await chooser.setFiles([]);
   assert.deepEqual(await setupState(), unedited, 'cancelling the keyboard file picker preserves setup');
+  await page.goto(base + '/settings?tab=connections&part=apps');
   const importButton = page.getByRole('button', { name: 'Import from Homepage', exact: true });
   await importButton.click();
   await page.getByRole('dialog', { name: 'Import from Homepage' }).getByLabel('services.yaml', { exact: true }).fill('- Test:\n    - Keyboard fixture:\n        href: https://example.org/');
