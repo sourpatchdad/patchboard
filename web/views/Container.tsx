@@ -32,7 +32,7 @@ import { Spark } from '../components/Spark.tsx';
 import { Empty, Icon, Ident, Section } from '../components/ui.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { ago, agoLong, pct, plural, shortDate, size, speed } from '../lib/format.ts';
-import { lineClass, useLogStream } from '../lib/logs.ts';
+import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
 import { checkFor, containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 
@@ -349,6 +349,7 @@ function LogTail({ name }: { name: string }) {
     >
       {lines.map((l) => (
         <div key={l.n} className={lineClass(l)}>
+          {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at)}</time>}
           {l.text || ' '}
         </div>
       ))}

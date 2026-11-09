@@ -56,7 +56,7 @@ export function NameForm({ withOtter = false }: { withOtter?: boolean }) {
       {withOtter && (
         <label className="check">
           <input type="checkbox" checked={otter ?? brand.otter === true} disabled={readOnly} onChange={(e) => (setOtter(e.target.checked), void save({ otter: e.target.checked }))} />
-          The otter beside it
+          Otter beside the name
         </label>
       )}
       {err && <span className="crit-text">{err}</span>}

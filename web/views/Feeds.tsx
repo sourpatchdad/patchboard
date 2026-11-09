@@ -253,6 +253,7 @@ export function Feeds() {
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
           />
+          <div className="feeds-selects">
           {(data?.feeds?.length ?? 0) > 1 && (
             <label>
               <span className="sr-only">Feed</span>
@@ -274,15 +275,7 @@ export function Feeds() {
               <option value="week">Last 7 days</option>
             </select>
           </label>
-          {filtered && (
-            <button type="button" className="text-button" onClick={clearFilters}>
-              Clear
-            </button>
-          )}
-        </div>
-
-        <div className="feeds-bar">
-          <label className="feeds-sort">
+          <label>
             <span className="sr-only">Sort</span>
             <select className="field field-small" value={sort} onChange={(e) => setSort(e.target.value as FeedSort)}>
               <option value="newest">Newest first</option>
@@ -290,6 +283,17 @@ export function Feeds() {
               <option value="quick">Quick reads first</option>
             </select>
           </label>
+          </div>
+        </div>
+
+        <div className="feeds-bar">
+          {filtered ? (
+            <button type="button" className="text-button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          ) : (
+            <span />
+          )}
           {!snap?.readOnly &&
             (confirmAll ? (
               <span className="feeds-confirm">

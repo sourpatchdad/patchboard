@@ -133,7 +133,7 @@ export function Settings() {
             [false, 'Hide it'],
           ])}
         </div>
-        <p className="settings-note">The otter keeps you company when nothing needs you, on first run and on a wrong address. The header mark stays either way.</p>
+        <p className="settings-note">On this device, the otter keeps you company when nothing needs you, on first run and on a wrong address. The one beside the name is set under Name.</p>
       </Section>
 
       <Section title="Accent">

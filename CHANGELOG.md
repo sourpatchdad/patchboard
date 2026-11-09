@@ -19,6 +19,20 @@
 - Stacks counts the same way in every group: "3 running", or "7 of 8
   running" when something is down.
 - The smallest labels (hourly weather, pills on a phone) grew to 11px.
+- On a phone, More sits at the end of the tab bar and opens every other
+  page and Settings. Reading keeps its tab once Miniflux is set up;
+  Upcoming holds it until then.
+- On a touch screen every button, chip, field and link is at least 44
+  pixels to tap, including hold buttons like Pause and Remove.
+- Settings in the top bar is a word on a wide screen, not a lone icon.
+- Logs show each line's time where you are. The app's own timestamp,
+  often in UTC or the container's zone, moves to the hover.
+- Customize marks what shows with a tick, and what's hidden fades.
+- Reading's feed, time and order menus share one row; on a phone the
+  categories scroll sideways so the articles start higher.
+- The two otter settings say which is which: "Otter beside the name" for
+  the header, The otter section for calm screens on this device.
+- Subheadings in panels and drawers stand out from the text under them.
 
 - Watched, a new widget: what was played lately on Plex, Jellyfin and Emby,
   newest first, with who and when; each opens in its app. Listening, a new

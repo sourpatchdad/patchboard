@@ -123,7 +123,8 @@ the newest version of the GitHub projects you name.
 
 ![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
 
-**Logs:** live from Docker.
+**Logs:** live from Docker, each line stamped in your own time, whatever
+zone the container runs in.
 
 ![Logs](screenshots/logs.webp)
 
@@ -205,6 +206,10 @@ Every theme comes in dark and light. A Custom theme starts from three
 colors.
 
 ## On a phone
+
+The tab bar holds Home, Server, Stacks and Reading (Upcoming until Miniflux
+is set up). More opens every other page and Settings. Every button and link
+takes a full fingertip.
 
 | | | | | |
 |---|---|---|---|---|

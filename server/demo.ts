@@ -924,10 +924,14 @@ const LOG_LINES = [
 export function demoLogs(
   name: string,
   tail: number,
-  onLine: (l: { stream: 'out' | 'err'; text: string }) => void,
+  emit: (l: { stream: 'out' | 'err'; text: string; at?: number }) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  const stamp = (offsetMs = 0) => new Date(Date.now() - offsetMs).toISOString().replace('T', ' ').slice(0, 19);
+  // Apps write their own time in UTC, as many containers do; Docker's stamp
+  // rides along so the browser shows local time.
+  let at = 0;
+  const stamp = (offsetMs = 0) => ((at = Date.now() - offsetMs), new Date(at).toISOString().replace('T', ' ').slice(0, 19));
+  const onLine = (l: { stream: 'out' | 'err'; text: string }) => emit({ ...l, at });
   const n = Math.min(tail, 60);
   for (let i = n; i > 0; i--) {
     onLine({ stream: 'out', text: `${stamp(i * 41_000)} [${name}] ${LOG_LINES[(i * 3 + i * i) % LOG_LINES.length]}` });

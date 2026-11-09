@@ -5060,7 +5060,7 @@ a.jw-title:hover {
 }
 
 .jw-sub {
-  font-size: 14px;
+  font-size: 16.5px;
   font-weight: 600;
   color: var(--head);
   margin: 18px 0 8px;
@@ -7085,24 +7085,24 @@ button.ha-act:hover {
 
 .feeds-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
   gap: 8px;
   padding: 0 20px 10px;
 }
 
-.feeds-filters .feeds-search {
-  grid-column: 1 / -1;
+/* Feed, time and order: one row of equal menus under the search. */
+.feeds-selects {
+  display: flex;
+  gap: 8px;
 }
 
-.feeds-filters label,
-.feeds-filters select {
+.feeds-selects label {
+  flex: 1;
   min-width: 0;
-  width: 100%;
 }
 
-.feeds-filters .text-button {
-  justify-self: start;
+.feeds-selects select {
+  width: 100%;
+  min-width: 0;
 }
 
 /* ---------- Storage (Unraid, Synology, QNAP) ---------- */
@@ -8390,30 +8390,63 @@ button.ha-act:hover {
   }
 }
 
-/* Touch: every tap target at least 40 pixels tall without moving the layout. */
+/* Touch: every tap target at least 44 pixels, the size Apple and Android
+   ask for, without moving the layout. Inline links grow an invisible
+   margin; buttons and fields grow for real. */
 @media (pointer: coarse) {
   .text-button,
   .section-action,
   .now-head a,
-  .logs-detail-link {
+  .logs-detail-link,
+  a.ident,
+  .head-alert a,
+  a.overnight,
+  .home-header a.date,
+  .crumbs a {
     position: relative;
   }
 
   .text-button::after,
-  .section-action::after {
+  .section-action::after,
+  a.ident::after,
+  .head-alert a::after,
+  a.overnight::after,
+  .home-header a.date::after,
+  .now-head a::after,
+  .crumbs a::after {
     content: '';
     position: absolute;
-    inset: -11px -8px;
+    inset: -12px -8px;
+  }
+
+  /* Stacked alert links share the gap between them instead of overlapping. */
+  .head-alert a::after {
+    inset: -5px -8px;
+  }
+
+  /* Hold buttons clip their fill, so they grow with padding instead. */
+  .text-button.hold {
+    padding: 12px 8px;
+    margin: -12px -8px;
+  }
+
+  .button,
+  .chip,
+  .seg button,
+  .field,
+  .field-small,
+  input[type='color'] {
+    min-height: 44px;
   }
 
   .chip {
-    min-height: 36px;
-    padding: 6px 13px;
+    padding: 6px 14px;
   }
 
-  .seg button,
-  .field-small {
-    min-height: 38px;
+  .topbar-icon,
+  .swatch {
+    width: 44px;
+    height: 44px;
   }
 
   .ctr {
@@ -8421,7 +8454,8 @@ button.ha-act:hover {
     padding-bottom: 10px;
   }
 
-  .toggle input[type='checkbox'] {
+  input[type='checkbox'],
+  input[type='radio'] {
     width: 20px;
     height: 20px;
   }
@@ -9836,4 +9870,133 @@ a.play:hover .play-title {
 
 .ws-hint {
   color: var(--ink-3);
+}
+
+/* The phone's More tab and its sheet; a wide screen shows every page in the bar. */
+.nav-more {
+  display: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.topbar-label {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  /* Settings reads as a word on a wide screen, not a lone icon. */
+  .topbar-settings {
+    display: flex;
+    gap: 6px;
+    width: auto;
+    padding: 0 10px;
+    font-weight: 500;
+    font-size: 14.5px;
+    text-decoration: none;
+  }
+
+  .topbar-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 760px) {
+  .nav .nav-more {
+    display: flex;
+  }
+
+  /* More holds Settings on a phone. */
+  .topbar-settings {
+    display: none;
+  }
+
+  .more-backdrop {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .more-sheet {
+    width: 100%;
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+    background: var(--raised);
+    border-top: 1px solid var(--line);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .more-sheet nav {
+    display: grid;
+  }
+
+  .more-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+    padding: 0 4px;
+    border: 0;
+    border-bottom: 1px solid var(--line-soft);
+    background: none;
+    color: var(--head);
+    font: 500 17px/1.2 var(--f-body);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .more-link.active {
+    color: var(--accent);
+  }
+
+  .more-link .nav-badge {
+    position: static;
+  }
+
+  .more-close {
+    width: 100%;
+    margin-top: 12px;
+  }
+}
+
+/* Log lines lead with the time where you are; wrapped lines hang under the text. */
+.ll-time {
+  margin-right: 1.5ch;
+  color: var(--ink-3);
+}
+
+.logs-out.wrap .ll {
+  padding-left: 9.5ch;
+  text-indent: -9.5ch;
+}
+
+/* Customize: a list item that shows is ticked; one that's hidden is faint. */
+.hide-chips .chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--head);
+}
+
+.hide-chips .chip[aria-pressed='true']::before {
+  content: '✓';
+  margin-right: 6px;
+  color: var(--accent);
+}
+
+.hide-chips .chip.is-off {
+  text-decoration: none;
+  opacity: 0.55;
+}
+
+@media (max-width: 760px) {
+  /* Reading on a phone: categories in one row you swipe, so the articles start higher. */
+  .feeds-cats {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .feeds-cats .chip {
+    flex: none;
+  }
 }

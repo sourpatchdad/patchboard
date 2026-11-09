@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Empty } from '../components/ui.tsx';
 import { containerMap } from '../lib/services.ts';
-import { lineClass, useLogStream } from '../lib/logs.ts';
+import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
 import { useStore } from '../lib/store.tsx';
 import { ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
 import { useUrlChoice } from '../lib/url.ts';
@@ -142,6 +142,7 @@ export function Logs() {
             >
               {shown.map((l) => (
                 <div key={l.n} className={lineClass(l)}>
+                  {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at)}</time>}
                   {l.text || ' '}
                 </div>
               ))}

@@ -4,7 +4,18 @@ export interface LogLine {
   n: number;
   stream: 'out' | 'err';
   text: string;
+  /** When Docker received the line; shown in the viewer's own time. */
+  at?: number;
+  /** The app's own timestamp, cut from the front of the text. */
+  own?: string;
 }
+
+// An app's own timestamp at the start of a line: 2026-11-09 01:17:45,
+// [2026-11-09T01:17:45.123Z], 2026/11/09 01:17:45 +0000 and the like.
+const OWN_STAMP = /^\[?\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?: ?(?:Z|UTC|[+-]\d{2}:?\d{2}))?\]?\s+/;
+
+/** Local time for a log line, with seconds: the zone the reader is in. */
+export const logTime = (at: number) => new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 
 export type LogStatus = 'idle' | 'streaming' | 'ended' | 'failed';
 
@@ -43,8 +54,11 @@ export function useLogStream(name: string | undefined, tail = 400, max = 3000) {
     };
     const es = new EventSource(`/api/logs/${encodeURIComponent(name)}?tail=${tail}`);
     es.onmessage = (m) => {
-      const l = JSON.parse(m.data as string) as { stream: 'out' | 'err'; text: string };
-      pending.push({ n: n++, ...l });
+      const l = JSON.parse(m.data as string) as { stream: 'out' | 'err'; text: string; at?: number };
+      // With Docker's time to show, the app's own copy (often in UTC or the
+      // container's zone) only repeats it; it stays on hover.
+      const own = l.at ? OWN_STAMP.exec(l.text)?.[0] : undefined;
+      pending.push({ n: n++, ...l, text: own ? l.text.slice(own.length) : l.text, own: own?.trim() });
       if (!raf) raf = requestAnimationFrame(flush);
     };
     es.addEventListener('failure', (m) => {

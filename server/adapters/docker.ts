@@ -314,16 +314,27 @@ export function watchContainerEvents(onEvent: (e: { action: string; name: string
  * a TTY use Docker's multiplexed framing: an 8-byte header (stream, 0, 0, 0,
  * then a big-endian uint32 length) before each payload.
  */
+/**
+ * Docker's own timestamp off the front of a line. Docker stamps every line
+ * in UTC, so the browser can show it in the viewer's time, whatever zone
+ * the container runs in.
+ */
+export function dockerStamp(line: string): { text: string; at?: number } {
+  const sp = line.indexOf(' ');
+  const at = sp > 0 ? Date.parse(line.slice(0, sp)) : NaN;
+  return Number.isFinite(at) ? { text: line.slice(sp + 1), at } : { text: line };
+}
+
 export async function followLogs(
   name: string,
   tail: number,
-  onLine: (line: { stream: 'out' | 'err'; text: string }) => void,
+  onLine: (line: { stream: 'out' | 'err'; text: string; at?: number }) => void,
   signal: AbortSignal,
 ): Promise<void> {
   const inspect = await dockerJson<{ Config: { Tty: boolean } }>(`/containers/${encodeURIComponent(name)}/json`);
   const tty = inspect.Config.Tty;
   const res = await dockerGet(
-    `/containers/${encodeURIComponent(name)}/logs?follow=1&stdout=1&stderr=1&timestamps=0&tail=${tail}`,
+    `/containers/${encodeURIComponent(name)}/logs?follow=1&stdout=1&stderr=1&timestamps=1&tail=${tail}`,
     signal,
   );
 
@@ -333,7 +344,7 @@ export async function followLogs(
   const emitText = (stream: 'out' | 'err', text: string) => {
     const lines = (partial[stream] + text).split('\n');
     partial[stream] = lines.pop() ?? '';
-    for (const l of lines) onLine({ stream, text: l.replace(/\r$/, '') });
+    for (const l of lines) onLine({ stream, ...dockerStamp(l.replace(/\r$/, '')) });
   };
 
   try {
