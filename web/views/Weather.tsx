@@ -49,7 +49,7 @@ export function Weather() {
         <div className={`weather-alert sev-${a.severity.toLowerCase()}`} key={a.headline}>
           <strong>{a.event}</strong>
           <span>{a.headline}</span>
-          {a.until && <time>until {new Date(a.until).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</time>}
+          {a.until && !/\buntil\b/i.test(a.headline ?? '') && <time>until {new Date(a.until).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</time>}
         </div>
       ))}
 

@@ -79,7 +79,7 @@ export function HoldButton({
   return (
     <button
       type="button"
-      className={`${className} hold ${holding ? 'is-holding' : ''} ${danger ? 'is-danger' : ''}`}
+      className={`${className} hold ${holding ? 'is-holding' : ''} ${danger ? 'is-danger' : ''} ${hinted ? 'is-hinted' : ''}`}
       disabled={disabled}
       data-hint={hint}
       aria-label={label ? `${label}: press and hold` : typeof children === 'string' ? `${children}: press and hold` : undefined}

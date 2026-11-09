@@ -137,12 +137,14 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   const results = useMemo(() => {
     const ranked = items
       .map((it) => {
-        const s = Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50);
+        // Articles and mail match where the words appear, never by scattered letters.
+        const loose = it.id.startsWith('f-') || it.id.startsWith('m-');
+        const s = loose ? (it.label.toLowerCase().includes(q.trim().toLowerCase()) ? score(q, it.label) : -1) : Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50);
         // The boost ranks a match; it never makes one.
         return { it, s: s > 0 && q.trim() ? s + (it.boost ?? 0) : s };
       })
       .filter((r) => r.s > 0)
-      .sort((a, b) => b.s - a.s)
+      .sort((a, b) => b.s - a.s || a.it.label.localeCompare(b.it.label))
       .slice(0, 9)
       .map((r) => r.it);
     if (q.trim()) {

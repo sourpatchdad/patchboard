@@ -48,10 +48,14 @@ export function uptimeDays(containers: Container[], days: number, expectStopped:
   const bySubject = new Map<string, { at: number; kind: string }[]>();
   for (const e of events) bySubject.set(e.subject, [...(bySubject.get(e.subject) ?? []), e]);
 
+  // A stop seen but not settled yet (the grace before it counts) is still a
+  // stop from that moment, not a stop for all time.
+  const pending = kvGet<{ pending?: Record<string, { at: number }> }>('container-track')?.pending ?? {};
   const out: Record<string, DayState[]> = {};
   for (const c of containers) {
     // Only state changes shape the timeline; recorded actions ("restart") don't.
     const list = (bySubject.get(c.name) ?? []).filter((e) => e.kind in after);
+    if (c.state !== 'running' && pending[c.name] && !list.some((e) => e.at >= pending[c.name].at)) list.push({ at: pending[c.name].at, kind: 'container.stopped' });
     const current: S = c.state !== 'running' ? 'stopped' : c.health === 'unhealthy' ? 'unhealthy' : 'running';
     // State at the start of the window: the last event before it, else what
     // the first event in the window implies, else the current state.

@@ -319,6 +319,7 @@ export function EditApps({
               <button
                 type="button"
                 className="cell-btn tile-add"
+                aria-label={`Add ${d.name}`}
                 onClick={() => setForm({ app: { name: d.name, icon: d.icon, href: d.href, container: d.container, source: 'ui' }, group: groups[0]?.name ?? 'Apps', isNew: true })}
               >
                 Add
@@ -377,7 +378,7 @@ export function EditApps({
                 <span className="tile-name">{h.service.name}</span>
                 <span className="tile-stat">{h.group}</span>
               </span>
-              <button type="button" className="cell-btn tile-add" onClick={() => unhide(n)}>
+              <button type="button" className="cell-btn tile-add" aria-label={`Show ${h.service.name}`} onClick={() => unhide(n)}>
                 Show
               </button>
             </li>

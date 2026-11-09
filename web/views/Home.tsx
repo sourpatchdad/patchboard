@@ -476,7 +476,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
         <div className="now-block" key={l.id}>
           <h3>
             <Led state="ok" />
-            {l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}
+            <AppLink container={l.id}>{l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}</AppLink>
           </h3>
           {l.data!.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} />
@@ -657,6 +657,7 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
           className="text-button rel-search"
           disabled={search === 'busy' || search === 'sent'}
           title={`Ask ${sourceName[it.source]} to search for it now`}
+          aria-label={`Search for ${it.title}${it.subtitle ? ` ${it.subtitle}` : ''}`}
           onClick={async () => {
             setSearch('busy');
             const res = await fetch(`/api/arr/${it.source}/search/${it.searchId}`, { method: 'POST', headers: { 'X-Patchboard': 'action' } }).catch(() => null);

@@ -124,7 +124,7 @@ export function DownloadsWidget() {
               <span className="dl-status">{q.app === 'sonarr' ? 'Sonarr' : 'Radarr'}</span>
               {!ro && (
                 <span className="dl-actions">
-                  <HoldButton className="text-button" hint="Hold to blocklist this release and search for another" onConfirm={() => void act(`${q.app}-${q.id}`, `/api/arr/${q.app}/retry/${q.id}`)}>
+                  <HoldButton className="text-button" label={`Try another release of ${q.title}`} hint="Hold to blocklist this release and search for another" onConfirm={() => void act(`${q.app}-${q.id}`, `/api/arr/${q.app}/retry/${q.id}`)}>
                     Try another release
                   </HoldButton>
                 </span>

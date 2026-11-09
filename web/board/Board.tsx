@@ -448,7 +448,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               onClick={async () => {
                 const err = await save({ ...draft, widgets: pinColumns(draft.widgets), name: draft.name?.trim() || undefined });
                 if (err) setError(err);
-                else setDraft(null);
+                else {
+                  setDraft(null);
+                  // Saved: focus goes back to where arranging started.
+                  setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50);
+                }
               }}
             >
               Save

@@ -1261,10 +1261,10 @@ export function RequestsWidget({ now }: { now: number }) {
               </div>
               {!snap?.readOnly && (
                 <span className="req-actions">
-                  <button type="button" className="text-button" disabled={busy === r.id} onClick={() => void act(r.id, 'approve')}>
+                  <button type="button" className="text-button" disabled={busy === r.id} aria-label={`Approve ${r.title}`} onClick={() => void act(r.id, 'approve')}>
                     Approve
                   </button>
-                  <HoldButton className="text-button req-quiet" danger disabled={busy === r.id} hint="Hold to decline" onConfirm={() => void act(r.id, 'decline')}>
+                  <HoldButton className="text-button req-quiet" danger disabled={busy === r.id} label={`Decline ${r.title}`} hint="Hold to decline" onConfirm={() => void act(r.id, 'decline')}>
                     Decline
                   </HoldButton>
                 </span>

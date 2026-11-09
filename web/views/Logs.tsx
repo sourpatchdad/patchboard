@@ -50,7 +50,15 @@ export function Logs() {
     if (x.level === 'info') continue;
     for (const k of [x.subject, x.source]) if (k && k !== 'docker' && !flagged.has(k.toLowerCase())) flagged.set(k.toLowerCase(), x.level);
   }
+  // Stopped on purpose from Patchboard: neutral, as Needs attention has it.
+  const parked = new Set((snap?.alerts ?? []).filter((x) => x.id.startsWith('ctr-parked-')).map((x) => x.subject));
+  // Also right after a stop, before Needs attention has settled on it.
+  for (const c of containers) {
+    const last = (snap?.changes ?? []).find((e) => e.kind === 'container.action' && e.subject === c.name);
+    if (c.state !== 'running' && last?.detail === 'stop') parked.add(c.name);
+  }
   const rankOf = (c: (typeof containers)[number]) => {
+    if (parked.has(c.name)) return RANK.idle;
     const f = flagged.get(c.name.toLowerCase()) ?? flagged.get((serviceFor(snap, c.name)?.name ?? '').toLowerCase());
     return Math.min(RANK[stateOf(c)], f === 'critical' ? 0 : f ? 1 : 9);
   };
@@ -103,7 +111,7 @@ export function Logs() {
         <ul className="ctr-list">
           {listed.map((c) => (
             <li key={c.name}>
-              <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
+              <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={parked.has(c.name) ? 'idle' : c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
                 <span className="ctr-status" title={c.status}>{c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>

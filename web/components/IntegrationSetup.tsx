@@ -149,7 +149,7 @@ export function IntegrationForm({
       ))}
       {integration.where && <p className="settings-note">{integration.where}</p>}
       {result && (
-        <p key={result.text} className={`setup-result ${result.ok ? 'ok-text is-ok' : 'crit-text is-bad'}`}>
+        <p key={result.text} role="status" className={`setup-result ${result.ok ? 'ok-text is-ok' : 'crit-text is-bad'}`}>
           {result.ok && (
             <svg className="check-draw" viewBox="0 0 16 16" width="15" height="15" aria-hidden>
               <path d="M3 8.5l3.2 3L13 4.5" />

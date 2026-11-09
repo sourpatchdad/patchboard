@@ -80,7 +80,7 @@ export function Upcoming() {
             <h2 className="agenda-day-head">
               {day}
               <span aria-hidden>{groupDrops(list).length}</span>
-              <span className="sr-only">, {plural(groupDrops(list).length, 'release')}</span>
+              <span className="sr-only"> ({plural(groupDrops(list).length, 'release')})</span>
             </h2>
             <ul>
               {groupDrops(list).map((it) => (
@@ -132,11 +132,13 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
             className={`cal-day ${off === 0 ? 'is-today' : ''} ${list.length ? '' : 'is-empty'}`}
           >
             <h2 className="agenda-day-head">
-              <span>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
+              {/* Heard as the full date; seen as the short one. */}
+              <span className="sr-only">{d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}{off === 0 ? ', today' : ''}</span>
+              <span aria-hidden>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
               {list.length > 1 && (
                 <>
                   <small aria-hidden>{list.length}</small>
-                  <span className="sr-only">, {list.length} releases</span>
+                  <span className="sr-only"> ({list.length} releases)</span>
                 </>
               )}
             </h2>

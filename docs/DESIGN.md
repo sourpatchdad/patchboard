@@ -34,7 +34,8 @@ one click.
   cyan and Tracearr blue. This is a narrow exception to healthy-neutral
   color. Paused and buffering states keep explicit text. Previews show
   artwork, never imply live video, and omit progress the service does not
-  report. Hover, keyboard focus and touch reach the same details.
+  report. Hover, Enter (or Down) and a tap reach the same details; Tab
+  always moves on.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
 - **Compact header.** Status, server graphs, and time above weather form

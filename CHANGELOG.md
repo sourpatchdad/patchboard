@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Fixed: in the two minutes after a stop, before Patchboard settles on it,
+  a container with no recorded history showed every watched day as down.
+  A stop not yet settled counts from when it began.
+- Logs treats a container you stopped from Patchboard as stopped on
+  purpose: a dark light, below real problems in Problems first.
+- Screen readers: each Approve, Decline, Search, Try another release, Add
+  and Show button names its title or app; Upcoming's days are read in full
+  ("Monday, November 9 (2 releases)"); an integration test's result is
+  announced.
+- Saving Arrange board returns focus to Arrange board. On a phone, a
+  container's buttons keep their own row while its state line changes.
+  Audiobookshelf and Navidrome in Right now link to their apps, like Plex
+  and Jellyfin. A hold button showing its hint drops the tooltip that
+  repeated it. The weather advisory says "until" once. A missing page
+  names itself in the tab. Jump to matches articles and mail by their
+  words, and lists ties A to Z.
+
 - Fixed: stopping a container from Patchboard painted its whole health
   history red. Stops and starts are recorded again; Changes still shows
   one line for each.

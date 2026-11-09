@@ -10603,3 +10603,25 @@ a.req-come:hover .req-title {
   cursor: not-allowed;
   filter: none;
 }
+
+@media (max-width: 760px) {
+  /* The state line can change length under your finger; the buttons keep their row. */
+  .detail-state-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-state-row .ctr-actions-wrap {
+    margin-left: 0;
+  }
+}
+
+@media (hover: hover) {
+  .hold.is-hinted::after {
+    opacity: 0;
+  }
+}
+
+.ctr[data-state='idle'] .ctr-led {
+  --led: transparent;
+}
