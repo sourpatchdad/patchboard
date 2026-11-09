@@ -422,14 +422,18 @@ const demoRequests = [
   { id: 38, kind: 'movie' as const, title: 'Sinners', year: 2025, by: 'Jo', at: Date.now() - 30 * H, is4k: true, art: poster('Sinners') },
 ];
 const demoDecided = new Set<number>();
+const demoApproved: number[] = [];
 
-export async function demoSeerrAct(id: number): Promise<void> {
+export async function demoSeerrAct(id: number, action?: 'approve' | 'decline'): Promise<void> {
   demoDecided.add(id);
+  if (action === 'approve') demoApproved.unshift(id);
 }
 
 function demoSeerr(): SeerrData {
   const requests = demoRequests.filter((r) => !demoDecided.has(r.id));
+  const approved = demoApproved.map((id) => demoRequests.find((r) => r.id === id)).filter((r) => !!r).map((r) => ({ ...r, href: '#' }));
   const coming = [
+    ...approved,
     { id: 36, kind: 'movie' as const, title: 'Weapons', year: 2025, by: 'Kit', at: Date.now() - 3 * 24 * H, is4k: false, art: poster('Weapons'), href: '#' },
     { id: 33, kind: 'tv' as const, title: 'Severance', year: 2022, by: 'Sam', at: Date.now() - 6 * 24 * H, seasons: [2], is4k: false, art: poster('Severance'), href: '#' },
   ];

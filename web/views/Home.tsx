@@ -506,7 +506,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
         return (
         <div className="now-block" key={d.id}>
           <h3 className="now-head">
-            <Led state={d.data.errored.length ? 'crit' : d.data.paused ? 'warn' : d.data.downloading ? 'ok' : 'idle'} />
+            <Led state={d.data.errored.length ? 'crit' : d.data.downloading && !d.data.paused ? 'ok' : 'idle'} />
             <AppLink container={d.container}>
               {d.data.paused
                 ? `${d.label} is paused`

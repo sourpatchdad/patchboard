@@ -477,6 +477,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             {home ? (
               <HoldButton
                 className="text-button"
+                danger
                 hint="Hold to reset"
                 onConfirm={async () => {
                   const err = await save(null);
@@ -689,10 +690,10 @@ function Cell(props: {
               ))}
             </span>
             <button type="button" className="cell-btn" disabled={index === 0} onClick={() => props.onMove(index, index - 1)} aria-label="Move earlier">
-              ←
+              {props.cols === 1 ? '↑' : '←'}
             </button>
             <button type="button" className="cell-btn" disabled={index === count - 1} onClick={() => props.onMove(index, index + 1)} aria-label="Move later">
-              →
+              {props.cols === 1 ? '↓' : '→'}
             </button>
             {props.onConfigure && (
               <button type="button" className="cell-btn cell-settings" onClick={props.onConfigure} aria-label={`${info.name} settings`} title="Name, width, items, look">
@@ -1025,13 +1026,19 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   const modal = useModal<HTMLDivElement>(onClose);
   const [picking, setPicking] = useState(false);
   const [q, setQ] = useState('');
+  const [find, setFind] = useState('');
   const present = new Set(board.widgets.map((w) => w.type));
+  // Search by name or by what it shows: "plex", "disk", "camera".
+  const matches = (t: WidgetType) => {
+    const f = find.trim().toLowerCase();
+    return !f || `${WIDGET_INFO[t].name} ${WIDGET_INFO[t].about} ${NEEDS[t]?.label ?? ''}`.toLowerCase().includes(f);
+  };
   // Integration widgets appear once their integration is on, so nothing lands empty.
   const ready = widgetReady(snap);
   const open = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => WIDGET_INFO[t].multiple || !present.has(t));
-  const types = open.filter((t) => ready[t] !== false);
+  const types = open.filter((t) => ready[t] !== false && matches(t));
   // The rest wait on an integration: listed after, each leading to its setup.
-  const waiting = open.filter((t) => ready[t] === false);
+  const waiting = open.filter((t) => ready[t] === false && matches(t));
   const containers = [...containerMap(snap).values()].filter((c) => c.name.includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
   const id = (base: string) => {
     let n = 1;
@@ -1048,6 +1055,9 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
             {picking ? 'Back' : 'Close'}
           </button>
         </header>
+        {!picking && (
+          <input className="field palette-input" type="search" placeholder="Search widgets: plex, disks, cameras" aria-label="Search widgets" value={find} onChange={(e) => setFind(e.target.value)} autoFocus />
+        )}
         {!picking ? (
           <ul className="drawer-list">
             {types.map((t) => (
@@ -1061,7 +1071,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
                 </button>
               </li>
             ))}
-            {types.length === 0 && <li className="settings-note">Everything is already on the board.</li>}
+            {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Everything is already on the board.'}</li>}
             {waiting.length > 0 && <li className="drawer-sub">Set up first</li>}
             {waiting.map((t) => (
               <li key={t} className="is-waiting">
@@ -1142,8 +1152,8 @@ function SettingsDrawer({
               </button>
             </span>
           ) : (
-            <button type="button" className="text-button" onClick={onClose} title="Back to the board; its Save keeps this">
-              Apply
+            <button type="button" className="button board-save" onClick={onClose} title="Back to the board; its Save keeps this">
+              Done
             </button>
           )}
         </header>

@@ -1217,6 +1217,12 @@ export function RequestsWidget({ now }: { now: number }) {
   const { limit = 5, editing } = useWidget();
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => setDone(null), 6000);
+    return () => clearTimeout(t);
+  }, [done]);
   if (!state || !data) return null;
   const coming = data.coming ?? [];
   // Nothing to approve and nothing on the way: the widget steps aside.
@@ -1224,8 +1230,10 @@ export function RequestsWidget({ now }: { now: number }) {
   async function act(id: number, action: 'approve' | 'decline') {
     setBusy(id);
     setError(null);
+    const title = data?.requests.find((r) => r.id === id)?.title ?? 'The request';
     try {
       await post(`/api/requests/${id}/${action}`);
+      setDone(action === 'approve' ? `Approved ${title}. It's on the way.` : `Declined ${title}.`);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -1266,6 +1274,11 @@ export function RequestsWidget({ now }: { now: number }) {
         </ul>
       )}
       {data.requests.length > shown.length && <p className="req-more">{data.requests.length - shown.length} more waiting in Overseerr.</p>}
+      {done && (
+        <p className="req-done" role="status">
+          {done}
+        </p>
+      )}
       {coming.length > 0 && (
         <>
           <h3 className="req-head">On the way{data.processing > coming.length ? <span className="req-year"> {data.processing}</span> : null}</h3>

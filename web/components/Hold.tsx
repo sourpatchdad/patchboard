@@ -100,6 +100,13 @@ export function HoldButton({
       style={{ ['--hold-ms' as string]: `${HOLD_MS}ms` }}
     >
       <span className="hold-fill" aria-hidden />
+      {/* A ring a quarter full: press and hold, before you've tried a click. */}
+      {!className.includes('text-button') && (
+        <svg className="hold-glyph" viewBox="0 0 12 12" width="12" height="12" aria-hidden>
+          <circle cx="6" cy="6" r="4.6" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.6" />
+          <path d="M6 1.4A4.6 4.6 0 0 1 10.6 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      )}
       <span className="hold-label">{hinted ? hint : children}</span>
     </button>
   );

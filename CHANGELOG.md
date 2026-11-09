@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Approve and Decline say what happened ("Approved Poor Things. It's on
+  the way.") and the approved title joins On the way at once.
+- Changes shows one line for a start or stop sent from Patchboard, not
+  two.
+- Jump to asks with a second Enter instead of a browser dialog, puts a
+  container that's down first, and says "Nothing here matches" before
+  offering a web search.
+- Add widget has a search box: "plex", "disks", "cameras".
+- Hold buttons carry a small ring that says press and hold before you
+  try. Widget settings in Arrange close with a Done button. On a phone,
+  where the board is one column, cards move with up and down arrows.
+- A download client you paused shows a dark light; amber stays for stale
+  data. Mark all read's question stays on one line.
+
 - Start, Stop and Restart show their progress: the state line says
   "Starting..." with a pulsing light until Docker reports the change, or
   says plainly if nothing changed after 30 seconds. A container that just

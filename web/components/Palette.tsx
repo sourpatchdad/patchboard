@@ -18,6 +18,10 @@ interface Item {
   hint: string;
   icon?: string;
   run: () => unknown;
+  /** Takes something down: Enter once arms it, Enter again runs it. */
+  confirm?: string;
+  /** Sorts ahead of its peers, such as an action on a container that's down. */
+  boost?: number;
 }
 
 /** Subsequence match with a bonus for word starts and contiguous runs. */
@@ -47,6 +51,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
+  const [armed, setArmed] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -54,6 +59,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     if (open) {
       setQ('');
       setSel(0);
+      setArmed(null);
     }
   }, [open]);
 
@@ -93,14 +99,17 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       // Actions by name: "restart sonarr". Stop and restart ask first, as the
       // hold buttons do; the container page then follows it through.
       if (!snap.readOnly && c.name !== (snap.self?.container ?? 'patchboard')) {
+        const trouble = c.state !== 'running' || c.health === 'unhealthy';
         for (const a of c.state === 'running' ? (['restart', 'stop'] as const) : (['start'] as const)) {
           const verb = a.charAt(0).toUpperCase() + a.slice(1);
           out.push({
             id: `a-${a}-${c.name}`,
             label: `${verb} ${c.name}`,
             hint: 'Action',
+            ...(a !== 'start' ? { confirm: `Press Enter again to ${a} ${c.name}` } : {}),
+            // A container in trouble comes first: that's the one you came for.
+            boost: trouble ? 200 : 0,
             run: async () => {
-              if (a !== 'start' && !window.confirm(`${verb} ${c.name}?`)) return;
               const res = await fetch(`/api/containers/${encodeURIComponent(c.name)}/action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' },
@@ -126,12 +135,17 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
 
   const results = useMemo(() => {
     const ranked = items
-      .map((it) => ({ it, s: Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50) }))
+      .map((it) => {
+        const s = Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50);
+        // The boost ranks a match; it never makes one.
+        return { it, s: s > 0 ? s + (it.boost ?? 0) : s };
+      })
       .filter((r) => r.s > 0)
       .sort((a, b) => b.s - a.s)
       .slice(0, 9)
       .map((r) => r.it);
     if (q.trim()) {
+      if (!ranked.length) ranked.push({ id: 'none', label: `Nothing here matches "${q.trim()}"`, hint: '', run: () => undefined });
       ranked.push({
         id: 'web',
         label: `Search the web for "${q.trim()}"`,
@@ -142,7 +156,10 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     return ranked;
   }, [items, q]);
 
-  useEffect(() => setSel(0), [q]);
+  useEffect(() => {
+    setSel(0);
+    setArmed(null);
+  }, [q]);
   useEffect(() => {
     listRef.current?.children[sel]?.scrollIntoView({ block: 'nearest' });
   }, [sel]);
@@ -150,7 +167,8 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   if (!open) return null;
 
   const choose = (it: Item | undefined) => {
-    if (!it) return;
+    if (!it || it.id === 'none') return;
+    if (it.confirm && armed !== it.id) return setArmed(it.id);
     onClose();
     it.run();
   };
@@ -194,11 +212,11 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
               role="option"
               aria-selected={i === sel}
               className="palette-item"
-              onMouseMove={() => setSel(i)}
+              onMouseMove={() => (i !== sel ? (setSel(i), setArmed(null)) : undefined)}
               onClick={() => choose(it)}
             >
               <span className="palette-icon">{it.icon ? <Icon name={it.label} icon={it.icon} size={18} /> : null}</span>
-              <span className="palette-label">{it.label}</span>
+              <span className={`palette-label ${armed === it.id ? 'is-armed' : ''}`}>{armed === it.id ? it.confirm : it.label}</span>
               <span className="palette-hint">{it.hint}</span>
             </li>
           ))}

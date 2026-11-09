@@ -8008,6 +8008,7 @@ button.ha-act:hover {
 
 .feeds-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -8023,8 +8024,11 @@ button.ha-act:hover {
 
 .feeds-confirm {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: baseline;
-  gap: 10px;
+  gap: 4px 10px;
+  white-space: nowrap;
   font-size: 13.5px;
   color: var(--ink-2);
 }
@@ -10418,4 +10422,22 @@ a.req-come:hover .req-title {
   .topbar-help {
     display: none;
   }
+}
+
+.req-done {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+/* Jump to: an action armed by one Enter reads as the question it asks. */
+.palette-label.is-armed {
+  color: var(--warn);
+}
+
+.hold-glyph {
+  position: relative;
+  margin-right: 6px;
+  vertical-align: -1px;
+  opacity: 0.8;
 }

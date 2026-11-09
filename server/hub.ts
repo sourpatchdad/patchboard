@@ -203,8 +203,9 @@ export class Hub {
     const prev = kvGet<Track>('container-track') ?? { ...emptyTrack(), states: kvGet<Track['states']>('container-states') ?? {} };
     const { track, events } = settle(prev, containers, Date.now());
     for (const e of events) {
-      // Restarted or updated from Patchboard: the command already says so.
-      if (e.kind === 'container.restarted' && e.at - (lastEventAt(e.subject, 'container.action') ?? 0) < 5 * 60_000) continue;
+      // Started, stopped or restarted from Patchboard: the command already
+      // says so ("stopped from Patchboard"); one line, not two.
+      if (['container.restarted', 'container.stopped', 'container.started'].includes(e.kind) && e.at - (lastEventAt(e.subject, 'container.action') ?? 0) < 5 * 60_000) continue;
       recordEvent(e.kind, e.subject, e.detail, e.at);
     }
     const changed = events.length > 0;
