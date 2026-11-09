@@ -14,7 +14,7 @@ import { cleanBrand } from '../shared/brand.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
-import { frigateAdapter } from './adapters/frigate.ts';
+import { frigateAdapter, frigateImage } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
@@ -61,7 +61,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -1405,6 +1405,28 @@ app.get('/api/img/:kind{jellyfin|emby}', async (c) => {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
         'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return c.body(null, 404);
+  }
+});
+
+// Frigate pictures: a camera's newest frame (?camera=) or an event's
+// thumbnail (?event=). Frames change, so they're cached for seconds.
+app.get('/api/img/frigate', async (c) => {
+  const q = { camera: c.req.query('camera'), event: c.req.query('event') };
+  if (config.demo) {
+    const svg = demoFrigateImage(q);
+    return svg ? c.body(svg, 200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' }) : c.body(null, 404);
+  }
+  if (!config.frigate) return c.body(null, 404);
+  try {
+    const res = await frigateImage(q);
+    return new Response(res.body, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+        'Cache-Control': q.camera ? 'private, max-age=10' : 'private, max-age=86400',
       },
     });
   } catch {

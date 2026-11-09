@@ -10,6 +10,7 @@ import { searchUrl } from '../../shared/fields.ts';
 import { Empty, Icon, Section } from '../components/ui.tsx';
 import { agoLong } from '../lib/format.ts';
 import { useStore } from '../lib/store.tsx';
+import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
 
 export function BookmarksWidget() {
@@ -67,7 +68,9 @@ export function ClocksWidget({ config, now }: { config?: Record<string, string>;
   return (
     <Section title="Clocks" className="clocks">
       {places.length === 0 ? (
-        <Empty>Add places in this widget's settings, such as Europe/London.</Empty>
+        <Empty>
+          No places yet. <SetupLink>Add places</SetupLink>
+        </Empty>
       ) : (
         <ul className="clock-list">
           {places.map((p) => {
@@ -114,7 +117,9 @@ export function RssWidget({ board, id, config, now }: { board: string; id: strin
   return (
     <Section title="Feeds" className="rss">
       {feeds.length === 0 ? (
-        <Empty>Add feed addresses in this widget's settings.</Empty>
+        <Empty>
+          No feeds yet. <SetupLink>Add feed addresses</SetupLink>
+        </Empty>
       ) : !data ? null : (
         <>
           {data.items.length === 0 && <Empty>Nothing new in these feeds.</Empty>}
@@ -147,7 +152,9 @@ export function ReleasesWidget({ board, id, config, now }: { board: string; id: 
   return (
     <Section title="Releases" className="releases">
       {repos.length === 0 ? (
-        <Empty>Add GitHub projects in this widget's settings, such as immich-app/immich.</Empty>
+        <Empty>
+          No projects yet. <SetupLink>Add GitHub projects</SetupLink>
+        </Empty>
       ) : !data ? null : (
         <ul className="play-list">
           {data.releases.slice(0, limit).map((r) => (

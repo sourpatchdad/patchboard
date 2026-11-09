@@ -11,6 +11,8 @@ export interface WidgetSettings {
   days?: number;
   /** Arranging the board: a widget that hides when quiet shows anyway, so it can be moved. */
   editing?: boolean;
+  /** Opens this widget's settings straight from the board; closing them saves. */
+  configure?: () => void;
 }
 
 export const WidgetCtx = createContext<WidgetSettings | null>(null);

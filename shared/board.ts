@@ -5,7 +5,7 @@
 // Runtime code is fine here: no Node or DOM use.
 
 import { parseEntities } from './ha.ts';
-import { engineField, feedsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
+import { camerasField, engineField, feedsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -26,6 +26,7 @@ export type WidgetType =
   | 'dns'
   | 'speed'
   | 'photos'
+  | 'cameras'
   | 'proxmox'
   | 'drives'
   | 'sync'
@@ -232,10 +233,11 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   clocks: { name: 'Clocks', about: 'The time where your people are, with the day when it differs from yours.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [zonesField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
+  cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 20 seconds, and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], fields: [camerasField] } },
   watched: { name: 'Watched', about: 'What was played lately on Plex, Jellyfin and Emby, newest first, with who watched and when. Each opens in its app.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 15] } },
   listening: { name: 'Listening', about: 'Audiobookshelf books in progress, with how far along, and albums played lately on Navidrome.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 8] } },
   downloads: { name: 'Downloads', about: 'Every unfinished download across your clients, with pause, resume and remove, and what Sonarr and Radarr are stuck on, with Try another release. With this on the board, Right now leaves downloads to it.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 30] } },
-  requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline. Hidden while none wait.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
+  requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline, and approved ones still on the way. Hidden while there are neither.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
   wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines you name in Settings, Connections.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
   json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },

@@ -10006,3 +10006,144 @@ a.play:hover .play-title {
     flex: none;
   }
 }
+
+/* Cameras: newest frames as 16:9 tiles, as many to a row as fit. */
+.cam-grid {
+  display: grid;
+  /* Fit: six cameras share the row instead of leaving an empty seventh slot. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cam {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--line-soft);
+  color: var(--head);
+  text-decoration: none;
+}
+
+.cam img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cam-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 10px 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.65));
+}
+
+.cam-off {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--crit);
+  font-size: 13.5px;
+}
+
+.is-off .cam-name {
+  color: var(--ink-2);
+  background: none;
+}
+
+.cam-head {
+  margin: 16px 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--head);
+}
+
+.cam-quiet {
+  margin: 0;
+  color: var(--ink-3);
+}
+
+.cam-events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cam-ev {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.cam-ev img {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.cam-ev-main {
+  display: grid;
+  min-width: 0;
+}
+
+.cam-ev-what {
+  overflow-wrap: anywhere;
+}
+
+.cam-ev-where,
+.cam-ev-when {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+a.cam-ev:hover .cam-ev-what {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--ink-3);
+}
+
+/* Requests: approved and still coming, one quiet line each. */
+.req-head {
+  margin: 14px 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--head);
+}
+
+.req-coming {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.req-come {
+  display: grid;
+  gap: 1px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a.req-come:hover .req-title {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--ink-3);
+}

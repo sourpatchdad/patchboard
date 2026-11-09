@@ -29,6 +29,7 @@ import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.t
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
 import { ListeningWidget, WatchedWidget } from './Media.tsx';
+import { CamerasWidget } from './Cameras.tsx';
 import { BookmarksWidget, ClocksWidget, ReleasesWidget, RssWidget, SearchWidget } from './Outside.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
@@ -299,6 +300,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const [jsonEdit, setJsonEdit] = useState<string | null>(null);
   /** The widget whose settings drawer is open. */
   const [setting, setSetting] = useState<string | null>(null);
+  /** Settings opened from the widget itself, outside Arrange: closing them saves. */
+  const [quick, setQuick] = useState(false);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [error, setError] = useState('');
   /** A note about the last layout applied, such as what it left out. */
   const [notice, setNotice] = useState('');
@@ -506,6 +511,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             onSpan={(n) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, span: n } : x)))}
             onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
+            onQuick={snap?.readOnly || editing || w.type === 'json' || !board ? undefined : () => (setError(''), setNotice(''), setDraft(structuredClone(board)), setQuick(true), setSetting(w.id))}
             bind={editing ? sort.bind(w.id) : undefined}
             dragging={sort.dragging === w.id}
           >
@@ -541,7 +547,13 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       {setting && draft && draft.widgets.some((x) => x.id === setting) && (
         <SettingsDrawer
           w={draft.widgets.find((x) => x.id === setting)!}
-          onClose={() => setSetting(null)}
+          onClose={() => {
+            setSetting(null);
+            if (!quick) return;
+            setQuick(false);
+            const d = draftRef.current;
+            if (d) void save(d).then((err) => (err ? setError(err) : setDraft(null)));
+          }}
           columns={chosen}
           onColumn={(column) => update((ws) => ws.map((x) => x.id === setting ? { ...x, column } : x))}
           onChange={(cfg) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, config: cfg } : x)))}
@@ -591,6 +603,8 @@ function Cell(props: {
   onSpan: (n: number) => void;
   onRemove: () => void;
   onConfigure?: () => void;
+  /** Settings from the widget itself, outside Arrange. */
+  onQuick?: () => void;
   /** Drag-sort props while editing. */
   bind?: Record<string, unknown>;
   dragging: boolean;
@@ -723,6 +737,7 @@ function Cell(props: {
               style: w.config?.style,
               days: w.config?.days ? Number(w.config.days) : undefined,
               editing,
+              configure: props.onQuick,
             }}
           >
             {props.children}
@@ -806,6 +821,8 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <DownloadsWidget />;
     case 'watched':
       return <WatchedWidget now={now} />;
+    case 'cameras':
+      return <CamerasWidget config={w.config} now={now} />;
     case 'bookmarks':
       return <BookmarksWidget />;
     case 'search':

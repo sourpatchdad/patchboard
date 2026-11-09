@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Cameras: a widget for Frigate. Each camera's newest frame, refreshed
+  every 20 seconds, with Offline when one stops; tap for its live view in
+  Frigate. Cameras that detect add today's people, cars and animals, with
+  a thumbnail each, opening in Frigate's Explore. Pick which cameras in
+  the widget's settings. Pictures come through Patchboard, so the browser
+  never needs Frigate's address.
+- Requests lists approved requests still on the way, each linked to its
+  page in Overseerr or Jellyseerr, and stays on the board while any are.
+- An empty widget opens its own settings: "Pick lights, switches and
+  scenes", "Add places", "Add feed addresses". Closing them saves the
+  board; no trip through Arrange.
+- The Home Assistant picker keeps what you ticked at the top, filters by
+  kind (lights, switches, scenes and more), and says when a search shows
+  80 of more.
+- Right now drops "Nobody is watching Jellyfin" while Plex or anything
+  else is playing; the idle line shows only when nothing plays.
+
 - Five widgets that need no integration. Bookmarks puts your links on the
   board; they were only on the Apps page before. Search sends words to
   DuckDuckGo, Google, Bing, Kagi, Startpage or a site you name. Clocks shows

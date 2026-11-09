@@ -152,11 +152,12 @@ try {
       { id: 'attention', type: 'attention', size: 'm', span: 1 },
       { id: 'ha-1', type: 'homeassistant', size: 'm', span: 2, config: { title: 'Downstairs', entities: 'light.living_room,light.kitchen,light.porch,scene.movie_night,switch.coffee_maker,sensor.living_room_temperature,binary_sensor.back_door,lock.front_door,cover.garage_door,sensor.house_power,person.sam,automation.night_lights' } },
       { id: 'car', type: 'car', size: 'm', span: 1 },
+      { id: 'cameras-1', type: 'cameras', size: 'w', span: 2 },
       { id: 'wake', type: 'wake', size: 's', span: 1 },
     ],
   });
   await go('/', 1500);
-  await shoot(page, 'house');
+  await shoot(page, 'house', { fullPage: true });
 
   // The machines: hosts, storage, power, drives, Proxmox, Docker hosts, the network, sync.
   await board('PUT', {

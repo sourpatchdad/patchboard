@@ -33,6 +33,9 @@ const server = createServer((req, res) => {
   }
   if (url.pathname.startsWith('/os/')) {
     if (req.headers['x-api-key'] !== 'os-key') return json({ message: 'Unauthorized' }, 403);
+    if (url.pathname === '/os/api/v1/request' && url.searchParams.get('filter') === 'processing') {
+      return json({ pageInfo: { page: 1, pages: 1, results: 1 }, results: [{ id: 5, status: 2, type: 'movie', is4k: false, createdAt: ago(60 * 24 * 3), media: { tmdbId: 200, mediaType: 'movie' }, requestedBy: { username: 'jo' } }] });
+    }
     if (url.pathname === '/os/api/v1/request') {
       assert.equal(url.searchParams.get('filter'), 'pending');
       return json({
@@ -95,7 +98,8 @@ test('Overseerr: pending requests with titles, years, seasons, requesters and pr
   assert.deepEqual([studio.title, studio.year, studio.kind, studio.by, studio.seasons], ['The Studio', 2025, 'tv', 'kit', [1, 2]]);
   assert.deepEqual([sinners.title, sinners.kind, sinners.by, sinners.is4k], ['Sinners', 'movie', 'Sam R', true]);
   assert.equal(sinners.art, '/api/art/seerr/8');
-  assert.deepEqual([...os.pendingIds].sort(), [7, 8]);
+  assert.deepEqual([...os.pendingIds].sort(), [7, 8], 'only pending requests can be approved or declined');
+  assert.deepEqual(d.coming?.map((r) => [r.title, r.by, r.href]), [['Sinners', 'jo', `${process.env.OVERSEERR_URL}/movie/200`]], 'approved and on the way, linked to its page');
   await act(7, 'approve');
   await act(8, 'decline');
   assert.deepEqual(decided, ['7:approve', '8:decline']);

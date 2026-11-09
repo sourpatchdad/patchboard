@@ -585,12 +585,16 @@ export interface SeerrRequest {
   is4k: boolean;
   /** Poster through Patchboard's art proxy. */
   art?: string;
+  /** Its page in Overseerr or Jellyseerr. */
+  href?: string;
 }
 
 export interface SeerrData {
   pending: number;
   processing: number;
   requests: SeerrRequest[];
+  /** Approved and not here yet, newest first. */
+  coming?: SeerrRequest[];
 }
 
 /** Pi-hole or AdGuard Home: the last day's queries and whether blocking is on. */
@@ -1057,8 +1061,25 @@ export interface TraktData {
   upcoming: ReleaseItem[];
 }
 
+export interface FrigateEvent {
+  id: string;
+  camera: string;
+  /** What Frigate saw: person, car, dog. */
+  label: string;
+  /** A face or plate Frigate recognised. */
+  name?: string;
+  at: number;
+  /** Confidence, 0 to 100. */
+  score?: number;
+  zones: string[];
+}
+
 export interface FrigateData {
-  cameras: { name: string; fps: number; online: boolean }[];
+  webUrl?: string;
+  /** detect: the camera looks for objects, so it has events. */
+  cameras: { name: string; fps: number; online: boolean; detect?: boolean }[];
+  /** The last day's events, newest first. */
+  events?: FrigateEvent[];
 }
 
 export type AlertLevel = 'critical' | 'warn' | 'info';

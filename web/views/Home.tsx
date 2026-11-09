@@ -424,9 +424,10 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
     { id: 'navidrome', label: 'Navidrome', data: navi.data },
   ].filter((l) => l.data?.streams.length);
   if (!configured && !anyClient && !abs.state && !navi.state) return null;
-  // Quiet sources share one line, so an idle evening takes two lines, not six.
+  // Quiet servers share one line, and only while nothing plays anywhere:
+  // with Plex busy, "nobody is watching Jellyfin" is noise.
   const watching = servers.filter((m) => m.data.streams.length);
-  const idle = servers.filter((m) => !m.data.streams.length);
+  const idle = watching.length || listening.length ? [] : servers;
   const isQuiet = (d: (typeof clients)[number]) => !d.data.paused && !d.data.downloading && !d.data.errored.length;
   const quietClients = clients.filter(isQuiet);
   const busyClients = clients.filter((d) => !isQuiet(d));
@@ -451,7 +452,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {watching.map((m) => (
         <div className="now-block" key={m.id}>
           <h3>
-            <AppLink container={m.container}>{m.data.streams.length ? `${plural(m.data.streams.length, 'stream')} on ${m.label}` : `Nobody is watching ${m.label}`}</AppLink>
+            <AppLink container={m.container}>{`${plural(m.data.streams.length, 'stream')} on ${m.label}`}</AppLink>
           </h3>
           {m.data.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />

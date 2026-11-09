@@ -402,7 +402,11 @@ export async function demoSeerrAct(id: number): Promise<void> {
 
 function demoSeerr(): SeerrData {
   const requests = demoRequests.filter((r) => !demoDecided.has(r.id));
-  return { pending: requests.length, processing: 2, requests };
+  const coming = [
+    { id: 36, kind: 'movie' as const, title: 'Weapons', year: 2025, by: 'Kit', at: Date.now() - 3 * 24 * H, is4k: false, art: poster('Weapons'), href: '#' },
+    { id: 33, kind: 'tv' as const, title: 'Severance', year: 2022, by: 'Sam', at: Date.now() - 6 * 24 * H, seasons: [2], is4k: false, art: poster('Severance'), href: '#' },
+  ];
+  return { pending: requests.length, processing: coming.length, requests, coming };
 }
 
 // ---------- Ad blocking ----------
@@ -900,14 +904,51 @@ export function demoAdapters(): Adapter[] {
       entries: demoFeeds.filter((e) => !demoReadIds.has(e.id)).slice(0, 10).map(({ content: _c, ...e }) => e),
     })),
     demo<FastmailData>('fastmail', 'Mail', 2 * MINUTE, demoMail),
-    demo<FrigateData>('frigate', 'Frigate', 30 * SECOND, () => ({
-      cameras: [
-        { name: 'driveway', fps: 5, online: true },
-        { name: 'backyard', fps: 5, online: true },
-        { name: 'porch', fps: 5, online: true },
-      ],
-    })),
+    demo<FrigateData>('frigate', 'Frigate', 30 * SECOND, () => {
+      const now = Date.now();
+      return {
+        webUrl: '#',
+        cameras: [
+          { name: 'front_door', fps: 5, online: true, detect: true },
+          { name: 'driveway', fps: 5, online: true, detect: true },
+          { name: 'backyard', fps: 5, online: true, detect: true },
+          { name: 'garage', fps: 0, online: false, detect: false },
+        ],
+        events: [
+          { id: 'demo-1', camera: 'front_door', label: 'person', name: 'Sam', at: now - 9 * 60_000, score: 91, zones: ['porch'] },
+          { id: 'demo-2', camera: 'driveway', label: 'car', at: now - 47 * 60_000, score: 88, zones: [] },
+          { id: 'demo-3', camera: 'front_door', label: 'person', at: now - 2.2 * 3_600_000, score: 84, zones: ['porch'] },
+          { id: 'demo-4', camera: 'backyard', label: 'dog', at: now - 5.5 * 3_600_000, score: 79, zones: [] },
+          { id: 'demo-5', camera: 'driveway', label: 'person', at: now - 9 * 3_600_000, score: 82, zones: [] },
+        ],
+      };
+    }),
   ];
+}
+
+// Stand-in camera pictures for demo mode: a dusk scene per camera, stamped
+// with the time the way Frigate stamps its frames.
+const SCENES: Record<string, [string, string, string]> = {
+  front_door: ['#3b4a63', '#2a2f3a', 'M250 120h140v170H250zM300 190h40v100h-40z'],
+  driveway: ['#46506b', '#30343c', 'M0 230L640 200v160H0zM360 230h170l20 40H340z'],
+  backyard: ['#3d5560', '#24342b', 'M60 210h120v80H60zM420 160c40-60 120-60 160 0v130H420z'],
+  garage: ['#2a2d33', '#1d1f23', 'M150 110h340v200H150z'],
+};
+const OBJECT: Record<string, string> = { person: '#d8c3a5', car: '#9fb3c8', dog: '#c9a46b' };
+
+export function demoFrigateImage(q: { camera?: string; event?: string }): string | null {
+  if (q.camera && SCENES[q.camera]) {
+    const [sky, ground, shape] = SCENES[q.camera];
+    const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="s" x2="0" y2="1"><stop offset="0" stop-color="${sky}"/><stop offset="1" stop-color="${ground}"/></linearGradient></defs><rect width="640" height="360" fill="url(#s)"/><path d="${shape}" fill="#151820" opacity=".75"/><text x="16" y="30" font-family="monospace" font-size="18" fill="#e8e8e8">${stamp}</text></svg>`;
+  }
+  const ev = q.event?.match(/^demo-(\d)$/);
+  if (ev) {
+    const label = ['person', 'car', 'person', 'dog', 'person'][Number(ev[1]) - 1] ?? 'person';
+    const body = label === 'car' ? '<rect x="40" y="95" width="120" height="45" rx="14"/><circle cx="70" cy="142" r="13"/><circle cx="130" cy="142" r="13"/>' : label === 'dog' ? '<ellipse cx="100" cy="120" rx="50" ry="24"/><circle cx="150" cy="96" r="18"/>' : '<circle cx="100" cy="62" r="24"/><path d="M62 175c0-60 16-86 38-86s38 26 38 86z"/>';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#2c3240"/><g fill="${OBJECT[label]}">${body}</g></svg>`;
+  }
+  return null;
 }
 
 const LOG_LINES = [

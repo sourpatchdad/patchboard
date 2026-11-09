@@ -548,7 +548,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'frigate',
     name: 'Frigate',
-    adds: 'Cameras online and offline.',
+    adds: "Cameras: each one's newest frame on the board, online or offline, and what the cameras that detect saw today.",
     env: ['FRIGATE_URL'],
     where: 'Frigate’s address; its API needs no key on the local network.',
     source: true,

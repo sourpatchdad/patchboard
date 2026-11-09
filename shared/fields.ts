@@ -22,6 +22,19 @@ const lines = (raw: string, max: number) =>
     .filter(Boolean)
     .slice(0, max);
 
+/** Camera names as Frigate spells them; blank shows every camera. */
+export const camerasField: WidgetField = {
+  key: 'cameras',
+  label: 'Cameras',
+  hint: 'Names as Frigate spells them, one per line. Leave empty for every camera.',
+  placeholder: 'front_door',
+  multiline: true,
+  check: (raw) => {
+    const ok = lines(raw, 24).filter((c) => /^[\w-]{1,64}$/.test(c));
+    return ok.length ? ok.join('\n') : null;
+  },
+};
+
 /** Feed addresses: http or https, ten at most. */
 export const feedsField: WidgetField = {
   key: 'feeds',

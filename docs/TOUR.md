@@ -81,11 +81,13 @@ the original.
 
 ![Reading, one article](screenshots/reading.webp)
 
-**The house:** Home Assistant lights, sensors and scenes, the car, and Wake
-buttons, on the Home board. Tap a light or a scene; a lock or a garage door
-only shows its state.
+**The house:** Home Assistant lights, sensors and scenes, the car, Frigate's
+cameras and Wake buttons, on the Home board. Tap a light or a scene; a lock
+or a garage door only shows its state. Cameras shows each camera's newest
+frame every 20 seconds and, for cameras that detect, who and what came by
+today. Tap a camera for its live view in Frigate.
 
-![Home Assistant, the car and Wake on the board](screenshots/house.webp)
+![Home Assistant, the car, Cameras and Wake on the board](screenshots/house.webp)
 
 **The network:** Uptime lists Uptime Kuma monitors with problems first, each
 with its last 30 checks; one that goes down joins Needs attention. Internet

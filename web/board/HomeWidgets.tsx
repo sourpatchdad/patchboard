@@ -12,6 +12,7 @@ import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg, pct, size, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
+import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
 
 async function post(url: string): Promise<void> {
@@ -86,7 +87,9 @@ export function HomeAssistantWidget({ entities: list }: { entities?: string }) {
   return (
     <Section title="Home" count={ids.length ? undefined : 'Home Assistant'} source={state} className="ha">
       {ids.length === 0 ? (
-        <Empty>Pick lights, switches, sensors and scenes in this widget's settings. Customize the board, then the gear on this widget.</Empty>
+        <Empty>
+          Nothing picked yet. <SetupLink>Pick lights, switches and scenes</SetupLink>
+        </Empty>
       ) : (
         <ul className="ha-grid">
           {ids.map((id) => {
@@ -140,11 +143,26 @@ export function HomeAssistantWidget({ entities: list }: { entities?: string }) {
   );
 }
 
+const HA_KINDS: [string, string][] = [
+  ['light', 'Lights'],
+  ['switch', 'Switches'],
+  ['scene', 'Scenes'],
+  ['script', 'Scripts'],
+  ['climate', 'Climate'],
+  ['fan', 'Fans'],
+  ['cover', 'Covers'],
+  ['lock', 'Locks'],
+  ['sensor', 'Sensors'],
+  ['binary_sensor', 'Binary sensors'],
+  ['automation', 'Automations'],
+];
+
 /** The widget's settings: search every entity and tick the ones to show. */
 export function HaPicker({ value, onChange }: { value: string | undefined; onChange: (v: string) => void }) {
   const [all, setAll] = useState<HaEntity[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
+  const [kind, setKind] = useState('');
   const picked = parseEntities(value);
   useEffect(() => {
     fetch('/api/ha/entities')
@@ -155,10 +173,17 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
       })
       .catch((e: Error) => setError(e.message));
   }, []);
-  const shown = useMemo(() => {
+  // Kinds this house has, in the order people look for them.
+  const kinds = useMemo(() => HA_KINDS.filter(([d]) => (all ?? []).some((e) => e.id.startsWith(`${d}.`))), [all]);
+  const matches = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return (all ?? []).filter((e) => !t || e.id.includes(t) || e.name.toLowerCase().includes(t)).slice(0, 80);
-  }, [all, q]);
+    return (all ?? []).filter((e) => (!kind || e.id.startsWith(`${kind}.`)) && (!t || e.id.includes(t) || e.name.toLowerCase().includes(t)));
+  }, [all, q, kind]);
+  // What's ticked stays in view at the top, whatever the search.
+  const shown = useMemo(() => {
+    const mine = picked.map((id) => (all ?? []).find((e) => e.id === id)).filter((e): e is HaEntity => !!e);
+    return [...mine, ...matches.filter((e) => !picked.includes(e.id)).slice(0, 80)];
+  }, [all, matches, value]);
   const toggle = (id: string) => onChange((picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id].slice(0, HA_MAX_PINNED)).join(','));
   return (
     <div className="ha-picker">
@@ -170,6 +195,15 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
       ) : (
         <>
           <input className="field" type="search" placeholder="Search lights, sensors, scenes" value={q} onChange={(e) => setQ(e.target.value)} />
+          {kinds.length > 1 && (
+            <div className="hide-chips ha-kinds" role="group" aria-label="Kind">
+              {kinds.map(([d, label]) => (
+                <button key={d} type="button" className="chip" aria-pressed={kind === d} onClick={() => setKind(kind === d ? '' : d)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <ul className="ha-pick-list">
             {!all && <li className="settings-note">Loading entities</li>}
             {shown.map((e) => (
@@ -182,6 +216,7 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
               </li>
             ))}
           </ul>
+          {matches.length > 80 && <p className="settings-note">Showing 80 of {matches.length.toLocaleString()}. Search or pick a kind to narrow it.</p>}
           <p className="settings-note">Lights, switches, fans and automations toggle; scenes and scripts run. Locks, garage doors and alarms show their state only.</p>
         </>
       )}
@@ -1183,8 +1218,9 @@ export function RequestsWidget({ now }: { now: number }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!state || !data) return null;
-  // Nothing to approve: the widget steps aside until someone asks for something.
-  if (!data.requests.length && !editing && state.ok) return null;
+  const coming = data.coming ?? [];
+  // Nothing to approve and nothing on the way: the widget steps aside.
+  if (!data.requests.length && !coming.length && !editing && state.ok) return null;
   async function act(id: number, action: 'approve' | 'decline') {
     setBusy(id);
     setError(null);
@@ -1199,9 +1235,9 @@ export function RequestsWidget({ now }: { now: number }) {
   const shown = data.requests.slice(0, limit);
   return (
     <Section title="Requests" count={data.pending ? `${data.pending} waiting` : undefined} source={state} className="requests">
-      {shown.length === 0 ? (
-        <Empty>Nothing waiting for approval.{data.processing ? ` ${data.processing} approved and on the way.` : ''}</Empty>
-      ) : (
+      {shown.length === 0 && coming.length === 0 ? (
+        <Empty>Nothing waiting for approval.</Empty>
+      ) : shown.length === 0 ? null : (
         <ul className="req-list">
           {shown.map((r) => (
             <li key={r.id} className="req">
@@ -1230,6 +1266,35 @@ export function RequestsWidget({ now }: { now: number }) {
         </ul>
       )}
       {data.requests.length > shown.length && <p className="req-more">{data.requests.length - shown.length} more waiting in Overseerr.</p>}
+      {coming.length > 0 && (
+        <>
+          <h3 className="req-head">On the way{data.processing > coming.length ? <span className="req-year"> {data.processing}</span> : null}</h3>
+          <ul className="req-coming">
+            {coming.slice(0, Math.max(2, limit - shown.length)).map((r) => {
+              const body = (
+                <>
+                  <span className="req-title">
+                    {r.title}
+                    {r.year ? <span className="req-year"> {r.year}</span> : null}
+                  </span>
+                  <span className="req-sub">{[r.by, ago(r.at, now), r.seasons ? seasonsText(r.seasons) : null].filter(Boolean).join(', ')}</span>
+                </>
+              );
+              return (
+                <li key={r.id}>
+                  {r.href && r.href !== '#' ? (
+                    <a href={r.href} target="_blank" rel="noreferrer" className="req-come">
+                      {body}
+                    </a>
+                  ) : (
+                    <span className="req-come">{body}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
       {error && <p className="dns-error warn-text">{error}</p>}
     </Section>
   );

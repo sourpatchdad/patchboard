@@ -29,9 +29,10 @@ export interface Details {
 export const requester = (r: RawRequest) =>
   r.requestedBy?.displayName || r.requestedBy?.username || r.requestedBy?.plexUsername || r.requestedBy?.email?.split('@')[0] || 'Someone';
 
-export function toRequest(r: RawRequest, d: Details | undefined): SeerrRequest {
+export function toRequest(r: RawRequest, d: Details | undefined, web?: string): SeerrRequest {
   const kind = r.type ?? r.media?.mediaType ?? 'movie';
   return {
+    ...(web && r.media?.tmdbId ? { href: `${web}/${kind}/${r.media.tmdbId}` } : {}),
     id: r.id,
     kind,
     title: d?.title ?? (kind === 'tv' ? 'A show' : 'A movie'),
@@ -49,6 +50,8 @@ export const pendingIds = new Set<number>();
 
 export function seerrClient(): { adapter: Adapter<SeerrData>; act: (id: number, action: 'approve' | 'decline') => Promise<void> } {
   const { url, key } = config.overseerr!;
+  // Links open the app the requests live in.
+  const web = url;
   const headers = { 'X-Api-Key': key, Accept: 'application/json' };
   const titles = new Map<string, Details>();
 
@@ -73,21 +76,26 @@ export function seerrClient(): { adapter: Adapter<SeerrData>; act: (id: number, 
       label: 'Requests',
       intervalMs: 2 * MINUTE,
       async fetch() {
-        const [list, count] = await Promise.all([
+        const [list, processing, count] = await Promise.all([
           getJson<{ results: RawRequest[] }>(`${url}/api/v1/request?take=20&skip=0&filter=pending&sort=added`, { headers }),
+          getJson<{ results: RawRequest[] }>(`${url}/api/v1/request?take=10&skip=0&filter=processing&sort=added`, { headers }).catch(() => ({ results: [] })),
           getJson<{ pending?: number; total?: number; processing?: number; available?: number }>(`${url}/api/v1/request/count`, { headers }),
         ]);
-        const pending = list.results.filter((r) => r.status === 1);
-        const out: SeerrRequest[] = [];
-        for (const r of pending) {
-          const kind = r.type ?? r.media?.mediaType ?? 'movie';
-          const d = r.media?.tmdbId ? await details(kind, r.media.tmdbId) : undefined;
-          if (d?.posterPath) rememberArt(`seerr:${r.id}`, `https://image.tmdb.org/t/p/w342${d.posterPath}`);
-          out.push(toRequest(r, d));
-        }
+        const withTitles = async (rows: RawRequest[]) => {
+          const out: SeerrRequest[] = [];
+          for (const r of rows) {
+            const kind = r.type ?? r.media?.mediaType ?? 'movie';
+            const d = r.media?.tmdbId ? await details(kind, r.media.tmdbId) : undefined;
+            if (d?.posterPath) rememberArt(`seerr:${r.id}`, `https://image.tmdb.org/t/p/w342${d.posterPath}`);
+            out.push(toRequest(r, d, web));
+          }
+          return out;
+        };
+        const out = await withTitles(list.results.filter((r) => r.status === 1));
+        const coming = await withTitles(processing.results.filter((r) => r.status === 2));
         pendingIds.clear();
         for (const r of out) pendingIds.add(r.id);
-        return { pending: count.pending ?? out.length, processing: count.processing ?? 0, requests: out };
+        return { pending: count.pending ?? out.length, processing: count.processing ?? coming.length, requests: out, coming };
       },
     },
     async act(id, action) {
