@@ -105,6 +105,19 @@ export function Shell() {
     if (navType !== 'POP') {
       // A new page starts at its top; a sort or filter change stays put.
       if (moved && !location.hash) window.scrollTo(0, 0);
+      // A screen reader hears the new page: focus its heading, once it has rendered,
+      // unless something on the page already took focus.
+      if (moved) {
+        const t = setTimeout(() => {
+          const at = document.activeElement;
+          if (at && at !== document.body && !at.closest('.nav, .topbar, .more-sheet')) return;
+          const h = document.querySelector<HTMLElement>('main h1');
+          if (!h) return;
+          if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+          h.focus({ preventScroll: true });
+        }, 120);
+        return () => clearTimeout(t);
+      }
       return;
     }
     let y = 0;
@@ -113,7 +126,10 @@ export function Shell() {
     } catch {
       /* nothing saved */
     }
-    if (!y) return;
+    if (!y) {
+      window.scrollTo(0, 0);
+      return;
+    }
     let tries = 0;
     const t = setInterval(() => {
       if (document.documentElement.scrollHeight - window.innerHeight >= y - 2 || ++tries > 30) {

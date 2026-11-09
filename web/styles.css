@@ -9634,7 +9634,8 @@ button.ha-act:hover {
   gap: 4px 14px;
   margin: 6px 0 0;
   font-size: 13.5px;
-  color: var(--warn);
+  /* An update waiting is news, not trouble: color stays for trouble. */
+  color: var(--ink-2);
 }
 
 /* Stacks, updates view: Update beside the row it belongs to. */

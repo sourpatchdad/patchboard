@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Fixed: Forward to a page you'd left at its top opened it partway down.
+- A container you stopped from Patchboard is read as "stopped from
+  Patchboard", not as a job that runs on a schedule.
+- Moving to another page puts focus on its heading, so screen readers
+  announce the new page.
+- An update waiting reads in neutral text: color stays for trouble. A
+  paused download's bar is quiet, not amber. Update locks while a start,
+  stop or restart is on its way.
+- Integration setup marks the empty fields when it asks for them. Edit
+  apps names each group's field by its group; the Apps filter has a name
+  and doesn't open the keyboard on a phone. The demo's restarts finish.
+
 - Fixed: opening Patchboard fresh could land partway down the page, at
   where the previous full load was left. Only Back and Forward restore a
   position now.

@@ -101,7 +101,7 @@ export function Apps() {
     <div className="page apps-page">
       <div className="page-head">
         <h1 className="page-title">Apps</h1>
-        {!draft && <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />}
+        {!draft && <input className="field" type="search" placeholder="Filter apps" aria-label="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus={!matchMedia('(pointer: coarse)').matches} />}
       </div>
       {draft ? (
         <div className="arrange-bar" role="toolbar" aria-label="Edit apps" tabIndex={-1}>

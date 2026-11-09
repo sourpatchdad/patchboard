@@ -187,7 +187,7 @@ export function demoContainers(): Container[] {
         labels: name === 'caddy' ? { name: 'Caddy', group: 'Tools', icon: 'caddy.png', href: '#' } : undefined,
         image: IMAGES[name] ?? `lscr.io/linuxserver/${name}:latest`,
         state: 'running',
-        status: acted?.state === 'running' ? `Up ${Date.now() - acted.at < 60_000 ? 'Less than a second' : sinceText(acted.at).replace(/ ago$/, '')}` : `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,
+        status: acted?.state === 'running' ? `Up ${Date.now() - acted.at < 60_000 ? `${Math.max(1, Math.round((Date.now() - acted.at) / 1000))} seconds` : sinceText(acted.at).replace(/ ago$/, '')}` : `Up ${name === 'plex' ? '4 hours' : '6 days'}${healthy ? ' (healthy)' : ''}`,
         health: healthy ? ('healthy' as const) : null,
         // Pulled last night, never recreated: still on the old copy.
         ...(name === 'immich-postgres' ? { staleImage: true } : {}),

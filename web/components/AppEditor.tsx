@@ -226,7 +226,7 @@ export function EditApps({
                 className={`field group-name ${dupes.has(g.name.trim()) || !g.name.trim() ? 'is-bad' : ''}`}
                 value={g.name}
                 maxLength={60}
-                aria-label="Group name"
+                aria-label={`Group name: ${g.name || 'unnamed'}`}
                 onChange={(e) => setGroups(groups.map((x, j) => (j === gi ? { ...x, name: e.target.value } : x)))}
               />
             </span>

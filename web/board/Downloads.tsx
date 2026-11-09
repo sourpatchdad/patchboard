@@ -105,7 +105,7 @@ export function DownloadsWidget() {
                   </HoldButton>
                 </span>
               )}
-              <Meter value={item.progress * 100} level={item.state === 'errored' ? 'crit' : item.state === 'stalled' || item.state === 'paused' ? 'warn' : 'ok'} label={`${item.name}, ${Math.round(item.progress * 100)}%`} />
+              <Meter value={item.progress * 100} level={item.state === 'errored' ? 'crit' : item.state === 'stalled' ? 'warn' : 'ok'} label={`${item.name}, ${Math.round(item.progress * 100)}%`} />
             </li>
           ))}
         </ul>

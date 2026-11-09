@@ -5,7 +5,7 @@
 import { Link } from 'react-router-dom';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { useStore } from '../lib/store.tsx';
-import { checkFor, checkText, containerMap, isExternal, jackState, jackStateText, tapeLabel } from '../lib/services.ts';
+import { checkFor, checkText, containerMap, isExternal, jackState, isParked, jackStateText, tapeLabel } from '../lib/services.ts';
 import { Icon } from './ui.tsx';
 
 export function PatchRow({ names = false }: { names?: boolean }) {
@@ -23,7 +23,8 @@ export function PatchRow({ names = false }: { names?: boolean }) {
             {g.services.map((s) => {
               const ck = checkFor(snap, s.name);
               const state = jackState(s, containers, ck);
-              const label = `${s.name}, ${ck && !ck.ok ? checkText(ck) : jackStateText[state]}${ck?.ok ? `, ${checkText(ck)}` : ''}`;
+              const words = state === 'idle' && isParked(s.container) ? 'stopped from Patchboard' : jackStateText[state];
+              const label = `${s.name}, ${ck && !ck.ok ? checkText(ck) : words}${ck?.ok ? `, ${checkText(ck)}` : ''}`;
               const inner = (
                 <>
                   <span className="jack-socket">

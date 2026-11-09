@@ -53,6 +53,9 @@ export function checkText(ck?: ServiceCheck): string {
  * notes): every light shows them idle, not down. The store keeps it current.
  */
 let parked = new Set<string>();
+/** Stopped from Patchboard, as opposed to a job that runs on a schedule. */
+export const isParked = (name?: string) => !!name && parked.has(name);
+
 export function setParked(alerts: { id: string; subject?: string }[]): void {
   parked = new Set(alerts.filter((a) => a.id.startsWith('ctr-parked-') && a.subject).map((a) => a.subject!));
 }

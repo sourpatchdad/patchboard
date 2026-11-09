@@ -140,6 +140,8 @@ export function IntegrationForm({
               // Opening setup lands on the first thing to fill in.
               autoFocus={idx === setup.fields.findIndex((x) => !x.locked)}
               aria-describedby={`${setup.id}-${f.name}-env`}
+              // Marked when a test or save asked for it and it's still empty.
+              aria-invalid={!!result && !result.ok && result.text.startsWith('Fill in') && !values[f.name] && !f.set ? true : undefined}
               type={f.kind === 'secret' ? 'password' : f.kind === 'url' ? 'url' : 'text'}
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
