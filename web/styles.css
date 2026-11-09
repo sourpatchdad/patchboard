@@ -7092,11 +7092,12 @@ button.ha-act:hover {
 /* Feed, time and order: one row of equal menus under the search. */
 .feeds-selects {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .feeds-selects label {
-  flex: 1;
+  flex: 1 1 96px;
   min-width: 0;
 }
 
@@ -9989,6 +9990,11 @@ a.play:hover .play-title {
 
 @media (max-width: 760px) {
   /* Reading on a phone: categories in one row you swipe, so the articles start higher. */
+  /* The list must not grow to fit the row it scrolls. */
+  .reader-list {
+    min-width: 0;
+  }
+
   .feeds-cats {
     flex-wrap: nowrap;
     overflow-x: auto;

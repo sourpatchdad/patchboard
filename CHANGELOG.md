@@ -28,8 +28,9 @@
 - Logs show each line's time where you are. The app's own timestamp,
   often in UTC or the container's zone, moves to the hover.
 - Customize marks what shows with a tick, and what's hidden fades.
-- Reading's feed, time and order menus share one row; on a phone the
-  categories scroll sideways so the articles start higher.
+- Reading's feed, time and order menus share one row (two on the
+  narrowest screens); on a phone the categories scroll sideways so the
+  articles start higher.
 - The two otter settings say which is which: "Otter beside the name" for
   the header, The otter section for calm screens on this device.
 - Subheadings in panels and drawers stand out from the text under them.
