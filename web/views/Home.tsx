@@ -221,6 +221,10 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   if (!list.length) return null;
   const SHOWN = 3;
   const shown = all ? list : list.slice(0, SHOWN);
+  const hidden = list.slice(SHOWN);
+  const notes = hidden.filter((a) => a.level === 'info').length;
+  const problems = hidden.length - notes;
+  const more = [problems && `${problems} more`, notes && plural(notes, 'note')].filter(Boolean).join(', ');
   return (
     <ul className="head-alerts" aria-label="Needs attention">
       {shown.map((a) => {
@@ -243,7 +247,7 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
       {list.length > SHOWN && (
         <li className="head-alert-more">
           <button type="button" className="text-button" aria-expanded={all} onClick={() => setAll(!all)}>
-            {all ? 'Show fewer' : `${list.length - SHOWN} more`}
+            {all ? 'Show fewer' : more}
           </button>
         </li>
       )}

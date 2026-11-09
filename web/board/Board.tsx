@@ -29,6 +29,7 @@ import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.t
 import { WidgetCtx } from './widget-context.ts';
 import { DownloadsWidget } from './Downloads.tsx';
 import { ListeningWidget, WatchedWidget } from './Media.tsx';
+import { BookmarksWidget, ClocksWidget, ReleasesWidget, RssWidget, SearchWidget } from './Outside.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -805,6 +806,16 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <DownloadsWidget />;
     case 'watched':
       return <WatchedWidget now={now} />;
+    case 'bookmarks':
+      return <BookmarksWidget />;
+    case 'search':
+      return <SearchWidget config={w.config} />;
+    case 'clocks':
+      return <ClocksWidget config={w.config} now={now} />;
+    case 'rss':
+      return <RssWidget board={board} id={w.id} config={w.config} now={now} />;
+    case 'releases':
+      return <ReleasesWidget board={board} id={w.id} config={w.config} now={now} />;
     case 'listening':
       return <ListeningWidget now={now} />;
     case 'container':
@@ -1125,6 +1136,30 @@ function SettingsDrawer({
                 onChange={(e) => set('limit', e.target.value)}
               />
             </label>
+          )}
+          {(o.fields ?? []).map((f) =>
+            f.choices ? (
+              <label key={f.key}>
+                <span>{f.label}</span>
+                <select className="field" value={cfg[f.key] ?? f.choices[0][0]} onChange={(e) => set(f.key, e.target.value)}>
+                  {f.choices.map(([v, label]) => (
+                    <option key={v} value={v}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label key={f.key}>
+                <span>{f.label}</span>
+                {f.multiline ? (
+                  <textarea className="field" rows={4} value={cfg[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
+                ) : (
+                  <input className="field" value={cfg[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
+                )}
+                {f.hint && <small className="ws-hint">{f.hint}</small>}
+              </label>
+            ),
           )}
           {o.days && (
             <div className="ws-row">

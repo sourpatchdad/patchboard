@@ -116,6 +116,13 @@ progress and albums played lately on Audiobookshelf and Navidrome.
 
 ![Calendar, Notes, Books, Watched, Listening and This week on the board](screenshots/household.webp)
 
+**No setup needed:** Bookmarks puts your links on the board, Search sends
+words to the engine you pick, Clocks shows the time where your people are,
+Feeds reads any RSS or Atom feed without a reader app, and Releases follows
+the newest version of the GitHub projects you name.
+
+![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
+
 **Logs:** live from Docker.
 
 ![Logs](screenshots/logs.webp)

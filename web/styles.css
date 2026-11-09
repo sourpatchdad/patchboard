@@ -3908,7 +3908,7 @@ a.vitals:hover .vital-label {
   }
 
   .topbar-end .pill {
-    font-size: 10.5px;
+    font-size: 11px;
     padding: 4px 6px;
   }
 
@@ -6339,7 +6339,7 @@ a.vw:hover {
 }
 
 .ww-hour small {
-  font: 400 10.5px/1 var(--f-mono);
+  font: 400 11px/1 var(--f-mono);
   color: var(--ink-3);
 }
 
@@ -8801,6 +8801,13 @@ button.ha-act:hover {
   pointer-events: none;
 }
 
+/* Text buttons that remove or stop read red before you touch them. */
+.text-button.hold.is-danger:not(.req-quiet),
+.text-button.req-quiet.hold.is-danger:hover,
+.text-button.req-quiet.hold.is-danger:focus-visible {
+  color: var(--crit);
+}
+
 .hold.is-danger .hold-fill {
   background: color-mix(in srgb, var(--crit) 26%, transparent);
 }
@@ -9301,7 +9308,7 @@ button.ha-act:hover {
 .header-weather .weather-text small { color: var(--ink-3); font-size: 11px; }
 .header-weather-chart { min-width: 0; display: grid; gap: 3px; }
 .header-chart-caption,
-.header-hour-labels { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-3); font: 400 10px/1.4 var(--f-mono); }
+.header-hour-labels { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-3); font: 400 11px/1.4 var(--f-mono); }
 .header-weather-chart svg { width: 100%; height: 42px; overflow: visible; }
 .header-temperature { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 .header-rain { fill: var(--accent); opacity: 0.65; }
@@ -9380,7 +9387,7 @@ button.ha-act:hover {
   overflow: auto;
   padding: 16px;
   border: 1px solid var(--line);
-  border-top: 3px solid var(--playback-accent);
+  box-shadow: inset 0 3px 0 var(--playback-accent);
   border-radius: var(--radius-lg);
   background: var(--raised);
   box-shadow: 0 8px 32px color-mix(in srgb, var(--bg) 75%, transparent);
@@ -9750,4 +9757,83 @@ a.play:hover .play-title {
   .play {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Bookmarks: icon and name, as many to a row as fit. */
+.bm-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  color: var(--ink);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.bm span {
+  overflow-wrap: anywhere;
+}
+
+.bm:hover span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--ink-3);
+}
+
+/* Search: one field, the width of its card. */
+.search-widget .field {
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 14px;
+}
+
+/* Clocks: place, time, and the day when it isn't today here. */
+.clock-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clock-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 3ch;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.clock-place {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.clock-time {
+  font: 500 18px/1.2 var(--f-mono);
+  color: var(--head);
+}
+
+.clock-day {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.rss-failed,
+.ws-hint {
+  font-size: 12.5px;
+}
+
+.ws-hint {
+  color: var(--ink-3);
 }

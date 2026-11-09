@@ -464,6 +464,27 @@ export interface MediaServerData extends TautulliData {
   itemPath: string;
 }
 
+/** One entry from an RSS or Atom feed. */
+export interface FeedItem {
+  title: string;
+  link?: string;
+  at: number;
+  /** The feed's own name. */
+  source: string;
+}
+
+/** A GitHub project's newest release. */
+export interface ReleaseInfo {
+  repo: string;
+  version: string;
+  name?: string;
+  at: number;
+  url: string;
+  prerelease?: boolean;
+  /** The project has no releases. */
+  none?: boolean;
+}
+
 export interface ActiveTorrent {
   name: string;
   progress: number;

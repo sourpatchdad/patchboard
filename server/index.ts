@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { latestReleases, readFeeds } from './outside.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isIP } from 'node:net';
 import { request } from './http.ts';
@@ -60,7 +61,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases } from './demo.ts';
 import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
@@ -353,6 +354,26 @@ app.post('/api/logout', (c) => {
 });
 
 app.get('/api/audit', (c) => c.json(listAudit(200)));
+
+// Feeds and Releases widgets: the server reads the addresses saved in the
+// board; the browser names only the board and the widget.
+app.get('/api/rss/:board/:id', async (c) => {
+  const found = getBoard(c.req.param('board'));
+  const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'rss') : undefined;
+  const feeds = w?.config?.feeds?.split('\n').filter(Boolean) ?? [];
+  if (!feeds.length) return c.json({ items: [], failed: [] });
+  if (config.demo) return c.json(demoFeedItems());
+  return c.json(await readFeeds(feeds));
+});
+
+app.get('/api/releases/:board/:id', async (c) => {
+  const found = getBoard(c.req.param('board'));
+  const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'releases') : undefined;
+  const repos = w?.config?.repos?.split('\n').filter(Boolean) ?? [];
+  if (!repos.length) return c.json({ releases: [] });
+  if (config.demo) return c.json({ releases: demoReleases(repos) });
+  return c.json({ releases: await latestReleases(repos) });
+});
 
 // API numbers widgets. The server only ever fetches URLs saved in a board:
 // the browser asks for a widget by board and id, never for a URL.

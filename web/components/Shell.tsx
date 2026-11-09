@@ -10,7 +10,8 @@ import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 
-// On a phone the tab bar holds the first five; Logs and Apps stay one search away.
+// On a phone the tab bar holds five: Reading gives its slot to Apps until
+// Miniflux is set up, and Logs stays one search away.
 // Phone tab bar icons: 24-unit outlines, drawn in the link's color.
 const ICONS: Record<string, string> = {
   '/': 'M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z',
@@ -18,6 +19,7 @@ const ICONS: Record<string, string> = {
   '/stacks': 'M12 3 21 8l-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5',
   '/feeds': 'M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8M6 19h.01',
   '/upcoming': 'M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4',
+  '/apps': 'M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z',
 };
 
 const NAV = [
@@ -98,6 +100,8 @@ export function Shell() {
   }, []);
 
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
+  const reading = !!snap?.sources.miniflux || !!snap?.demo;
+  const onPhone = (to: string, desktop?: boolean) => (to === '/feeds' ? reading : to === '/apps' ? !reading : !desktop);
 
   return (
     <div className="shell">
@@ -114,7 +118,7 @@ export function Shell() {
               key={n.to}
               to={n.to}
               end={n.end}
-              className={({ isActive }) => `nav-link ${n.desktop ? 'nav-desktop' : ''} ${isActive || (n.to === '/' && onBoard) ? 'active' : ''}`}
+              className={({ isActive }) => `nav-link ${onPhone(n.to, n.desktop) ? '' : 'nav-desktop'} ${isActive || (n.to === '/' && onBoard) ? 'active' : ''}`}
             >
               {ICONS[n.to] && (
                 <svg className="nav-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">

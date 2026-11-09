@@ -166,9 +166,6 @@ export function ContainerPage() {
               Open {svc.name}
             </a>
           )}
-          <Link className="text-button" to={`/logs/${name}`}>
-            Full logs
-          </Link>
           {!snap.readOnly &&
             (svc ? (
               <Link className="text-button" to={`/apps?edit=${encodeURIComponent(svc.name)}`} title="Icon, live number, group">
@@ -225,7 +222,7 @@ export function ContainerPage() {
 
         {/* The live logs sit beside the fix, so 2 AM needs no scrolling. */}
         <aside className="detail-side">
-          <Section title="Logs" action={{ label: 'Open full view', to: `/logs/${name}` }} className="side-logs">
+          <Section title="Logs" action={{ label: 'Full logs', to: `/logs/${name}` }} className="side-logs">
             <LogTail name={name} />
           </Section>
           {!calm && details}

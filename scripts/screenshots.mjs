@@ -176,6 +176,20 @@ try {
   await go('/', 1500);
   await shoot(page, 'machines', { fullPage: true });
 
+  // Widgets that need no setup: bookmarks, search, clocks, feeds, releases.
+  await board('PUT', {
+    columns: 3,
+    widgets: [
+      { id: 'search-1', type: 'search', size: 'xl', span: 3 },
+      { id: 'bookmarks', type: 'bookmarks', size: 'm', span: 2 },
+      { id: 'clocks-1', type: 'clocks', size: 's', span: 1, config: { zones: 'Mum=Europe/London\nTokyo=Asia/Tokyo\nSam=America/Los_Angeles' } },
+      { id: 'rss-1', type: 'rss', size: 'm', span: 2, config: { feeds: 'https://example.com/feed.xml\nhttps://example.org/atom.xml' } },
+      { id: 'releases-1', type: 'releases', size: 'm', span: 1, config: { repos: 'immich-app/immich\njellyfin/jellyfin\nsourpatchdad/patchboard' } },
+    ],
+  });
+  await go('/', 1500);
+  await shoot(page, 'everyday');
+
   // The household: calendar, a shared note, books and the house itself.
   await page.evaluate(() =>
     fetch('/api/notes/notes-1', {

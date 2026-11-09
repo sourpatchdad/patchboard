@@ -33,7 +33,7 @@ function encodeURIComponentIfQuery(v: string): string {
   return v;
 }
 
-function blockedAddress(ip: string): boolean {
+export function blockedAddress(ip: string): boolean {
   if (isIP(ip) === 4) {
     const [a, b] = ip.split('.').map(Number);
     return a === 169 && b === 254; // link-local, including cloud metadata 169.254.169.254

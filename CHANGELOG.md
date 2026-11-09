@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Five widgets that need no integration. Bookmarks puts your links on the
+  board; they were only on the Apps page before. Search sends words to
+  DuckDuckGo, Google, Bing, Kagi, Startpage or a site you name. Clocks shows
+  the time in the places you list, with the day when it differs. Feeds
+  reads any RSS or Atom feeds, fetched by the server every 15 minutes
+  through the same address fence as API numbers. Releases shows the newest
+  GitHub release of the projects you follow. Widget settings take these as
+  text, checked when the board is saved.
+- The header's toggle says what it hides: "2 more, 1 note" instead of
+  counting quiet notes as problems.
+- On a phone, Apps takes Reading's tab until Miniflux is set up.
+- Remove, Stop and the other hold-to-confirm text buttons read red before
+  you touch them, so they no longer look like Pause.
+- A container page has one link to its full logs, called Full logs.
+- Stacks counts the same way in every group: "3 running", or "7 of 8
+  running" when something is down.
+- The smallest labels (hourly weather, pills on a phone) grew to 11px.
+
 - Watched, a new widget: what was played lately on Plex, Jellyfin and Emby,
   newest first, with who and when; each opens in its app. Listening, a new
   widget: Audiobookshelf books in progress with how far along, and albums

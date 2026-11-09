@@ -946,3 +946,24 @@ export function demoLogs(
     });
   });
 }
+
+/** Demo Feeds: a few made-up posts from two made-up feeds. */
+export function demoFeedItems(): { items: import('../shared/types.ts').FeedItem[]; failed: string[] } {
+  const now = Date.now();
+  return {
+    items: [
+      { title: 'Self-hosting in 2026: what changed', link: 'https://example.com/a', at: now - 40 * 60_000, source: 'Small Servers' },
+      { title: 'ZFS 2.4 lands with faster scrubs', link: 'https://example.com/b', at: now - 3 * 3600_000, source: 'Disk Pressure' },
+      { title: 'A quieter NAS fan curve', link: 'https://example.com/c', at: now - 9 * 3600_000, source: 'Small Servers' },
+      { title: 'Why I moved my photos off the cloud', link: 'https://example.com/d', at: now - 26 * 3600_000, source: 'Disk Pressure' },
+    ],
+    failed: [],
+  };
+}
+
+/** Demo Releases: plausible versions for whatever projects the widget lists. */
+export function demoReleases(repos: string[]): import('../shared/types.ts').ReleaseInfo[] {
+  const now = Date.now();
+  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.0.0' };
+  return repos.map((repo, i) => ({ repo, version: known[repo] ?? `v1.${(i * 7) % 12}.${i % 5}`, at: now - (i * 2 + 1) * 86_400_000, url: `https://github.com/${repo}/releases` }));
+}

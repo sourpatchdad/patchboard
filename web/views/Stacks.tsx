@@ -128,11 +128,12 @@ export function Stacks() {
         const mem = list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
         const quiet = list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some((c) => snap.updates[c.name]);
         const isOpen = opened.has(project);
+        const running = list.filter((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))).length;
         return (
           <section className={`stack ${quiet ? 'is-quiet' : ''} ${isOpen ? 'is-open' : ''}`} key={project} id={`stack-${project}`}>
             <header className="stack-head">
               <h2>{project}</h2>
-              <span className="section-count">{quiet ? `${list.length} running` : plural(list.length, 'container')}</span>
+              <span className="section-count">{running === list.length ? `${list.length} running` : `${running} of ${list.length} running`}</span>
               {quiet && (
                 <button
                   type="button"

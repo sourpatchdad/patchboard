@@ -5,6 +5,7 @@
 // Runtime code is fine here: no Node or DOM use.
 
 import { parseEntities } from './ha.ts';
+import { engineField, feedsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -40,6 +41,11 @@ export type WidgetType =
   | 'downloads'
   | 'watched'
   | 'listening'
+  | 'bookmarks'
+  | 'search'
+  | 'clocks'
+  | 'rss'
+  | 'releases'
   | 'container'
   | 'json'
   | 'weather';
@@ -147,6 +153,8 @@ export interface WidgetOptions {
   title?: boolean;
   /** Apps: show names under icons, or only on hover. */
   names?: boolean;
+  /** Text settings: feeds, places, projects, a search engine. */
+  fields?: WidgetField[];
 }
 
 type Info = { name: string; about: string; size: WidgetSize; sizes: WidgetSize[]; removable: boolean; multiple: boolean; options: WidgetOptions };
@@ -219,6 +227,11 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   drives: { name: 'Drives', about: "Scrutiny: every drive's SMART verdict, temperature and age.", size: 's', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   proxmox: { name: 'Proxmox', about: 'Proxmox VE: each node and every VM and container, running or stopped.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 1, 40] } },
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  bookmarks: { name: 'Bookmarks', about: 'The links in Edit apps, Bookmarks, or brought over from Homepage, grouped as you keep them.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  search: { name: 'Search', about: 'A search box for DuckDuckGo, Google, Bing, Kagi, Startpage or any site you name. Opens the results in a new tab.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { title: false, fields: [engineField, searchUrlField] } },
+  clocks: { name: 'Clocks', about: 'The time where your people are, with the day when it differs from yours.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [zonesField] } },
+  rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
+  releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
   watched: { name: 'Watched', about: 'What was played lately on Plex, Jellyfin and Emby, newest first, with who watched and when. Each opens in its app.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 15] } },
   listening: { name: 'Listening', about: 'Audiobookshelf books in progress, with how far along, and albums played lately on Navidrome.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 8] } },
   downloads: { name: 'Downloads', about: 'Every unfinished download across your clients, with pause, resume and remove, and what Sonarr and Radarr are stuck on, with Try another release. With this on the board, Right now leaves downloads to it.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 30] } },
@@ -333,6 +346,11 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
   if (st && typeof c.style === 'string' && c.style && st.some(([v]) => v === c.style)) out.style = c.style;
   if (info.options.days && (c.days === '7' || c.days === '14')) out.days = c.days;
   if (info.options.names && c.names === 'show') out.names = 'show';
+  for (const f of info.options.fields ?? []) {
+    if (typeof c[f.key] !== 'string' || !(c[f.key] as string).trim()) continue;
+    const v = f.check(c[f.key] as string);
+    if (v) out[f.key] = v;
+  }
   return out;
 }
 
