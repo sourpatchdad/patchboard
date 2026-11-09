@@ -226,7 +226,7 @@ export function ContainerPage() {
         <div className={`ctr-actions-wrap ${ctr.state === 'running' || ctr.state === 'restarting' ? '' : 'is-stopped'}`}>
           {(() => {
             const update = !snap.readOnly && detail.data?.update?.ok && (
-              <UpdateButton key="update" name={name} busy={upd.job?.status === 'running' || (!!pending && !pending.stuck)} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
+              <UpdateButton key="update" name={name} busy={upd.job?.status === 'running'} locked={!!pending && !pending.stuck} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
             );
             const running = ctr.state === 'running' || ctr.state === 'restarting';
             const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => {

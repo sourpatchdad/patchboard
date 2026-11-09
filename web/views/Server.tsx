@@ -11,7 +11,7 @@ import { useLanding } from '../lib/landing.ts';
 import type { BackupRun, BackupsData, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HourHeatmap } from '../components/Squares.tsx';
-import { Empty, Meter, Section } from '../components/ui.tsx';
+import { Empty, Led, Meter, Section } from '../components/ui.tsx';
 import { useHistory } from '../lib/api.ts';
 import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
@@ -426,6 +426,7 @@ function NasAlerts({ nas, now }: { nas: TruenasData; now: number }) {
         <ul className="nas-alerts">
           {nas.alerts.map((a) => (
             <li key={a.id} data-tone={LEVEL_TONE[a.level] ?? 'info'}>
+              <Led state={LEVEL_TONE[a.level] === 'crit' ? 'crit' : LEVEL_TONE[a.level] === 'warn' ? 'warn' : 'idle'} />
               <span className="nas-level mono">{a.level.toLowerCase()}</span>
               <span className="nas-text">{a.text}</span>
               {a.at && <time>{ago(a.at, now)}</time>}

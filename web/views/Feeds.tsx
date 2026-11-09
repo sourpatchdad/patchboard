@@ -201,8 +201,11 @@ export function Feeds() {
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       if (document.querySelector('.palette')) return;
       const idx = visible.findIndex((x) => x.id === selectedId);
-      if (e.key === 'j') select(visible[Math.min(idx + 1, visible.length - 1)]?.id ?? null);
-      else if (e.key === 'k') select(visible[Math.max(idx - 1, 0)]?.id ?? null);
+      if (e.key === 'j' || e.key === 'k') {
+        select(visible[e.key === 'j' ? Math.min(idx + 1, visible.length - 1) : Math.max(idx - 1, 0)]?.id ?? null);
+        // Focus follows: the next Tab starts in the article, and a screen reader reads its title.
+        setTimeout(() => document.getElementById('reader-title')?.focus(), 30);
+      }
       else if (e.key === 'o' && selected) window.open(selected.url, '_blank', 'noopener');
       else if (e.key === 'u' || (e.key === 'Escape' && selected)) {
         back();
@@ -365,7 +368,7 @@ export function Feeds() {
                 {selected.feed}, {new Date(selected.publishedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
                 {selected.readingTime > 0 && `, ${selected.readingTime} min read`}
               </p>
-              <h1>{selected.title}</h1>
+              <h1 id="reader-title" tabIndex={-1}>{selected.title}</h1>
               <span className="reader-actions">
                 <a className="text-button" href={selected.url} target="_blank" rel="noreferrer">
                   Open original
@@ -448,7 +451,7 @@ function Edition(props: {
     <div className="edition">
       <p className="edition-date">
         {new Date(now).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-        {total != null && <span>, {count(total)} unread</span>}. Press <kbd>j</kbd> to read from the top.
+        {total != null && <span>, {count(total)} unread</span>}.<span className="keys-only"> Press <kbd>j</kbd> to read from the top.</span>
       </p>
       <button type="button" className="edition-lead" data-entry={lead.id} onClick={() => onPick(lead.id)}>
         <Thumb src={lead.image} className="edition-lead-img" />

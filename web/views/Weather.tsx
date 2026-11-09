@@ -4,7 +4,7 @@
 
 import { Link } from 'react-router-dom';
 import type { WeatherData } from '../../shared/types.ts';
-import { Empty, Section } from '../components/ui.tsx';
+import { Empty, Led, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { deg, weatherText } from '../lib/format.ts';
 import { useNow, useSource } from '../lib/store.tsx';
@@ -47,8 +47,10 @@ export function Weather() {
 
       {(w.alerts ?? []).map((a) => (
         <div className={`weather-alert sev-${a.severity.toLowerCase()}`} key={a.headline}>
+          <Led state={/extreme|severe/i.test(a.severity) ? 'crit' : 'warn'} />
           <strong>{a.event}</strong>
-          <span>{a.headline}</span>
+          {/* Services often start the headline with the event's own name: say it once. */}
+          <span>{withoutEvent(a.headline ?? '', a.event)}</span>
           {a.until && !/\buntil\b/i.test(a.headline ?? '') && <time>until {new Date(a.until).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</time>}
         </div>
       ))}
@@ -167,4 +169,11 @@ export function Weather() {
       </Section>
     </div>
   );
+}
+
+/** "Wind Advisory until Tuesday" under a "Wind Advisory" label reads "Until Tuesday". */
+function withoutEvent(headline: string, event: string): string {
+  if (!event || !headline.toLowerCase().startsWith(event.toLowerCase())) return headline;
+  const rest = headline.slice(event.length).replace(/^[\s,:.-]+/, '');
+  return rest ? rest[0].toUpperCase() + rest.slice(1) : headline;
 }

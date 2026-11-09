@@ -585,14 +585,22 @@ function demoSab(): QbitData {
 
 /** Demo torrents paused or removed one at a time, and the alternative speed limits. */
 const demoItemPaused = new Set<string>();
+/** The Bear's progress when it was paused, so it holds still instead of running on. */
+let bearHeld: number | null = null;
+const bearNow = () => (Date.now() / 1000 / 600) % 1;
 const demoItemRemoved = new Set<string>();
 let demoTurtle = false;
 export function demoItemControl(id: DownloadClientId): ((item: string, action: 'pause' | 'resume' | 'remove') => Promise<void>) | undefined {
   if (id !== 'qbit') return undefined;
   return async (item, action) => {
     if (action === 'remove') demoItemRemoved.add(item);
-    else if (action === 'pause') demoItemPaused.add(item);
-    else demoItemPaused.delete(item);
+    else if (action === 'pause') {
+      demoItemPaused.add(item);
+      if (item === 'a1b2') bearHeld = bearNow();
+    } else {
+      demoItemPaused.delete(item);
+      if (item === 'a1b2') bearHeld = null;
+    }
   };
 }
 export function demoAltSpeed(id: DownloadClientId): (() => Promise<void>) | undefined {
@@ -611,7 +619,7 @@ function demoQbit(): QbitData {
   const s1 = run('a1b2') ? jitter(28e6, 6e6) * slow : 0;
   const s2 = run('c3d4') ? jitter(9e6, 3e6) * slow : 0;
   const items: QueueItem[] = [
-    { id: 'a1b2', name: 'The.Bear.S04E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, speed: s1, etaSec: s1 ? 340 : -1, state: run('a1b2') ? 'downloading' : 'paused' },
+    { id: 'a1b2', name: 'The.Bear.S04E04.1080p.WEB.h264', progress: bearHeld ?? bearNow(), speed: s1, etaSec: s1 ? 340 : -1, state: run('a1b2') ? 'downloading' : 'paused' },
     { id: 'c3d4', name: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: s2 ? 2900 : -1, state: run('c3d4') ? 'downloading' : 'paused' },
     { id: 'e5f6', name: 'Slow.Horses.S05E02.1080p.ATVP.WEB-DL', progress: 0.62, speed: 0, etaSec: -1, state: demoItemPaused.has('e5f6') ? 'paused' : 'stalled' },
   ].filter((i) => !demoItemRemoved.has(i.id)) as QueueItem[];
@@ -622,14 +630,11 @@ function demoQbit(): QbitData {
     paused,
     down: s1 + s2,
     up: jitter(2.4e6, 0.8e6),
-    downloading: paused ? 0 : 2,
+    downloading: items.filter((i) => i.state === 'downloading').length,
     seeding: paused ? 0 : 41,
     stalled: 1,
     errored: [],
-    active: [
-      { name: 'The.Bear.S04E04.1080p.WEB.h264', progress: (Date.now() / 1000 / 600) % 1, speed: s1, etaSec: 340 },
-      { name: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: 2900 },
-    ],
+    active: items.filter((i) => i.state === 'downloading').map(({ name, progress, speed, etaSec }) => ({ name, progress, speed, etaSec })),
   };
 }
 

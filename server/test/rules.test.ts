@@ -9,6 +9,7 @@ import { auditCatalog, guessFromImage } from '../catalog-audit.ts';
 import { mergeCatalog, pickLabels } from '../labels.ts';
 import { DEFAULT_BOARD, validateBoard } from '../../shared/board.ts';
 import { computeAlerts, stoppedDetail } from '../alerts.ts';
+import { kvSet } from '../db.ts';
 import { normalizeImage, pendingUpdates, recordDiunNotice, settleUpdates } from '../updates.ts';
 
 const ctr = (name: string, over: Partial<Container> = {}): Container => ({
@@ -40,6 +41,20 @@ test('a stopped container is critical; expectStopped ones are not', () => {
   assert.deepEqual(alerts.map((a) => a.id), ['ctr-down-unpackerr']);
   assert.equal(alerts[0].level, 'critical');
   assert.equal(alerts[0].href, '/c/unpackerr');
+});
+
+test('a stop from Patchboard is a note at once, not after the grace for unexplained stops', () => {
+  const now = Date.now();
+  kvSet('parked', ['sonarr']);
+  kvSet('container-track', { states: {}, images: {}, pending: { sonarr: { at: now - 5_000, status: 'Up 2 days' }, radarr: { at: now - 5_000, status: 'Up 2 days' } } });
+  try {
+    const alerts = computeAlerts(sources({ docker: { containers: [down('sonarr', { status: 'Exited (0) 5 seconds ago' }), down('radarr')] } }), catalog(), {}, now);
+    // Sonarr was stopped here: a note now. Radarr stopped by itself moments ago: still settling.
+    assert.deepEqual(alerts.map((a) => a.id), ['ctr-parked-sonarr']);
+  } finally {
+    kvSet('parked', null);
+    kvSet('container-track', null);
+  }
 });
 
 test('root-cause folding: dependents fold under the container they depend on', () => {

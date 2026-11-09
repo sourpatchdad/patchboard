@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+- Container page: Update stays labeled Update while a start, stop or
+  restart runs, instead of claiming to update.
+- Stopping a container from Patchboard turns its light dark at once, not
+  red for two minutes first. Changes keeps a stop red only while the
+  container is still unexplained down.
+- Problems first, in Logs and Stacks, puts stopped containers after the
+  ones in trouble and before the healthy rest. A container an alert
+  names (a camera offline) shows the alert in Logs, not its uptime. A
+  scheduled job that finished is quiet in Logs too, as on Stacks.
+- Integration setup: a missing address or key is announced to screen
+  readers right under the fields, and only required fields are marked.
+  Save is the primary button; the row's Settings link no longer turns
+  into a second Close.
+- Reading: `j` and `k` move focus to the article's title. Phones no longer
+  show the keyboard hint.
+- Alerts in Needs attention, the header, Weather and TrueNAS wear the
+  status light instead of a colored side stripe. The runbook and update
+  panel sit in a thin frame.
+- One control scale: buttons and Settings choices at 36 pixels, sort and
+  filter rows at 30, every text action at 14px. Buttons in a row match
+  in height, and links follow one rule: underlined in a sentence, plain
+  on their own.
+- Spacing: an alert's detail sits with its title; the phone loses the
+  empty band under the app groups; download actions sit with their own
+  row; theme cards line up; integration statuses end on one edge.
+- Arrange board on a touch screen: 44-pixel controls, with Remove apart
+  from Settings. Small links (the header date, breadcrumbs) get a full
+  44-pixel touch area.
+- Weather: the alert says its name once, and the day length sits under
+  the sunset. Pale icons in light mode read darker. Edit apps tiles show
+  their source in full. Settings checkboxes match the theme.
+- Short screens (200% zoom, a landscape phone): the top bar scrolls away.
+- Closing Arrange board returns focus to its button only if you haven't
+  moved it already.
+- Demo: a paused torrent keeps its progress and leaves the count.
 - Roll back after a good update too: the update panel offers the previous
   image, and once dismissed a line under the container's state keeps the
   way back. The demo runs rollbacks.
@@ -12,7 +47,6 @@
   and says where it went.
 - Add widget sorts its list under Everyday, Media, Server, and House and
   network.
-
 - A link to part of a page (a Server stat, a setting) marks the section's
   heading and rule in the accent until you move on, instead of a glowing
   ring that faded out.

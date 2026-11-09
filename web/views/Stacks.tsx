@@ -17,7 +17,7 @@ import { RowUpdate } from '../components/Updater.tsx';
 
 const LOOSE = 'Standalone';
 type SortKey = 'problems' | 'name' | 'cpu' | 'memory';
-const rank: Record<JackState, number> = { down: 0, warn: 1, up: 2, idle: 3, none: 4 };
+const rank: Record<JackState, number> = { down: 0, warn: 1, idle: 2, up: 3, none: 4 };
 
 export function Stacks() {
   const { snap } = useStore();

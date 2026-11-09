@@ -12,7 +12,8 @@ import { ctrState, type JackState, serviceFor, shortStatus } from '../lib/servic
 import { useUrlChoice } from '../lib/url.ts';
 
 type ListSort = 'problems' | 'name' | 'recent';
-const RANK: Record<JackState, number> = { down: 0, warn: 1, up: 2, idle: 3, none: 4 };
+// Stopped sits after trouble and before the healthy rest: worth seeing, not alarming.
+const RANK: Record<JackState, number> = { down: 0, warn: 1, idle: 2, up: 3, none: 4 };
 
 export function Logs() {
   const { name } = useParams();
@@ -48,10 +49,17 @@ export function Logs() {
   // camera offline), not only what Docker reports.
   // An alert names its app ("Paperless") or its source ("frigate" for a camera).
   const flagged = new Map<string, string>();
+  /** The alert's own words, shown in place of the uptime it contradicts. */
+  const why = new Map<string, string>();
   for (const x of snap?.alerts ?? []) {
     if (x.level === 'info') continue;
-    for (const k of [x.subject, x.source]) if (k && k !== 'docker' && !flagged.has(k.toLowerCase())) flagged.set(k.toLowerCase(), x.level);
+    for (const k of [x.subject, x.source])
+      if (k && k !== 'docker' && !flagged.has(k.toLowerCase())) {
+        flagged.set(k.toLowerCase(), x.level);
+        why.set(k.toLowerCase(), x.title);
+      }
   }
+  const reason = (c: (typeof containers)[number]) => why.get(c.name.toLowerCase()) ?? why.get((serviceFor(snap, c.name)?.name ?? '').toLowerCase());
   // Stopped on purpose from Patchboard: neutral, as Needs attention has it.
   const parked = new Set((snap?.alerts ?? []).filter((x) => x.id.startsWith('ctr-parked-')).map((x) => x.subject));
   // Also right after a stop, before Needs attention has settled on it.
@@ -114,14 +122,15 @@ export function Logs() {
           {listed.map((c) => (
             <li key={c.name}>
               <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={(() => {
-                if (parked.has(c.name)) return 'idle';
+                // Stopped on purpose, or a scheduled job that finished: quiet, as on Stacks and in Changes.
+                if (parked.has(c.name) || stateOf(c) === 'idle') return 'idle';
                 if (c.state !== 'running') return 'down';
                 const f = flagged.get(c.name.toLowerCase()) ?? flagged.get((serviceFor(snap, c.name)?.name ?? '').toLowerCase());
                 return f === 'critical' ? 'down' : f || c.health === 'unhealthy' ? 'warn' : 'up';
               })()}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
-                <span className="ctr-status" title={c.status}>{c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
+                <span className="ctr-status" title={c.status}>{c.state === 'running' && reason(c) ? reason(c) : c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
               </Link>
             </li>
           ))}

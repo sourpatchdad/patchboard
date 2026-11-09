@@ -101,6 +101,7 @@ export function IntegrationForm({
   }
 
   const editable = setup.fields.some((f) => !f.locked);
+  const missing = (f: (typeof setup.fields)[number]) => !!result && !result.ok && result.text.startsWith('Fill in') && !!f.required && !values[f.name] && !f.set;
   const disabled = readOnly || demo;
 
   return (
@@ -139,9 +140,9 @@ export function IntegrationForm({
               className="field"
               // Opening setup lands on the first thing to fill in.
               autoFocus={idx === setup.fields.findIndex((x) => !x.locked)}
-              aria-describedby={`${setup.id}-${f.name}-env`}
-              // Marked when a test or save asked for it and it's still empty.
-              aria-invalid={!!result && !result.ok && result.text.startsWith('Fill in') && !values[f.name] && !f.set ? true : undefined}
+              aria-describedby={missing(f) ? `${setup.id}-result ${setup.id}-${f.name}-env` : `${setup.id}-${f.name}-env`}
+              // Marked when a test or save asked for it and it's still empty: required fields only.
+              aria-invalid={missing(f) || undefined}
               type={f.kind === 'secret' ? 'password' : f.kind === 'url' ? 'url' : 'text'}
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
@@ -154,9 +155,9 @@ export function IntegrationForm({
           <code className="setup-name" id={`${setup.id}-${f.name}-env`}>{f.name}</code>
         </label>
       ))}
-      {integration.where && <p className="settings-note">{integration.where}</p>}
+      {/* Right under the fields it's about; a problem is announced at once. */}
       {result && (
-        <p key={result.text} role="status" className={`setup-result ${result.ok ? 'ok-text is-ok' : 'crit-text is-bad'}`}>
+        <p key={result.text} id={`${setup.id}-result`} role={result.ok ? 'status' : 'alert'} className={`setup-result ${result.ok ? 'ok-text is-ok' : 'crit-text is-bad'}`}>
           {result.ok && (
             <svg className="check-draw" viewBox="0 0 16 16" width="15" height="15" aria-hidden>
               <path d="M3 8.5l3.2 3L13 4.5" />
@@ -165,13 +166,14 @@ export function IntegrationForm({
           {result.text}
         </p>
       )}
+      {integration.where && <p className="settings-note">{integration.where}</p>}
       {demo && <p className="settings-note">Demo mode: Test works, Save doesn't.</p>}
       <div className="setup-actions">
         <button type="button" className="button button-quiet setup-test" disabled={!!busy || readOnly} onClick={() => void test()}>
           {busy === 'test' ? 'Testing' : 'Test connection'}
         </button>
         {editable && (
-          <button type="submit" className="button" disabled={!!busy || disabled}>
+          <button type="submit" className="button board-save" disabled={!!busy || disabled}>
             {busy === 'save' ? 'Saving' : 'Save'}
           </button>
         )}

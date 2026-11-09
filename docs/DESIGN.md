@@ -72,6 +72,10 @@ one click.
   Dragging assigns a starting column and relative vertical position, so
   neighboring columns stay stable; narrower screens clamp the column.
   Dotted editing outlines surround card content and leave the gutters clear.
+- **Two control sizes.** Buttons and Settings choices are 36 pixels tall;
+  sort and filter rows inside a list are 30. Every text action (Details,
+  Pause, Search, Arrange board) is 14px. A link inside a sentence is
+  underlined; a name or action on its own isn't, until you hover it.
 - **Keyboard access.** Board drawers contain focus, Escape closes them,
   and focus returns to the opener. The background is inert while a drawer
   is open. Skip to content bypasses the navigation. Each app group is one
@@ -120,8 +124,11 @@ amber means stale, red means down and glows, and a dark socket means idle.
 Every board widget wears one before its name: its integration's health, or
 for a widget built from several, whether Patchboard itself is live, so a
 dropped connection turns the whole board amber at once. Right now, Changes,
-Logs and a container's state line use the same light at list size. Color
-still means trouble; only the top bar's Live light is green.
+Logs, a container's state line and every alert (Needs attention, weather,
+TrueNAS) use the same light at list size, in place of a colored stripe. A
+stop stays red only while it's unexplained: a container that runs again, a
+scheduled job, or one you stopped from Patchboard goes quiet. Color still
+means trouble; only the top bar's Live light is green.
 
 ## The otter
 

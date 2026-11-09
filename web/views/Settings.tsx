@@ -887,8 +887,9 @@ function Integrations() {
             {locked && st.on && <small> From the environment</small>}
           </span>
           {su ? (
-            <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={`${open === i.id ? 'Close' : st.on ? 'Settings for' : 'Set up'} ${i.name}`} onClick={() => setOpen(open === i.id ? null : i.id)}>
-              {open === i.id ? 'Close' : st.on ? 'Settings' : 'Set up'}
+            <button type="button" className="text-button" aria-expanded={open === i.id} aria-label={`${st.on ? 'Settings for' : 'Set up'} ${i.name}`} onClick={() => setOpen(open === i.id ? null : i.id)}>
+              {/* The form below has Cancel; this stays its name and only shows it's open. */}
+              {st.on ? 'Settings' : 'Set up'}
             </button>
           ) : (
             st.on && <span className="integration-slot" aria-hidden />

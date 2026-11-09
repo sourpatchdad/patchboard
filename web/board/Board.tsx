@@ -444,11 +444,11 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               {tools ? 'Fewer tools' : 'Tools'}
             </button>
             {dirty ? (
-              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''), setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50))}>
+              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''), backToArrange())}>
                 Discard changes
               </HoldButton>
             ) : (
-              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''), setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50))}>
+              <button type="button" className="text-button" onClick={() => (setDraft(null), setNotice(''), backToArrange())}>
                 Cancel
               </button>
             )}
@@ -461,7 +461,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
                 else {
                   setDraft(null);
                   // Saved: focus goes back to where arranging started.
-                  setTimeout(() => document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus(), 50);
+                  backToArrange();
                 }
               }}
             >
@@ -922,6 +922,19 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
 }
 
 /** The server at a glance, each number with its last 24 hours, each leading to its own section. */
+/**
+ * After Arrange closes, focus goes back to its button: the controls it was on
+ * are gone. Only if focus is still nowhere, so a key pressed meanwhile (Ctrl K,
+ * Skip to content) keeps where it went.
+ */
+function backToArrange(): void {
+  setTimeout(() => {
+    const at = document.activeElement;
+    if (at && at !== document.body && at.isConnected) return;
+    document.querySelector<HTMLElement>('.board-foot .board-customize')?.focus();
+  }, 50);
+}
+
 export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
@@ -935,13 +948,13 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
   return (
     <Section title="Server" action={{ label: 'Details', to: '/server' }} className="vitals-widget">
       <div className="vw-grid">
-        <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it">
+        <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it" aria-label={`CPU ${pct(sys.cpuPct)}`}>
           <Roll className="vw-num" value={pct(sys.cpuPct)} />
           <span className="vw-label">CPU</span>
           <Spark data={h.cpu} max={100} height={compact ? 16 : 22} label="CPU, last 24 hours" />
         </Link>
         {m && (
-          <Link to="/server#resources" className="vw" title="What memory goes to">
+          <Link to="/server#resources" className="vw" title="What memory goes to" aria-label={`Memory in use ${size(used)}`}>
             <Roll className="vw-num" value={size(used)} />
             <span className="vw-label">Memory in use</span>
             <Split
@@ -955,7 +968,7 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
           </Link>
         )}
         {storage != null && (
-          <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots">
+          <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots" aria-label={`Storage${pool ? ` on ${pool.name}` : ''} ${Math.round(storage)}% full`}>
             <Roll className="vw-num" value={`${Math.round(storage)}%`} />
             <span className="vw-label" title={pool ? `Storage on ${pool.name}` : 'Storage'}>Storage{pool ? ` on ${pool.name}` : ''}</span>
             <Meter label={pool ? `Storage used on ${pool.name}` : 'Storage used'} value={storage} level={storageLevel(storage, limits)} />

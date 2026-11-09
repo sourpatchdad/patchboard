@@ -19,6 +19,15 @@
   --radius: 6px;
   --radius-lg: 10px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Two control sizes. Regular: buttons and Settings choices. Small: sort and
+     filter rows that sit inside a list. Text actions: in a card's header or a
+     row, and in running text. */
+  --ctl-h: 36px;
+  --ctl-fs: 14px;
+  --ctl-sm-h: 30px;
+  --ctl-sm-fs: 13px;
+  --act-fs: 14px;
 }
 
 /* ---------- Graphite (default): plain dark, one accent ---------- */
@@ -270,6 +279,21 @@ time,
 
 .ident {
   color: var(--head);
+}
+
+/* Links: inside a sentence they're underlined; a name or an action standing
+   on its own isn't, and underlines on hover. */
+a.ident,
+.dl-client > a {
+  color: var(--head);
+  text-decoration: none;
+}
+
+a.ident:hover,
+.dl-client > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--ink-3);
 }
 
 .ep {
@@ -528,6 +552,11 @@ time,
   margin-bottom: 8px;
 }
 
+.weather-page .page-head {
+  align-items: baseline;
+  gap: 12px;
+}
+
 .page-head .field {
   margin-left: auto;
   width: min(280px, 50%);
@@ -659,22 +688,10 @@ time,
 .head-alert > span {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  padding-right: 12px;
-  border-right: 2px solid var(--warn);
+  gap: 1px 8px;
   color: var(--ink-2);
   text-decoration: none;
   text-align: right;
-}
-
-.head-alert.alert-critical > a,
-.head-alert.alert-critical > span {
-  border-right-color: var(--crit);
-}
-
-.head-alert.alert-info > a,
-.head-alert.alert-info > span {
-  border-right-color: transparent;
 }
 
 .head-alert.alert-info .head-alert-title {
@@ -724,9 +741,6 @@ h2.status-line {
 
   .head-alert > a,
   .head-alert > span {
-    padding: 0 0 0 12px;
-    border-right: none;
-    border-left: 2px solid var(--warn);
     text-align: left;
   }
 
@@ -933,7 +947,7 @@ a.jack:focus-visible {
 /* Links: text color with an accent rule, as on nbnstack.com. */
 .section-action {
   margin-left: auto;
-  font-size: 14px;
+  font-size: var(--act-fs);
   font-weight: 500;
   color: var(--accent);
   text-decoration: none;
@@ -963,25 +977,37 @@ a.jack:focus-visible {
 .alert > a,
 .alert > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 16px;
-  row-gap: 3px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 2px;
   padding: 12px 16px;
-  border-left: 2px solid var(--crit);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: var(--radius);
   background: var(--raised);
   text-decoration: none;
 }
 
-.alert-warn > a,
-.alert-warn > div {
-  border-left-color: var(--warn);
+/* The light sits on the title's line; the detail lines up under the title. */
+.alert .led,
+.head-alert .led {
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+}
+
+/* The card's grid centers the light on the title's first line; the header's flex row sits it on the baseline. */
+.alert .led {
+  align-self: start;
+  margin-top: 7px;
+}
+
+.head-alert .led {
+  align-self: baseline;
+  transform: translateY(1px);
 }
 
 /* Only the Needs attention card: header lines share the class, not the padding. */
 .alerts .alert-info > a,
 .alerts .alert-info > div {
-  border-left-color: var(--line);
   background: transparent;
   padding-top: 8px;
   padding-bottom: 8px;
@@ -1003,14 +1029,14 @@ a.jack:focus-visible {
 }
 
 .alert-detail {
-  grid-column: 1;
+  grid-column: 2;
   color: var(--ink-3);
   font-size: 14px;
   overflow-wrap: anywhere;
 }
 
 .alert-since {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   font: 400 12px/1.6 var(--f-mono);
   color: var(--ink-3);
@@ -1186,7 +1212,6 @@ a.jack:focus-visible {
 
 .now-action {
   margin-left: auto;
-  font-size: 13.5px;
 }
 
 .now-error {
@@ -1347,21 +1372,8 @@ a.jack:focus-visible {
 
 .change-text::before {
   content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
   margin-right: 11px;
-  vertical-align: 2px;
-  background: var(--quiet);
-}
-
-.change-stopped .change-text::before {
-  background: var(--crit);
-}
-
-.change-unhealthy .change-text::before {
-  background: var(--warn);
+  vertical-align: -1px;
 }
 
 .changes time {
@@ -1607,7 +1619,7 @@ a.jack:focus-visible {
   padding: 0;
   cursor: pointer;
   color: var(--accent);
-  font: 500 14.5px/1.3 var(--f-body);
+  font: 500 var(--act-fs)/1.3 var(--f-body);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1618,16 +1630,23 @@ a.jack:focus-visible {
   text-decoration-thickness: 1px;
 }
 
-.toggle {
+/* A checkbox and its words: one style everywhere, themed, with room between. */
+.toggle,
+.check {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--ink-2);
+  gap: 8px;
+  min-height: var(--ctl-sm-h);
+  font-size: var(--ctl-fs);
+  color: var(--ink);
   cursor: pointer;
 }
 
-.toggle input {
+input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
   accent-color: var(--accent);
 }
 
@@ -1639,12 +1658,13 @@ a.jack:focus-visible {
 }
 
 .chip {
-  padding: 4px 11px;
+  min-height: var(--ctl-sm-h);
+  padding: 0 11px;
   border-radius: 99px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink-3);
-  font: 400 12.5px/1.4 var(--f-mono);
+  font: 400 var(--ctl-sm-fs)/1.2 var(--f-mono);
   cursor: pointer;
 }
 
@@ -2384,12 +2404,15 @@ a.app:hover {
 .button {
   display: inline-flex;
   align-items: center;
-  padding: 7px 14px;
+  justify-content: center;
+  min-height: var(--ctl-h);
+  padding: 0 14px;
+  line-height: 1.2;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--raised);
   color: var(--head);
-  font-size: 14.5px;
+  font-size: var(--ctl-fs);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
@@ -2825,10 +2848,11 @@ a.vitals:hover .vital-label {
   border-color: var(--ink-3);
 }
 
-/* When something is wrong, the runbook leads, with the same rule as an alert. */
+/* When something is wrong, the runbook leads, framed in the trouble color. */
 .runbook-urgent .rb {
-  border-left: 2px solid var(--crit);
-  padding-left: 16px;
+  border: 1px solid color-mix(in srgb, var(--crit) 45%, var(--line));
+  border-radius: var(--radius);
+  padding: 14px 16px;
 }
 
 /* ---------- Stacks ---------- */
@@ -3055,19 +3079,17 @@ a.vitals:hover .vital-label {
 
 .nas-alerts li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 14px;
-  padding: 10px 0 10px 14px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  padding: 10px 0;
   border-bottom: 1px solid var(--line-soft);
-  border-left: 2px solid var(--line);
 }
 
-.nas-alerts li[data-tone='warn'] {
-  border-left-color: var(--warn);
-}
-
-.nas-alerts li[data-tone='crit'] {
-  border-left-color: var(--crit);
+.nas-alerts .led {
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
 }
 
 .nas-level {
@@ -3076,13 +3098,13 @@ a.vitals:hover .vital-label {
 }
 
 .nas-text {
-  grid-column: 1;
+  grid-column: 2;
   font-size: 14px;
   color: var(--ink);
 }
 
 .nas-alerts time {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   color: var(--ink-3);
 }
@@ -3382,6 +3404,8 @@ a.vitals:hover .vital-label {
 
 .theme-card {
   display: grid;
+  /* A taller neighbor (a two-line note) never pushes this card's content down. */
+  align-content: start;
   gap: 10px;
   width: 220px;
   padding: 12px;
@@ -3433,7 +3457,10 @@ a.vitals:hover .vital-label {
 }
 
 .seg button {
-  padding: 7px 14px;
+  min-height: var(--ctl-h);
+  padding: 0 14px;
+  font-size: var(--ctl-fs);
+  line-height: 1.2;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--raised);
@@ -3581,8 +3608,6 @@ a.vitals:hover .vital-label {
 }
 
 .button-quiet {
-  padding: 6px 12px;
-  font-size: 14px;
   background: transparent;
   color: var(--ink-2);
   cursor: pointer;
@@ -3708,16 +3733,17 @@ a.vitals:hover .vital-label {
 }
 
 .update-panel {
-  border-left: 2px solid var(--accent);
-  padding-left: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: var(--radius);
+  padding: 14px 18px;
 }
 
 .update-panel.is-failed {
-  border-left-color: var(--crit);
+  border-color: color-mix(in srgb, var(--crit) 45%, var(--line));
 }
 
 .update-panel.is-done {
-  border-left-color: var(--line);
+  border-color: var(--line);
 }
 
 .update-summary {
@@ -4477,8 +4503,9 @@ a.vitals:hover .vital-label {
 }
 
 .sort-seg button {
-  font-size: 13.5px;
-  padding: 5px 11px;
+  min-height: var(--ctl-sm-h);
+  font-size: var(--ctl-sm-fs);
+  padding: 0 11px;
 }
 
 /* Full pages wrap long titles; Home's compact agenda keeps one line. */
@@ -4576,7 +4603,6 @@ a.vitals:hover .vital-label {
 }
 
 .board-customize {
-  font-size: 13.5px;
   color: var(--ink-3);
 }
 
@@ -4712,6 +4738,7 @@ a.vitals:hover .vital-label {
 .cell-sizes button,
 .cell-btn {
   min-width: 28px;
+  min-height: 28px;
   padding: 3px 6px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -5134,8 +5161,9 @@ a.jw-title:hover {
 
 .seg-small button {
   flex: 1 1 auto;
-  font-size: 12.5px;
-  padding: 4px 8px;
+  min-height: var(--ctl-sm-h);
+  font-size: var(--ctl-sm-fs);
+  padding: 0 10px;
   white-space: nowrap;
 }
 
@@ -6003,14 +6031,19 @@ a.vw:hover {
   padding: 12px 16px;
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--warn) 12%, var(--bg));
-  box-shadow: inset 3px 0 0 var(--warn);
   color: var(--ink);
+}
+
+.weather-alert .led {
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
 }
 
 .weather-alert.sev-extreme,
 .weather-alert.sev-severe {
   background: color-mix(in srgb, var(--crit) 12%, var(--bg));
-  box-shadow: inset 3px 0 0 var(--crit);
 }
 
 .weather-alert time {
@@ -6067,8 +6100,10 @@ a.vw:hover {
   color: var(--head);
 }
 
+/* Day length: its own line under the sunset, never wrapped beside it. */
 .weather-facts small {
-  margin-left: 6px;
+  display: block;
+  margin-top: 2px;
   font: 400 12.5px var(--f-body);
   color: var(--ink-3);
 }
@@ -6290,11 +6325,6 @@ a.vw:hover {
   display: flex;
   flex-wrap: wrap;
   margin: 4px 0 6px;
-}
-
-.settings-tabs button {
-  font-size: 14px;
-  padding: 7px 14px;
 }
 
 /* ---------- Weather widget ---------- */
@@ -8139,7 +8169,8 @@ button.ha-act:hover {
 
 .integration-end .text-button,
 .integration-slot {
-  min-width: 4.2em;
+  /* The same width with or without a link, so every status ends on one edge. */
+  flex: 0 0 4.5rem;
   text-align: right;
 }
 
@@ -8273,6 +8304,11 @@ button.ha-act:hover {
 .setup-result {
   margin: 0;
   font-size: 14px;
+}
+
+/* Notes in the form follow the grid's gap, not their own page margins. */
+.setup-form > .settings-note {
+  margin: 0;
 }
 
 .setup-actions {
@@ -8428,7 +8464,8 @@ button.ha-act:hover {
   .crumbs a::after {
     content: '';
     position: absolute;
-    inset: -12px -8px;
+    /* 16px text plus 14 each way makes 44; short links grow sideways to match. */
+    inset: -14px -11px;
   }
 
   /* Stacked alert links share the gap between them instead of overlapping. */
@@ -9251,7 +9288,9 @@ button.ha-act:hover {
 .head-alert-detail {
   display: block;
   flex-basis: 100%;
-  margin-top: 2px;
+  margin-top: 0;
+  /* Under the title, past the light. */
+  padding-left: 18px;
   font-size: 12.5px;
   font-weight: 400;
   line-height: 1.35;
@@ -9312,14 +9351,7 @@ button.ha-act:hover {
 .home-header .head-alert > span {
   justify-content: flex-start;
   text-align: left;
-  border-right: 0;
-  border-left: 2px solid var(--warn);
-  padding: 0 0 0 10px;
 }
-.home-header .head-alert.alert-critical > a,
-.home-header .head-alert.alert-critical > span { border-left-color: var(--crit); }
-.home-header .head-alert.alert-info > a,
-.home-header .head-alert.alert-info > span { border-left-color: transparent; }
 .home-header .overnight { text-align: left; line-height: 1.4; margin-top: 0; }
 .home-header .masthead-time { align-items: flex-end; gap: 6px; padding-left: 20px; border-left: 1px solid var(--line-soft); }
 .home-header .clock { font-size: 48px; line-height: 1; white-space: nowrap; }
@@ -9372,7 +9404,7 @@ button.ha-act:hover {
   .home-header .masthead-status { flex-basis: 100%; align-items: flex-start; gap: 12px; }
   .home-header .status-line { font-size: 20px; }
   .home-header.status-large .status-line { font-size: 23px; }
-  .home-header .head-alerts { display: grid; font-size: 13px; }
+  .home-header .head-alerts { display: grid; gap: 10px; font-size: 13px; }
   .home-header .status-mascot { max-width: 64px; max-height: 64px; }
   .home-header .status-mascot img { width: 100%; height: 100%; }
   .home-header .masthead-time { flex-direction: row; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-left: 0; border-left: 0; }
@@ -9483,7 +9515,7 @@ button.ha-act:hover {
 .header-board-vitals .section { height: 100%; margin-bottom: 0; padding: 8px 16px 10px; }
 .header-board-vitals .section-head { padding-bottom: 6px; }
 .header-board-vitals .section-head h2 { font-size: 16px; }
-.header-board-vitals .section-action { font-size: 12px; }
+
 .header-board-vitals .vw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: 8px; gap: 16px; }
 .header-board-vitals .vw { min-width: 0; }
 .header-board-vitals .vw-label { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -9507,7 +9539,7 @@ button.ha-act:hover {
 .header-options-details { margin-block: 16px; }
 .header-options-details > summary { cursor: pointer; color: var(--ink-2); }
 .header-options-details .header-options { margin-top: 16px; }
-.board-header-settings { margin-right: auto; color: var(--ink-3); font-size: 13px; }
+.board-header-settings { margin-right: auto; color: var(--ink-3); }
 
 /* Arrange the same visible board: controls float without changing card geometry. */
 .board-wrap.is-editing { padding-bottom: 180px; }
@@ -9522,6 +9554,13 @@ button.ha-act:hover {
 }
 
 .cell-tools button { scroll-margin-block: 100px 220px; }
+/* Touch: the arrange controls are real 44px targets, and Remove keeps its distance from Settings. */
+@media (pointer: coarse) {
+  .cell-tools { gap: 8px; }
+  .cell-sizes { gap: 4px; }
+  .cell-sizes button, .cell-btn { min-width: 44px; min-height: 44px; font-size: 14px; }
+  .cell-remove { margin-left: 8px; }
+}
 .is-sorting .cell-tools { opacity: 0; pointer-events: none; }
 
 .is-editing .board-foot { visibility: hidden; }
@@ -9697,8 +9736,7 @@ button.ha-act:hover {
 
 .dl-actions {
   display: flex;
-  gap: 12px;
-  font-size: 13px;
+  gap: 16px;
 }
 
 .dl-why {
@@ -9711,10 +9749,12 @@ button.ha-act:hover {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
+  /* Under its own bar, with more room after than before: the actions belong to this row. */
   .dl-actions {
     grid-row: 3;
     grid-column: 1 / -1;
     justify-content: flex-end;
+    margin-bottom: 10px;
   }
 }
 
@@ -9732,7 +9772,6 @@ button.ha-act:hover {
   position: absolute;
   top: 6px;
   right: 0;
-  font-size: 12.5px;
 }
 
 /* Watched and Listening: one row per play or book, what on the left, who and when on the right. */
@@ -10479,7 +10518,8 @@ a.req-come:hover .req-title {
 /* Light schemes: pale brand marks (Dozzle, Uptime Kuma, Caddy) darken and
    take a hairline, so no grayscale icon disappears into the page. */
 :root[data-scheme='light']:not([data-icons='color']) :is(.jack-socket, .app, .srow-icon, .detail-icon, .tile-icon) .icon-img {
-  filter: grayscale(1) brightness(0.78) contrast(1.3) drop-shadow(0 0 0.6px rgba(20, 22, 26, 0.55));
+  /* Pale marks come down further than dark ones can go: the set reads even. */
+  filter: grayscale(1) brightness(0.6) contrast(1.6) drop-shadow(0 0 0.6px rgba(20, 22, 26, 0.6));
   opacity: 1;
 }
 
@@ -10668,8 +10708,9 @@ a.req-come:hover .req-title {
 
 .feeds-mark.button,
 .feeds-filter-toggle.button {
-  padding: 5px 12px;
-  font-size: 13px;
+  min-height: var(--ctl-sm-h);
+  padding: 0 12px;
+  font-size: var(--ctl-sm-fs);
 }
 
 .feeds-filter-toggle {
@@ -10847,4 +10888,32 @@ a.req-title:hover {
 
 .drawer-kind:first-child {
   margin-top: 4px;
+}
+
+/* On the board, the gutter between cards is the only space under the apps. */
+.cell .patchrow {
+  margin-bottom: 0;
+}
+
+/* Short screens (a landscape phone, 200% zoom): the top bar scrolls away with
+   the page, so the content keeps the height; the tab bar stays for navigation. */
+@media (max-height: 520px) {
+  .topbar {
+    position: static;
+  }
+}
+
+/* Keyboard hints mean nothing on a touch screen. */
+@media (hover: none) and (pointer: coarse) {
+  .keys-only { display: none; }
+}
+
+#reader-title:focus { outline: none; }
+#reader-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* Summaries and notes break evenly: no last line holding one word. */
+.backup-summary,
+.settings-note,
+.alert-detail {
+  text-wrap: pretty;
 }

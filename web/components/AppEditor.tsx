@@ -82,7 +82,8 @@ export function draftProblem(d: Draft): string | null {
   return null;
 }
 
-const SOURCE: Record<string, string> = { yaml: 'From services.yaml', labels: 'From a Docker label', ui: 'Added here' };
+// Short enough to fit a tile; the edit panel says the rest.
+const SOURCE: Record<string, string> = { yaml: 'services.yaml', labels: 'Docker label', ui: 'Added here' };
 
 export function EditApps({
   draft,

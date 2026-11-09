@@ -89,9 +89,10 @@ export function UpdateUndo({ job, onRollback }: { job: UpdateJob | null; onRollb
 }
 
 /** Update, as a press and hold: recreating takes the container down for a moment. It stands out when an update waits. */
-export function UpdateButton({ busy, onStart, waiting = false }: { name: string; busy: boolean; onStart: () => void; waiting?: boolean }) {
+/** `busy`: this update is running. `locked`: something else is (a start, a stop), so it waits without claiming to update. */
+export function UpdateButton({ busy, locked = false, onStart, waiting = false }: { name: string; busy: boolean; locked?: boolean; onStart: () => void; waiting?: boolean }) {
   return (
-    <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy} hint="Hold to update" onConfirm={onStart}>
+    <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy || locked} hint="Hold to update" onConfirm={onStart}>
       {busy ? 'Updating...' : 'Update'}
     </HoldButton>
   );

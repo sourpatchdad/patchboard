@@ -49,7 +49,7 @@ import {
   uptime,
   weatherText,
 } from '../lib/format.ts';
-import { containerMap, isExternal } from '../lib/services.ts';
+import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 
 export function Home() {
@@ -234,6 +234,7 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
       {shown.map((a) => {
         const body = (
           <>
+            <Led state={alertLed[a.level]} />
             <span className="head-alert-title">
               <WithSubject title={a.title} subject={a.subject} />
             </span>
@@ -317,6 +318,7 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
         {alerts.map((a) => {
           const body = (
             <>
+              <Led state={alertLed[a.level]} />
               <span className="alert-title">
                 <WithSubject title={a.title} subject={a.subject} />
               </span>
@@ -675,6 +677,9 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
 
 const sourceName = { sonarr: 'Sonarr', radarr: 'Radarr', trakt: 'Trakt' };
 
+/** An alert wears the status light: red down, amber trouble, a dark socket for a note. */
+const alertLed = { critical: 'crit', warn: 'warn', info: 'idle' } as const;
+
 const changeText: Record<ChangeEvent['kind'], string> = {
   'container.stopped': 'stopped',
   'container.started': 'started',
@@ -696,11 +701,17 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
   const { snap } = useStore();
   const { limit = 6 } = useWidget();
   if (!changes.length) return null;
+  // A stop stays red only while it's still unexplained: not running again,
+  // not a job that runs on a schedule, not stopped on purpose from here.
+  const over = (name: string) => {
+    const ctr = containerMap(snap).get(name);
+    return !ctr || ctrState(ctr, serviceFor(snap, name)) !== 'down';
+  };
   return (
     <Section title="Changes" className="changes-sec" count="last 48 hours">
       <ul className="changes">
         {changes.slice(0, limit).map((c) => (
-          <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && containerMap(snap).get(c.subject)?.state === 'running' ? 'is-over' : ''}`}>
+          <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && over(c.subject) ? 'is-over' : ''}`}>
             <Link to={`/c/${c.subject}`}>
               <span className="change-text">
                 <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind]}

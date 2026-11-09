@@ -105,8 +105,10 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   for (const c of containers) {
     const logs = `/c/${c.name}`;
     if (foldedAway.has(c.name)) continue;
-    if (c.state !== 'restarting' && track && settling(track, c.name, now)) continue;
-    if (c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name) && parked.has(c.name)) {
+    const deliberate = c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name) && parked.has(c.name);
+    // A stop from Patchboard is known at once; only an unexplained stop waits out the grace.
+    if (!deliberate && c.state !== 'restarting' && track && settling(track, c.name, now)) continue;
+    if (deliberate) {
       alerts.push({
         id: `ctr-parked-${c.name}`,
         subject: c.name,
