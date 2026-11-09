@@ -134,6 +134,7 @@ export function IntegrationForm({
               className="field"
               // Opening setup lands on the first thing to fill in.
               autoFocus={idx === setup.fields.findIndex((x) => !x.locked)}
+              aria-describedby={`${setup.id}-${f.name}-env`}
               type={f.kind === 'secret' ? 'password' : f.kind === 'url' ? 'url' : 'text'}
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
@@ -143,7 +144,7 @@ export function IntegrationForm({
               onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
             />
           )}
-          <code className="setup-name">{f.name}</code>
+          <code className="setup-name" id={`${setup.id}-${f.name}-env`}>{f.name}</code>
         </label>
       ))}
       {integration.where && <p className="settings-note">{integration.where}</p>}
@@ -168,7 +169,7 @@ export function IntegrationForm({
           </button>
         )}
         <button type="button" className="text-button" onClick={onClose}>
-          Close
+          Cancel
         </button>
         {setup.fromUi && !disabled && (
           <span className="setup-remove">

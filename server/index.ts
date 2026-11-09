@@ -517,6 +517,11 @@ app.post('/api/containers/:name/action', async (c) => {
   if (!hub.containers().some((x) => x.name === name)) return c.json({ error: 'No such container' }, 404);
   recordEvent('container.action', name, action);
   recordAudit(who(c), `container.${action}`, name);
+  // Stopped on purpose here: Needs attention treats it as a note until it runs again.
+  const parked = new Set(kvGet<string[]>('parked') ?? []);
+  if (action === 'stop') parked.add(name);
+  else parked.delete(name);
+  kvSet('parked', [...parked]);
   if (config.demo) demoContainerAction(name, action);
   else {
     try {
@@ -763,7 +768,7 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
   // Only a test that reaches out counts toward the pause between tests.
   lastTest.set(i.id, Date.now());
   recordAudit(who(c), 'setup.test', i.id);
-  if (config.demo) return c.json({ ok: true, summary: 'Demo mode: nothing to connect to, so this always passes.' });
+  if (config.demo) return c.json({ ok: true, summary: 'The address and key are filled in. Demo mode has nothing to connect to.' });
   try {
     const summary = await withConfig(candidate(checked.values), () => testIntegration(i.id));
     return c.json({ ok: true, summary });
@@ -948,7 +953,8 @@ app.post('/api/containers/:name/update', async (c) => {
     void hub.pollNow('checks');
     hub.refreshChanges();
   };
-  if (config.demo) return c.json(startDemoUpdate(name, done));
+  // An update recreates the container and starts it, stopped or not, as compose does.
+  if (config.demo) return c.json(startDemoUpdate(name, () => (demoContainerAction(name, 'start'), done())));
   // "Answering" is checked live during the wait, not from the last minute's result.
   const svc = getCatalog().groups.flatMap((g) => g.services).find((s) => s.container === name);
   const url = svc ? checkUrl(svc) : null;

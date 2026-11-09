@@ -42,6 +42,18 @@ export function Logs() {
   const dozzle = snap?.links.dozzle;
   const lf = listFilter.trim().toLowerCase();
   const stateOf = (c: (typeof containers)[number]) => (snap ? ctrState(c, serviceFor(snap, c.name)) : 'none');
+  // A problem is what Needs attention calls one (an app not answering, a
+  // camera offline), not only what Docker reports.
+  // An alert names its app ("Paperless") or its source ("frigate" for a camera).
+  const flagged = new Map<string, string>();
+  for (const x of snap?.alerts ?? []) {
+    if (x.level === 'info') continue;
+    for (const k of [x.subject, x.source]) if (k && k !== 'docker' && !flagged.has(k.toLowerCase())) flagged.set(k.toLowerCase(), x.level);
+  }
+  const rankOf = (c: (typeof containers)[number]) => {
+    const f = flagged.get(c.name.toLowerCase()) ?? flagged.get((serviceFor(snap, c.name)?.name ?? '').toLowerCase());
+    return Math.min(RANK[stateOf(c)], f === 'critical' ? 0 : f ? 1 : 9);
+  };
   const listed = containers
     .filter((c) => !lf || c.name.toLowerCase().includes(lf) || (c.project ?? '').toLowerCase().includes(lf))
     .sort((a, b) =>
@@ -49,7 +61,7 @@ export function Logs() {
         ? a.name.localeCompare(b.name)
         : listSort === 'recent'
           ? (b.created ?? 0) - (a.created ?? 0) || a.name.localeCompare(b.name)
-          : RANK[stateOf(a)] - RANK[stateOf(b)] || a.name.localeCompare(b.name),
+          : rankOf(a) - rankOf(b) || a.name.localeCompare(b.name),
     );
 
   // Something in trouble and nothing picked: on a wide screen, open its logs
@@ -94,7 +106,7 @@ export function Logs() {
               <Link to={`/logs/${c.name}${listSort === 'problems' ? '' : `?sort=${listSort}`}`} className={`ctr ${c.name === name ? 'is-selected' : ''}`} data-state={c.state === 'running' ? (c.health === 'unhealthy' ? 'warn' : 'up') : 'down'}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
-                <span className="ctr-status" title={c.status}>{shortStatus(c)}</span>
+                <span className="ctr-status" title={c.status}>{c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
               </Link>
             </li>
           ))}

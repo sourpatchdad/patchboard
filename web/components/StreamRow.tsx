@@ -129,10 +129,15 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
             requestAnimationFrame(() => card.current?.querySelector<HTMLButtonElement>('button')?.focus());
           }
         }}
-        onClick={() => {
+        onClick={(e) => {
           cancelLeave();
           if (pinned) close();
-          else { setPinned(true); setOpen(true); }
+          else {
+            setPinned(true);
+            setOpen(true);
+            // From the keyboard (no pointer, detail 0): take focus into the details.
+            if (e.detail === 0) requestAnimationFrame(() => card.current?.querySelector<HTMLElement>('button, a')?.focus());
+          }
         }}
       >
         <span className="stream-line">

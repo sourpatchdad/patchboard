@@ -515,17 +515,20 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
       {busyClients.map((d) => {
         return (
         <div className="now-block" key={d.id}>
-          <h3 className="now-head">
-            <Led state={d.data.errored.length ? 'crit' : d.data.downloading && !d.data.paused ? 'ok' : 'idle'} />
-            <AppLink container={d.container}>
-              {d.data.paused
-                ? `${d.label} is paused`
-                : d.data.downloading
-                  ? `Downloading ${d.data.downloading} in ${d.label} at ${speed(d.data.down)}`
-                  : `Nothing downloading in ${d.label}`}
-            </AppLink>
+          {/* The heading says what's happening; its Pause sits beside it, not inside it. */}
+          <div className="now-head">
+            <h3>
+              <Led state={d.data.errored.length ? 'crit' : d.data.downloading && !d.data.paused ? 'ok' : 'idle'} />
+              <AppLink container={d.container}>
+                {d.data.paused
+                  ? `${d.label} is paused`
+                  : d.data.downloading
+                    ? `Downloading ${d.data.downloading} in ${d.label} at ${speed(d.data.down)}`
+                    : `Nothing downloading in ${d.label}`}
+              </AppLink>
+            </h3>
             <PauseButton client={d} />
-          </h3>
+          </div>
           {!d.data.paused &&
             d.data.active.slice(0, limit).map((t) => (
               <div className="stream" key={t.name}>

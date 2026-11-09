@@ -1221,12 +1221,6 @@ function SettingsDrawer({
             </button>
           )}
         </header>
-        <label className="settings-label">Column
-          <select className="field" value={w.column ?? ''} onChange={(e) => onColumn(e.target.value ? Number(e.target.value) : undefined)}>
-            <option value="">Automatic</option>
-            {Array.from({ length: Math.max(1, columns - spanOf(w, columns) + 1) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
-          </select>
-        </label>
         <p className="settings-note">{info.about}</p>
         <div className="ws-form">
           {o.title !== false && (
@@ -1245,6 +1239,14 @@ function SettingsDrawer({
               ))}
             </span>
           </div>
+          {/* What it is, its name, then where it sits: Column after width. */}
+          <label>
+            <span>Column</span>
+            <select className="field" value={w.column ?? ''} onChange={(e) => onColumn(e.target.value ? Number(e.target.value) : undefined)}>
+              <option value="">Automatic</option>
+              {Array.from({ length: Math.max(1, columns - spanOf(w, columns) + 1) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+            </select>
+          </label>
           {o.limit && (
             <label>
               <span>Items to show, {o.limit[1]} to {o.limit[2]}</span>

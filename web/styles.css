@@ -10587,3 +10587,19 @@ a.req-come:hover .req-title {
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
 }
+
+/* Arranging on a phone: an app row stays inside its card's outline. */
+@media (max-width: 760px) {
+  .is-editing .bay-jacks {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+/* A button that can't be pressed looks it. */
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}

@@ -667,9 +667,9 @@ export function demoAdapters(): Adapter[] {
       return {
         label: 'Riverside',
         // Now matches the hourly line's first point.
-        tempNow: Math.round(14 + 8 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)),
+        tempNow: Math.round(17 + 6 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)),
         codeNow: 1,
-        feelsNow: Math.round(14 + 8 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)) - 1,
+        feelsNow: Math.round(17 + 6 * Math.sin(((new Date().getHours() - 9) / 24) * 2 * Math.PI)) - 1,
         windNow: 14,
         humidityNow: 58,
         isDay: true,
@@ -678,7 +678,7 @@ export function demoAdapters(): Adapter[] {
           const hr = t.getHours();
           return {
             time: local(t),
-            temp: Math.round(14 + 8 * Math.sin(((hr - 9) / 24) * 2 * Math.PI)),
+            temp: Math.round(17 + 6 * Math.sin(((hr - 9) / 24) * 2 * Math.PI)),
             code: hr >= 18 && hr <= 21 ? 61 : hr >= 6 && hr <= 18 ? 1 : 0,
             precipPct: hr >= 17 && hr <= 22 ? [20, 45, 60, 55, 35, 15][hr - 17] : 0,
           };
@@ -1032,6 +1032,8 @@ export function demoLogs(
       onLine({ stream: 'err', text: `${stamp(end + i * 41_000 - 5_000)} [unpackerr] ERROR open /downloads/complete: permission denied` });
     }
   }
+  // Unpackerr crashed: its last word is the error the runbook sends you to.
+  if (!running && name === 'unpackerr' && !demoStopped(name)) onLine({ stream: 'err', text: `${stamp(end)} [unpackerr] FATAL open /downloads/complete: permission denied, exiting` });
   if (!running) return Promise.resolve();
   return new Promise((resolve) => {
     const t = setInterval(() => {

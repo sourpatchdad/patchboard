@@ -72,6 +72,8 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
   const expectStopped = new Set(
     catalog.groups.flatMap((g) => g.services.filter((s) => s.expectStopped && s.container).map((s) => s.container!)),
   );
+  /** Stopped on purpose from Patchboard, and not started since. */
+  const parked = new Set(kvGet<string[]>('parked') ?? []);
 
   const docker = data<DockerData>(sources, 'docker');
   const containers = docker?.containers ?? [];
@@ -104,7 +106,18 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
     const logs = `/c/${c.name}`;
     if (foldedAway.has(c.name)) continue;
     if (c.state !== 'restarting' && track && settling(track, c.name, now)) continue;
-    if (c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name)) {
+    if (c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name) && parked.has(c.name)) {
+      alerts.push({
+        id: `ctr-parked-${c.name}`,
+        subject: c.name,
+        level: 'info',
+        title: `${c.name} is stopped`,
+        detail: 'You stopped it from Patchboard. Start it from its page when you want it back.',
+        since: lastEventAt(c.name, 'container.stopped'),
+        href: logs,
+        source: 'docker',
+      });
+    } else if (c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name)) {
       const dependents = folded.get(c.name);
       alerts.push({
         id: `ctr-down-${c.name}`,

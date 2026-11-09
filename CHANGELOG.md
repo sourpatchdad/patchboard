@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- Fixed: stopping a container from Patchboard painted its whole health
+  history red. Stops and starts are recorded again; Changes still shows
+  one line for each.
+- A container you stop from Patchboard is a note in Needs attention ("You
+  stopped it from Patchboard"), not an outage, until it runs again. An
+  update starts a stopped container, as compose does.
+- Keyboard: Enter on a playing item takes focus into its details; Settings
+  tabs move with the arrow keys, Home and End; Edit apps puts focus on its
+  toolbar.
+- Logs' Problems first ranks what Needs attention flags too, such as an
+  app not answering or a camera offline. A running container's line reads
+  "Up 6 days".
+- Integration setup: one Close (the row's) and a Cancel in the form, the
+  variable name describes its field for screen readers instead of being
+  part of its name, and a button that can't be pressed looks it.
+- Right now's download heading no longer contains its Pause button. Widget
+  settings put Column after width. On a phone, an app row stays inside its
+  card while arranging. "Less than a second" reads "under a minute".
+- Demo: the day's low matches the hourly line, a crashed Unpackerr's logs
+  end on its error, and no warning on first load.
+
 - Saving a board pins each card to the column it's shown in, so what you
   arranged is what stays: a card no longer hops columns when a neighbour
   grows or shrinks with live data, such as a paused download client.

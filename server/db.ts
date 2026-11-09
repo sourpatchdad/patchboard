@@ -106,13 +106,19 @@ export function recordEvent(kind: ChangeEvent['kind'], subject: string, detail?:
 }
 
 export function listChanges(sinceMs: number, limit = 30): ChangeEvent[] {
-  return recentEvents.all(Date.now() - sinceMs, limit).map((r) => ({
+  const rows: ChangeEvent[] = recentEvents.all(Date.now() - sinceMs, limit + 10).map((r) => ({
     id: Number(r.id),
     at: Number(r.at),
     kind: r.kind as ChangeEvent['kind'],
     subject: String(r.subject),
     detail: r.detail == null ? undefined : String(r.detail),
   }));
+  // A stop or start sent from Patchboard already reads "stopped from
+  // Patchboard": the state change it caused is the same news, so it's left out.
+  const twin = (e: ChangeEvent) =>
+    (e.kind === 'container.stopped' || e.kind === 'container.started') &&
+    rows.some((a) => a.kind === 'container.action' && a.subject === e.subject && a.detail === (e.kind === 'container.stopped' ? 'stop' : 'start') && e.at >= a.at && e.at - a.at < 5 * 60_000);
+  return rows.filter((e) => !twin(e)).slice(0, limit);
 }
 
 export function allEventsSince(at: number): { at: number; kind: string; subject: string }[] {

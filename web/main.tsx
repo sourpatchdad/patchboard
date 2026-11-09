@@ -21,6 +21,8 @@ const page = <M extends Record<string, any>>(load: () => Promise<M>, name: keyof
 const router = createBrowserRouter([
   {
     element: <Shell />,
+    // Pages load lazily; nothing to show for the instant before the first one does.
+    HydrateFallback: () => null,
     children: [
       { path: '/', element: <Home /> },
       { path: '/b/:board', element: <Home /> },

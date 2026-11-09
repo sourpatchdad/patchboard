@@ -97,7 +97,7 @@ export function tidyDuration(s: string): string {
   return s
     .replace(/\s*\((healthy|unhealthy|health: starting)\)$/, '')
     .replace(/\bAbout an? /i, '1 ')
-    .replace(/\bLess than a second\b/i, 'seconds')
+    .replace(/\bLess than a second\b/i, 'under a minute')
     .replace(/\bUp\b/, 'Up')
     // Docker's "Exited (1)" in plain words: a clean exit is just stopped.
     .replace(/^Exited \(0\)/, 'Stopped')

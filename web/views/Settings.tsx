@@ -33,6 +33,18 @@ import { agoLong } from '../lib/format.ts';
 import { UpdateButton, useUpdateJob } from '../components/Updater.tsx';
 
 type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
+
+/** Tabs move with the arrow keys, Home and End, as tabs do everywhere else. */
+function tabKeys(e: React.KeyboardEvent<HTMLDivElement>) {
+  const tabs = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  const at = tabs.indexOf(document.activeElement as HTMLButtonElement);
+  if (at < 0) return;
+  const to = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+  if (to < 0) return;
+  e.preventDefault();
+  tabs[to].focus();
+  tabs[to].click();
+}
 type Part = 'integrations' | 'access' | 'apps' | 'backup';
 const PARTS: [Part, string][] = [
   ['integrations', 'Integrations'],
@@ -78,9 +90,9 @@ export function Settings() {
       <div className="page-head">
         <h1 className="page-title">Settings</h1>
       </div>
-      <div className="seg settings-tabs" role="tablist" aria-label="Settings">
+      <div className="seg settings-tabs" role="tablist" aria-label="Settings" onKeyDown={tabKeys}>
         {TABS.map(([v, label]) => (
-          <button key={v} type="button" role="tab" aria-selected={tab === v} aria-pressed={tab === v} onClick={() => setTab(v)}>
+          <button key={v} type="button" role="tab" tabIndex={tab === v ? 0 : -1} aria-selected={tab === v} aria-pressed={tab === v} onClick={() => setTab(v)}>
             {label}
           </button>
         ))}
@@ -248,9 +260,9 @@ export function Settings() {
       {tab === 'look' && <Portability />}
       {tab === 'connections' && (
         <>
-          <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label="Connections">
+          <div className="seg settings-tabs settings-parts span-all" role="tablist" aria-label="Connections" onKeyDown={tabKeys}>
             {PARTS.map(([v, label]) => (
-              <button key={v} type="button" role="tab" aria-selected={part === v} aria-pressed={part === v} onClick={() => setPart(v)}>
+              <button key={v} type="button" role="tab" tabIndex={part === v ? 0 : -1} aria-selected={part === v} aria-pressed={part === v} onClick={() => setPart(v)}>
                 {label}
               </button>
             ))}

@@ -38,7 +38,7 @@ export function Apps() {
     }
     setDraft(draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]));
     // The Edit apps button just went away: hand focus to the editing toolbar.
-    setTimeout(() => document.querySelector<HTMLElement>('.arrange-bar button, .arrange-bar input')?.focus(), 50);
+    setTimeout(() => document.querySelector<HTMLElement>('.arrange-bar')?.focus(), 50);
   };
   // Home's Apps widget links here with ?arrange=1; a container page with
   // ?edit=<app> (its icon and live number) or ?adopt=<container>.
@@ -100,7 +100,7 @@ export function Apps() {
         {!draft && <input className="field" type="search" placeholder="Filter apps" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />}
       </div>
       {draft ? (
-        <div className="arrange-bar" role="toolbar" aria-label="Edit apps">
+        <div className="arrange-bar" role="toolbar" aria-label="Edit apps" tabIndex={-1}>
           <p>Drag apps to reorder them or into another group, and groups by their grip. Type over a group's name to rename it. Each app's ⋯ menu edits, hides or moves it.</p>
           <span className="arrange-actions">
             {error && <span className="crit-text">{error}</span>}
