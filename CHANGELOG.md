@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Fewer files to read: examples/ holds the plain compose file and a
+  hardened one. Mounts, host networking for Wake-on-LAN and HTTPS for the
+  phone app are short snippets in CONFIGURATION.md. The variable template
+  and the command-line Homepage importer are gone; set things up in
+  Settings, and use Import from Homepage there.
+
 ## 1.1.0 (2026-11-10)
 
 - **Version and updates on Home:** Patchboard's version sits beside Header

@@ -126,7 +126,7 @@ the phone views.
 - [INTEGRATIONS.md](docs/INTEGRATIONS.md): getting apps and numbers onto Patchboard.
 - [CONFIGURATION.md](docs/CONFIGURATION.md): every setting, the catalog file, mounts, themes.
 - [SECURITY.md](SECURITY.md): what it can do and how to narrow it.
-- [examples/](examples/): complete compose files for a full install, a hardened one, and labels on your own apps.
+- [examples/](examples/): the plain compose file and a hardened one.
 - [RELEASING.md](docs/RELEASING.md): branches, tags, images and how a release ships.
 - [ROADMAP.md](docs/ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md)
 - [CONTRIBUTING.md](.github/CONTRIBUTING.md): running it locally, and what a new integration or widget needs.

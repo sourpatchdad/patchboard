@@ -15,8 +15,8 @@ npm run dev:demo      # invented data on http://localhost:5173, hot reload
 
 Demo mode fills every page with made-up containers, media, feeds and
 alerts, so UI work never needs a real server. To point at your own Docker
-and apps, copy `examples/env.example` to `.env`, fill in what you run, and use
-`npm run dev`.
+and apps, run `npm run dev` and connect them in Settings, as on a real
+install.
 
 ## Before you open a pull request
 
@@ -42,8 +42,7 @@ Some house rules:
   works: no enums, namespaces or constructor parameter properties. Imports
   end in `.ts`.
 - **Docs ship with the code,** in the same pull request: README, the
-  matching file in `docs/`, CHANGELOG.md, `examples/env.example` and the
-  example compose files. Run `npm run screenshots` when the change shows on screen.
+  matching file in `docs/`, CHANGELOG.md and the example compose files. Run `npm run screenshots` when the change shows on screen.
 - **Check every screen size.** Look at a change at 1440 by 900, 1920 by 1080
   and a 390-pixel phone. Pages should fit a desktop screen with little or no
   scrolling, and nothing on a phone should scroll sideways.
@@ -78,14 +77,12 @@ example. A new one touches these files:
 6. **`shared/setup.ts`:** add the id to `UI_SETUP` so Settings can set it up.
    Patchboard encrypts secrets at rest and never sends them back to a
    browser.
-7. **`examples/env.example`:** every variable, with a realistic placeholder.
-   A test fails when one is missing.
-8. **`server/demo.ts`:** invented data in the same shape. Demo mode has to
+7. **`server/demo.ts`:** invented data in the same shape. Demo mode has to
    keep working.
-9. **`server/test/<name>.test.ts`:** the mapping, against a fixture shaped
+8. **`server/test/<name>.test.ts`:** the mapping, against a fixture shaped
    like the app's real response.
-10. **A place on screen:** a widget (below), a line in Needs attention
-    (`server/alerts.ts`), or both.
+9. **A place on screen:** a widget (below), a line in Needs attention
+   (`server/alerts.ts`), or both.
 
 Read-only comes first. An integration that can act (Pause, Toggle, Wake)
 needs a POST route with the action header, a check that the target is one

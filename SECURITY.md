@@ -47,7 +47,7 @@ The Docker socket gives root on the host, and `:ro` on the mount doesn't
 change that. For a narrower boundary, run a
 [socket proxy](https://github.com/Tecnativa/docker-socket-proxy) and set
 `DOCKER_HOST=tcp://socket-proxy:2375`.
-[examples/hardened](examples/hardened/docker-compose.yml) does this with
+[examples/hardened.yml](examples/hardened.yml) does this with
 read-only access and runs Patchboard as the unprivileged `node` user with a
 read-only root filesystem. For restart buttons, the proxy needs `POST=1`,
 `ALLOW_START`, `ALLOW_STOP` and `ALLOW_RESTARTS`. Updates need image pulls and

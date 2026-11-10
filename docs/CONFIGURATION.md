@@ -110,8 +110,18 @@ as environment variables, which win and show there as locked.
 
 ## Mounts
 
-Mount each one read-only at its place to turn it on.
-[examples/everything](../examples/everything/docker-compose.yml) has all four.
+Mount each one read-only at its place to turn it on. Change the paths on
+the left to yours:
+
+```yaml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/data
+      - /mnt/tank:/pool:ro
+      - /mnt/tank/notes:/docs:ro
+      - /mnt/tank/logs:/logs:ro
+      - /mnt/tank/compose:/mnt/tank/compose:ro
+```
 
 | Mount at | What | Adds |
 |---|---|---|
@@ -122,6 +132,55 @@ Mount each one read-only at its place to turn it on.
 
 `POOL_PATH`, `DOCS_PATH` and `LOGS_PATH` point somewhere else instead, and
 `COMPOSE_ROOT` limits updates to one folder.
+
+## Host networking
+
+Wake-on-LAN sends its packet on your LAN, which a container reaches only on
+the host's network. Replace `ports:` with `network_mode: host`, tell
+Patchboard which address to answer on, and point the health check there:
+
+```yaml
+services:
+  patchboard:
+    image: ghcr.io/sourpatchdad/patchboard:latest
+    container_name: patchboard
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=America/New_York
+      - LISTEN_HOST=192.168.1.10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://192.168.1.10:3200/healthz"]
+```
+
+Then add your machines in Settings, Connections, Wake-on-LAN.
+
+## HTTPS for the phone app
+
+A phone installs Patchboard as an app only over HTTPS. On a private network,
+a reverse proxy with a DNS challenge gets a real certificate without opening
+a port. With Caddy (a build with your DNS provider, such as
+`ghcr.io/caddybuilds/caddy-cloudflare`) and `dash.example.com` pointed at
+your server's private or Tailscale address:
+
+```
+dash.example.com {
+	bind 100.64.0.10
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	reverse_proxy 127.0.0.1:3200 {
+		flush_interval -1
+	}
+}
+```
+
+`flush_interval -1` keeps live updates from being buffered. Add
+`dash.example.com` in Settings, Connections, Sign-in and keys, or set
+`ALLOWED_HOSTS`, so Patchboard answers to the name.
 
 ## The catalog file
 

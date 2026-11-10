@@ -40,9 +40,8 @@ never rewrite your files.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
    place. Settings, Connections, Apps downloads your current apps as one.
    Coming from Homepage? Settings, Connections, Import from Homepage takes
-   its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard.
-   To keep a file instead, `npm run import-homepage -- /path/to/homepage/config`
-   writes one. Both leave the credentials out.
+   its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard,
+   leaving the credentials out.
 
 Patchboard finds icons by name in [dashboard icons](https://dashboardicons.com),
 which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
@@ -69,12 +68,10 @@ address and key, **Test connection**, then **Save**. Patchboard connects at
 once, with no restart. Keys you type there are encrypted on the server and
 never shown again.
 
-Keeping config in git instead? Add the variables to `.env` and run
-`docker compose up -d` (a restart keeps the old values). A variable in `.env`
-always wins and shows in Settings as locked. Integrations that read folders
-need their mount in compose, so those use `.env` only. To move variables
-from `.env` into Patchboard later, see
-[Moving off files](CONFIGURATION.md#moving-off-files).
+Each variable in the table below also works in the compose file's
+`environment:`. It wins over Settings and shows there as locked; recreate the
+container with `docker compose up -d` after changing one. To move variables
+into Patchboard later, see [Moving off files](CONFIGURATION.md#moving-off-files).
 
 <!-- generated:integrations -->
 | Integration | What it adds | Turn on with | Where to find it |
@@ -99,7 +96,7 @@ from `.env` into Patchboard later, see
 | **Fastmail** | Unread count and the newest messages (read-only). | `FASTMAIL_TOKEN`; optional `FASTMAIL_WEB_URL` | Fastmail: Settings, Privacy & Security, API tokens; give it read-only Mail access. |
 | **Home Assistant** | A widget of the lights, switches, sensors and scenes you pick. Tap a light to toggle it or a scene to run it. Locks, garage doors and alarms show their state only. | `HA_URL`, `HA_TOKEN` | Home Assistant: your profile, Security, Long-lived access tokens, Create token. A token for a non-admin user limits what Patchboard can reach. |
 | **Tessie (Tesla)** | A Car widget: battery, range, charging and time to full, climate, locks. Reads Tessie’s cached state, so it never wakes the car. | `TESSIE_TOKEN`; optional `TESSIE_VIN` | Tessie: Settings, API, Generate access token. TESSIE_VIN picks one car when the account has several. |
-| **Wake-on-LAN** | A Wake widget with a button per machine. The MAC addresses stay on the server. | `WOL_DEVICES`; optional `WOL_BROADCAST` | WOL_DEVICES=NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55. Needs host networking: examples/wake-on-lan. |
+| **Wake-on-LAN** | A Wake widget with a button per machine. The MAC addresses stay on the server. | `WOL_DEVICES`; optional `WOL_BROADCAST` | WOL_DEVICES=NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55. Needs host networking: see CONFIGURATION.md, Host networking. |
 | **ntfy** | Push notifications: a problem in Needs attention that lasts two minutes reaches your phone, and so does its fix. Test sends a real one. | `NTFY_URL`; optional `NTFY_TOKEN`, `NOTIFY_LEVEL`, `PATCHBOARD_URL` | A topic on your own ntfy server or ntfy.sh. On ntfy.sh, pick a long topic name nobody can guess. NTFY_TOKEN for a server that needs sign-in. |
 | **Gotify** | The same push notifications through Gotify. | `GOTIFY_URL`, `GOTIFY_TOKEN`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | Gotify: Apps, Create application, then copy its token. |
 | **Pushover** | The same notifications through Pushover: outages at high priority, fixes quietly. | `PUSHOVER_TOKEN`, `PUSHOVER_USER_KEY`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | pushover.net: your User Key is on the front page; Create an Application for the token. |
@@ -180,14 +177,8 @@ or `items[0].total`.
 
 ## Adding a built-in integration
 
-1. Write an adapter in `server/adapters/`. It returns one typed object, keeps
-   URLs out of error messages, and backs off after a failed login.
-2. Add a fixture of the same shape to `server/demo.ts`, so demo mode and the
-   screenshots keep working.
-3. Add an entry to [shared/integrations.ts](../shared/integrations.ts) and
-   its variables to `examples/env.example`. A test checks both.
-4. Run `npm run docs`, and `npm run screenshots` if the change shows on
-   screen.
+[CONTRIBUTING.md](../.github/CONTRIBUTING.md#adding-an-integration) lists
+every file a new integration touches.
 
 A live number preset is one entry in [shared/presets.ts](../shared/presets.ts),
 then `npm run docs`.

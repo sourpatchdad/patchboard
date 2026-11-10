@@ -36,7 +36,7 @@ COPY package.json LICENSE ./
 COPY shared ./shared
 COPY server ./server
 # /data belongs to the node user, so a named volume there inherits that and
-# Patchboard can run as node (see examples/hardened).
+# Patchboard can run as node (see examples/hardened.yml).
 RUN mkdir -p /data && chown node:node /data
 EXPOSE 3200
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \

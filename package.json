@@ -21,7 +21,6 @@
     "dev:demo": "cross-env DEMO=1 DATA_DIR=./data-demo npm run dev",
     "build": "vite build",
     "start": "node --disable-warning=ExperimentalWarning server/index.ts",
-    "import-homepage": "node scripts/import-homepage.ts",
     "icons": "node scripts/make-icons.mjs",
     "docs": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts",
     "release:check": "node scripts/release-check.ts",

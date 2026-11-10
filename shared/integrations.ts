@@ -197,7 +197,7 @@ export const INTEGRATIONS: Integration[] = [
     adds: 'A Wake widget with a button per machine. The MAC addresses stay on the server.',
     env: ['WOL_DEVICES'],
     optional: ['WOL_BROADCAST'],
-    where: 'WOL_DEVICES=NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55. Needs host networking: examples/wake-on-lan.',
+    where: 'WOL_DEVICES=NAS=aa:bb:cc:dd:ee:ff,Desktop=00:11:22:33:44:55. Needs host networking: see CONFIGURATION.md, Host networking.',
     source: false,
   },
   {
