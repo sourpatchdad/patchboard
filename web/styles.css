@@ -11196,3 +11196,38 @@ button.cam {
   border-radius: var(--radius);
   background: var(--term-bg);
 }
+
+/* A widget setting picked from a list (app groups, cameras): tick boxes in
+   two columns, set out like the other settings fields. */
+.ws-pick {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.ws-pick legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.ws-pick-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2px 16px;
+}
+
+/* The settings drawer stacks a label over its field; a tick box sits beside its name. */
+.ws-pick .ws-pick-list label.check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ctl-sm-h);
+  font-size: var(--ctl-fs);
+  color: var(--ink);
+}

@@ -24,11 +24,14 @@ export function AppTiles({
   size = 'normal',
   sort = 'catalog',
   legend = false,
+  groups,
 }: {
   filter?: string;
   size?: 'normal' | 'large';
   sort?: TileSort;
   legend?: boolean;
+  /** Only these app groups (a board's own choice); every group when absent. */
+  groups?: string[];
 }) {
   const { snap } = useStore();
   const nums = useAppNumbers();
@@ -39,7 +42,7 @@ export function AppTiles({
 
   return (
     <div className={`tiles tiles-${size}`}>
-      {snap.catalog.groups.map((g) => {
+      {snap.catalog.groups.filter((g) => !groups || groups.includes(g.name)).map((g) => {
         const pairs = g.services.filter(match).map((s) => ({ s, st: appStat(s, snap, containers, numberText(nums[s.name])) }));
         if (!pairs.length) return null;
         // Catalog order is the default: positions stay put, so muscle memory works.

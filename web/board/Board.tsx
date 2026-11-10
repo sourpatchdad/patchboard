@@ -34,7 +34,7 @@ import { CamerasWidget } from './Cameras.tsx';
 import { BookmarksWidget, ClocksWidget, ReleasesWidget, RssWidget, SearchWidget } from './Outside.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import type { FrigateData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -838,7 +838,7 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
   if (!snap) return null;
   switch (w.type) {
     case 'apps':
-      return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} /> : <AppTiles legend />;
+      return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} groups={pickedGroups(w.config?.groups)} /> : <AppTiles legend groups={pickedGroups(w.config?.groups)} />;
     case 'attention':
       if (w.config?.style !== 'card' && homeStatusSize !== 'hidden')
         return editing ? (
@@ -950,6 +950,42 @@ const ALSO: Partial<Record<WidgetType, string>> = {
   now: 'playing streams watching',
   cameras: 'frigate nvr security',
 };
+
+/** The groups an apps widget shows: those ticked, or every group when none are. */
+const pickedGroups = (raw?: string) => {
+  const list = (raw ?? '').split('\n').map((x) => x.trim()).filter(Boolean);
+  return list.length ? list : undefined;
+};
+
+/**
+ * Tick boxes for a setting Patchboard can fill in itself (app groups,
+ * cameras). Stored one per line; nothing ticked means all. A name ticked
+ * earlier that's gone now (a renamed group) still shows, so it can be cleared.
+ */
+function PickField({ label, hint, names, value, onChange }: { label: string; hint?: string; names: string[]; value: string; onChange: (v: string) => void }) {
+  const picked = value.split('\n').map((x) => x.trim()).filter(Boolean);
+  const all = [...names, ...picked.filter((p) => !names.includes(p))];
+  const toggle = (n: string, on: boolean) => onChange((on ? [...picked, n] : picked.filter((p) => p !== n)).join('\n'));
+  return (
+    <fieldset className="ws-pick">
+      <legend>{label}</legend>
+      {all.length === 0 ? (
+        <p className="ws-hint">Nothing to pick from yet.</p>
+      ) : (
+        <div className="ws-pick-list">
+          {all.map((n) => (
+            <label key={n} className="check">
+              <input type="checkbox" checked={picked.includes(n)} onChange={(e) => toggle(n, e.target.checked)} />
+              {n}
+              {!names.includes(n) && <small className="ws-hint"> (not found)</small>}
+            </label>
+          ))}
+        </div>
+      )}
+      {hint && <small className="ws-hint">{hint}</small>}
+    </fieldset>
+  );
+}
 
 export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
@@ -1249,6 +1285,8 @@ function SettingsDrawer({
   onSpan: (n: number) => void;
   onColumn: (n: number | undefined) => void;
 }) {
+  // What the pickers offer: this server's app groups and cameras.
+  const { snap } = useStore();
   const dismiss = onCancel ?? onClose;
   const modal = useModal<HTMLDivElement>(dismiss);
   const info = WIDGET_INFO[w.type];
@@ -1334,7 +1372,9 @@ function SettingsDrawer({
             </label>
           )}
           {(o.fields ?? []).map((f) =>
-            f.choices ? (
+            f.pick ? (
+              <PickField key={f.key} label={f.label} hint={f.hint} names={f.pick === 'groups' ? (snap?.catalog.groups.map((g) => g.name) ?? []) : ((snap?.sources.frigate?.data as FrigateData | null)?.cameras.map((c) => c.name) ?? [])} value={cfg[f.key] ?? ''} onChange={(v) => set(f.key, v)} />
+            ) : f.choices ? (
               <label key={f.key}>
                 <span>{f.label}</span>
                 <select className="field" value={cfg[f.key] ?? f.choices[0][0]} onChange={(e) => set(f.key, e.target.value)}>

@@ -174,7 +174,9 @@ between them.
 ![Widget settings](screenshots/widget-settings.webp)
 
 **Edit apps.** Drag apps between groups, rename groups, hide anything, add
-apps.
+apps. Each board's Apps widget can show only the groups you tick in its
+settings: Home with what you use every day, a Work board with only that.
+Cameras picks its cameras the same way.
 
 ![Edit apps](screenshots/edit-apps.webp)
 

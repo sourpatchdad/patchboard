@@ -11,6 +11,12 @@ export interface WidgetField {
   multiline?: boolean;
   /** A fixed choice instead of free text: value and label. */
   choices?: [string, string][];
+  /**
+   * Tick boxes from what Patchboard already knows (the catalog's groups,
+   * Frigate's cameras) instead of typing names. Stored one per line, like
+   * `multiline`; nothing ticked means all of them.
+   */
+  pick?: 'groups' | 'cameras';
   /** The cleaned value, or null when it isn't usable. Empty input clears the setting. */
   check: (raw: string) => string | null;
 }
@@ -29,8 +35,22 @@ export const camerasField: WidgetField = {
   hint: 'Names as Frigate spells them, one per line. Leave empty for every camera.',
   placeholder: 'front_door',
   multiline: true,
+  pick: 'cameras',
   check: (raw) => {
     const ok = lines(raw, 24).filter((c) => /^[\w-]{1,64}$/.test(c));
+    return ok.length ? ok.join('\n') : null;
+  },
+};
+
+/** App groups by name, as in Edit apps; blank shows every group. */
+export const groupsField: WidgetField = {
+  key: 'groups',
+  label: 'Groups',
+  hint: 'Tick the groups this board shows. None ticked shows them all.',
+  multiline: true,
+  pick: 'groups',
+  check: (raw) => {
+    const ok = lines(raw, 40).filter((g) => g.length <= 60);
     return ok.length ? ok.join('\n') : null;
   },
 };

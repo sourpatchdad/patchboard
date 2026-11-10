@@ -19,3 +19,10 @@ test('Needs attention sits in the header unless the board asks for a card, and t
   const bogus = validateBoard({ ...DEFAULT_BOARD, widgets: DEFAULT_BOARD.widgets.map((w) => (w.type === 'attention' ? { ...w, config: { style: 'sideways' } } : w)) });
   assert.ok('board' in bogus && attentionInHeader(bogus.board));
 });
+
+test('an apps widget can show only some groups, stored one per line', () => {
+  const v = validateBoard({ widgets: [{ id: 'apps', type: 'apps', size: 'w', config: { style: 'patchbay', groups: 'Watch & Listen\n\nInfrastructure ' } }] });
+  assert.ok(!('error' in v));
+  const apps = (v as { board: { widgets: { type: string; config?: Record<string, string> }[] } }).board.widgets.find((w) => w.type === 'apps');
+  assert.equal(apps?.config?.groups, 'Watch & Listen\nInfrastructure');
+});

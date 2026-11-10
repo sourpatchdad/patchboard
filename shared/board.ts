@@ -5,7 +5,7 @@
 // Runtime code is fine here: no Node or DOM use.
 
 import { parseEntities } from './ha.ts';
-import { camerasField, engineField, feedsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
+import { camerasField, engineField, feedsField, groupsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -192,6 +192,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
         ['tiles', 'Tiles with a live number'],
       ],
       names: true,
+      fields: [groupsField],
     },
   },
   weather: {
@@ -233,7 +234,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   clocks: { name: 'Clocks', about: 'The time where your people are, with the day when it differs from yours.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [zonesField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
-  cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 20 seconds, and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], fields: [camerasField] } },
+  cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 5 seconds while on screen (tap one to watch it live), and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], fields: [camerasField] } },
   watched: { name: 'Watched', about: 'What was played lately on Plex, Jellyfin and Emby, newest first, with who watched and when. Each opens in its app.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 15] } },
   listening: { name: 'Listening', about: 'Audiobookshelf books in progress, with how far along, and albums played lately on Navidrome.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 8] } },
   downloads: { name: 'Downloads', about: 'Every unfinished download across your clients, with pause, resume and remove, and what Sonarr and Radarr are stuck on, with Try another release. With this on the board, Right now leaves downloads to it.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 30] } },

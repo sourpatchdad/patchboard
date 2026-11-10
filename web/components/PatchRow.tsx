@@ -10,7 +10,8 @@ import { Roving } from './Roving.tsx';
 import { Icon } from './ui.tsx';
 import { alertLevelFor } from '../lib/attention.ts';
 
-export function PatchRow({ names = false }: { names?: boolean }) {
+/** `groups`: only these app groups (a board's own choice); every group when absent. */
+export function PatchRow({ names = false, groups }: { names?: boolean; groups?: string[] }) {
   const { snap } = useStore();
   const nums = useAppNumbers();
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
@@ -18,7 +19,7 @@ export function PatchRow({ names = false }: { names?: boolean }) {
 
   return (
     <nav className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
-      {snap.catalog.groups.map((g) => (
+      {snap.catalog.groups.filter((g) => !groups || groups.includes(g.name)).map((g) => (
         <div className="bay" key={g.name}>
           <span className="bay-name">{g.name}</span>
           <Roving className="bay-jacks">
