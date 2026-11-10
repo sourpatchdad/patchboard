@@ -25,6 +25,8 @@
 - Apps no longer suggests a one-off `docker compose run` job as an app
   that isn't listed yet.
 - On a phone, addresses under Elsewhere wrap at their dots, not mid-word.
+- The README and tour match their screenshots again: five themes plus
+  Custom, the widget settings as they are, and fresh captures throughout.
 
 - The Apps widget can show only the groups you tick in its settings, so a
   board can leave a group out (Home without work projects) or hold just

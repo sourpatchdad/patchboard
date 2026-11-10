@@ -169,7 +169,7 @@ between them.
 
 ![Arrange board with clear card gutters](screenshots/customize.webp)
 
-**Widget settings:** a name, how many items, how wide, which look.
+**Widget settings:** a name, how wide, which column, and how many items.
 
 ![Widget settings](screenshots/widget-settings.webp)
 
@@ -188,12 +188,13 @@ Cameras picks its cameras the same way.
 
 ![Customize a page](screenshots/page-customize.webp)
 
-**Settings** has themes, colors, type, density and units, saved per device.
+**Settings** has themes, colors, type and density, saved per device; units
+and the header are under Home.
 A new browser or home-screen app starts from the last look you saved.
 
 ![Settings](screenshots/settings-look.webp)
 
-![Header sizes and weather choices](screenshots/settings-home.webp)
+![Settings, Home: the header switches, app appearance, units and time](screenshots/settings-home.webp)
 
 **Connections** shows which integrations run. **Set up** takes an address and
 a key, tests the connection, and saves. Keys are encrypted on the server and

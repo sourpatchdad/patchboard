@@ -89,9 +89,13 @@ async function shootEl(locator, name) {
   await save(await locator.screenshot(), name);
 }
 
-/** A browser context with a look saved, as Settings would save it. Icons in color: they read better in a screenshot. */
+/**
+ * A browser context with a look saved, as Settings would save it. Icons in
+ * color: they read better in a screenshot. Reduced motion, so a number that
+ * just changed isn't caught mid-roll.
+ */
 async function context(browser, opts, appearance) {
-  const ctx = await browser.newContext(opts);
+  const ctx = await browser.newContext({ reducedMotion: 'reduce', ...opts });
   await ctx.addInitScript((a) => localStorage.setItem('pb-appearance', JSON.stringify(a)), { icons: 'color', ...appearance });
   return ctx;
 }

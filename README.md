@@ -64,7 +64,7 @@ use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 ## What you get
 
-**It answers before you ask.** The top of Home says "All quiet" or "4 things
+**It answers before you ask.** The top of Home says "All quiet" or "6 things
 need you", with each problem on its own line under it, linked to its fix. A container that crashed at
 3 AM still shows under Changes at breakfast. Turn on ntfy, Gotify, Pushover,
 Discord, email or a webhook and a problem that lasts two minutes reaches
@@ -87,8 +87,8 @@ move, drag an edge to resize, rename any widget, choose how many items it
 shows, or turn on Fit the window to trim lists to one screen. Recently
 added keeps its whole poster row; if the board still runs over, Arrange board
 says by how much. Add more boards and name them: one for the TV, one for the rack.
-Every other page has a Customize button too. Six themes, each dark and
-light, or build your own from three colors. Call it whatever your household
+Every other page has a Customize button too. Five themes, each dark and
+light, or a Custom one built from three colors. Call it whatever your household
 calls it.
 
 **See what is playing.** Hover, focus or tap a playback row for its artwork,
@@ -133,7 +133,7 @@ Press `Ctrl K` or `/` to jump to any app, page, container or article.
 
 | Your machines | Your household |
 |---|---|
-| ![Hosts, storage, power, drives, Proxmox, Docker hosts and the network](docs/screenshots/machines.webp) | ![Calendar, notes, books and Right now](docs/screenshots/household.webp) |
+| ![Hosts, storage, power, drives, Proxmox, Docker hosts and the network](docs/screenshots/machines.webp) | ![Calendar, notes, books, Watched, Listening and This week](docs/screenshots/household.webp) |
 
 **[Take the tour](docs/TOUR.md):** every page, every editor, every theme and
 the phone views.

@@ -171,7 +171,7 @@ night's square for that job. Audit reports in `LOGS_PATH/audit/` with a
 
 ## Themes
 
-Settings has six themes and a Custom one built from three colors. To add a
+Settings has five themes and a Custom one built from three colors. To add a
 theme to the code, add one entry to `web/lib/themes.ts`: dark and light color
 tokens and a type pairing. Keep `ok`, `warn` and `crit` distinct from the
 accent, and quiet text (`ink3`) at 4.5:1 or better on `bg`.
