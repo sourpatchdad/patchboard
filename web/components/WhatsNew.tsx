@@ -49,7 +49,7 @@ export function VersionLine() {
   const newer = releases.filter((r) => compareVersions(r.version, version) > 0);
   const newImage = !!(me.container && snap.updates[me.container]);
   const fresh = !!seen && compareVersions(version, seen) > 0;
-  const label = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : fresh ? `What's new in v${version}` : `v${version}`;
+  const label = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : fresh ? `What's new in v${version}` : `Patchboard v${version}`;
 
   return (
     <>

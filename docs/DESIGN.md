@@ -48,7 +48,7 @@ one click.
   three matching cards with aligned edges. Time and weather share one
   centered card; weather has no box of its own. Quiet status stays on one
   desktop line. Full graphs are the default, with on/off controls in
-  Settings, Home and a Header settings link beside Arrange board. Sizes and
+  Settings, Home and an Edit header link beside Arrange board. Sizes and
   forecasts are secondary controls. Header choices apply per device and
   leave saved boards alone. New boards leave out a duplicate Server card;
   saved widgets stay as they are. An unreachable integration leads with the
@@ -172,7 +172,7 @@ means trouble; only the top bar's Live light is green.
 ## Purposeful identity
 
 Every element helps you understand the server or act on it. Status,
-welcome, empty and error states carry no mascots or mood illustrations.
+welcome, empty and error states carry no illustrations.
 Status uses explicit text, counts and consistent severity indicators. Healthy
 states stay quiet; recovery actions stay visible.
 

@@ -1,9 +1,9 @@
 name: Release
 
-# A version tag publishes a release. v1.27.0 pushes the image for amd64 and
-# arm64 as 1.27.0, 1.27, 1 and latest, the slim image as 1.27.0-slim,
-# 1.27-slim, 1-slim and latest-slim, and opens a GitHub Release with that
-# version's CHANGELOG section. A pre-release tag (v1.27.0-rc.1) pushes only
+# A version tag publishes a release. v1.2.0 pushes the image for amd64 and
+# arm64 as 1.2.0, 1.2, 1 and latest, the slim image as 1.2.0-slim,
+# 1.2-slim, 1-slim and latest-slim, and opens a GitHub Release with that
+# version's CHANGELOG section. A pre-release tag (v1.2.0-rc.1) pushes only
 # its own tag and never moves latest. docs/RELEASING.md has the steps.
 
 on:

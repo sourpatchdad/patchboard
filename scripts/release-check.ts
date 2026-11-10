@@ -15,7 +15,7 @@ export function checkRelease({ tag, version, lockVersion, rootVersion, changelog
   const match = /^v(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(tag);
   const zeroPadded = (s: string) => /^\d+$/.test(s) && s.length > 1 && s.startsWith('0');
   if (!match || match.slice(1, 4).some(zeroPadded) || match[4]?.split('.').some(zeroPadded)) {
-    throw new Error('Use a version tag such as v1.40.0 or v1.40.0-rc.1.');
+    throw new Error('Use a version tag such as v1.2.0 or v1.2.0-rc.1.');
   }
   const expected = tag.slice(1);
   for (const [name, value] of [['package.json', version], ['package-lock.json', lockVersion], ['package-lock.json root package', rootVersion]]) {

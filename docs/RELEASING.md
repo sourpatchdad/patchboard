@@ -38,14 +38,19 @@ have no slim build.
 Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
 `## Unreleased` at the top of CHANGELOG.md for anything a user would notice.
 
+Each section becomes a GitHub Release and the What's new sheet on Home, so
+write it for the person running Patchboard: what changed for them, in plain
+words and active voice, with no em dashes. Group a release's lines under a
+few bold leads, as 1.0.0 and 1.1.0 do.
+
 ## Cutting a release
 
 1. Batch the work. A release is a set of features or a set of fixes, not a
    commit.
-2. Pick the version: fixes bump the patch (1.2.1), features bump the minor
-   (1.3.0), and a change that breaks a setup bumps the major.
+2. Pick the version: fixes bump the patch (1.1.1), features bump the minor
+   (1.2.0), and a change that breaks a setup bumps the major.
 3. On `dev`, set `version` in `package.json` and rename `## Unreleased` in
-   CHANGELOG.md to `## 1.3.0 (date)`. Update the root and package version
+   CHANGELOG.md to `## 1.2.0 (date)`. Update the root and package version
    in `package-lock.json` too.
 4. Run `npm run typecheck`, `npm test`, `npm run docs:check`,
    `npm run build`, and `npm run screenshots` when the change shows on screen.
@@ -53,7 +58,7 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
    `npm run test:a11y` for accessible names, reflow and high-contrast graphics.
    Run `npm run test:zoom` for actual browser zoom and enlarged-text checks.
    See [Accessibility checks](ACCESSIBILITY.md) for coverage and manual checks.
-5. Run `npm run release:check -- v1.3.0`. It checks the tag against
+5. Run `npm run release:check -- v1.2.0`. It checks the tag against
    `package.json` and both lockfile versions, and requires one matching,
    nonempty changelog section.
 6. Merge `dev` into `main`, then tag and push:
@@ -61,11 +66,11 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
    ```sh
    git checkout main
    git merge --ff-only dev
-   git tag v1.3.0
-   git push --atomic origin main dev v1.3.0
+   git tag v1.2.0
+   git push --atomic origin main dev v1.2.0
    ```
 
 The release workflow runs this preflight before it publishes any image. A
 version or notes mismatch stops the publication jobs. When the check passes,
-the workflow builds the image, moves `latest`, `1` and `1.3`, and publishes
+the workflow builds the image, moves `latest`, `1` and `1.2`, and publishes
 the GitHub Release. It fails when CHANGELOG.md has no section for the tag.

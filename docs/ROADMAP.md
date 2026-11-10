@@ -13,7 +13,6 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] TP-Link Omada
 - [ ] Backrest
 - [ ] Kavita, Komga
-- [ ] GitHub releases for the apps you run
 
 ### Running it anywhere
 

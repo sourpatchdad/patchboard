@@ -16,10 +16,9 @@ Settings, Home controls the header on this device. By default it shows
 status, full server graphs, and one column with the time and date above the
 weather. The four Show switches turn each part on or off. Sizes and forecast
 details holds the optional sizes and weather chart. Restore default header
-brings back the compact graphical layout. Older numeric header preferences
-adopt this default; a part you switched off stays off.
+brings back the compact graphical layout.
 
-Header settings beside Arrange board opens these controls. Header choices
+Edit header, at the foot of Home, opens these controls. Header choices
 never rewrite a saved board. New boards don't repeat the server details in
 the grid; saved Server widgets stay where you put them. Arrange board changes
 widgets and placement for every device. You export appearance from Settings,

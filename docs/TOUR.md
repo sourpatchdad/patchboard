@@ -8,12 +8,12 @@ they match the current code.
 The default header puts status beside full server graphs, then the time and
 date above the weather in a centered card. All three header cards share one
 surface and line up along their top and bottom edges. On a desktop, the
-quiet status stays on one line. Header settings on Home opens Settings,
+quiet status stays on one line. Edit header, at the foot of Home, opens Settings,
 Home: four checkboxes, with sizing and forecasts in Sizes and forecast
 details. Header preferences apply to this device. Arrange board controls the
 shared widget layout and leaves saved boards as they are.
 
-Beside Header settings sits the version. It reads "Update to v1.2.0" when a
+The version sits at the foot of Home, on the left. It reads "Update to v1.2.0" when a
 newer release is out, and "What's new in v1.2.0" once after you update.
 Either opens what each release changed, with Update right there when
 Patchboard can update itself. If your compose file pins an exact version, it
@@ -248,7 +248,7 @@ behind; Patchboard names the integrations worth connecting instead.
 ### Server details in the header
 
 Server details are in the header by default, including CPU history, memory,
-storage, uptime and the Details link. Use Header settings on Home to turn
+storage, uptime and the Details link. Use Edit header on Home to turn
 parts off for this device. If your saved board still has a Server card,
 Arrange board can remove that copy.
 

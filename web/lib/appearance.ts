@@ -84,11 +84,9 @@ export const HOME_SECTIONS: { id: HomeSection; label: string }[] = [
 
 let hadSaved = false;
 
-/** Older numeric headers adopt the graphical default; explicit off stays off. */
+/** A saved look over the defaults. The server card shows unless it was hidden. */
 function withDefaults(saved: Partial<Appearance>): Appearance {
-  // Ignore the retired mascot preference in older saved looks.
-  const { otter: _retired, ...look } = saved as Partial<Appearance> & { otter?: unknown };
-  return { ...DEFAULTS, ...look, homeServer: saved.homeServer === 'hidden' ? 'hidden' : 'card', custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
+  return { ...DEFAULTS, ...saved, homeServer: saved.homeServer === 'hidden' ? 'hidden' : 'card', custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
 }
 
 function read(): Appearance {

@@ -2,13 +2,15 @@
 
 ## Unreleased
 
-- A new app icon: a P with a blue tab, in dark and light, for the browser
-  tab, home screens and the install prompt. It replaces the otter.
-- Fewer files to read: examples/ holds the plain compose file and a
-  hardened one. Mounts, host networking for Wake-on-LAN and HTTPS for the
-  phone app are short snippets in CONFIGURATION.md. The variable template
-  and the command-line Homepage importer are gone; set things up in
-  Settings, and use Import from Homepage there.
+- **New app icon:** a P with a blue tab, in dark and light, on the browser
+  tab, home screens and the install prompt.
+- **Home's foot:** your version on the left; Edit header, Arrange board and
+  New board together on the right. On a phone, the version takes its own
+  line.
+- **Leaner examples:** examples/ holds the plain compose file and a
+  hardened one. CONFIGURATION.md covers mounts, host networking for
+  Wake-on-LAN, and HTTPS for the phone app. Import from Homepage in
+  Settings replaces the command-line importer.
 
 ## 1.1.0 (2026-11-10)
 

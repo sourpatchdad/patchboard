@@ -9327,16 +9327,21 @@ button.ha-act:hover {
 .header-options-details .header-options { margin-top: 16px; }
 .board-header-settings { color: var(--ink-3); }
 
-/* The version sits beside Header settings; it takes the accent only when there's news. */
+/* The version holds the left of the foot; it takes the accent only when there's news. */
 .version-line {
   margin-right: auto;
   color: var(--ink-3);
-  font-family: var(--f-mono);
   font-size: var(--act-fs);
 }
 
 .version-line.is-news {
   color: var(--accent);
+}
+
+/* A phone: the version gets its own line above the three actions. */
+@media (max-width: 600px) {
+  .board-foot { flex-wrap: wrap; row-gap: 8px; }
+  .version-line { flex-basis: 100%; text-align: left; }
 }
 
 .whats-new {
