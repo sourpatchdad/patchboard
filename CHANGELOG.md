@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 (2026-11-10)
 
 - **New app icon:** a P with a blue tab, in dark and light, on the browser
-  tab, home screens and the install prompt.
+  tab, home screens and the install prompt. A phone that already added
+  Patchboard keeps the old icon until you add it again.
 - **Home's foot:** your version on the left; Edit header, Arrange board and
   New board together on the right. On a phone, the version takes its own
   line.
