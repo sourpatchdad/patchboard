@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A finishing pass on the look: softer, nested corners; cards with a hairline
+  edge and a faint top light instead of a box outline; a selected row gets
+  a soft wash and an app in trouble a tinted outline, not a colored side
+  bar. Buttons, tiles and app icons give a little when pressed, playback
+  bars glide, and on a phone the app rack is a card like the rest, the tab
+  bar lets the page show through, and the More sheet rises into place.
 - Plainer words throughout: errors say what to do next ("Couldn't connect.
   Check the address and key."), one action keeps one name, and the docs
   read tighter.

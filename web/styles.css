@@ -15,9 +15,28 @@
   --f-sans-graphite: 'Geist Variable', 'Geist', system-ui, sans-serif;
 
   --topbar-h: 56px;
-  --radius: 6px;
-  --radius-lg: 10px;
+
+  /* Corners: nested shapes step down so curves stay concentric. Small for
+     chips and keys, regular for controls and rows, md for tiles and icon
+     wells, lg for cards and sheets. */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Cards: a tonal step above the page, a hairline, and in dark themes a
+     faint top light so the edge reads as a surface, not a box outline. */
+  --card-bg: color-mix(in srgb, var(--raised) 55%, var(--bg));
+  --card-hi: color-mix(in srgb, var(--head) 5%, transparent);
+  --card-edge: inset 0 1px 0 var(--card-hi), inset 0 0 0 1px var(--line-soft);
+  /* Floating layers (sheets, menus, previews) are the only things with a cast shadow. */
+  --float-shadow: 0 1px 2px rgb(0 0 0 / 0.24), 0 18px 48px rgb(0 0 0 / 0.42);
+
+  /* Motion: fast for hover and press, a beat longer for things that appear. */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 280ms;
 
   /* Two control sizes. Regular: buttons and Settings choices. Small: sort and
      filter rows that sit inside a list. Text actions: in a card's header or a
@@ -61,6 +80,8 @@
 }
 
 :root[data-scheme='light'] {
+  --card-hi: rgb(255 255 255 / 0.7);
+  --float-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 18px 48px rgb(0 0 0 / 0.16);
   color-scheme: light;
   --bg: #f7f7f8;
   --raised: #efeff1;
@@ -147,6 +168,21 @@ button {
 button {
   font: inherit;
   color: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: var(--head);
+}
+
+:root {
+  accent-color: var(--accent);
+  scrollbar-color: color-mix(in srgb, var(--ink-3) 45%, transparent) transparent;
+}
+
+input,
+textarea {
+  caret-color: var(--accent);
 }
 
 :focus-visible {
@@ -681,8 +717,8 @@ h2.status-line {
   gap: 20px 36px;
   padding: 20px 34px 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--line-soft);
   background-color: var(--raised);
+  box-shadow: var(--card-edge);
 }
 
 .patchrow-loading {
@@ -723,7 +759,7 @@ h2.status-line {
   position: relative;
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   background: var(--surface);
@@ -1133,6 +1169,8 @@ a.jack:focus-visible {
   height: 100%;
   border-radius: 3px;
   background: var(--accent);
+  /* Playing time updates once a second; a linear second between values keeps the bar gliding. */
+  transition: width 1s linear;
 }
 
 .meter-warn > span {
@@ -1419,9 +1457,17 @@ a.jack:focus-visible {
   background: var(--raised);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 0 var(--card-hi), var(--float-shadow);
   overflow: hidden;
-  animation: palette-in 160ms var(--ease-out);
+  animation: palette-in var(--dur-2) var(--ease-out);
+}
+
+/* A sheet rises the last stretch from the bottom edge; it never starts invisible. */
+@keyframes sheet-up {
+  from {
+    opacity: 0.4;
+    transform: translateY(24px);
+  }
 }
 
 @keyframes palette-in {
@@ -1465,9 +1511,9 @@ a.jack:focus-visible {
 }
 
 .palette-item[aria-selected='true'] {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
   color: var(--head);
-  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .palette-label {
@@ -1631,8 +1677,9 @@ input[type='checkbox'] {
 }
 
 .entry.is-selected {
-  background: var(--surface);
-  box-shadow: inset 2px 0 0 var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .entry-title {
@@ -1721,7 +1768,7 @@ input[type='checkbox'] {
 .prose blockquote {
   margin: 1.5em 0;
   padding-left: 20px;
-  border-left: 2px solid var(--accent);
+  border-left: 2px solid var(--line);
   font-family: var(--f-display);
   font-size: 1.2em;
   line-height: 1.45;
@@ -1786,8 +1833,9 @@ input[type='checkbox'] {
 }
 
 .ctr.is-selected {
-  background: var(--surface);
-  box-shadow: inset 2px 0 0 var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .ctr-led {
@@ -2009,9 +2057,10 @@ a.app:hover {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
-    background: color-mix(in srgb, var(--raised) 94%, transparent);
-    backdrop-filter: blur(14px);
-    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--raised) 80%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+    border-top: 1px solid var(--line-soft);
   }
 
   .nav-link {
@@ -2106,11 +2155,7 @@ a.app:hover {
   .patchrow {
     display: grid;
     gap: 18px;
-    margin: 0 -16px;
     padding: 18px 16px 16px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
   }
 
   .bay-jacks {
@@ -2313,7 +2358,7 @@ a.app:hover {
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: border-color 200ms var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
 }
 
 .button:hover {
@@ -3889,23 +3934,25 @@ a.vitals:hover .vital-label {
   position: relative;
   display: flex;
   min-width: 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
-  transition: background-color 160ms ease, box-shadow 160ms ease;
+  box-shadow: var(--card-edge);
+  transition: background-color var(--dur-1) ease, box-shadow var(--dur-1) ease, transform var(--dur-1) var(--ease-out);
 }
 
-.tile:hover {
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
+@media (hover: hover) {
+  .tile:hover {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
 }
 
 .tile[data-tone='warn'] {
-  box-shadow: inset 2px 0 0 var(--warn), inset 0 0 0 1px var(--line-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 50%, var(--line-soft));
 }
 
 .tile[data-tone='crit'] {
-  box-shadow: inset 2px 0 0 var(--crit), inset 0 0 0 1px var(--line-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crit) 55%, var(--line-soft));
 }
 
 .tile-main {
@@ -3919,7 +3966,7 @@ a.vitals:hover .vital-label {
   padding: 8px 10px;
   text-decoration: none;
   color: inherit;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
 }
 
 .tile-icon {
@@ -4755,11 +4802,11 @@ a.vitals:hover .vital-label {
   padding: 14px;
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
 }
 
 .cw.is-down {
-  box-shadow: inset 2px 0 0 var(--crit), inset 0 0 0 1px var(--line-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crit) 55%, var(--line-soft));
 }
 
 .cw-head {
@@ -4888,15 +4935,15 @@ a.vitals:hover .vital-label {
   padding: 14px 16px;
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
 }
 
 .jw[data-tone='warn'] {
-  box-shadow: inset 2px 0 0 var(--warn), inset 0 0 0 1px var(--line-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 50%, var(--line-soft));
 }
 
 .jw[data-tone='crit'] {
-  box-shadow: inset 2px 0 0 var(--crit), inset 0 0 0 1px var(--line-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crit) 55%, var(--line-soft));
 }
 
 .jw-head {
@@ -5154,7 +5201,7 @@ a.jw-title:hover {
   padding: 4px 14px 6px;
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
 }
 
 .agenda-grid .agenda-day.is-today {
@@ -5213,7 +5260,7 @@ a.jw-title:hover {
   border: 0;
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -5548,7 +5595,7 @@ body.is-sorting * {
   height: 52px;
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
 }
 
 /* ---------- Patch bay: icons only, names on hover ---------- */
@@ -5557,8 +5604,7 @@ body.is-sorting * {
   min-width: 52px;
 }
 
-.patchrow.icons-only .jack-label,
-.patchrow.icons-only .bay-jacks::after {
+.patchrow.icons-only .jack-label {
   display: none;
 }
 
@@ -5750,7 +5796,7 @@ body.is-sorting * {
   padding: 6px 8px;
   border-radius: var(--radius);
   background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
   cursor: grab;
 }
 
@@ -5795,8 +5841,8 @@ body.is-sorting * {
 .cell:not([data-type='apps']):not([data-type='json']) .cell-body {
   padding: 16px 20px 18px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--raised) 55%, var(--bg));
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  background: var(--card-bg);
+  box-shadow: var(--card-edge);
 }
 
 .cell .cell-body > .section > .section-head {
@@ -6527,8 +6573,8 @@ a.date:hover {
   min-height: 132px;
   padding: 8px 10px 4px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--raised) 55%, var(--bg));
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  background: var(--card-bg);
+  box-shadow: var(--card-edge);
   min-width: 0;
 }
 
@@ -8612,7 +8658,7 @@ button.ha-act:hover {
   padding: 14px 16px;
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  box-shadow: var(--card-edge);
 }
 
 .adopt p {
@@ -9402,7 +9448,7 @@ button.ha-act:hover {
 .masthead.home-header { align-items: stretch; }
 .home-header > .masthead-status,
 .header-board-vitals > .section,
-.header-context { border-radius: var(--radius-lg); background: color-mix(in srgb, var(--raised) 55%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.header-context { border-radius: var(--radius-lg); background: var(--card-bg); box-shadow: var(--card-edge); }
 .header-context { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: 0 0 210px; padding: 8px 12px; margin-left: auto; text-align: center; }
 .header-context:empty { display: none; }
 .home-header .header-context .masthead-time { padding: 0; border: 0; align-items: center; gap: 2px; }
@@ -9880,6 +9926,8 @@ a.play:hover .play-title {
     background: var(--raised);
     border-top: 1px solid var(--line);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: inset 0 1px 0 var(--card-hi), var(--float-shadow);
+    animation: sheet-up var(--dur-3) var(--ease-out);
   }
 
   .more-sheet nav {
@@ -11120,4 +11168,31 @@ button.cam {
 
 .cam-live .cam-frames img {
   object-fit: contain;
+}
+
+/* ---------- Press feedback (last, so it wins over hover lifts) ---------- */
+
+/* A press answers at once: buttons, tiles and app icons give a little. */
+.button:active:not(:disabled),
+.tile:has(> .tile-main:active) {
+  transform: scale(0.97);
+}
+
+a.jack:active .jack-socket,
+.nav-link:active {
+  transform: scale(0.94);
+}
+
+.nav-link,
+a.jack .jack-socket {
+  transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:active,
+  .tile:has(> .tile-main:active),
+  a.jack:active .jack-socket,
+  .nav-link:active {
+    transform: none;
+  }
 }

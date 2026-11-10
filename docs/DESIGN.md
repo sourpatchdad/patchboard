@@ -78,6 +78,16 @@ one click.
   vertical position, so neighboring columns stay put; narrower screens
   clamp the column.
   Dotted editing outlines surround card content and leave the gutters clear.
+- **Surfaces and corners.** Cards sit one tonal step above the page with a
+  hairline edge and, in dark themes, a faint top light; only floating
+  layers (sheets, Jump to, previews) cast a shadow. Corners step down as
+  shapes nest: 14px cards and sheets, 10px tiles and icon wells, 8px
+  controls and rows, 6px chips. Selection is a soft accent wash; trouble
+  is a tinted outline plus its colored status line, never a side bar.
+- **Motion answers you.** Hover and press take 120ms, things that appear
+  200ms, sheets 280ms, all easing out. Buttons, tiles and app icons give
+  a little when pressed. A playing bar glides between its once-a-second
+  updates. Reduced motion turns all of it off.
 - **Two control sizes.** Buttons and Settings choices are 36 pixels tall;
   sort and filter rows inside a list are 30. Every text action (Details,
   Pause, Search, Arrange board) is 14px. A link inside a sentence is
