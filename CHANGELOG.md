@@ -25,6 +25,7 @@
   instead of an empty card, on a fresh install.
 - The README leads with what Patchboard does, a demo you can open from
   another machine, and plain section names.
+- Screenshots show the current look: no mascot, colored icons, named trouble.
 - Accessibility: hold-to-confirm buttons work with screen readers, voice
   control and switches (press twice); single-key shortcuts can be turned
   off in Settings, Look; focus stays put after moving or removing a widget,

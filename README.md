@@ -43,7 +43,7 @@ Open Patchboard and press **Add all**. It turns every running container into
 an app, grouped by compose stack. Coming from Homepage? Settings imports its
 `services.yaml`.
 
-![First run: Patchboard picks out the 22 of 30 running containers that look like apps and offers to add them all](docs/screenshots/first-run.webp)
+![First run: Patchboard picks out the 21 of 30 running containers that look like apps and offers to add them all](docs/screenshots/first-run.webp)
 
 Then connect what you run from Settings, Connections: press **Set up**,
 paste the address and key, test, save. It connects at once, and the server
