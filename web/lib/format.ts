@@ -166,3 +166,8 @@ export function temp(c: number, unit: 'f' | 'c' | 'both' = 'both'): string {
 export function deg(c: number, unit: 'f' | 'c' | 'both'): number {
   return Math.round(unit === 'c' ? c : c * 1.8 + 32);
 }
+
+/** Release names break at their dots (The.Bear.S04E04), not mid-word. */
+export function breakable(name: string): string {
+  return name.replace(/([._-])/g, '$1\u200b');
+}

@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import type { Stream } from '../../shared/types.ts';
 import type { MediaService } from '../lib/themes.ts';
 import { Episode, Meter, Poster } from './ui.tsx';
+import { eta } from '../lib/format.ts';
 
 // Closing a preview must not open the row its disappearing card uncovers.
 let dismissedPointer: { x: number; y: number } | undefined;
@@ -59,6 +60,9 @@ export function StreamRow({ stream: reported, service, label, href, compact = fa
   const [pinned, setPinned] = useState(false);
   const [place, setPlace] = useState({ top: 0, left: 0, maxWidth: 340, maxHeight: window.innerHeight - 24 });
   const progress = Number.isFinite(s.progress) && s.progress >= 0 ? Math.min(100, s.progress) : null;
+  // "26 min left" beside who's watching, as a download says it; it counts down with the bar.
+  const remaining = s.positionSec != null && s.durationSec ? s.durationSec - s.positionSec : null;
+  const left = remaining == null ? '' : remaining < 60 ? 'ending' : eta(remaining);
   const state = s.state === 'paused' ? 'Paused' : s.state === 'buffering' ? 'Buffering' : 'Playing';
   const cancelLeave = () => clearTimeout(leave.current);
   const close = (focus = false) => {
@@ -129,7 +133,7 @@ export function StreamRow({ stream: reported, service, label, href, compact = fa
         ref={trigger}
         type="button"
         className="playback-trigger"
-        aria-label={`${label}: ${s.title}, ${s.user}${progress !== null ? `, ${Math.round(progress)} percent` : ''}. Show playback details`}
+        aria-label={`${label}: ${s.title}, ${s.user}${s.state !== 'playing' ? `, ${s.state}` : left ? `, ${left}` : ''}${progress !== null ? `, ${Math.round(progress)} percent` : ''}. Show playback details`}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -174,7 +178,11 @@ export function StreamRow({ stream: reported, service, label, href, compact = fa
           <>
             <span className="stream-line">
               <span className="stream-title">{s.title}{s.subtitle && <span className="stream-sub"> <Episode text={s.subtitle} /></span>}</span>
-              <span className="stream-user">{s.user}{s.state !== 'playing' && `, ${s.state}`}{s.transcode && ', transcoding'}</span>
+              <span className="stream-user">
+                {s.user}
+                {s.state !== 'playing' ? `, ${s.state}` : left ? `, ${left}` : ''}
+                {s.transcode && ', transcoding'}
+              </span>
             </span>
             {progress !== null && <Meter label={`${s.title} playback progress`} value={progress} />}
           </>

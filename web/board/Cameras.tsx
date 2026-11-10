@@ -24,36 +24,49 @@ const FRAME_MS = 5_000;
 /**
  * A camera's newest frame, close to live while you can see it: every few
  * seconds while it's on screen and the tab is in front, and not at all
- * otherwise, so a board left open in a background tab costs nothing. Each
- * frame is fetched once, decoded off screen, then swapped in whole, so the
- * picture never blanks or flickers between frames. Patchboard passes each
- * frame straight through without holding it: bandwidth, not memory.
+ * otherwise, so a board left open in a background tab costs nothing.
+ *
+ * Two stacked pictures: the next frame loads into the hidden one and only
+ * becomes the visible one once it has fully loaded, so the old frame stays
+ * up until then and the picture never blanks or flickers. Each frame is one
+ * request; Patchboard passes it through without holding it.
  */
 function LiveFrame({ name }: { name: string }) {
-  const img = useRef<HTMLImageElement>(null);
-  const [src, setSrc] = useState(() => `/api/img/frigate?camera=${encodeURIComponent(name)}&t=${Date.now()}`);
+  const box = useRef<HTMLSpanElement>(null);
+  const [layers, setLayers] = useState<{ front: 0 | 1; src: [string, string] }>(() => ({
+    front: 0,
+    src: [`/api/img/frigate?camera=${encodeURIComponent(name)}&t=${Date.now()}`, ''],
+  }));
+  /** The hidden picture finished loading: show it, and free the frame it replaces. */
+  const shown = (i: 0 | 1) =>
+    setLayers((l) => {
+      if (l.front === i) return l;
+      const old = l.src[l.front];
+      if (old.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(old), 0);
+      return { ...l, front: i };
+    });
   useEffect(() => {
-    const el = img.current;
+    const el = box.current;
     if (!el) return;
     let seen = false;
     let loading = false;
     let gone = false;
-    let shown = '';
     const next = async () => {
       if (loading || !seen || document.visibilityState !== 'visible') return;
       loading = true;
       try {
         const res = await fetch(`/api/img/frigate?camera=${encodeURIComponent(name)}`, { cache: 'no-store' });
-        if (!res.ok) return;
+        if (!res.ok || gone) return;
         const url = URL.createObjectURL(await res.blob());
-        // Ready to paint before it goes in: no blank frame while it loads.
-        const pre = new Image();
-        pre.src = url;
-        await pre.decode().catch(() => {});
         if (gone) return URL.revokeObjectURL(url);
-        if (shown) URL.revokeObjectURL(shown);
-        shown = url;
-        setSrc(url);
+        // Into the hidden picture; its onLoad brings it to the front.
+        setLayers((l) => {
+          const back = (1 - l.front) as 0 | 1;
+          if (l.src[back].startsWith('blob:')) URL.revokeObjectURL(l.src[back]);
+          const src: [string, string] = [...l.src];
+          src[back] = url;
+          return { ...l, src };
+        });
       } catch {
         // Missed a frame: the last one stays up, and the next try comes on schedule.
       } finally {
@@ -73,10 +86,19 @@ function LiveFrame({ name }: { name: string }) {
       io.disconnect();
       document.removeEventListener('visibilitychange', onShow);
       clearInterval(timer);
-      if (shown) URL.revokeObjectURL(shown);
     };
   }, [name]);
-  return <img ref={img} src={src} alt="" decoding="async" />;
+  // Free whatever is still held when the camera leaves the page.
+  const held = useRef(layers);
+  held.current = layers;
+  useEffect(() => () => held.current.src.forEach((u) => u.startsWith('blob:') && URL.revokeObjectURL(u)), []);
+  return (
+    <span className="cam-frames" ref={box}>
+      {([0, 1] as const).map((i) =>
+        layers.src[i] ? <img key={i} src={layers.src[i]} alt="" className={i === layers.front ? 'is-front' : undefined} onLoad={() => shown(i)} /> : null,
+      )}
+    </span>
+  );
 }
 
 /**

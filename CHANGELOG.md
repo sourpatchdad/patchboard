@@ -2,12 +2,19 @@
 
 ## Unreleased
 
+- Camera frames really stop flickering: the next frame loads behind the
+  visible one and takes its place only once it's ready. (Patchboard's own
+  security policy was blocking the frames the last fix swapped in.)
+- Right now says how long is left beside who's watching ("Sam, 26 min
+  left"), counting down with the bar; paused rows still say paused.
+- Release names in Right now wrap at their dots, not mid-word.
+
 - The Apps widget can show only the groups you tick in its settings, so a
   board can leave a group out (Home without work projects) or hold just
   one. Cameras picks its cameras with the same tick boxes instead of typed
   names.
-- Camera frames no longer flicker: each is fetched once, decoded, then
-  swapped in whole, every 5 seconds while on screen (half the requests).
+- Camera frames refresh every 5 seconds while on screen, one request
+  each instead of two.
 - On a touch screen, app names under icons stay on one line, ending in an
   ellipsis instead of breaking mid-word, and a big app group wraps onto
   another row instead of running out of its card. Phones still swipe each

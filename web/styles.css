@@ -1192,8 +1192,9 @@ a.jack:focus-visible {
 }
 
 .torrent-name {
-  /* Release names are long and dotted: wrap at any point rather than cut. */
-  overflow-wrap: anywhere;
+  /* Release names are long and dotted: they wrap at the dots (see
+     breakable), and only mid-word when one piece is wider than the row. */
+  overflow-wrap: break-word;
   font: 400 12.5px/1.5 var(--f-mono);
   color: var(--ink-2);
 }
@@ -11230,4 +11231,36 @@ button.cam {
   min-height: var(--ctl-sm-h);
   font-size: var(--ctl-fs);
   color: var(--ink);
+}
+
+/* Two stacked camera pictures: the visible one stays until the next has loaded. */
+.cam-frames {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.cam-frames img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.cam-frames img.is-front {
+  opacity: 1;
+}
+
+.cam-live .cam-frames {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--term-bg);
+}
+
+.cam-live .cam-frames img {
+  object-fit: contain;
 }

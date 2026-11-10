@@ -12,6 +12,7 @@ import { type DownloadClient, PauseButton, useDownloadClients } from '../lib/dow
 import { eta, speed } from '../lib/format.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
+import { breakable } from '../lib/format.ts';
 
 const ACTION = { 'X-Patchboard': 'action' };
 
@@ -142,9 +143,4 @@ export function DownloadsWidget() {
       {error && <p className="crit-text">{error}</p>}
     </Section>
   );
-}
-
-/** Release names break at their dots (The.Bear.S04E04), not mid-word. */
-function breakable(name: string): string {
-  return name.replace(/([._-])/g, '$1​');
 }

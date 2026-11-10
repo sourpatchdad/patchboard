@@ -37,6 +37,7 @@ import {
   count,
   ago,
   agoLong,
+  breakable,
   clock,
   deg,
   dayLabel,
@@ -613,7 +614,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
             d.data.active.slice(0, limit).map((t) => (
               <div className="stream" key={t.name}>
                 <div className="stream-line">
-                  <span className="stream-title torrent-name">{t.name}</span>
+                  <span className="stream-title torrent-name">{breakable(t.name)}</span>
                   <span className="stream-user">{t.speed ? eta(t.etaSec) || speed(t.speed) : 'Queued'}</span>
                 </div>
                 <Meter label={`${t.name} download progress`} value={t.progress * 100} level="ok" />

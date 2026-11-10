@@ -44,7 +44,9 @@ export function securityHeaders(indexHtml: string | null): MiddlewareHandler {
     // React writes some style attributes; nothing executes from them.
     "style-src 'self' 'unsafe-inline'",
     // Service icons come from the dashboard-icons CDN or wherever the catalog points.
-    "img-src 'self' data: https: http:",
+    // blob: is the page's own copy of a camera frame it already fetched from
+    // Patchboard, swapped in whole so the picture never flickers.
+    "img-src 'self' data: blob: https: http:",
     "font-src 'self'",
     "connect-src 'self'",
     "frame-ancestors 'none'",
