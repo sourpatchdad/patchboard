@@ -322,32 +322,6 @@ try {
   await shootEl(cardPage.locator('.masthead'), 'home-header-contrast');
   await cardContext.close();
 
-  console.log('The otter');
-  // Each mood and what brings it on, from the images the app itself uses.
-  const moods = [
-    ['calm', 'All quiet', 'Nothing needs you.'],
-    ['hello', 'Eyes open', 'Image updates or an app it can’t reach: worth a look, not a problem.'],
-    ['alert', 'Alert', 'Something needs you: a warning in Needs attention, an amber dot on the tab.'],
-    ['worried', 'Worried', 'Something is down: an alarm in Needs attention, a red dot on the tab.'],
-    ['asleep', 'Asleep', 'All quiet between 11 PM and 6 AM.'],
-    ['happy', 'Happy', 'Welcomes you on first run.'],
-    ['lost', 'Lost', 'An address Patchboard doesn’t know.'],
-  ];
-  const sheet = await dark.newPage();
-  await sheet.setViewportSize({ width: 1920, height: 440 });
-  await sheet.setContent(`<body style="margin:0;padding:56px 64px;background:#0e1114;color:#e8eaed;font:15px/1.45 system-ui,sans-serif">
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:28px">
-    ${moods
-      .map(
-        ([m, t, d]) => `<figure style="margin:0;text-align:center"><img src="${demo.base}/otter/${m}-clear.png" style="width:210px;height:210px">
-        <figcaption><strong style="display:block;font-size:19px;margin:10px 0 6px">${t}</strong><span style="color:#9aa0a6">${d}</span></figcaption></figure>`,
-      )
-      .join('')}
-    </div></body>`);
-  await sheet.waitForLoadState('networkidle');
-  await shoot(sheet, 'otter-moods');
-  await sheet.close();
-
   console.log('First run');
   const fp = await dark.newPage();
   await fp.goto(fresh.base + '/');

@@ -168,45 +168,21 @@ container that runs again, a scheduled job, or one you stopped from
 Patchboard goes quiet. Color still
 means trouble; only the top bar's Live light is green.
 
-## The otter
+## Purposeful identity
 
-An otter peeking over the edge of the water, keeping an eye on your server
-so you don't have to. An otter floats calm with its tools at hand until
-something needs it, and Patchboard should feel the same.
+The interface is lightweight, clean and professional. Every element helps
+someone understand the server or act on it. Decorative mascots and mood
+illustrations do not appear in status, welcome, empty or error states.
+Status uses explicit text, counts and consistent severity indicators. Healthy
+states stay quiet; recovery actions stay visible.
 
-- **The art.** The designed artwork lives outside the repo, one 1254-pixel
-  image per mood (hello, calm, alert, worried, asleep, happy, lost), each the
-  otter on a navy tile: a brown dome with round ears, a cream face from the
-  eyes down, a nose over a wide "w" mouth, cream whiskers, two paws on one
-  band of water. The app icon wears the hello face.
-- **Few colors.** Navy, one brown, cream, ink and one blue. Amber appears
-  only on the alert otter and red only on the tab icon's dot, the same rule
-  as the rest of the interface: color means trouble.
-- **Never recolored.** The build lifts the otter off its tile and resizes
-  it; the pixels stay as drawn. On a light page the mascot sits on its navy
-  tile, so the cream whiskers show.
-- **Moods follow the server.** Calm when all is quiet, eyes open when
-  quiet notes wait (image updates, an app it can't reach), asleep on quiet
-  nights, alert with an amber dot when something needs you, worried with a
-  red dot when something is down. The header mark, the tab icon, the page
-  title count and an installed app's badge all follow. Happy greets you on
-  first run; lost answers a wrong address.
-- **Quiet by default.** Healthy stays neutral here too: the otter shows up in
-  empty and quiet moments and never pops up uninvited. Settings, Look turns
-  the mascot off per device; the header mark stays.
-- **The header mark and the tab icon** are the otter with no tile, cropped
-  close, wearing the server's mood. The tab adds an amber or red dot.
-- **Files.** `npm run icons -- /path/to/otter-art` reads the art and
-  writes, per mood, `web/public/otter/<mood>.png` (navy tile),
-  `<mood>-clear.png` (no tile, for the mascot) and `<mood>-mark.png` (no
-  tile, cropped close, for the header). It also writes the home-screen
-  PNGs with square corners (the platform rounds them), maskable PNGs with
-  the otter inside Android's safe zone, `favicon.png` and `favicon.ico`. To
-  change the otter, replace the art and run it again.
-- **Per device.** Settings, Look, App icon picks match the mode, dark or
-  light. Patchboard points the Apple touch icon and the install manifest at
-  the choice, and `index.html` does the same before the bundle
-  loads. Browsers read those links when you add to a home screen or install,
-  so the pick is what gets installed. A home-screen icon can't change after
-  that on iOS or Android; the badge count is how an installed app shows
-  trouble.
+The existing otter favicon and home-screen icons remain temporary identifiers
+until a replacement logo is selected. The tab uses the same static mark in all
+states, adding an amber dot for warnings or a red dot for critical alerts.
+The title count and installed-app badge also report attention counts.
+
+Settings, Look, App icon chooses dark, light or match the mode for this device.
+The Apple touch icon and install manifest follow that choice before the bundle
+loads. Installed home-screen icons may keep their original artwork; badge
+counts report trouble where supported. `npm run icons -- /path/to/otter-art`
+can still reproduce the temporary icons from the hello artwork.

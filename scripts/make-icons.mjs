@@ -1,18 +1,16 @@
-// Builds every otter image from the designed art (kept outside the repo; the
-// built images in web/public are what ship): the app
-// icons home screens need, the tab icons, favicon.ico, and the per-mood
-// images the header and the mascot use.
+// Reproduces the temporary app icons and favicon from the existing hello art.
+// The source artwork lives outside the repo; built icons in web/public ship.
 // Run: npm run icons (needs Chrome or Chromium, like npm run screenshots).
 //
-// The art is one 1254-pixel PNG per mood, the otter on a navy tile. Chrome's
+// The art is a 1254-pixel hello PNG, the otter on a navy tile. Chrome's
 // canvas does the work: it lifts the otter off the navy (keeping the soft
 // edges), then places it on a navy tile, a cream tile, a full square for
-// home screens, or nothing at all for the mascot. It never recolors the art.
+// home screens, or a transparent favicon. It never recolors the art.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const MOODS = ['hello', 'calm', 'alert', 'worried', 'asleep', 'happy', 'lost'];
+const MOODS = ['hello'];
 
 // The art: one PNG or WebP per mood, named after it (calm.png, calm.webp), or
 // patchboard-otter-<mood>.png as designed. Pass the folder:
@@ -26,7 +24,6 @@ const artFile = (mood) => {
 };
 const CHROME = process.env.CHROME_PATH ?? (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : '/usr/bin/chromium');
 
-mkdirSync('web/public/otter', { recursive: true });
 const browser = await chromium.launch({ executablePath: CHROME });
 const page = await browser.newPage();
 await page.setContent('<canvas></canvas>');
@@ -211,14 +208,7 @@ const build = async ({ src, jobs }) => {
 };
 
 const jobs = (mood) => {
-  const list = [
-    { name: `otter/${mood}.png`, tile: 'dark', shape: 'round', size: 160 },
-    { name: `otter/${mood}-clear.png`, tile: 'none', size: 280 },
-    { name: `otter/${mood}-mark.png`, tile: 'mark', size: 96 },
-  ];
-  if (mood !== 'hello') return list;
   return [
-    ...list,
     // Home screens round the corners themselves, so these fill the square.
     ...[180, 192, 512].flatMap((size) => [
       { name: `icon-${size}.png`, tile: 'dark', shape: 'square', size },

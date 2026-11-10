@@ -1176,7 +1176,7 @@ export interface Snapshot {
   pages?: import('./pages.ts').Pages;
   /** This Patchboard: its version, and its own container's name when it runs in Docker. */
   self?: { version: string; container: string | null; check?: SelfCheck };
-  /** The name in the header and the tab, and whether the otter sits beside it. */
+  /** The name in the header and the tab. */
   brand?: Brand;
   /** The boards, Home first, for the tabs over the board. */
   boards?: import('./board.ts').BoardRef[];
@@ -1219,6 +1219,4 @@ export interface SelfCheck {
 export interface Brand {
   /** Empty means Patchboard. */
   name?: string;
-  /** true puts the otter beside the name in the header. Off by default: Home's status line has one. */
-  otter?: boolean;
 }

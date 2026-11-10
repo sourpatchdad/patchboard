@@ -1,10 +1,8 @@
 // Home: exceptions and changes, not inventory. Healthy things collapse into
 // one sentence; space goes to what is new, in progress, broken or coming up.
 
-import { moodFor } from '../../shared/otter.ts';
 import { HeaderServer } from '../components/HeaderServer.tsx';
 import { StreamRow } from '../components/StreamRow.tsx';
-import { Mascot } from '../components/Otter.tsx';
 import { HOME_ID, STARTERS } from '../../shared/board.ts';
 import { forThisServer } from '../board/ready.ts';
 import { NameForm } from '../components/BrandName.tsx';
@@ -111,7 +109,6 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
   const date = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   const alerts = snap!.alerts.filter((a) => a.level !== 'info');
-  const night = d.getHours() >= 23 || d.getHours() < 6;
   const running = [...containerMap(snap).values()].filter((c) => c.state === 'running').length;
   const dockerOk = !!snap!.sources.docker?.ok;
   const blind = blindSpot(snap!);
@@ -125,15 +122,12 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
       : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: `${alerts.length === 1 ? 'One thing needs' : `${alerts.length} things need`} you.` };
   // A quiet line leads to what's running, or to the integrations it can't reach.
   const quietTo = blind ? '/settings?tab=connections' : '/stacks';
-  // The otter beside the status line wears the worst of it.
-  const mood = moodFor(status.tone === 'crit' ? 'critical' : status.tone === 'warn' ? 'warn' : null, night, snap!.alerts.length);
 
   if (homeStatusSize === 'hidden' && homeServer === 'hidden' && homeClockSize === 'hidden' && (!weather || weatherOnBoard || homeWeather === 'hidden')) return null;
 
   return (
     <header className={`masthead home-header status-${homeStatusSize} clock-${homeClockSize}${status.tone === 'ok' ? ' is-quiet' : ''}`}>
       {homeStatusSize !== 'hidden' && <div className={`masthead-status tone-${status.tone}`}>
-        <Mascot mood={mood} size={homeStatusSize === 'large' ? 88 : homeStatusSize === 'small' ? 56 : 72} className="status-mascot" />
         <div className="status-copy">
           {!attentionCard && !alerts.length ? (
             <Link className="status-line is-quiet" to={quietTo}>{status.text}</Link>
@@ -337,16 +331,12 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   const { snap } = useStore();
   const blind = snap ? blindSpot(snap) : null;
   const serious = needsYou(alerts).length;
-  const h = new Date(now).getHours();
-  const night = h >= 23 || h < 6;
-  // The otter stays whenever nothing is wrong, even with a quiet note below.
   const clear = serious === 0 && (
     <div className="all-clear">
-      <Mascot mood={moodFor(blind ? 'warn' : null, night, alerts.length)} size={88} />
       <p>
         <strong>{blind ? 'Connection problem.' : 'Nothing needs you.'}</strong>
         <br />
-        {blind ? blind : alerts.length ? `${alerts.length === 1 ? 'One note' : `${alerts.length} notes`} below, nothing urgent.` : night ? 'Everything is running. Get some sleep.' : 'Everything is running. The otter is keeping watch.'}
+        {blind ? blind : alerts.length ? `${alerts.length === 1 ? 'One note' : `${alerts.length} notes`} below, nothing urgent.` : 'Everything is running.'}
       </p>
     </div>
   );
@@ -1006,7 +996,6 @@ function Welcome() {
   return (
     <section className="welcome" aria-label="Getting started">
       <header className="welcome-head">
-        <Mascot mood="happy" size={56} />
         <h2>Welcome to Patchboard.</h2>
         <button
           type="button"

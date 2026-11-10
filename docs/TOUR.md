@@ -38,12 +38,9 @@ and Navidrome; Tracearr has its own marker for aggregate activity.
 
 ![Playback details on hover, focus or tap](screenshots/playback-preview.webp)
 
-![The otter's moods and what brings each one on](screenshots/otter-moods.webp)
-
-**The otter** follows the server in the header and the browser tab: calm,
-eyes open when image updates wait, asleep on quiet nights, alert with an
-amber dot, worried with a red one. The tab title counts what needs you, as in "(2) Patchboard". When nothing does,
-it sits beside "All quiet" and keeps watch. Settings, Look hides it.
+**Status** stays explicit: the header names problems, and the tab title counts
+what needs you, as in "(2) Patchboard". The tab icon adds an amber dot for
+warnings or a red dot for critical alerts.
 
 **Needs attention** sits in Home's header, with problem links wrapping under
 the status line, worst first. Three show, and the rest wait in a panel a

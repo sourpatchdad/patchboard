@@ -74,7 +74,7 @@ export function Settings() {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
   }, [hash]);
   useLanding(!!useStore().snap && (tab === 'connections' || tab === 'home'));
-  const groupLabels: Partial<Record<keyof Appearance, string>> = { otter: 'The otter', homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
+  const groupLabels: Partial<Record<keyof Appearance, string>> = { homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
     <div className="seg" role="group" aria-label={groupLabels[key]}>
       {options.map(([v, label]) => (
@@ -133,7 +133,7 @@ export function Settings() {
         <div className="choice-row icon-choices">
           {(
             [
-              ['auto', 'Match the mode', '/otter/hello-clear.png'],
+              ['auto', 'Match the mode', a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches) ? '/icon-light-192.png' : '/icon-192.png'],
               ['dark', 'Dark', '/icon-192.png'],
               ['light', 'Light', '/icon-light-192.png'],
             ] as const
@@ -145,20 +145,9 @@ export function Settings() {
           ))}
         </div>
         <p className="settings-note">
-          For this device: the browser tab, bookmarks, and the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick
-          first, then add. The tab icon follows your server: the otter looks up with an amber dot when something needs you, and worries with a red one when
-          something is down.
+          For this device: the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick
+          first, then add. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts what needs you.
         </p>
-      </Section>
-
-      <Section title="The otter">
-        <div className="choice-row">
-          {seg('otter', [
-            [true, 'Show it'],
-            [false, 'Hide it'],
-          ])}
-        </div>
-        <p className="settings-note">On this device, the otter keeps you company when nothing needs you, on first run and on a wrong address. The one beside the name is set under Name.</p>
       </Section>
 
       <Section title="Accent">

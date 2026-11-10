@@ -104,13 +104,9 @@ Home opens the on/off switches in Settings, Home. You can also change sizes
 and forecast detail. Arrange board changes the widget layout every device
 shares; header controls change this device and leave saved boards intact.
 
-**An otter keeps watch.** The otter beside the status follows your server: calm
-when all is quiet, eyes open when updates wait, asleep at night, looking up
-with an amber dot when something needs you, worried with a red one when
-something is down. Your browser tab follows along, so a pinned tab tells you
-from across the room.
-
-![The otter's moods and what brings each one on](docs/screenshots/otter-moods.webp)
+**Status at a glance.** The header names what needs attention and links to the
+problem. The browser tab counts alerts and adds an amber or red severity dot;
+installed apps show the count where the platform supports badges.
 
 **It's safe to run.** Keys stay on the server. Read-only mode, a Docker
 socket proxy, forward auth and an activity log let you decide how much it

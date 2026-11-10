@@ -304,37 +304,13 @@ a.ident:hover,
   min-width: 0;
 }
 
-.wordmark > span:not(.otter) {
+.wordmark > span {
   min-width: 0;
   max-width: 22ch;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   padding-block: 2px;
-}
-
-/* The otter: the mark and the mascot. Its face follows the server. */
-.otter {
-  display: inline-block;
-  flex: none;
-  line-height: 0;
-  color: var(--ink-3);
-}
-
-.otter img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  user-select: none;
-}
-
-:root[data-scheme='light'] .otter-on-dark,
-:root:not([data-scheme='light']) .otter-on-light {
-  display: none;
-}
-
-.wordmark-otter {
-  margin: -3px 0;
 }
 
 .nav {
@@ -698,14 +674,9 @@ h2.status-line {
   margin: 0;
 }
 
-/* The otter keeps watch beside the status line and wears its mood. */
 .status-line {
   gap: 10px;
   text-decoration: none;
-}
-
-.status-line .otter {
-  margin: -8px 0;
 }
 
 @media (max-width: 1099px) {
@@ -3875,10 +3846,8 @@ a.vitals:hover .vital-label {
   }
 }
 
-/* Narrower still: the otter alone is the wordmark, the demo label steps
-   aside, and the tabs sit closer. */
+/* Keep the dashboard name visible as the navigation tightens. */
 @media (min-width: 761px) and (max-width: 980px) {
-  .wordmark > span:not(.otter),
   .topbar-end .demo-pill {
     display: none;
   }
@@ -3887,9 +3856,22 @@ a.vitals:hover .vital-label {
     gap: 12px;
   }
 
+  .wordmark {
+    min-width: 80px;
+    max-width: 16ch;
+  }
+
+  .nav {
+    gap: 0;
+  }
+
   .nav-link {
-    padding: 0 8px;
-    font-size: 14.5px;
+    padding: 0 6px;
+    font-size: 13.5px;
+  }
+
+  .topbar-label {
+    display: none;
   }
 }
 
@@ -8631,12 +8613,9 @@ button.ha-act:hover {
   -webkit-line-clamp: unset;
 }
 
-/* ---------- The otter's moments ---------- */
+/* ---------- Quiet status and recovery ---------- */
 
 .all-clear {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   padding: 6px 0 2px;
 }
 
@@ -8651,15 +8630,6 @@ button.ha-act:hover {
   color: var(--head);
   font-weight: 600;
   font-size: 15px;
-}
-
-.welcome-head:has(.otter) {
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.welcome-head:has(.otter) h2 {
-  margin: 0 auto 0 0;
 }
 
 .not-found {
@@ -8692,14 +8662,6 @@ button.ha-act:hover {
 /* A narrow phone: the demo label gives way so the name and icons fit. */
 @media (max-width: 400px) {
   .topbar-end .demo-pill {
-    display: none;
-  }
-}
-
-/* On a phone the otter shows only where it reacts, beside the status line;
-   the header keeps just the name. */
-@media (max-width: 760px) {
-  .wordmark-otter {
     display: none;
   }
 }
@@ -8763,14 +8725,6 @@ button.ha-act:hover {
 
 .brand-row .field {
   flex: 0 1 320px;
-}
-
-.brand-row .check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--ink-2);
 }
 
 /* A section a link pointed at: it clears the header, and the rule under its
@@ -9350,7 +9304,6 @@ button.ha-act:hover {
   grid-row: auto;
   max-width: 520px;
 }
-.home-header .status-mascot { flex: none; }
 .home-header .status-copy { display: grid; gap: 4px; min-width: 0; }
 .home-header .status-line { font-size: 22px; line-height: 1.25; }
 .home-header.status-small .status-line { font-size: 19px; }
@@ -9414,8 +9367,6 @@ button.ha-act:hover {
   .home-header .status-line { font-size: 20px; }
   .home-header.status-large .status-line { font-size: 23px; }
   .home-header .head-alerts { display: grid; gap: 10px; font-size: 13px; }
-  .home-header .status-mascot { max-width: 64px; max-height: 64px; }
-  .home-header .status-mascot img { width: 100%; height: 100%; }
   .home-header .masthead-time { flex-direction: row; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-left: 0; border-left: 0; }
   .home-header .clock { font-size: 36px; }
   .home-header.clock-large .clock { font-size: 48px; }
@@ -9428,7 +9379,6 @@ button.ha-act:hover {
 
 @media (max-width: 359px) {
   .home-header .header-weather { grid-template-columns: minmax(0, 1fr); }
-  .home-header .status-mascot { max-width: 48px; max-height: 48px; }
 }
 
 /* Header metrics use the existing snapshot, and each opens its own detail. */

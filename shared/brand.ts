@@ -9,5 +9,5 @@ export function cleanBrand(raw: unknown): Brand | { error: string } {
   if (r.name != null && typeof r.name !== 'string') return { error: 'The name must be text' };
   const name = ((r.name as string | undefined) ?? '').replace(/\s+/g, ' ').replace(/[\u0000-\u001f\u007f]/g, '').trim();
   if (name.length > 40) return { error: 'Keep the name to 40 characters' };
-  return { ...(name ? { name } : {}), ...(r.otter === true ? { otter: true } : {}) };
+  return name ? { name } : {};
 }

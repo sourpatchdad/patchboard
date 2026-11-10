@@ -8,7 +8,7 @@ You configure almost everything in the UI:
 | Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in and keys | A password, and other names you open Patchboard by | Every device |
-| Settings, Look, Name | The name in the header and tab, and the otter beside it | Every device |
+| Settings, Look, Name | The name in the header and tab | Every device |
 | Settings, Look and Home | Theme, colors, type, density, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
 

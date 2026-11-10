@@ -5,7 +5,6 @@
 // between dark and light since the last visit. Keep KEY and VARS_KEY in step
 // with that script.
 
-import { moodFor, OTTER, otterSrc } from '../../shared/otter.ts';
 import { useSyncExternalStore } from 'react';
 import { contrast, MEDIA_COLORS, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
@@ -28,8 +27,6 @@ export interface Appearance {
   icons: IconMode;
   homeApps: HomeApps;
   appIcon: AppIcon;
-  /** The otter in empty and quiet moments. The header mark stays either way. */
-  otter: boolean;
   font: 'theme' | FontSet;
   density: Density;
   homeClockSize: 'hidden' | 'small' | 'medium' | 'large';
@@ -54,7 +51,6 @@ export const DEFAULTS: Appearance = {
   icons: 'mono',
   homeApps: 'tiles',
   appIcon: 'auto',
-  otter: true,
   font: 'theme',
   density: 'comfortable',
   homeClockSize: 'small',
@@ -89,7 +85,9 @@ let hadSaved = false;
 
 /** Older numeric headers adopt the graphical default; explicit off stays off. */
 function withDefaults(saved: Partial<Appearance>): Appearance {
-  return { ...DEFAULTS, ...saved, homeServer: saved.homeServer === 'hidden' ? 'hidden' : 'card', custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
+  // Ignore the retired mascot preference in older saved looks.
+  const { otter: _retired, ...look } = saved as Partial<Appearance> & { otter?: unknown };
+  return { ...DEFAULTS, ...look, homeServer: saved.homeServer === 'hidden' ? 'hidden' : 'card', custom: { ...DEFAULTS.custom, ...(saved.custom ?? {}) } };
 }
 
 function read(): Appearance {
@@ -197,8 +195,7 @@ export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
 }
 
 /**
- * The server's state, for the tab icon: the otter looks up with an amber dot
- * when something needs you and worries with a red one when something is down.
+ * The server's state adds a severity dot to the static tab icon.
  * When all is quiet the tab shows the plain icon file.
  */
 let status: { level: 'critical' | 'warn' | null; count: number } = { level: null, count: 0 };
@@ -240,10 +237,10 @@ export function setStatus(level: 'critical' | 'warn' | null, count: number): voi
 
 let drawn = 0;
 
-/** The mood's tile with a status dot in the corner, as a data URL. */
+/** The existing brand mark with a severity dot, as a data URL. */
 async function statusIcon(level: 'critical' | 'warn'): Promise<string> {
   const img = new Image();
-  img.src = otterSrc(moodFor(level), { mark: true });
+  img.src = '/favicon.png';
   await img.decode();
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -252,7 +249,8 @@ async function statusIcon(level: 'critical' | 'warn'): Promise<string> {
   g.drawImage(img, 0, 0, 64, 64);
   g.beginPath();
   g.arc(51, 13, 11, 0, Math.PI * 2);
-  g.fillStyle = level === 'critical' ? OTTER.crit : OTTER.warn;
+  const styles = getComputedStyle(document.documentElement);
+  g.fillStyle = styles.getPropertyValue(level === 'critical' ? '--crit' : '--warn').trim() || (level === 'critical' ? '#ef5b4c' : '#f0a43a');
   g.fill();
   return c.toDataURL('image/png');
 }

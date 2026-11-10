@@ -2,11 +2,9 @@ import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { moodFor } from '../../shared/otter.ts';
 import { setAppName, setPageName, setStatus } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
-import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 import { HELP } from '../lib/docs.ts';
@@ -148,13 +146,9 @@ export function Shell() {
   const gAt = useRef(0);
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
-  // The otter follows the server: the header mark, the tab icon, the title
-  // count and an installed app's badge. Quiet nights, it sleeps.
+  // The tab indicator, title count and installed app badge follow alerts.
   const serious = needsYou(snap?.alerts);
   const level = serious.some((a) => a.level === 'critical') ? 'critical' : serious.length ? 'warn' : null;
-  const hour = new Date().getHours();
-  const notes = snap?.alerts.filter((a) => a.level === 'info').length ?? 0;
-  const mood = moodFor(level, hour >= 23 || hour < 6, notes);
   useEffect(() => {
     if (snap) setStatus(level, serious.length);
   }, [snap, level, serious.length]);
@@ -219,7 +213,6 @@ export function Shell() {
       <PullRefresh />
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
-          {snap?.brand?.otter === true && <Otter mood={mood} size={32} mark className="wordmark-otter" />}
           <span title={name}>{name}</span>
         </NavLink>
         <nav className="nav" aria-label="Views">
