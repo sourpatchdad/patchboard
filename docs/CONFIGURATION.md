@@ -67,7 +67,7 @@ services.yaml.
 | `ALLOWED_HOSTS` | empty | Other names you reach Patchboard by, such as `dash.example.com`; Settings, Sign-in sets them too. IP addresses, `localhost` and home names (`nas`, `nas.local`, `.lan`, `.home.arpa`, `.internal`) always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |
-| `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the boards, apps, history, integration settings, keys) and `secret.key`, which encrypts the keys. Mount it, back it up, keep it owner-only. A few megabytes. |
+| `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the boards, apps, history, integration settings, keys) `secret.key`, which encrypts the keys, and `icon-cache/`, the app icons it has fetched. Mount it, back it up, keep it owner-only. A few megabytes. |
 | `PATCHBOARD_SECRET_KEY` | a random `secret.key` | Any long string. Encrypts keys saved in the UI instead of the generated file, so the database and the key can live on different disks. Set it later and Patchboard moves saved keys over to it on the next start, as long as `secret.key` is still in `DATA_DIR`. Back up `DATA_DIR` whole: the database and its key together. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |
@@ -134,7 +134,7 @@ services.yaml gives you your current apps as a starting file.
 | `name` | Shown on the tile, in Apps and in Jump to. |
 | `label` | A short name for under the icon, when the Apps widget shows names. |
 | `href` | Where the tile goes. |
-| `icon` | A [dashboard icons](https://dashboardicons.com) name such as `plex.png`, a URL, or a site path. |
+| `icon` | A [dashboard icons](https://dashboardicons.com) name such as `plex.png` (Patchboard fetches it once and serves its own copy), a URL, or a site path. |
 | `container` | The Docker container. Gives the tile its status and a container page. |
 | `expectStopped` | `true` for one-shot jobs, so their exit raises no alert. |
 | `check` | `false` skips the reachability check; a URL checks that address instead of `href`. |

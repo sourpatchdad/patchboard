@@ -43,7 +43,7 @@ export function securityHeaders(indexHtml: string | null): MiddlewareHandler {
     `script-src 'self' ${inline.join(' ')}`.trim(),
     // React writes some style attributes; nothing executes from them.
     "style-src 'self' 'unsafe-inline'",
-    // Service icons come from the dashboard-icons CDN or wherever the catalog points.
+    // Named app icons come from Patchboard; an icon given as a full address loads from there.
     // blob: is the page's own copy of a camera frame it already fetched from
     // Patchboard, swapped in whole so the picture never flickers.
     "img-src 'self' data: blob: https: http:",

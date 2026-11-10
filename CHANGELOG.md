@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- App icons come from Patchboard: it fetches each dashboard-icons file
+  once, keeps it in the data folder and serves it, so the browser no longer
+  calls a CDN and known icons still show with the internet down. Fonts
+  already ship inside the image.
 - Camera frames really stop flickering: the next frame loads behind the
   visible one and takes its place only once it's ready. (Patchboard's own
   security policy was blocking the frames the last fix swapped in.)

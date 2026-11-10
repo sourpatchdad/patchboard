@@ -90,6 +90,7 @@ import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
+import { iconCache } from './icon-cache.ts';
 
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
@@ -1357,6 +1358,19 @@ app.get('/api/icons/:file', (c) => {
   } catch {
     return c.json({ error: 'No such icon' }, 404);
   }
+});
+
+// App icons by name, from the dashboard-icons set, fetched once and kept in
+// the data folder. Sandboxed like uploads: an SVG opened directly can't run script.
+const icons = iconCache(join(config.dataDir, 'icon-cache'));
+app.get('/api/icon/:kind/:file', async (c) => {
+  const got = await icons.get(c.req.param('kind'), c.req.param('file'));
+  if (!got) return c.json({ error: 'No such icon' }, 404);
+  return c.body(got.body, 200, {
+    'Content-Type': got.type,
+    'Cache-Control': 'private, max-age=604800',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+  });
 });
 
 // Catalog audit: entries pointing at nothing, and running apps not listed.

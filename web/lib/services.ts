@@ -2,7 +2,8 @@ import type { ChecksData, Container, Service, ServiceCheck, Snapshot } from '../
 
 export type JackState = 'up' | 'warn' | 'down' | 'idle' | 'none';
 
-const ICON_CDN = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons';
+/** Patchboard keeps its own copy of each dashboard-icons file it shows. */
+const ICONS = '/api/icon';
 
 /**
  * Accepts the same icon forms as Homepage: a full URL, a site path, or a
@@ -12,9 +13,9 @@ export function iconUrl(icon?: string): string | undefined {
   if (!icon) return undefined;
   if (/^(https?:)?\/\//.test(icon) || icon.startsWith('/')) return icon;
   const m = /^(.+)\.(png|svg|webp)$/.exec(icon);
-  if (m) return `${ICON_CDN}/${m[2]}/${m[1]}.${m[2]}`;
+  if (m) return `${ICONS}/${m[2]}/${m[1]}.${m[2]}`;
   if (/^(si|mdi)-/.test(icon)) return undefined;
-  return `${ICON_CDN}/svg/${icon}.svg`;
+  return `${ICONS}/svg/${icon}.svg`;
 }
 
 export function containerMap(snap: Snapshot | null): Map<string, Container> {

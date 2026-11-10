@@ -67,10 +67,12 @@ container creation, which comes close to full access.
 - **Connection details stay on your box.** Patchboard sends no telemetry and
   calls no service of its own. It talks to the apps you connect, plus the
   public services you turn on (weather from Open-Meteo and the US National
-  Weather Service, Tessie, Trakt, Fastmail, TVmaze and TMDB for posters). Your
-  browser loads app icons from the dashboard-icons CDN on jsDelivr unless
-  you upload your own, and article and poster pictures from wherever their
-  publisher hosts them. No key or address rides along on any of those.
+  Weather Service, Tessie, Trakt, Fastmail, TVmaze and TMDB for posters).
+  App icons named from the dashboard-icons set are fetched once from
+  jsDelivr and kept in `DATA_DIR`, so your browser gets them from
+  Patchboard. Fonts ship inside the image. Your browser loads only article
+  pictures from their publishers, and an icon you give as a full address
+  from that address. No key or address rides along on any of those.
 - **Notifications are opt-in and go where you point them.** With a notifier
   set up, an alert's title and detail (a container name, a disk
   temperature) go to that service. A self-hosted ntfy, Gotify or webhook
