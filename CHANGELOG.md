@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Fixes:** the board tabs on a phone scroll only sideways, so a swipe
+  down the page no longer catches on them. Browsers fetch the icons and
+  install files again after an update instead of showing last release's
+  copy.
+- **App icon:** Dark is the default, and reads on light and dark home
+  screens. A phone in dark mode could darken the Light icon until its P
+  disappeared.
+
 ## 1.1.1 (2026-11-10)
 
 - **New app icon:** a P with a blue tab, in dark and light, on the browser

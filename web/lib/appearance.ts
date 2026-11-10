@@ -52,7 +52,7 @@ export const DEFAULTS: Appearance = {
   custom: DEFAULT_CUSTOM,
   icons: 'color',
   homeApps: 'tiles',
-  appIcon: 'auto',
+  appIcon: 'dark',
   font: 'theme',
   density: 'comfortable',
   homeClockSize: 'small',

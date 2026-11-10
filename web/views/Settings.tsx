@@ -133,9 +133,9 @@ export function Settings() {
         <div className="choice-row icon-choices">
           {(
             [
-              ['auto', 'Match the mode', a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches) ? '/icon-light-192.png' : '/icon-192.png'],
               ['dark', 'Dark', '/icon-192.png'],
               ['light', 'Light', '/icon-light-192.png'],
+              ['auto', 'Match the mode', a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches) ? '/icon-light-192.png' : '/icon-192.png'],
             ] as const
           ).map(([v, label, src]) => (
             <button key={v} type="button" className="icon-choice" aria-pressed={a.appIcon === v} onClick={() => setAppearance({ appIcon: v })}>
@@ -145,8 +145,8 @@ export function Settings() {
           ))}
         </div>
         <p className="settings-note">
-          For this device: the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick
-          first, then add. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts what needs you.
+          For this device: the icon you get from Add to Home Screen or Install. Dark reads on light and dark home screens; a phone in dark
+          mode can darken the Light icon and hide its P. A phone keeps the icon it had when you added it, so pick first, then add. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts what needs you.
         </p>
       </Section>
 

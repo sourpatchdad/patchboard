@@ -182,7 +182,9 @@ geometry. The tab uses the same mark in all states, adding an amber dot for
 warnings or a red dot for critical alerts. The title count and installed-app
 badge also report attention counts.
 
-Settings, Look, App icon chooses dark, light or match the mode for this device.
+Settings, Look, App icon chooses dark (the default), light or match the mode
+for this device. Dark reads on any home screen; a phone in dark mode can
+darken a light icon until its P disappears.
 The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge
 counts report trouble where supported. The mark lives in

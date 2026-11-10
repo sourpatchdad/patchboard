@@ -1529,6 +1529,14 @@ app.get('/healthz', (c) => c.text('ok'));
 
 // Static client and SPA fallback.
 const indexPath = join(config.staticDir, 'index.html');
+// Built files carry a hash in their name, so they keep forever. Everything
+// else (icons, manifests, the page) keeps its name across releases, so the
+// browser fetches it again rather than showing last release's copy.
+app.use('/*', async (c, next) => {
+  await next();
+  if (c.req.path.startsWith('/api/') || c.res.headers.has('Cache-Control')) return;
+  c.res.headers.set('Cache-Control', c.req.path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
+});
 app.use('/*', serveStatic({ root: config.staticDir }));
 app.get('*', (c) => {
   if (c.req.path.startsWith('/api/')) return c.json({ error: 'Not found' }, 404);
