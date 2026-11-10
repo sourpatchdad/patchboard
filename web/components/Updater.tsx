@@ -240,3 +240,18 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
     </Section>
   );
 }
+
+/** Update Patchboard itself: the same job as its container page, followed in one line. */
+export function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }) {
+  const u = useUpdateJob(name);
+  const j = u.job;
+  if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
+  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">Update failed. Open it</Link>;
+  if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>Already the newest image.</span>;
+  return (
+    <>
+      <UpdateButton name={name} busy={false} waiting={waiting} onStart={() => void u.start()} />
+      {u.error && <span className="crit-text" role="alert">{u.error}</span>}
+    </>
+  );
+}

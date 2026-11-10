@@ -13,6 +13,12 @@ Home: four checkboxes, with sizing and forecasts in Sizes and forecast
 details. Header preferences apply to this device. Arrange board controls the
 shared widget layout and leaves saved boards as they are.
 
+Beside Header settings sits the version. It reads "Update to v1.2.0" when a
+newer release is out, and "What's new in v1.2.0" once after you update.
+Either opens what each release changed, with Update right there when
+Patchboard can update itself. If your compose file pins an exact version, it
+tells you which tag to switch to instead.
+
 Below the header sits a board of widgets on the columns you choose. Right
 now shows who is watching Plex, Jellyfin or Emby and what each download client is doing, with a Pause button
 per client. Recently added merges every server newest first. A file Plex and

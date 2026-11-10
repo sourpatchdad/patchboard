@@ -64,7 +64,8 @@ import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
 import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
-import { Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
+import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
+import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
 import { boardId, validateBoard } from '../shared/board.ts';
@@ -1031,6 +1032,9 @@ app.get('/api/jobs/:id', (c) => {
     stop();
   });
 });
+
+// Patchboard's releases with their notes, so Home can say what an update brings.
+app.get('/api/self/releases', async (c) => c.json({ version: APP_VERSION, releases: config.demo ? demoSelfReleases(APP_VERSION) : await selfReleases() }));
 
 // Check for a newer Patchboard now, instead of waiting for the six-hourly look.
 app.post('/api/self/check', async (c) => {

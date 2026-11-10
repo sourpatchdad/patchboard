@@ -102,4 +102,4 @@ jobs:
           node scripts/release-check.ts "$TAG" notes.md
           pre=""
           case "${v%%+*}" in *-*) pre="--prerelease" ;; esac
-          gh release create "$TAG" --title "Patchboard $v" --notes-file notes.md --verify-tag $pre
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag $pre

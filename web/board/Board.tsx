@@ -40,6 +40,7 @@ import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
 import { HealthStrip } from '../components/Squares.tsx';
 import { Empty, Icon, Meter, Section } from '../components/ui.tsx';
+import { VersionLine } from '../components/WhatsNew.tsx';
 import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { useLanding } from '../lib/landing.ts';
@@ -596,6 +597,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
 
       <div className="board-foot" inert={editing || undefined}>
           <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Header settings</Link>
+          <VersionLine />
           {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             Arrange board
           </button>

@@ -64,10 +64,13 @@ container creation, which comes close to full access.
 - **Content-Security-Policy:** scripts load only from Patchboard. The single
   inline script runs by its SHA-256 hash. No frames, no plugins, no form
   posts elsewhere, `nosniff`, no referrer.
-- **Connection details stay on your box.** Patchboard sends no telemetry and
-  calls no service of its own. It talks to the apps you connect, plus the
-  public services you turn on (weather from Open-Meteo and the US National
-  Weather Service, Tessie, Trakt, Fastmail, TVmaze and TMDB for posters).
+- **Connection details stay on your box.** Patchboard sends no telemetry.
+  It talks to the apps you connect, plus the public services you turn on
+  (weather from Open-Meteo and the US National Weather Service, Tessie,
+  Trakt, Fastmail, TVmaze and TMDB for posters). For its own updates it asks
+  the GitHub container registry about its image and reads its release notes
+  from GitHub, at most once an hour; neither request carries anything about
+  you.
   App icons named from the dashboard-icons set are fetched once from
   jsDelivr and kept in `DATA_DIR`, so your browser gets them from
   Patchboard. Fonts ship inside the image. Article pictures in Reading load

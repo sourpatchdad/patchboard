@@ -39,7 +39,7 @@ const CHANGE_WINDOW = 48 * 3_600_000;
 /** Always on: these keep their loops when integrations change. */
 const CORE = new Set<SourceId>(['docker', 'stats', 'system', 'checks']);
 
-const APP_VERSION: string = (() => {
+export const APP_VERSION: string = (() => {
   try {
     return (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
   } catch {

@@ -51,7 +51,7 @@ export const IMAGES: Record<string, string> = {
   caddy: 'caddy:2',
   vaultwarden: 'vaultwarden/server:latest',
   'uptime-kuma': 'louislam/uptime-kuma:2',
-  patchboard: 'patchboard:1.1.0',
+  patchboard: 'ghcr.io/sourpatchdad/patchboard:latest',
   paperless: 'ghcr.io/paperless-ngx/paperless-ngx:latest',
   dozzle: 'amir20/dozzle:latest',
   diun: 'crazymax/diun:latest',

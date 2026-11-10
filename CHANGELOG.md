@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Home shows Patchboard's version beside Header settings. When a newer
+  release is out it reads "Update to v1.2.0" and opens what each release
+  changed, with Update right there; after you update, it shows what's new
+  once. A compose file that pins an exact version is told which tag to use.
+- Lists in Reading articles, runbooks and release notes show their bullets
+  and numbers again.
+- GitHub Releases are titled by their tag (v1.0.0).
+
 ## 1.0.0 (2026-11-10)
 
 The first public release.

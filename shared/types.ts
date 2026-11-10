@@ -1199,6 +1199,15 @@ export type ServerEvent =
   | { type: 'brand'; brand: Brand }
   | { type: 'boards'; boards: import('./board.ts').BoardRef[]; changed?: string };
 
+/** One published Patchboard release and its notes (Markdown), from GitHub Releases. */
+export interface SelfRelease {
+  version: string;
+  /** Unix ms. */
+  at: number;
+  notes: string;
+  url: string;
+}
+
 /** The last time Patchboard asked its registry about its own image, and what it heard. */
 export interface SelfCheck {
   at: number;
