@@ -170,6 +170,32 @@ button {
   color: inherit;
 }
 
+/* Trouble pulses three times when it starts, then holds still: a light that
+   never stops reads as decoration. Things in progress (Live, an update
+   running) keep pulsing because they are still moving. */
+
+/* Text wraps without leaving one word alone on its last line. */
+p,
+li,
+dd,
+blockquote,
+.settings-note {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* A selected row's wash lowers contrast; its quiet text steps up a shade. */
+.ctr.is-selected,
+.entry.is-selected,
+.palette-item[aria-selected='true'] {
+  --ink-3: var(--ink-2);
+}
+
 ::selection {
   background: color-mix(in srgb, var(--accent) 32%, transparent);
   color: var(--head);
@@ -622,7 +648,7 @@ a.ident:hover,
 
 .tone-crit .status-led {
   background: var(--crit);
-  animation: led-pulse 1.6s ease-in-out infinite;
+  animation: led-pulse 1.6s ease-in-out 3;
 }
 
 /* Needs attention in the header: short lines under the status line, a
@@ -795,7 +821,7 @@ h2.status-line {
 .jack[data-state='down'] .jack-led {
   background: var(--crit);
   box-shadow: 0 0 8px color-mix(in srgb, var(--crit) 65%, transparent);
-  animation: led-pulse 1.6s ease-in-out infinite;
+  animation: led-pulse 1.6s ease-in-out 3;
 }
 
 .jack[data-state='down'] .icon-img,
@@ -4017,7 +4043,7 @@ a.vitals:hover .vital-label {
 
 .tile[data-tone='crit'] .tile-icon::after {
   background: var(--crit);
-  animation: led-pulse 1.6s ease-in-out infinite;
+  animation: led-pulse 1.6s ease-in-out 3;
 }
 
 .tile-name {
@@ -5873,7 +5899,7 @@ body.is-sorting * {
 }
 
 .cell .cell-body > .section > .section-head h2 {
-  font-size: 19px;
+  font-size: 20px;
 }
 
 /* Wide widgets: lists flow into columns instead of one long stretched list. */
@@ -8474,8 +8500,8 @@ button.ha-act:hover {
   }
 
   .ctr {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   input[type='checkbox'],

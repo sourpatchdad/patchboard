@@ -9,6 +9,11 @@
 - Lists in Reading articles, runbooks and release notes show their bullets
   and numbers again.
 - GitHub Releases are titled by their tag (v1.0.0).
+- An app in trouble pulses three times when it goes down, then holds
+  still; Live and running updates still pulse while they move.
+- Widget titles step up a size, long text no longer leaves one word alone
+  on its last line, and quiet text on a selected row keeps its contrast.
+- Logs' container rows are a full finger tall on a phone.
 
 ## 1.0.0 (2026-11-10)
 
