@@ -5,10 +5,9 @@
 - One trouble count: the header, the tab title, Needs attention and Jump
   to read the same list. Jump to shows the first three and a row for all
   of them when more need you.
-- Fit the window folds Right now to one line per service (the heading and
-  what's playing), then gives rows back to the lists it cut deepest. Home
-  fits a 1440 by 900 window with the demo board. Opening Arrange board
-  keeps the counts you were looking at until you change something.
+- Fit the window folds Right now first, to one line per service (the
+  heading and what's playing), before it cuts other lists. Home fits a
+  1440 by 900 window with the demo board.
 - History squares: a healthy day is quiet ink; only warning and down days
   take color.
 - An app that's down or failing wears a larger light on its icon. Alerts

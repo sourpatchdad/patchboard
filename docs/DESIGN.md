@@ -61,9 +61,9 @@ one click.
   footer height, and report any remaining overflow. Fit is a temporary view
   adjustment and never rewrites the saved board. If list cuts are insufficient,
   artwork can shrink with its proportions intact; every poster remains in
-  the horizontal row. Right now can fold all the way, each service to its
-  heading and one line of titles. Once the board fits, Fit gives rows back
-  to the lists it cut deepest, as far as the window allows. When nothing
+  the horizontal row. Right now folds first and can fold all the way, each
+  service to its heading and one line of titles, so the other lists keep
+  their rows. When nothing
   makes it fit, Fit gives every list its full length back: a page that
   scrolls anyway shouldn't also be cut short.
 - **Use the width.** The board has the columns you choose; each widget lays
