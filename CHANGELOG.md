@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A new app icon: a P with a blue tab, in dark and light, for the browser
+  tab, home screens and the install prompt. It replaces the otter.
 - Fewer files to read: examples/ holds the plain compose file and a
   hardened one. Mounts, host networking for Wake-on-LAN and HTTPS for the
   phone app are short snippets in CONFIGURATION.md. The variable template

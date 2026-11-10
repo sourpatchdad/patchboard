@@ -176,13 +176,14 @@ welcome, empty and error states carry no mascots or mood illustrations.
 Status uses explicit text, counts and consistent severity indicators. Healthy
 states stay quiet; recovery actions stay visible.
 
-The existing otter favicon and home-screen icons remain temporary identifiers
-until a replacement logo is selected. The tab uses the same static mark in all
-states, adding an amber dot for warnings or a red dot for critical alerts.
-The title count and installed-app badge also report attention counts.
+The app icon is a P: an open bowl in the tile's ink and a blue tab under its
+top bar. Dark (ivory on near-black) and light (slate on near-white) share the
+geometry. The tab uses the same mark in all states, adding an amber dot for
+warnings or a red dot for critical alerts. The title count and installed-app
+badge also report attention counts.
 
 Settings, Look, App icon chooses dark, light or match the mode for this device.
 The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge
-counts report trouble where supported. `npm run icons -- /path/to/otter-art`
-can still reproduce the temporary icons from the hello artwork.
+counts report trouble where supported. The mark lives in
+`scripts/make-icons.mjs`; `npm run icons` redraws every size from it.

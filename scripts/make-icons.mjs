@@ -1,260 +1,71 @@
-// Reproduces the temporary app icons and favicon from the existing hello art.
-// The source artwork lives outside the repo; built icons in web/public ship.
+// Draws Patchboard's app icons and favicon from the mark below.
 // Run: npm run icons (needs Chrome or Chromium, like npm run screenshots).
 //
-// The art is a 1254-pixel hello PNG, the otter on a navy tile. Chrome's
-// canvas does the work: it lifts the otter off the navy (keeping the soft
-// edges), then places it on a navy tile, a cream tile, a full square for
-// home screens, or a transparent favicon. It never recolors the art.
+// The mark is a P on a 512 grid: an open bowl in the tile's ink, and a blue
+// tab under its top bar with a slanted foot. Dark and light share the
+// geometry; only the tile and the ink change. The whole mark sits inside the
+// circle Android crops maskable icons to, so one file serves both purposes.
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const MOODS = ['hello'];
-
-// The art: one PNG or WebP per mood, named after it (calm.png, calm.webp), or
-// patchboard-otter-<mood>.png as designed. Pass the folder:
-//   npm run icons -- /path/to/otter-art
-const ART = process.argv[2] ?? 'scripts/otter';
-const artFile = (mood) => {
-  for (const name of [`${mood}.webp`, `${mood}.png`, `patchboard-otter-${mood}.png`, mood === 'hello' ? 'patchboard-otter-generic.png' : null]) {
-    if (name && existsSync(`${ART}/${name}`)) return `${ART}/${name}`;
-  }
-  throw new Error(`No art for ${mood} in ${ART}. Run: npm run icons -- /path/to/otter-art`);
-};
-const CHROME = process.env.CHROME_PATH ?? (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : '/usr/bin/chromium');
-
-const browser = await chromium.launch({ executablePath: CHROME });
-const page = await browser.newPage();
-await page.setContent('<canvas></canvas>');
-
-// Everything below runs in the page, once per mood.
-const build = async ({ src, jobs }) => {
-  const NAVY = [17, 34, 59];
-  const CREAM = [245, 239, 228];
-  const FUR = [163, 111, 73];
-  const FACE = [242, 223, 200];
-  const WATER = [52, 129, 246];
-  const AMBER = [245, 172, 51];
-  // The tile inside the 1254-pixel art.
-  const X0 = 38;
-  const Y0 = 37;
-  const S = 1178;
-  const RADIUS = 300 / S;
-
-  const img = new Image();
-  img.src = src;
-  await img.decode();
-  const canvas = (w, h = w) => Object.assign(document.createElement('canvas'), { width: w, height: h });
-  const src0 = canvas(S);
-  src0.getContext('2d').drawImage(img, X0, Y0, S, S, 0, 0, S, S);
-  const data = src0.getContext('2d').getImageData(0, 0, S, S);
-  const px = data.data;
-  const N = S * S;
-  const dist = (i, c) => Math.hypot(px[i] - c[0], px[i + 1] - c[1], px[i + 2] - c[2]);
-
-  // 1. The navy around the otter: flood from the edges through navy and
-  // through the clear corners. Ink (eyes, nose) is close to navy but sits
-  // inside the cream face, so the flood never reaches it.
-  const bg = new Uint8Array(N);
-  const stack = [];
-  const seed = (k) => {
-    if (!bg[k]) {
-      const i = k * 4;
-      if (px[i + 3] < 128 || dist(i, NAVY) < 30) {
-        bg[k] = 1;
-        stack.push(k);
-      }
-    }
-  };
-  // The art outlines its tile with a thin light line: everything outside a
-  // tile inset a few pixels counts as background, so the line goes too.
-  const IN = 10;
-  const r = S * RADIUS - IN;
-  const inside = (x, y) => {
-    const cx = Math.min(Math.max(x, IN + r), S - IN - r);
-    const cy = Math.min(Math.max(y, IN + r), S - IN - r);
-    return Math.hypot(x - cx, y - cy) <= r;
-  };
-  for (let k = 0; k < N; k++) {
-    if (!inside(k % S, (k / S) | 0)) {
-      bg[k] = 1;
-      stack.push(k);
-    }
-  }
-  while (stack.length) {
-    const k = stack.pop();
-    const x = k % S;
-    const y = (k / S) | 0;
-    if (x > 0) seed(k - 1);
-    if (x < S - 1) seed(k + 1);
-    if (y > 0) seed(k - S);
-    if (y < S - 1) seed(k + S);
-  }
-
-  // 2. Lift the otter off: background clear, and each edge pixel split into
-  // the color it blends with navy and how much of it shows. The color comes
-  // from the solid stroke next to it, so a cream whisker keeps a cream edge.
-  const near = (k, r) => {
-    const x = k % S;
-    const y = (k / S) | 0;
-    for (let dy = -r; dy <= r; dy++)
-      for (let dx = -r; dx <= r; dx++) {
-        const xx = x + dx;
-        const yy = y + dy;
-        if (xx >= 0 && yy >= 0 && xx < S && yy < S && bg[yy * S + xx]) return true;
-      }
-    return false;
-  };
-  const clear = new Uint8ClampedArray(px);
-  for (let k = 0; k < N; k++) {
-    const i = k * 4;
-    if (bg[k]) {
-      clear[i + 3] = 0;
-      continue;
-    }
-    if (px[i + 3] < 250 || !near(k, 2)) continue;
-    const inner = [];
-    const x0 = k % S;
-    const y0 = (k / S) | 0;
-    for (const [dx, dy] of [[4, 0], [-4, 0], [0, 4], [0, -4], [3, 3], [-3, 3], [3, -3], [-3, -3]]) {
-      const xx = x0 + dx;
-      const yy = y0 + dy;
-      if (xx < 0 || yy < 0 || xx >= S || yy >= S) continue;
-      const kk = yy * S + xx;
-      if (!bg[kk] && !near(kk, 2)) inner.push([px[kk * 4], px[kk * 4 + 1], px[kk * 4 + 2]]);
-    }
-    let best = null;
-    for (const c of inner.length ? inner : [FUR, FACE, WATER, AMBER]) {
-      const d = [c[0] - NAVY[0], c[1] - NAVY[1], c[2] - NAVY[2]];
-      const p = [px[i] - NAVY[0], px[i + 1] - NAVY[1], px[i + 2] - NAVY[2]];
-      const a = Math.min(1, Math.max(0, (p[0] * d[0] + p[1] * d[1] + p[2] * d[2]) / (d[0] ** 2 + d[1] ** 2 + d[2] ** 2)));
-      const err = Math.hypot(p[0] - a * d[0], p[1] - a * d[1], p[2] - a * d[2]);
-      if (!best || err < best.err) best = { c, a, err };
-    }
-    clear.set(best.c, i);
-    clear[i + 3] = Math.round(best.a * 255);
-  }
-
-  const layer = (pixels) => {
-    const c = canvas(S);
-    c.getContext('2d').putImageData(new ImageData(pixels, S, S), 0, 0);
-    return c;
-  };
-  const otter = layer(clear);
-
-  // Shrink in halves so the small sizes stay crisp.
-  const shrink = (c, size) => {
-    let cur = c;
-    while (cur.width / 2 > size) {
-      const n = canvas(Math.round(cur.width / 2));
-      const g = n.getContext('2d');
-      g.imageSmoothingQuality = 'high';
-      g.drawImage(cur, 0, 0, n.width, n.height);
-      cur = n;
-    }
-    const out = canvas(size);
-    const g = out.getContext('2d');
-    g.imageSmoothingQuality = 'high';
-    g.drawImage(cur, 0, 0, size, size);
-    return out;
-  };
-  const rgb = (c) => `rgb(${c.join(',')})`;
-
-  // A finished picture at full size, then shrunk.
-  const compose = ({ tile, shape, safe }) => {
-    const c = canvas(S);
-    const g = c.getContext('2d');
-    const fill = tile === 'light' ? CREAM : NAVY;
-    const art = otter;
-    if (tile === 'none') {
-      g.drawImage(art, 0, 0);
-      return c;
-    }
-    // The mark: no tile, cropped close so the otter fills a small square.
-    if (tile === 'mark') {
-      const m = S * 0.04;
-      g.drawImage(art, m, S * 0.08, S - 2 * m, S - 2 * m, 0, 0, S, S);
-      return c;
-    }
-    if (shape === 'round') {
-      g.beginPath();
-      g.roundRect(0, 0, S, S, S * RADIUS);
-      g.clip();
-    }
-    g.fillStyle = rgb(fill);
-    g.fillRect(0, 0, S, S);
-    // Square icons: one flat band of water from edge to edge, starting at
-    // the art's waterline, so the mask never shows a step. The rounded tile
-    // keeps the art's sloped shoulders.
-    const k = safe ? 0.8 : 1;
-    const off = (S * (1 - k)) / 2;
-    g.fillStyle = rgb(WATER);
-    g.fillRect(0, off + S * k * (shape === 'round' ? 0.86 : 0.79), S, S);
-    g.drawImage(art, off, off, S * k, S * k);
-    // One blue below the waterline, so the pool's edge leaves no faint seam.
-    const top = Math.floor(off + S * k * 0.74);
-    const d = g.getImageData(0, top, S, S - top);
-    const p = d.data;
-    for (let i = 0; i < p.length; i += 4)
-      if (p[i + 3] === 255 && Math.hypot(p[i] - WATER[0], p[i + 1] - WATER[1], p[i + 2] - WATER[2]) < 70) p.set(WATER, i);
-    g.putImageData(d, 0, top);
-    return c;
-  };
-
-  const out = {};
-  for (const job of jobs) out[job.name] = shrink(compose(job), job.size).toDataURL('image/png');
-  return out;
+const BOWL = 'M152 124H305A101 101 0 0 1 305 326H232V266H305A41 41 0 0 0 305 184H152A10 10 0 0 1 142 174V134A10 10 0 0 1 152 124Z';
+const TAB = 'M142 266H232V376L142 413Z';
+const BLUE = '#3b82f6';
+const TILES = {
+  dark: { tile: '#0b0c0e', ink: '#f1e2cc' },
+  light: { tile: '#f7f7f8', ink: '#20252d' },
 };
 
-const jobs = (mood) => {
-  return [
-    // Home screens round the corners themselves, so these fill the square.
-    ...[180, 192, 512].flatMap((size) => [
-      { name: `icon-${size}.png`, tile: 'dark', shape: 'square', size },
-      { name: `icon-light-${size}.png`, tile: 'light', shape: 'square', size },
-    ]),
-    // Android crops a maskable icon to a circle or squircle: keep the otter in the safe zone.
-    { name: 'icon-maskable-512.png', tile: 'dark', shape: 'square', safe: true, size: 512 },
-    { name: 'icon-light-maskable-512.png', tile: 'light', shape: 'square', safe: true, size: 512 },
-    // The tab icon, and the sizes inside favicon.ico: the mark, no tile.
-    { name: 'favicon.png', tile: 'mark', size: 64 },
-    ...[16, 32, 48].map((size) => ({ name: `ico-${size}`, tile: 'mark', size })),
-  ];
+/** The mark on a tile. `scale` grows it about the center; `radius` rounds the tile. */
+export const iconSvg = (tone, { scale = 1, radius = 0 } = {}) => {
+  const { tile, ink } = TILES[tone];
+  const mark = `<path fill="${ink}" d="${BOWL}"/><path fill="${BLUE}" d="${TAB}"/>`;
+  const grown = scale === 1 ? mark : `<g transform="translate(256 256) scale(${scale}) translate(-256 -256)">${mark}</g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="${radius}" fill="${tile}"/>${grown}</svg>`;
 };
 
-const ico = [];
-for (const mood of MOODS) {
-  const file = artFile(mood);
-  const src = `data:image/${file.endsWith('.webp') ? 'webp' : 'png'};base64,${readFileSync(file).toString('base64')}`;
-  const files = await page.evaluate(build, { src, jobs: jobs(mood) });
-  for (const [name, url] of Object.entries(files)) {
-    const buf = Buffer.from(url.split(',')[1], 'base64');
-    if (name.startsWith('ico-')) {
-      ico.push([Number(name.slice(4)), buf]);
-      continue;
-    }
-    writeFileSync(`web/public/${name}`, buf);
-    console.log(`wrote web/public/${name}`);
+const jobs = [
+  // Home screens and the install manifest: a full square, as designed.
+  ...[180, 192, 512].flatMap((size) => [
+    { name: `icon-${size}.png`, svg: iconSvg('dark'), size },
+    { name: `icon-light-${size}.png`, svg: iconSvg('light'), size },
+  ]),
+  // The tab icon and the sizes inside favicon.ico: a rounded tile with the
+  // mark grown, so the P still reads at 16 pixels on light and dark tab bars.
+  { name: 'favicon.png', svg: iconSvg('dark', { scale: 1.3, radius: 96 }), size: 64 },
+  ...[16, 32, 48].map((size) => ({ name: `ico-${size}`, svg: iconSvg('dark', { scale: 1.3, radius: 96 }), size })),
+];
+
+if (process.argv[1]?.endsWith('make-icons.mjs')) {
+  const CHROME = process.env.CHROME_PATH ?? (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : '/usr/bin/chromium');
+  const browser = await chromium.launch({ executablePath: CHROME });
+  const page = await browser.newPage();
+  const ico = [];
+  for (const { name, svg, size } of jobs) {
+    await page.setViewportSize({ width: size, height: size });
+    await page.setContent(`<style>html,body{margin:0;background:transparent}svg{display:block;width:${size}px;height:${size}px}</style>${svg}`);
+    const buf = await page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
+    if (name.startsWith('ico-')) ico.push([size, buf]);
+    else writeFileSync(`web/public/${name}`, buf);
   }
+  await browser.close();
+
+  // favicon.ico, for browsers and bookmark bars that ask for it by name: PNGs inside an ICO directory.
+  const header = Buffer.alloc(6 + 16 * ico.length);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(ico.length, 4);
+  let offset = header.length;
+  ico.forEach(([size, buf], i) => {
+    const e = 6 + 16 * i;
+    header.writeUInt8(size, e);
+    header.writeUInt8(size, e + 1);
+    header.writeUInt16LE(1, e + 4);
+    header.writeUInt16LE(32, e + 6);
+    header.writeUInt32LE(buf.length, e + 8);
+    header.writeUInt32LE(offset, e + 12);
+    offset += buf.length;
+  });
+  writeFileSync('web/public/favicon.ico', Buffer.concat([header, ...ico.map(([, buf]) => buf)]));
+  console.log(`Wrote ${jobs.length - ico.length} icons and favicon.ico.`);
 }
-
-// favicon.ico, for browsers and bookmark bars that ask for it by name.
-const header = Buffer.alloc(6 + 16 * ico.length);
-header.writeUInt16LE(0, 0);
-header.writeUInt16LE(1, 2);
-header.writeUInt16LE(ico.length, 4);
-let offset = header.length;
-ico.forEach(([size, buf], i) => {
-  const e = 6 + 16 * i;
-  header.writeUInt8(size, e);
-  header.writeUInt8(size, e + 1);
-  header.writeUInt16LE(1, e + 4);
-  header.writeUInt16LE(32, e + 6);
-  header.writeUInt32LE(buf.length, e + 8);
-  header.writeUInt32LE(offset, e + 12);
-  offset += buf.length;
-});
-writeFileSync('web/public/favicon.ico', Buffer.concat([header, ...ico.map(([, buf]) => buf)]));
-console.log('wrote web/public/favicon.ico');
-await browser.close();
