@@ -10109,8 +10109,8 @@ a.play:hover .play-title {
 /* Cameras: newest frames as 16:9 tiles, as many to a row as fit. */
 .cam-grid {
   display: grid;
-  /* Fit: six cameras share the row instead of leaving an empty seventh slot. */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  /* Two to a row on a phone; five fit one row of a two-column card. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   gap: 8px;
   /* The same space under the header rule as every other card. */
   margin: 14px 0 0;

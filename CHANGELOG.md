@@ -8,6 +8,8 @@
 - Right now says how long is left beside who's watching ("Sam, 26 min
   left"), counting down with the bar; paused rows still say paused.
 - Release names in Right now wrap at their dots, not mid-word.
+- Cameras sit two to a row on a phone instead of one, so five cameras
+  take a third of the height; a wide card fits more to a row.
 
 - The Apps widget can show only the groups you tick in its settings, so a
   board can leave a group out (Home without work projects) or hold just
