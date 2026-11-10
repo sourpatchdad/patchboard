@@ -49,7 +49,7 @@ export function ContainerActions({ name, running, self, onSent, locked }: { name
     <div className="ctr-actions">
       {actions.map((a) =>
         a === 'start' ? (
-          <button key={a} type="button" className="button button-quiet" disabled={!!busy || locked} onClick={() => void run(a)} aria-live="polite">
+          <button key={a} type="button" className="button button-quiet" disabled={locked} aria-disabled={!!busy || undefined} onClick={() => !busy && void run(a)} aria-live="polite">
             {busy === a ? `${VERB[a][1]}...` : VERB[a][0]}
           </button>
         ) : (

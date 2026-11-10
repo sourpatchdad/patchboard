@@ -281,10 +281,17 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
         {last.size ? `. ${last.stored} files kept, ${last.size}.` : '.'}
       </p>
       <ul className="backup-grid">
-        {labels.map((label) => (
+        {labels.map((label) => {
+          // Failures said in words too, not only as red squares.
+          const fails = recent.filter((r) => r.items.find((i) => i.label === label && !i.ok));
+          const dates = fails.map((r) => new Date(r.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })).join(', ');
+          return (
           <li key={label}>
-            <span className="backup-label">{label}</span>
-            <span className="squares" role="img" aria-label={`${label}, last ${recent.length} nights`}>
+            <span className="backup-label">
+              {label}
+              {fails.length > 0 && <span className="crit-text">, {fails.length} failed</span>}
+            </span>
+            <span className="squares" role="img" aria-label={`${label}, last ${recent.length} nights${fails.length ? `: ${fails.length} failed, ${dates}` : ', all complete'}`}>
               {recent.map((r) => {
                 const it = r.items.find((i) => i.label === label);
                 const cls = !it ? 'sq-none' : it.ok ? 'sq-up' : 'sq-down';
@@ -293,7 +300,8 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
               })}
             </span>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

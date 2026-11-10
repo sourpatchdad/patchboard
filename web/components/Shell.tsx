@@ -2,7 +2,7 @@ import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { setAppName, setPageName, setStatus } from '../lib/appearance.ts';
+import { setAppName, setPageName, setStatus, getAppearance } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
 import { Palette } from './Palette.tsx';
@@ -177,6 +177,7 @@ export function Shell() {
       if (document.querySelector('[aria-modal="true"]')) return;
       if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'Escape') setHelp(false);
+      if (!getAppearance().keys) return;
       if (e.key === '/') {
         e.preventDefault();
         setPalette(true);

@@ -1066,7 +1066,7 @@ function Welcome() {
               {i > 0 && ', '}
               <button
                 type="button"
-                className="text-button"
+                className="text-button in-sentence"
                 title={st.about}
                 onClick={async () => {
                   await fetch(`/api/boards/${HOME_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(forThisServer(st.board, snap)) });

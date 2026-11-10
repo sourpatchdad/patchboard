@@ -183,6 +183,14 @@ export function Settings() {
         </div>
       </Section>
 
+      <Section title="Keyboard">
+        <label className="check">
+          <input type="checkbox" checked={a.keys} onChange={(e) => setAppearance({ keys: e.target.checked })} />
+          Single-key shortcuts
+        </label>
+        <p className="settings-note">/ opens Jump to, ? lists the shortcuts, g then a letter goes to a page, and j and k move through Reading. Turn them off if you use speech input. Ctrl K always works.</p>
+      </Section>
+
       </>
       )}
       {tab === 'home' && (
@@ -310,7 +318,7 @@ function AppVersion() {
       <span>Patchboard {me.version}</span>
       <span className={newer ? 'warn-text' : undefined}>{status}</span>
       {!ro && (
-        <button type="button" className="text-button" disabled={busy} onClick={() => void checkNow()}>
+        <button type="button" className="text-button" aria-disabled={busy || undefined} onClick={() => !busy && void checkNow()}>
           {busy ? 'Checking...' : 'Check now'}
         </button>
       )}
@@ -1161,7 +1169,7 @@ function Alerts() {
       ))}
       {!readOnly && (
         <div className="thresholds-save">
-          <button type="button" className="button" disabled={!changed || busy} onClick={() => void save()}>
+          <button type="button" className="button" disabled={!changed} aria-disabled={busy || undefined} onClick={() => !busy && void save()}>
             {busy ? 'Saving...' : 'Save'}
           </button>
           {changed && (

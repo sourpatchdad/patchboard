@@ -4,6 +4,7 @@
 // Opening an entry marks it read. Keyboard: j/k next/previous, o open
 // original, u back to the edition.
 
+import { getAppearance } from '../lib/appearance.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -188,6 +189,9 @@ export function Feeds() {
       readerRef.current?.scrollTo({ top: 0 });
       // On a phone the page itself scrolls: open the article at its top.
       if (matchMedia('(max-width: 760px)').matches) window.scrollTo({ top: 0 });
+      // Focus follows into the article, however it was opened: the next Tab
+      // starts there, and a screen reader reads its title.
+      if (id) setTimeout(() => document.getElementById('reader-title')?.focus({ preventScroll: true }), 30);
     },
     [params, setParams, markRead, selectedId, kept],
   );
@@ -208,6 +212,7 @@ export function Feeds() {
     let gAt = 0;
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (!getAppearance().keys) return;
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       if (document.querySelector('.palette')) return;
       // "g k" and "g u" go to pages: the key after g belongs to the shortcut, not to Reading.
@@ -222,8 +227,6 @@ export function Feeds() {
       const idx = visible.findIndex((x) => x.id === selectedId);
       if (e.key === 'j' || e.key === 'k') {
         select(visible[e.key === 'j' ? Math.min(idx + 1, visible.length - 1) : Math.max(idx - 1, 0)]?.id ?? null);
-        // Focus follows: the next Tab starts in the article, and a screen reader reads its title.
-        setTimeout(() => document.getElementById('reader-title')?.focus(), 30);
       }
       else if (e.key === 'o' && selected) window.open(selected.url, '_blank', 'noopener');
       else if (e.key === 'u' || (e.key === 'Escape' && selected)) {
@@ -379,7 +382,7 @@ export function Feeds() {
         )}
       </aside>
 
-      <article className="reader" ref={readerRef} aria-live="polite">
+      <article className="reader" ref={readerRef}>
         {selected ? (
           <>
             <button type="button" className="text-button reader-back" onClick={back}>

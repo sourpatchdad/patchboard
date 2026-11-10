@@ -36,6 +36,8 @@ export interface Appearance {
   clock24: boolean;
   temp: TempUnit;
   hidden: HomeSection[];
+  /** Single-key shortcuts (/, ?, g then a letter, j and k). Off for speech input, which can trigger them. */
+  keys: boolean;
 }
 
 const KEY = 'pb-appearance';
@@ -60,6 +62,7 @@ export const DEFAULTS: Appearance = {
   clock24: false,
   temp: usesFahrenheit ? 'f' : 'c',
   hidden: [],
+  keys: true,
 };
 
 export const ACCENTS: { id: string; name: string; dark: string; light: string }[] = [

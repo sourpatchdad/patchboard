@@ -8,6 +8,19 @@ Run `npm run test:a11y` and `npm run test:zoom` with Chrome or Chromium
 installed. Set `CHROMIUM_PATH` if needed. CI runs the same checks after building, against a temporary demo
 database; it never uses your saved boards or integration settings.
 
+## Built in
+
+- **Hold to confirm** (Stop, Restart, Update, Remove) also works without
+  holding: a screen reader, voice control or switch press arms the button,
+  and a second press within five seconds confirms.
+- **Single-key shortcuts** (/, ?, g then a letter, j and k) can be turned
+  off in Settings, Look, Keyboard, for speech input. Ctrl K always works.
+- **Arrange board** works without dragging: Move earlier, Move later, a
+  Column menu and width buttons. A move keeps focus on the widget and says
+  where it went.
+- **Overlays** hold focus, close with Escape and return focus to what
+  opened them. Focus moves into an opened article.
+
 ## Automated coverage
 
 - Home, Server, Stacks, Reading, Upcoming, Apps, and Home/Connections settings:

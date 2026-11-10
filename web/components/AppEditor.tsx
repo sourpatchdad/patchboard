@@ -282,7 +282,23 @@ export function EditApps({
                 </span>
                 <span className="cell-btn move-to tile-menu" title="Edit, hide or move">
                   ⋯
-                  <select aria-label={`${s.name}: edit, hide or move`} data-app-menu={s.name} value="" onChange={(e) => action(gi, i, e.target.value)}>
+                  <select
+                    aria-label={`${s.name}: edit, hide or move`}
+                    data-app-menu={s.name}
+                    value=""
+                    onChange={(e) => action(gi, i, e.target.value)}
+                    // An arrow on a closed select would pick the next action at once; open the list instead.
+                    onKeyDown={(e) => {
+                      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.altKey) {
+                        e.preventDefault();
+                        try {
+                          e.currentTarget.showPicker();
+                        } catch {
+                          /* an older browser: Alt+Down or Space opens it */
+                        }
+                      }
+                    }}
+                  >
                     <option value="" disabled>
                       {s.name}
                     </option>

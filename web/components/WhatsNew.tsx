@@ -3,14 +3,14 @@
 // update. Either opens a sheet with what each release changed and, where
 // Patchboard can update itself, the button that does it.
 
-import { lazy, Suspense, useEffect, useState } from "react";
-import type { SelfRelease } from "../../shared/types.ts";
-import { compareVersions } from "../../shared/version.ts";
-import { useJson } from "../lib/api.ts";
-import { useStore } from "../lib/store.tsx";
+import { lazy, Suspense, useEffect, useState } from 'react';
+import type { SelfRelease } from '../../shared/types.ts';
+import { compareVersions } from '../../shared/version.ts';
+import { useJson } from '../lib/api.ts';
+import { useStore } from '../lib/store.tsx';
 
-const SEEN = "pb-seen-version";
-const WhatsNew = lazy(() => import("./WhatsNewSheet.tsx"));
+const SEEN = 'pb-seen-version';
+const WhatsNew = lazy(() => import('./WhatsNewSheet.tsx'));
 
 function readSeen(): string | null {
   try {
@@ -30,13 +30,11 @@ function markSeen(version: string): void {
 
 export function VersionLine() {
   const { snap } = useStore();
-  const { data } = useJson<{ version: string; releases: SelfRelease[] }>(
-    "/api/self/releases",
-  );
+  const { data } = useJson<{ version: string; releases: SelfRelease[] }>('/api/self/releases');
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(readSeen);
   const me = snap?.self;
-  const version = me?.version ?? "";
+  const version = me?.version ?? '';
 
   // A first visit has nothing new to announce: remember this version quietly.
   useEffect(() => {
@@ -51,21 +49,11 @@ export function VersionLine() {
   const newer = releases.filter((r) => compareVersions(r.version, version) > 0);
   const newImage = !!(me.container && snap.updates[me.container]);
   const fresh = !!seen && compareVersions(version, seen) > 0;
-  const label = newer.length
-    ? `Update to v${newer[0].version}`
-    : newImage
-      ? "A newer image is out"
-      : fresh
-        ? `What's new in v${version}`
-        : `v${version}`;
+  const label = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : fresh ? `What's new in v${version}` : `v${version}`;
 
   return (
     <>
-      <button
-        type="button"
-        className={`text-button version-line ${newer.length || newImage || fresh ? "is-news" : ""}`}
-        onClick={() => setOpen(true)}
-      >
+      <button type="button" className={`text-button version-line ${newer.length || newImage || fresh ? 'is-news' : ''}`} aria-haspopup="dialog" aria-label={newer.length || newImage ? `${label}: what's new` : `Patchboard v${version}: what's new`} onClick={() => setOpen(true)}>
         {label}
       </button>
       {open && (

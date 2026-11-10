@@ -328,6 +328,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const [error, setError] = useState('');
   /** A note about the last layout applied, such as what it left out. */
   const [notice, setNotice] = useState('');
+  // Said to a screen reader after a move or removal in Arrange board.
+  const [said, setSaid] = useState('');
   useEffect(() => {
     setDraft(null);
     setError('');
@@ -581,10 +583,28 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             posterHeight={posters[w.id]}
             alignedHeight={alignedHeights[w.id]}
             onMove={(from, to) => {
-              if (peers[from] && peers[to]) move(shown.widgets.indexOf(peers[from]), shown.widgets.indexOf(peers[to]));
+              if (!peers[from] || !peers[to]) return;
+              move(shown.widgets.indexOf(peers[from]), shown.widgets.indexOf(peers[to]));
+              const name = w.config?.title || WIDGET_INFO[w.type].name;
+              setSaid(`${name} moved to ${to + 1} of ${peers.length}.`);
+              // Focus stays with the widget: the same arrow, or the other one at an end.
+              const later = to > from;
+              setTimeout(() => {
+                const cell = document.getElementById(`w-${w.id}`);
+                const same = cell?.querySelector<HTMLButtonElement>(`button[aria-label="${later ? 'Move later' : 'Move earlier'}"]`);
+                const other = cell?.querySelector<HTMLButtonElement>(`button[aria-label="${later ? 'Move earlier' : 'Move later'}"]`);
+                (same && !same.disabled ? same : other)?.focus();
+              }, 30);
             }}
             onSpan={(n) => update((ws) => ws.map((x) => (x.id === w.id ? { ...x, span: n } : x)))}
-            onRemove={() => update((ws) => ws.filter((x) => x.id !== w.id))}
+            onRemove={() => {
+              // Focus goes to the neighbor's controls, not the page.
+              const at = peers.indexOf(w);
+              const next = peers[at + 1] ?? peers[at - 1];
+              update((ws) => ws.filter((x) => x.id !== w.id));
+              setSaid(`${w.config?.title || WIDGET_INFO[w.type].name} removed.`);
+              setTimeout(() => (next ? document.getElementById(`w-${next.id}`)?.querySelector<HTMLButtonElement>('.cell-btn') : document.querySelector<HTMLButtonElement>('.board-bar button'))?.focus(), 30);
+            }}
             onConfigure={() => (w.type === 'json' ? setJsonEdit(w.id) : setSetting(w.id))}
             onQuick={snap?.readOnly || editing || w.type === 'json' || !board ? undefined : () => (setError(''), setNotice(''), setDraft(structuredClone(board)), setQuick(true), setSetting(w.id))}
             bind={editing ? sort.bind(w.id) : undefined}
@@ -594,6 +614,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           </Cell>);
         })}
       </div>
+
+      <p className="sr-only" role="status">
+        {said}
+      </p>
 
       <div className="board-foot" inert={editing || undefined}>
           <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Header settings</Link>

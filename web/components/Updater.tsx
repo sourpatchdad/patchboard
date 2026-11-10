@@ -198,7 +198,7 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
 
   return (
     <Section title={title} className={`update-panel is-${job.status}`} count={job.from && job.to && job.from !== job.to ? `${job.from} → ${job.to}` : undefined}>
-      <p className={`update-summary ${job.status === 'failed' ? 'crit-text' : ''}`}>{summary}</p>
+      <p className={`update-summary ${job.status === 'failed' ? 'crit-text' : ''}`} role="status">{summary}</p>
       <ol className="update-steps">
         {job.steps.map((s) => (
           <li key={s.key} data-status={s.status}>

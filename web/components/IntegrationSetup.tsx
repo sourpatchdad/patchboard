@@ -110,7 +110,7 @@ export function IntegrationForm({
       className="setup-form"
       onSubmit={(e) => {
         e.preventDefault();
-        void save();
+        if (!busy) void save();
       }}
     >
       {setup.fields.map((f, idx) => (
@@ -170,11 +170,11 @@ export function IntegrationForm({
       {integration.where && <p className="settings-note">{integration.where}</p>}
       {demo && <p className="settings-note">Demo mode: Test checks the fields are filled in. Nothing connects or saves.</p>}
       <div className="setup-actions">
-        <button type="button" className="button button-quiet setup-test" disabled={!!busy || readOnly} onClick={() => void test()}>
+        <button type="button" className="button button-quiet setup-test" disabled={readOnly} aria-disabled={!!busy || undefined} onClick={() => !busy && void test()}>
           {busy === 'test' ? 'Testing...' : 'Test connection'}
         </button>
         {editable && (
-          <button type="submit" className="button board-save" disabled={!!busy || disabled}>
+          <button type="submit" className="button board-save" disabled={disabled} aria-disabled={!!busy || undefined}>
             {busy === 'save' ? 'Saving...' : 'Save'}
           </button>
         )}

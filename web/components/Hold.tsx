@@ -1,6 +1,9 @@
 // Press and hold to confirm, for anything that takes something down. A fill
 // sweeps across while you hold; let go early and nothing happens. A quick
 // tap says to hold instead. Works with a mouse, a finger, Space or Enter.
+// Screen readers, voice control and switch access send a plain click, which
+// can't be held: that click arms the button, and a second within five
+// seconds confirms.
 
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 
@@ -27,10 +30,16 @@ export function HoldButton({
 }) {
   const [holding, setHolding] = useState(false);
   const [hinted, setHinted] = useState(false);
+  const [armed, setArmed] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const started = useRef(0);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => {
+    if (!armed) return;
+    const t = window.setTimeout(() => setArmed(false), 5000);
+    return () => window.clearTimeout(t);
+  }, [armed]);
   useEffect(() => {
     if (!hinted) return;
     const t = window.setTimeout(() => setHinted(false), 2500);
@@ -63,7 +72,10 @@ export function HoldButton({
     setHolding(false);
   };
   useEffect(() => {
-    if (disabled) cancel();
+    if (disabled) {
+      cancel();
+      setArmed(false);
+    }
   }, [disabled]);
   useEffect(() => {
     if (!holding) return;
@@ -76,15 +88,26 @@ export function HoldButton({
     };
   }, [holding]);
 
+  const name = label ?? (typeof children === 'string' ? children : undefined);
   return (
+    <>
     <button
       type="button"
       className={`${className} hold ${holding ? 'is-holding' : ''} ${danger ? 'is-danger' : ''} ${hinted ? 'is-hinted' : ''}`}
-      disabled={disabled}
+      // aria-disabled keeps focus on the button while it's busy; a disabled button drops it.
+      aria-disabled={disabled || undefined}
       data-hint={hint}
-      aria-label={label ? `${label}: press and hold` : typeof children === 'string' ? `${children}: press and hold` : undefined}
+      aria-label={name ? (armed ? `${name}: press again to confirm` : `${name}: press and hold, or press twice`) : undefined}
+      onClick={(e) => {
+        // A pointer or key press is a hold, handled above; only a plain click arrives with detail 0.
+        if (e.detail !== 0 || disabled || timer.current) return;
+        if (armed) {
+          setArmed(false);
+          onConfirm();
+        } else setArmed(true);
+      }}
       onPointerDown={(e) => {
-        if (e.button !== 0) return;
+        if (e.button !== 0 || disabled) return;
         // Captured, the hold survives the label changing under the finger
         // (the hint is wider than "Remove"); letting go anywhere ends it.
         try {
@@ -113,7 +136,11 @@ export function HoldButton({
       style={{ ['--hold-ms' as string]: `${HOLD_MS}ms` }}
     >
       <span className="hold-fill" aria-hidden />
-      <span className="hold-label">{hinted ? hint : children}</span>
+      <span className="hold-label">{armed ? 'Press again to confirm' : hinted ? hint : children}</span>
     </button>
+    <span className="sr-only" role="status">
+      {armed && name ? `Press ${name} again to confirm.` : ''}
+    </span>
+    </>
   );
 }

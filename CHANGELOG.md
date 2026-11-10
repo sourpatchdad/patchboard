@@ -25,6 +25,13 @@
   instead of an empty card, on a fresh install.
 - The README leads with what Patchboard does, a demo you can open from
   another machine, and plain section names.
+- Accessibility: hold-to-confirm buttons work with screen readers, voice
+  control and switches (press twice); single-key shortcuts can be turned
+  off in Settings, Look; focus stays put after moving or removing a widget,
+  opening an article, or pressing a busy button; failed backup nights are
+  named in words; form fields have edges you can see; the update result
+  is announced, and an open article or a container's log tail no longer
+  reads itself out.
 - Security: pictures in Reading are fetched only from public addresses,
   checked as each connection opens, including addresses written as IPv6;
   the API widget refuses metadata addresses however they're written; feed

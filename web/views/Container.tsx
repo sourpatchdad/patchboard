@@ -397,6 +397,8 @@ function LogTail({ name }: { name: string }) {
     <div
       className="logs-out wrap log-tail"
       role="log"
+      // New lines arrive every few seconds; a screen reader reads the tail on request, not each line.
+      aria-live="off"
       aria-label={`${name} logs, newest last`}
       ref={ref}
       onScroll={(e) => {
