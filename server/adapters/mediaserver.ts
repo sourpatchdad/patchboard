@@ -7,6 +7,7 @@ import { cached, every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import { keepSocket, streamsChanged, wsUrl } from './live.ts';
 
 export type MediaKind = 'jellyfin' | 'emby';
 
@@ -165,27 +166,71 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
     return { added, next };
   });
   let watching = false;
+  /** When the line last carried sessions. Polling slows only while they keep coming. */
+  let heard = 0;
+  const pushing = () => Date.now() - heard < 30 * SECOND;
+  /** The last full answer, so a push can swap in new streams and keep the rest. */
+  let lastData: MediaServerData | null = null;
+  /** The streams last passed on, to tell news (a pause, a seek) from playing time. */
+  let sent: { streams: Stream[]; at: number } | null = null;
 
   return {
     id: kind,
     label: kind === 'jellyfin' ? 'Jellyfin' : 'Emby',
-    // While someone watches, every 5 seconds so Right now keeps up; otherwise 15.
+    // Pushed: once a minute, for new arrivals and as a check. Polled: every 5
+    // seconds while someone watches, otherwise 15.
     get intervalMs() {
-      return watching ? 5 * SECOND : 15 * SECOND;
+      return pushing() ? 60 * SECOND : watching ? 5 * SECOND : 15 * SECOND;
+    },
+    live(on) {
+      const { url, key } = settings(kind);
+      let alive: ReturnType<typeof setInterval> | undefined;
+      // Jellyfin's line is /socket, Emby's /embywebsocket; both take the key in the address.
+      const path = kind === 'jellyfin' ? '/socket' : '/embywebsocket';
+      return keepSocket(`${wsUrl(url)}${path}?api_key=${encodeURIComponent(key)}&deviceId=patchboard`, {
+        open(send) {
+          // Sessions now, then every 2 seconds; only changes go further.
+          send(JSON.stringify({ MessageType: 'SessionsStart', Data: '0,2000' }));
+        },
+        message(text, send) {
+          const m = JSON.parse(text) as { MessageType?: string; Data?: unknown };
+          if (m.MessageType === 'ForceKeepAlive') {
+            // The server drops a quiet line: say we're here at half its timeout.
+            clearInterval(alive);
+            alive = setInterval(() => send(JSON.stringify({ MessageType: 'KeepAlive' })), Math.max(5, Number(m.Data) || 30) * 500);
+            alive.unref?.();
+          } else if (m.MessageType === 'Sessions' && Array.isArray(m.Data) && lastData) {
+            // Proof the line works (a wrong key or an old server never gets here).
+            heard = Date.now();
+            const streams = (m.Data as Session[]).map((s) => toStream(kind, s)).filter((s): s is Stream => s !== null);
+            const now = Date.now();
+            if (!streamsChanged(sent, streams, now)) return;
+            sent = { streams, at: now };
+            watching = streams.length > 0;
+            lastData = { ...lastData, streams };
+            on.update(lastData);
+          }
+        },
+        close() {
+          heard = 0;
+          clearInterval(alive);
+        },
+      });
     },
     async fetch() {
       const [sessions, slow, watched, library] = await Promise.all([get<Session[]>(kind, '/Sessions?ActiveWithinSeconds=120'), fresh(), played(), counts()]);
       const { added, next } = slow;
       const streams = sessions.map((s) => toStream(kind, s)).filter((s): s is Stream => s !== null);
       watching = streams.length > 0;
-      return {
+      sent = { streams, at: Date.now() };
+      return (lastData = {
         streams,
         recent: added.map((it) => toRecent(kind, it)).sort((a, b) => b.addedAt - a.addedAt),
         nextUp: next.Items.map((it) => ({ ...toRecent(kind, it), id: it.Id })),
         itemPath: ITEM_PATH[kind],
         ...(watched ? { watched } : {}),
         ...(library ? { library } : {}),
-      };
+      });
     },
   };
 }

@@ -7,6 +7,7 @@ import { every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
+import { keepSocket, wsUrl } from './live.ts';
 
 type AbsSession = { id?: string; userId?: string; displayTitle?: string; displayAuthor?: string; currentTime?: number; duration?: number; updatedAt?: number; user?: { username?: string } };
 
@@ -63,12 +64,38 @@ export function audiobookshelfAdapter(): Adapter<ListeningData> {
     return absInProgress(me, items);
   });
   let listening = false;
+  /** When the line last spoke (signed in, a ping, news). Polling slows only while it does. */
+  let heard = 0;
+  const pushing = () => Date.now() - heard < 60 * SECOND;
   return {
     id: 'audiobookshelf',
     label: 'Audiobookshelf',
-    // While someone listens, every 5 seconds; otherwise 20.
+    // Pushed: once a minute, as a check. Polled: every 5 seconds while someone listens, otherwise 20.
     get intervalMs() {
-      return listening ? 5 * SECOND : 20 * SECOND;
+      return pushing() ? 60 * SECOND : listening ? 5 * SECOND : 20 * SECOND;
+    },
+    // Audiobookshelf speaks Socket.IO; its few frames are handled here
+    // instead of pulling in the client library. Any listening news asks for
+    // one poll (the hub runs at most one every 3 seconds).
+    live(on) {
+      return keepSocket(`${wsUrl(url)}/socket.io/?EIO=4&transport=websocket`, {
+        message(text, send) {
+          if (text.startsWith('0')) send('40'); // handshake: join the default namespace
+          else if (text === '2') {
+            send('3'); // ping, pong
+            if (heard) heard = Date.now();
+          } else if (text.startsWith('40')) send(`42${JSON.stringify(['auth', key])}`);
+          else if (text.startsWith('42')) {
+            const [event] = JSON.parse(text.slice(2)) as [string];
+            // "init" answers a good sign-in: from here the line counts.
+            if (event === 'init' || heard) heard = Date.now();
+            if (heard && /^(user_online|user_offline|user_stream_update|user_item_progress_updated|stream_open|stream_closed)$/.test(event)) on.refresh();
+          }
+        },
+        close() {
+          heard = 0;
+        },
+      });
     },
     async fetch() {
       const [online, inProgress] = await Promise.all([getJson<Parameters<typeof fromAudiobookshelf>[0]>(`${url}/api/users/online`, { headers }), progress()]);

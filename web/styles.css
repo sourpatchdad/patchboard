@@ -11143,3 +11143,48 @@ a.req-title:hover {
 .page-title:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* A camera tile is a button now: it opens the camera live. Same look as before. */
+button.cam {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The live view: wide enough for video, letterboxed so nothing is cropped. */
+.cam-live {
+  width: min(980px, calc(100vw - 32px));
+}
+
+.cam-live h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.cam-live-tag {
+  font: 400 12px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+
+.cam-live-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.cam-live-feed,
+.cam-live > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--term-bg);
+}

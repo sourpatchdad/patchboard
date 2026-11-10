@@ -100,7 +100,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'jellyfin',
     name: 'Jellyfin',
-    adds: 'Who is watching, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin.',
+    adds: 'Who is watching, the moment it changes, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin.',
     env: ['JELLYFIN_URL', 'JELLYFIN_KEY'],
     optional: ['JELLYFIN_USER'],
     where: 'Jellyfin: Dashboard, API Keys, +. JELLYFIN_USER picks whose Next up to show; blank uses the first admin.',
@@ -382,7 +382,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'audiobookshelf',
     name: 'Audiobookshelf',
-    adds: 'Who is listening, to what, and how far through, in Right now, and every book in progress in Listening.',
+    adds: 'Who is listening, to what, and how far through, in Right now as it happens, and every book in progress in Listening.',
     env: ['AUDIOBOOKSHELF_URL', 'AUDIOBOOKSHELF_TOKEN'],
     where: 'Signed in as an admin: Settings, Users, your user, API token (or Settings, API Keys on newer versions).',
     source: true,
@@ -548,7 +548,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'frigate',
     name: 'Frigate',
-    adds: "Cameras: each one's newest frame on the board, online or offline, and what the cameras that detect saw today.",
+    adds: "Cameras: each one's newest frame on the board, refreshed while you look; tap one to watch it live. Online or offline, and what the cameras that detect saw today.",
     env: ['FRIGATE_URL'],
     where: 'Frigate’s address; its API needs no key on the local network.',
     source: true,

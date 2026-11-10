@@ -77,3 +77,63 @@ export async function frigateImage(q: { camera?: string; event?: string }): Prom
   if (q.event && EVENT.test(q.event)) return request(`${base}/api/events/${q.event}/thumbnail.jpg`);
   throw new Error('Bad image');
 }
+
+/** At most this many live views at once, across every tab, so a forgotten tab can't pile up streams. */
+export const LIVE_MAX = 3;
+/** A live view ends itself after this long; reopen it to keep watching. */
+export const LIVE_MS = 10 * 60_000;
+let viewers = 0;
+
+/**
+ * A camera, live: Frigate's own motion-JPEG feed at five frames a second and
+ * 540 pixels tall, passed straight through. Nothing is held: the stream asks
+ * Frigate for the next chunk only when the browser has taken the last one,
+ * and stops the moment the viewer closes, leaves, or hits the time limit.
+ * Patchboard never decodes or re-encodes a frame.
+ */
+export async function frigateLive(camera: string, closed: AbortSignal): Promise<Response | 'busy'> {
+  if (!CAMERA.test(camera)) throw new Error('Bad camera');
+  if (viewers >= LIVE_MAX) return 'busy';
+  const stop = new AbortController();
+  const res = await fetch(`${config.frigate!.url}/api/${camera}?fps=5&h=540`, { signal: stop.signal });
+  if (!res.ok || !res.body) {
+    stop.abort();
+    throw new Error(`Frigate answered ${res.status}`);
+  }
+  viewers++;
+  const reader = res.body.getReader();
+  let ended = false;
+  const end = () => {
+    if (ended) return;
+    ended = true;
+    viewers--;
+    clearTimeout(limit);
+    stop.abort();
+    void reader.cancel().catch(() => {});
+  };
+  const limit = setTimeout(end, LIVE_MS);
+  limit.unref?.();
+  closed.addEventListener('abort', end);
+  const body = new ReadableStream<Uint8Array>(
+    {
+      async pull(out) {
+        try {
+          const { done, value } = await reader.read();
+          if (done || ended) {
+            end();
+            out.close();
+          } else out.enqueue(value);
+        } catch {
+          end();
+          out.close();
+        }
+      },
+      cancel: end,
+    },
+    // No read-ahead: one chunk at a time, so memory stays flat however long it runs.
+    { highWaterMark: 0 },
+  );
+  return new Response(body, {
+    headers: { 'Content-Type': res.headers.get('content-type') ?? 'multipart/x-mixed-replace;boundary=frame', 'Cache-Control': 'no-store' },
+  });
+}

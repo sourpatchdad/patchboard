@@ -86,8 +86,9 @@ it; `j` and `k` move, `o` opens the original.
 **The house:** Home Assistant lights, sensors and scenes, the car, Frigate's
 cameras and Wake buttons, on the Home board. Tap a light or a scene; a lock
 or a garage door only shows its state. Cameras shows each camera's newest
-frame every 20 seconds and, for cameras that detect, who and what came by
-today. Tap a camera for its live view in Frigate.
+frame, refreshed every few seconds while it's on screen, and, for cameras
+that detect, who and what came by today. Tap a camera to watch it live
+right there; Escape, Close or switching tabs ends it.
 
 ![Home Assistant, the car, Cameras and Wake on the board](screenshots/house.webp)
 

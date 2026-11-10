@@ -80,10 +80,43 @@ export class Hub {
     for (const a of next) this.sources[a.id] ??= { id: a.id, label: a.label, ok: false, updatedAt: null, data: null };
     this.emit({ type: 'sources', sources: this.sources });
     for (const a of next) if (!CORE.has(a.id)) void this.loop(a);
+    // Settings changed: every push line reopens with the new address and key.
+    for (const [id, stop] of this.lines) if (!keep.has(id)) (stop(), this.lines.delete(id));
+    for (const a of next) this.startLive(a);
+  }
+
+  /** Open push lines, by source. */
+  private lines = new Map<SourceId, () => void>();
+
+  /** Open (or reopen) an adapter's push line, if it has one. */
+  private startLive(a: Adapter): void {
+    this.lines.get(a.id)?.();
+    this.lines.delete(a.id);
+    if (!a.live) return;
+    // A burst of news (three sessions starting) is one poll; never more than one every 3 seconds.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let last = 0;
+    const refresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        last = Date.now();
+        void this.pollNow(a.id);
+      }, Math.max(300, last + 3000 - Date.now()));
+      timer.unref?.();
+    };
+    const update = (data: unknown) => {
+      const prev = this.sources[a.id];
+      if (!prev) return;
+      const next: SourceState = { id: a.id, label: a.label, ok: true, updatedAt: Date.now(), data };
+      this.sources[a.id] = next;
+      this.emit({ type: 'source', state: next });
+    };
+    this.lines.set(a.id, a.live({ update, refresh }));
   }
 
   start(): void {
     for (const a of this.adapters) void this.loop(a);
+    for (const a of this.adapters) this.startLive(a);
     // Docker pushes lifecycle events; refresh on them instead of waiting for
     // the next 10-second poll. Bursts (a compose up) collapse into one poll.
     if (!config.demo) {

@@ -3,10 +3,12 @@
 // server, so Frigate's address never has to reach the browser.
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useModal } from '../lib/modal.ts';
 import type { FrigateData, FrigateEvent } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { agoLong } from '../lib/format.ts';
-import { useSource } from '../lib/store.tsx';
+import { useSource, useStore } from '../lib/store.tsx';
 import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
 
@@ -67,6 +69,57 @@ function LiveFrame({ name }: { name: string }) {
   return <img ref={img} src={src} alt="" decoding="async" />;
 }
 
+/**
+ * One camera, live, over the page. The picture is Frigate's motion-JPEG feed
+ * through Patchboard (see the server's frigateLive): it runs only while this
+ * is open and the tab is in front. Switching tabs, Escape or Close ends it,
+ * and Patchboard holds no frames, so watching costs bandwidth, not memory.
+ */
+function CameraLive({ name, web, onClose }: { name: string; web?: string; onClose: () => void }) {
+  const modal = useModal<HTMLDivElement>(onClose);
+  const { snap } = useStore();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const away = () => {
+      if (document.visibilityState !== 'visible') onClose();
+    };
+    document.addEventListener('visibilitychange', away);
+    return () => document.removeEventListener('visibilitychange', away);
+  }, [onClose]);
+  return createPortal(
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="palette drawer cam-live" ref={modal} role="dialog" aria-label={`${cameraName(name)}, live`} onClick={(e) => e.stopPropagation()}>
+        <header className="drawer-head">
+          <h2>
+            {cameraName(name)} <span className="cam-live-tag">{snap?.demo ? 'Still' : 'Live'}</span>
+          </h2>
+          <span className="cam-live-actions">
+            {web && (
+              <a className="text-button" href={`${web}/#${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
+                Open in Frigate
+              </a>
+            )}
+            <button type="button" className="text-button" onClick={onClose}>
+              Close
+            </button>
+          </span>
+        </header>
+        {snap?.demo ? (
+          <>
+            <LiveFrame name={name} />
+            <p className="settings-note">The demo has no cameras to stream, so this is its still. With Frigate connected, this is the camera live.</p>
+          </>
+        ) : failed ? (
+          <p className="settings-note">Couldn't start the live view. Three can be open at once; close one elsewhere, or try again.</p>
+        ) : (
+          <img className="cam-live-feed" src={`/api/live/frigate?camera=${encodeURIComponent(name)}`} alt={`${cameraName(name)}, live`} onError={() => setFailed(true)} />
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 /** What a camera saw, as a short phrase: "Sam at the porch", "Car". */
 const seen = (e: FrigateEvent) => {
   const what = e.name ?? cameraName(e.label);
@@ -76,6 +129,7 @@ const seen = (e: FrigateEvent) => {
 export function CamerasWidget({ config, now }: { config?: Record<string, string>; now: number }) {
   const { state, data } = useSource<FrigateData>('frigate');
   const { limit = 6 } = useWidget();
+  const [watching, setWatching] = useState<string | null>(null);
   if (!state || !data) return null;
   const pick = (config?.cameras ?? '').split('\n').filter(Boolean);
   const cams = pick.length ? pick.map((n) => data.cameras.find((c) => c.name === n)).filter((c) => !!c) : data.cameras;
@@ -100,10 +154,11 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
             );
             return (
               <li key={c.name} className={c.online ? undefined : 'is-off'}>
-                {web ? (
-                  <a href={`${web}/#${encodeURIComponent(c.name)}`} target="_blank" rel="noreferrer" className="cam" aria-label={`${cameraName(c.name)}, live in Frigate`}>
+                {/* A camera that's up opens live, here; an offline one has nothing to show. */}
+                {c.online ? (
+                  <button type="button" className="cam" aria-label={`${cameraName(c.name)}, watch live`} onClick={() => setWatching(c.name)}>
                     {body}
-                  </a>
+                  </button>
                 ) : (
                   <span className="cam">{body}</span>
                 )}
@@ -146,6 +201,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
           )}
         </>
       )}
+      {watching && <CameraLive name={watching} web={web} onClose={() => setWatching(null)} />}
     </Section>
   );
 }

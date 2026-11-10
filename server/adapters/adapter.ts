@@ -10,6 +10,12 @@ export interface Adapter<T = unknown> {
   label: string;
   intervalMs: number;
   fetch(): Promise<T>;
+  /**
+   * Optional push: keep one line open to the service. `update` hands over new
+   * data the line already carried; `refresh` asks for a poll now. Returns a
+   * function that closes the line. Polling carries on underneath, slower.
+   */
+  live?(on: { update(data: T): void; refresh(): void }): () => void;
 }
 
 export const SECOND = 1000;

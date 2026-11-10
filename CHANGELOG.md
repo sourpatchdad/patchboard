@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Playback as it happens: Jellyfin, Emby and Audiobookshelf push to
+  Patchboard over one light connection each, so starts, stops, pauses and
+  seeks show at once; while that line works, they're polled once a minute
+  instead of every few seconds. Plex and Navidrome keep their 5-second
+  checks while something plays.
+- Tap a camera to watch it live. Patchboard passes Frigate's feed straight
+  through without holding frames; it stops when you close the view or
+  switch tabs, after ten minutes, and at most three run at once.
 - Stopping a container from Patchboard no longer hides a crash in a
   container that depends on it.
 - Container page: the state line says Updating or Rolling back while one

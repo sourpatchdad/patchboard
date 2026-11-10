@@ -104,11 +104,18 @@ one click.
   media servers and music poll every 5 seconds while someone plays
   something and fall back to 15 or 20 when nobody does, and the slow parts
   (new arrivals, next up) ride along at most once a minute.
-- **Live without weight.** Between polls the browser runs a playing
-  stream's position on at real speed, at most 30 seconds past the last
-  answer. A camera's frame refreshes every few seconds only while it's on
-  screen and the tab is in front; the server passes frames through without
-  holding them, so a camera costs bandwidth, not memory.
+- **Live without weight.** Jellyfin, Emby and Audiobookshelf push: one
+  WebSocket each, using Node's own client, so a start, stop, pause or seek
+  shows at once, and polling drops to once a minute while the line is
+  proven to carry news. Steady playing time isn't sent at all: the browser
+  runs a playing stream's position on at real speed, at most 30 seconds
+  past the last answer. Plex (through Tautulli) and Navidrome can't push,
+  so they poll every 5 seconds while something plays. A camera's frame
+  refreshes every few seconds only while it's on screen and the tab is in
+  front. Tapping a camera opens it live: Frigate's motion-JPEG feed passed
+  straight through, one chunk at a time, at most three at once, ending when
+  the view closes, the tab goes to the back, or ten minutes pass. Patchboard
+  never decodes a frame, so a camera costs bandwidth, not memory.
 - **Server-sent events** push changes to every open tab.
 - **SQLite** (`node:sqlite`) holds what integrations can't supply: container
   history, minute samples, the boards, the app layout, page settings, keys and

@@ -16,7 +16,7 @@ import { cleanBrand } from '../shared/brand.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
 import { fastmailAdapter } from './adapters/fastmail.ts';
-import { frigateAdapter, frigateImage } from './adapters/frigate.ts';
+import { frigateAdapter, frigateImage, frigateLive, LIVE_MAX } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
 import { haCall, haEntityList, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
@@ -1462,6 +1462,20 @@ app.get('/api/img/frigate', async (c) => {
     });
   } catch {
     return c.body(null, 404);
+  }
+});
+
+// A camera live, while a viewer is open. Frigate's motion-JPEG stream passes
+// straight through (see frigateLive): no buffering, closed with the viewer.
+app.get('/api/live/frigate', async (c) => {
+  if (config.demo) return c.json({ error: 'The demo has no cameras to stream.' }, 404);
+  if (!config.frigate) return c.body(null, 404);
+  try {
+    const res = await frigateLive(c.req.query('camera') ?? '', c.req.raw.signal);
+    if (res === 'busy') return c.json({ error: `${LIVE_MAX} live views are open already. Close one to watch this camera.` }, 429);
+    return res;
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
   }
 });
 
