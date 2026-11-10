@@ -93,7 +93,8 @@ test('Jellyfin: subscribes, keeps the line alive, and passes on only changes', a
   await until(() => updates.length === 2);
   assert.equal(updates[1].streams[0].state, 'playing');
 
-  line.send(JSON.stringify({ MessageType: 'ForceKeepAlive', Data: 10 }));
+  // The shortest timeout Patchboard honours: a keep-alive goes out within 2.5 seconds.
+  line.send(JSON.stringify({ MessageType: 'ForceKeepAlive', Data: 5 }));
   await until(() => line.got.some((m) => m.includes('KeepAlive')));
   stop();
 });
