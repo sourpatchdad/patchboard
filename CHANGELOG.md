@@ -25,6 +25,15 @@
   instead of an empty card, on a fresh install.
 - The README leads with what Patchboard does, a demo you can open from
   another machine, and plain section names.
+- App icons show their own colors by default; Settings, Look still turns
+  them gray.
+- Reading's Mark all read sits on its own row instead of over the sort
+  buttons. Hold buttons show their track only when you point at or tab to
+  them.
+- A chosen sort or filter is edged in the accent instead of a ring that
+  looked like keyboard focus. Stacks gives icon-less containers a letter.
+- Sizes keep their unit on the same line ("64.0 GB"), times drop a zero
+  part ("14 h"), and disk models stay on one line.
 - On Home's icon rack, an app with a problem shows its name under the icon
   in its warning or down color; healthy apps stay icons.
 

@@ -37,7 +37,8 @@ one click.
 - **Playback identity.** Playback rows and previews use service colors:
   Plex gold, Jellyfin purple, Emby green, Audiobookshelf amber, Navidrome
   cyan and Tracearr blue. This is a narrow exception to healthy-neutral
-  color. Paused and buffering states keep explicit text. Previews show
+  color. App icons keep their own colors by default too, because you
+  recognize Plex or Sonarr by its mark; Settings, Look turns them gray. Paused and buffering states keep explicit text. Previews show
   artwork, never imply live video, and omit progress the service does not
   report. Hover, Enter (or Down) and a tap reach the same details; Tab
   always moves on. A playing bar moves every second; a paused one holds.

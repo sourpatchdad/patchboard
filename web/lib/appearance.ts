@@ -48,7 +48,7 @@ export const DEFAULTS: Appearance = {
   accent: 'default',
   accentHex: '#5fd0c5',
   custom: DEFAULT_CUSTOM,
-  icons: 'mono',
+  icons: 'color',
   homeApps: 'tiles',
   appIcon: 'auto',
   font: 'theme',

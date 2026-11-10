@@ -182,7 +182,7 @@ export function Stacks() {
                   <li key={c.name} className={act ? 'has-act' : undefined}>
                     <Link to={`/c/${c.name}`} className="srow" data-state={st}>
                       <span className="srow-id">
-                        <span className="srow-icon">{svc?.icon ? <Icon name={svc.name} icon={svc.icon} size={18} /> : <span className="dot" />}</span>
+                        <span className="srow-icon"><Icon name={svc?.name ?? c.name} icon={svc?.icon} size={18} /></span>
                         <span className="srow-name">{c.name}</span>
                         {svc && svc.name.toLowerCase() !== c.name && <span className="srow-app">{svc.name}</span>}
                         {hasUpdate(c) && !act && <span className="tag tag-update" title={c.staleImage ? 'A newer copy is downloaded; Update switches to it' : 'A newer image is out'}>update</span>}

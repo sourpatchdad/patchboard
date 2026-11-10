@@ -98,7 +98,8 @@ export function size(n: number): string {
     i++;
   }
   const digits = v >= 100 || i === 0 ? 0 : v >= 10 ? 1 : 2;
-  return `${v.toFixed(digits)} ${units[i]}`;
+  // A no-break space: the unit never wraps away from its number ("64.0 / GB").
+  return `${v.toFixed(digits)} ${units[i]}`;
 }
 
 /** CPU share: one decimal under 10%, whole numbers above. */
@@ -107,15 +108,15 @@ export function pct(n: number): string {
   return `${n < 10 ? n.toFixed(1) : Math.round(n)}%`;
 }
 
-/** "13 h 27 m", "4 d 2 h", "35 s". */
+/** "13 h 27 m", "14 h", "4 d 2 h", "35 s": a zero part is left off. */
 export function duration(ms: number): string {
   const s = Math.max(0, Math.round(ms / 1000));
   if (s < 60) return `${s} s`;
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} m`;
   const h = Math.floor(m / 60);
-  if (h < 48) return `${h} h ${m % 60} m`;
-  return `${Math.floor(h / 24)} d ${h % 24} h`;
+  if (h < 48) return m % 60 ? `${h} h ${m % 60} m` : `${h} h`;
+  return h % 24 ? `${Math.floor(h / 24)} d ${h % 24} h` : `${Math.floor(h / 24)} d`;
 }
 
 /** "Nov 1" this year, "Nov 1, 2025" otherwise. */

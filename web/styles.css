@@ -2970,8 +2970,12 @@ a.vitals:hover .vital-label {
 }
 
 .disk-model {
+  min-width: 0;
   color: var(--ink-2);
-  overflow-wrap: anywhere;
+  /* One line; the full model is in its tooltip. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .disk-size,
@@ -3366,10 +3370,15 @@ a.vitals:hover .vital-label {
 }
 
 .theme-card[aria-pressed='true'],
-.seg button[aria-pressed='true'],
 .swatch[aria-pressed='true'] {
   box-shadow: 0 0 0 2px var(--accent);
   border-color: transparent;
+}
+
+/* A chosen segment is filled and edged in the accent, so it never reads
+   as the focus ring. */
+.seg button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
 }
 
 .theme-card strong {
@@ -10615,8 +10624,10 @@ a.req-come:hover .req-title {
   }
 }
 
-/* A hold button carries a track under its label, a quarter lit: the fill
-   that sweeps across while you hold starts from it. Not a spinner. */
+/* A hold button shows a track under its label, a quarter lit, when you
+   point at it or reach it by keyboard: the fill that sweeps across while you
+   hold starts from it. At rest it would read as a stray underline; on touch
+   a tap shows "Hold to …" instead. */
 .button.hold::before {
   content: '';
   position: absolute;
@@ -10626,8 +10637,19 @@ a.req-come:hover .req-title {
   height: 2px;
   border-radius: 1px;
   background: linear-gradient(to right, currentColor 0 25%, color-mix(in srgb, currentColor 25%, transparent) 25%);
-  opacity: 0.55;
+  opacity: 0;
   pointer-events: none;
+  transition: opacity var(--dur-1) ease;
+}
+
+@media (hover: hover) {
+  .button.hold:hover::before {
+    opacity: 0.55;
+  }
+}
+
+.button.hold:focus-visible::before {
+  opacity: 0.55;
 }
 
 .button.hold.is-holding::before {
@@ -10779,9 +10801,10 @@ a.req-come:hover .req-title {
 }
 
 .feeds-mark {
-  grid-column: 2;
-  grid-row: 3;
-  justify-self: end;
+  /* Its own row under the sort buttons: side by side they collide in the
+     sidebar's width. */
+  grid-column: 1 / -1;
+  justify-self: start;
 }
 
 .feeds-mark.button,
@@ -10837,7 +10860,9 @@ a.req-come:hover .req-title {
   }
 
   .feeds-mark {
+    grid-column: 2;
     grid-row: 1;
+    justify-self: end;
   }
 
   .feeds-tools:not(.is-open) .feeds-filters > * {
