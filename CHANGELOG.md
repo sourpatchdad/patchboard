@@ -25,6 +25,22 @@
   instead of an empty card, on a fresh install.
 - The README leads with what Patchboard does, a demo you can open from
   another machine, and plain section names.
+- Security: pictures in Reading are fetched only from public addresses,
+  checked as each connection opens, including addresses written as IPv6;
+  the API widget refuses metadata addresses however they're written; feed
+  downloads stop at 1 MB as they stream; marking articles read needs the
+  action header like every other change.
+- Paper's accent is slate blue, apart from its amber warnings, and the
+  accent presets drop green, rose and sand, which read as ok, down and
+  warning.
+- One shadow for everything that floats, a pill radius for counts and
+  chips, shared motion timings, and bold text at the design's weight. The
+  playback preview's service-colored edge shows again.
+- The first page load is about 30 KB smaller: the update notes load when
+  you open them.
+- Docs: the sign-in path is Settings, Connections, Sign-in and keys; the
+  demo's outside requests are listed in full; the example files run as
+  written.
 - App icons show their own colors by default; Settings, Look still turns
   them gray.
 - Reading's Mark all read sits on its own row instead of over the sort

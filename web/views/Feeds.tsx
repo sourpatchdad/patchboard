@@ -64,7 +64,7 @@ export function Feeds() {
       n.delete(id);
       return n;
     });
-    void post('/api/feeds/read', { ids: [id], unread: true });
+    void post('/api/feeds/read', { ids: [id], unread: true }, true);
   };
   const [sort, setSort] = useUrlChoice<FeedSort>('sort', ['newest', 'oldest', 'quick'], 'newest');
   const category = params.get('cat') ?? 'All';
@@ -161,7 +161,7 @@ export function Feeds() {
   const markRead = useCallback((ids: number[]) => {
     if (!ids.length) return;
     setRead((prev) => new Set([...prev, ...ids]));
-    void post('/api/feeds/read', { ids });
+    void post('/api/feeds/read', { ids }, true);
   }, []);
 
   async function markAll() {

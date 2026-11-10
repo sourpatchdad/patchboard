@@ -20,7 +20,7 @@ docker run --rm -p 3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
 
 Open `http://your-server:3200` (or <http://localhost:3200> on the same
 machine). Ctrl-C stops it. Its only outside requests load posters from
-TVmaze and Wikipedia.
+TVmaze, pictures from Wikimedia and app icons from jsDelivr.
 
 ## Install
 
@@ -32,7 +32,7 @@ docker compose up -d
 ```
 
 Sign-in is off by default, for a home network. Read [SECURITY.md](SECURITY.md)
-before you expose it anywhere: turn on a password in Settings, Sign-in, or
+before you expose it anywhere: turn on a password in Settings, Connections, Sign-in and keys, or
 use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 For a read-only install or a small disk, use the `latest-slim` image. It
@@ -141,7 +141,8 @@ npm run docs          # regenerate the tables in docs/INTEGRATIONS.md
 npm run screenshots   # regenerate docs/screenshots from demo mode
 ```
 
-TypeScript on Node 24 without a build step for the server, Hono, React 19,
+TypeScript on Node 24 or newer (the image ships Node 26) without a build
+step for the server, Hono, React 19,
 Vite and SQLite. [DESIGN.md](docs/DESIGN.md) records why.
 
 Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and

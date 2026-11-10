@@ -1,6 +1,8 @@
 # HTTPS on a private network, so phones can install Patchboard as an app.
 # Point dash.example.com at your server's private or Tailscale address.
 # Needs a Caddy build with your DNS provider, e.g. ghcr.io/caddybuilds/caddy-cloudflare.
+# Patchboard answers only names it knows: set ALLOWED_HOSTS=dash.example.com,
+# or add the name in Settings, Connections, Sign-in and keys.
 
 dash.example.com {
 	bind 100.64.0.10

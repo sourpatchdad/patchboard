@@ -66,9 +66,22 @@ async function fetchText(address: string): Promise<string> {
       continue;
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (text.length > MAX_BYTES) throw new Error('Over 1 MB');
-    return text;
+    // Read up to the cap and stop, instead of taking the whole body first.
+    const reader = res.body?.getReader();
+    if (!reader) return '';
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > MAX_BYTES) {
+        await reader.cancel();
+        throw new Error('Over 1 MB');
+      }
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks).toString('utf8');
   }
   throw new Error('Too many redirects');
 }

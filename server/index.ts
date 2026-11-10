@@ -239,7 +239,7 @@ function hostAllowed(hostHeader: string | undefined): boolean {
 app.use('/api/*', async (c, next) => {
   const host = c.req.header('host');
   if (!hostAllowed(host)) {
-    return c.json({ error: `Patchboard refuses requests addressed to ${host ?? 'an unknown host'}. Open Patchboard by its IP address and add the name in Settings, Sign-in.` }, 403);
+    return c.json({ error: `Patchboard refuses requests addressed to ${host ?? 'an unknown host'}. Open Patchboard by its IP address and add the name in Settings, Connections, Sign-in and keys.` }, 403);
   }
   if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
     const origin = c.req.header('origin');
@@ -465,6 +465,7 @@ app.post('/api/feeds/read-all', async (c) => {
 });
 
 app.post('/api/feeds/read', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const body = await c.req.json<{ ids: unknown; unread?: unknown }>();
   const ids = Array.isArray(body.ids) ? body.ids.filter((n): n is number => Number.isInteger(n)) : [];
   if (!ids.length) return c.json({ ok: true });

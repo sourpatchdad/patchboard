@@ -17,7 +17,8 @@ test('article pictures point at Patchboard, and no publisher copy is left to pic
 });
 
 test('only public addresses', () => {
-  for (const ip of ['10.0.0.5', '127.0.0.1', '172.20.1.1', '192.168.1.10', '100.112.9.9', '169.254.169.254', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:192.168.1.1', '224.0.0.1']) {
+  // The IPv6 spellings of private IPv4 that new URL() produces, and reserved ranges.
+  for (const ip of ['10.0.0.5', '127.0.0.1', '172.20.1.1', '192.168.1.10', '100.112.9.9', '169.254.169.254', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:192.168.1.1', '224.0.0.1', '::ffff:7f00:1', '::ffff:a00:1', '64:ff9b::7f00:1', '::7f00:1', '2002:7f00:1::', '198.18.0.1', '192.0.0.8', 'not-an-ip']) {
     assert.equal(publicAddress(ip), false, ip);
   }
   for (const ip of ['93.184.216.34', '1.1.1.1', '172.32.0.1', '100.128.0.1', '2606:4700::1111']) assert.equal(publicAddress(ip), true, ip);
@@ -33,6 +34,11 @@ test('a picture on a private address is never fetched, even one Patchboard hande
   const port = (lan.address() as AddressInfo).port;
   proxied(7, 0, `http://127.0.0.1:${port}/x.png`);
   assert.equal(await feedPicture('7', '0'), null);
+  // The same server spelled as a mapped IPv6 address, and by a name that resolves to it.
+  proxied(7, 1, `http://[::ffff:127.0.0.1]:${port}/x.png`);
+  assert.equal(await feedPicture('7', '1'), null);
+  proxied(7, 2, `http://localhost:${port}/x.png`);
+  assert.equal(await feedPicture('7', '2'), null);
   assert.equal(await feedPicture('7', '9'), null, 'unknown picture');
   assert.equal(hits, 0);
   lan.close();

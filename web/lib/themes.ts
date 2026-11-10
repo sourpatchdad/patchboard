@@ -119,12 +119,12 @@ export const THEMES: ThemeDef[] = [
     dark: {
       bg: '#121110', raised: '#1a1917', surface: '#23211e', line: '#36322e', lineSoft: '#282522',
       ink: '#ece8e1', ink2: '#bcb6ac', ink3: '#948e84', head: '#faf7f2',
-      accent: '#d8bf8f', ok: '#8fbf8a', warn: '#e9a65a', crit: '#e9776a', termBg: '#0e0d0c',
+      accent: '#9cc0d6', ok: '#8fbf8a', warn: '#e9a65a', crit: '#e9776a', termBg: '#0e0d0c',
     },
     light: {
       bg: '#fbf9f4', raised: '#f4f1ea', surface: '#ebe7dd', line: '#dad3c5', lineSoft: '#ebe6dc',
       ink: '#22201c', ink2: '#4c4840', ink3: '#69645a', head: '#12110e',
-      accent: '#8a5a2b', ok: '#3d7a55', warn: '#94580f', crit: '#b0402f', termBg: '#fdfcf9',
+      accent: '#2f5f7a', ok: '#3d7a55', warn: '#94580f', crit: '#b0402f', termBg: '#fdfcf9',
     },
   },
 ];

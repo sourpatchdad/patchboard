@@ -49,7 +49,7 @@ Patchboard can take both over, so the UI is the one place you change things.
    `services.yaml` becomes one saved in Patchboard, with its group, order,
    short name, icon, check and one-shot flag, and the links join the
    Elsewhere row. Patchboard never edits the file.
-3. **Turn on a password** in Settings, Sign-in, if you had `AUTH=password`.
+3. **Turn on a password** in Settings, Connections, Sign-in and keys, if you had `AUTH=password`.
 4. **Remove what was copied:** the `.env` (or all of it but the time zone),
    `services.yaml` and the `./config` mount, and the folder variables for
    mounts at /pool, /docs and /logs.
@@ -65,13 +65,13 @@ services.yaml.
 | Variable | Default | |
 |---|---|---|
 | `TZ` | `UTC` | Time zone for clocks and calendars. |
-| `ALLOWED_HOSTS` | empty | Other names you reach Patchboard by, such as `dash.example.com`; Settings, Sign-in sets them too. IP addresses, `localhost` and home names (`nas`, `nas.local`, `.lan`, `.home.arpa`, `.internal`) always work. Patchboard refuses any other name, which blocks DNS rebinding. |
+| `ALLOWED_HOSTS` | empty | Other names you reach Patchboard by, such as `dash.example.com`; Settings, Connections, Sign-in and keys sets them too. IP addresses, `localhost` and home names (`nas`, `nas.local`, `.lan`, `.home.arpa`, `.internal`) always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |
 | `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the boards, apps, history, integration settings, keys) `secret.key`, which encrypts the keys, and `icon-cache/`, the app icons it has fetched. Mount it, back it up, keep it owner-only. A few megabytes. |
 | `PATCHBOARD_SECRET_KEY` | a random `secret.key` | Any long string. Encrypts keys saved in the UI instead of the generated file, so the database and the key can live on different disks. Set it later and Patchboard moves saved keys over to it on the next start, as long as `secret.key` is still in `DATA_DIR`. Back up `DATA_DIR` whole: the database and its key together. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
-| `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze and Wikipedia. |
+| `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze, pictures from Wikimedia and app icons from jsDelivr. |
 | `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |
 
 ## Sign-in and safety
@@ -80,7 +80,7 @@ services.yaml.
 
 | Variable | Default | |
 |---|---|---|
-| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header), `oidc` or `password`. Settings, Sign-in turns a password on without it. |
+| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header), `oidc` or `password`. Settings, Connections, Sign-in and keys turns a password on without it. |
 | `TRUSTED_USER_HEADER` | `Remote-User` | The header your forward-auth proxy sets. |
 | `PATCHBOARD_PASSWORD` | empty | The password for `AUTH=password`, instead of setting one in Settings. Also how you get back in after forgetting one. |
 | `OIDC_ISSUER` | empty | Your provider's issuer URL, for `AUTH=oidc`. |
@@ -89,7 +89,7 @@ services.yaml.
 | `OIDC_ALLOWED` | empty | Emails, usernames or groups that may sign in, comma-separated. Empty lets in anyone the provider signs in. |
 | `OIDC_NAME` | `your identity provider` | The name on the sign-in button. |
 | `OIDC_SCOPES` | `openid email profile` | Add `groups` if your provider needs it to send groups. |
-| `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Sign-in shows Diun's address with it. |
+| `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
 

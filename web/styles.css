@@ -23,6 +23,8 @@
   --radius: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  /* Counts and filter chips are pills. */
+  --radius-pill: 999px;
 
   /* Cards: a tonal step above the page, a hairline, and in dark themes a
      faint top light so the edge reads as a surface, not a box outline. */
@@ -65,9 +67,7 @@
   --ok: #6fbf8a;
   --warn: #e3a253;
   --crit: #ef6b5e;
-  --slate: #2a3038;
   --term-bg: #08090b;
-
 
   --f-display: var(--f-sans-graphite);
   --f-body: var(--f-sans-graphite);
@@ -96,7 +96,6 @@
   --ok: #1d7a45;
   --warn: #9a5b00;
   --crit: #c0362c;
-  --slate: #d5d8de;
   --term-bg: #fbfbfc;
 
   --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
@@ -112,7 +111,6 @@
 .section-head h2,
 .poster-type span,
 .reader-head h1,
-.app-group h2,
 .detail-state,
 .stack-head h2,
 .big-num,
@@ -186,6 +184,11 @@ h3 {
   text-wrap: balance;
 }
 
+b,
+strong {
+  font-weight: 600;
+}
+
 /* A selected row's wash lowers contrast; its quiet text steps up a shade. */
 .ctr.is-selected,
 .entry.is-selected,
@@ -233,7 +236,7 @@ kbd {
   padding: 0 6px;
   border: 1px solid var(--line);
   border-bottom-width: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--ink-2);
 }
@@ -341,7 +344,7 @@ a.ident:hover,
   background: var(--accent);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 200ms var(--ease-out);
+  transition: transform var(--dur-2) var(--ease-out);
 }
 
 .nav-link:hover {
@@ -373,7 +376,7 @@ a.ident:hover,
   font: 400 12px/1 var(--f-mono);
   white-space: nowrap;
   padding: 5px 9px;
-  border-radius: 99px;
+  border-radius: var(--radius-pill);
   border: 1px dashed var(--line);
   color: var(--ink-3);
 }
@@ -478,10 +481,6 @@ a.ident:hover,
     padding-left: 32px;
     padding-right: 32px;
   }
-}
-
-.page-narrow {
-  max-width: 860px;
 }
 
 .page-title {
@@ -667,7 +666,7 @@ a.ident:hover,
 }
 
 .head-alert-more .text-button {
-  font-size: 13px;
+  font-size: var(--act-fs);
 }
 
 h2.status-line {
@@ -755,12 +754,12 @@ h2.status-line {
   place-items: center;
   background: var(--surface);
   box-shadow: 0 0 0 1px var(--line);
-  transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
+  transition: box-shadow var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
 }
 
 .jack-socket .icon-img,
 .jack-socket .icon-mono {
-  transition: opacity 200ms ease;
+  transition: opacity var(--dur-2) ease;
 }
 
 .jack-led {
@@ -826,15 +825,6 @@ a.jack:focus-visible {
   50% {
     opacity: 0.35;
   }
-}
-
-/* ---------- Home grid & sections ---------- */
-
-.home-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: 0 64px;
-  margin-top: 44px;
 }
 
 .section {
@@ -1176,27 +1166,6 @@ a.jack:focus-visible {
   border-bottom: none;
 }
 
-.vital {
-  display: grid;
-  gap: 6px;
-}
-
-.vital-wide {
-  flex: 1;
-}
-
-.vital-num {
-  font: 400 26px/1 var(--f-mono);
-  letter-spacing: -0.03em;
-  color: var(--head);
-  font-variant-numeric: tabular-nums;
-}
-
-.vital-label {
-  font-size: 13px;
-  color: var(--ink-3);
-}
-
 /* Agenda (Home and Upcoming) */
 
 .agenda-day :is(h2, h3) {
@@ -1398,24 +1367,24 @@ a.jack:focus-visible {
    page reads as one instrument, and get their color back when pointed at.
    In dark schemes a hairline of light keeps dark brand marks (GitHub,
    Vaultwarden) visible. */
-:root:not([data-icons='color']) :is(.jack-socket, .app, .srow-icon, .detail-icon) .icon-img {
+:root:not([data-icons='color']) :is(.jack-socket, .srow-icon, .detail-icon) .icon-img {
   filter: grayscale(1) contrast(1.05);
   opacity: 0.85;
-  transition: filter 220ms ease, opacity 220ms ease;
+  transition: filter var(--dur-2) ease, opacity var(--dur-2) ease;
 }
 
-:root:not([data-icons='color']):not([data-scheme='light']) :is(.jack-socket, .app, .srow-icon, .detail-icon) .icon-img {
+:root:not([data-icons='color']):not([data-scheme='light']) :is(.jack-socket, .srow-icon, .detail-icon) .icon-img {
   filter: grayscale(1) brightness(1.2) drop-shadow(0 0 0.6px rgba(232, 229, 220, 0.75));
 }
 
 :root:not([data-scheme='light']) .palette-icon .icon-img,
-:root[data-icons='color']:not([data-scheme='light']) :is(.jack-socket, .app, .srow-icon, .detail-icon) .icon-img,
-:root:not([data-scheme='light']) :is(a.jack, a.app, .srow):is(:hover, :focus-visible) .icon-img {
+:root[data-icons='color']:not([data-scheme='light']) :is(.jack-socket, .srow-icon, .detail-icon) .icon-img,
+:root:not([data-scheme='light']) :is(a.jack, .srow):is(:hover, :focus-visible) .icon-img {
   filter: drop-shadow(0 0 0.6px rgba(232, 229, 220, 0.75));
   opacity: 1;
 }
 
-:root[data-scheme='light'] :is(a.jack, a.app, .srow):is(:hover, :focus-visible) .icon-img {
+:root[data-scheme='light'] :is(a.jack, .srow):is(:hover, :focus-visible) .icon-img {
   filter: none;
   opacity: 1;
 }
@@ -1581,17 +1550,10 @@ input[type='checkbox'] {
   accent-color: var(--accent);
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 16px 20px 12px;
-}
-
 .chip {
   min-height: var(--ctl-sm-h);
   padding: 0 11px;
-  border-radius: 99px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink-3);
@@ -1945,66 +1907,6 @@ input[type='checkbox'] {
   font-size: 14px;
 }
 
-/* Apps */
-
-.app-group h2 {
-  font: var(--display-weight) 20px/1 var(--f-display);
-  color: var(--head);
-  margin: 36px 0 14px;
-}
-
-.app-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 10px;
-}
-
-.app {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  column-gap: 14px;
-  align-items: center;
-  padding: 12px 14px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--line);
-  background: var(--raised);
-  text-decoration: none;
-  height: 100%;
-  transition: border-color 200ms var(--ease-out), transform 200ms var(--ease-out);
-}
-
-/* Card hover: a 1px accent edge along the top and a 2px lift. */
-a.app:hover {
-  border-color: var(--line);
-  border-top-color: var(--accent);
-  transform: translateY(-2px);
-}
-
-.app > :first-child {
-  grid-row: 1 / span 2;
-}
-
-.app-name {
-  font-weight: 600;
-  color: var(--head);
-}
-
-.app-state {
-  font: 400 12px/1.5 var(--f-mono);
-  color: var(--ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.app-state[data-state='down'] {
-  color: var(--crit);
-}
-
-.app-state[data-state='warn'] {
-  color: var(--warn);
-}
-
 .skeleton {
   background: var(--raised);
   border-radius: var(--radius-lg);
@@ -2097,7 +1999,7 @@ a.app:hover {
     border-radius: 50%;
     border: 1px solid var(--line);
     background: var(--surface);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--float-shadow);
     cursor: pointer;
   }
 
@@ -2149,7 +2051,6 @@ a.app:hover {
   .status-line {
     font-size: 20px;
   }
-
 
   .masthead > * {
     min-width: 0;
@@ -2204,14 +2105,6 @@ a.app:hover {
   .patchrow {
     order: 0;
     margin-bottom: 32px;
-  }
-
-  .home-grid {
-    display: contents;
-  }
-
-  .home-col {
-    display: contents;
   }
 
   .attention {
@@ -2336,10 +2229,6 @@ a.app:hover {
     margin-left: 0;
   }
 
-  .app-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-
   .palette {
     margin-top: calc(var(--safe-top) + 12px);
   }
@@ -2390,7 +2279,7 @@ ul.plain {
   font: 400 11px/1 var(--f-mono);
   padding: 3px 6px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--ink-3);
   margin-left: 8px;
   vertical-align: 1px;
@@ -2560,10 +2449,6 @@ ul.plain {
 a.vitals {
   text-decoration: none;
   color: inherit;
-}
-
-a.vitals:hover .vital-label {
-  color: var(--ink-2);
 }
 
 /* ---------- Detail pages (container, server) ---------- */
@@ -2751,7 +2636,7 @@ a.vitals:hover .vital-label {
   border-right: 1.5px solid var(--ink-3);
   border-bottom: 1.5px solid var(--ink-3);
   transform: rotate(-45deg);
-  transition: transform 160ms var(--ease-out);
+  transition: transform var(--dur-1) var(--ease-out);
 }
 
 .rb[open] summary::before {
@@ -3391,19 +3276,6 @@ a.vitals:hover .vital-label {
   font-size: 13px;
 }
 
-.theme-preview {
-  display: flex;
-  gap: 4px;
-  height: 34px;
-  padding: 6px;
-  border-radius: 6px;
-}
-
-.theme-preview i {
-  flex: 1;
-  border-radius: 3px;
-}
-
 .seg {
   display: inline-flex;
   flex-wrap: wrap;
@@ -3412,6 +3284,7 @@ a.vitals:hover .vital-label {
 
 .seg button {
   white-space: nowrap;
+  font-weight: 500;
   min-height: var(--ctl-h);
   padding: 0 14px;
   font-size: var(--ctl-fs);
@@ -3591,10 +3464,6 @@ a.vitals:hover .vital-label {
   color: var(--warn);
   border-color: color-mix(in srgb, var(--warn) 45%, transparent);
   margin-left: 2px;
-}
-
-.stack-filters {
-  margin: 4px 0 -6px;
 }
 
 .chip[aria-pressed='true'] {
@@ -3803,7 +3672,6 @@ a.vitals:hover .vital-label {
 .alert > a,
 .alert > div,
 .ledger-row dd,
-.home-col,
 .detail-titles,
 .srow-id {
   min-width: 0;
@@ -4045,7 +3913,6 @@ a.vitals:hover .vital-label {
   line-height: 1.35;
 }
 
-
 .tile[data-tone='warn'] .tile-stat {
   color: var(--warn);
 }
@@ -4067,7 +3934,7 @@ a.vitals:hover .vital-label {
   color: var(--ink-3);
   border-radius: var(--radius);
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity var(--dur-1) ease;
 }
 
 .tile:hover .tile-more,
@@ -4086,7 +3953,7 @@ a.vitals:hover .vital-label {
 :root:not([data-icons='color']) .tile-icon .icon-img {
   filter: grayscale(1) contrast(1.05);
   opacity: 1;
-  transition: filter 220ms ease, opacity 220ms ease;
+  transition: filter var(--dur-2) ease, opacity var(--dur-2) ease;
 }
 
 :root:not([data-icons='color']):not([data-scheme='light']) .tile-icon .icon-img {
@@ -4234,7 +4101,7 @@ a.vitals:hover .vital-label {
 }
 
 .swatch-theme {
-  background: conic-gradient(from 90deg, #6ea8fe, #5fd0c5, #86c7a0, #b49cff, #d8bf8f, #6ea8fe);
+  background: conic-gradient(from 90deg, #6ea8fe, #5fd0c5, #a99bff, #6ea8fe);
 }
 
 .swatch-pick {
@@ -4509,23 +4376,6 @@ a.vitals:hover .vital-label {
 
 @media (min-width: 1600px) {
 
-  /* Three balanced columns; each section stays whole. */
-  .home-grid {
-    display: block;
-    column-count: 3;
-    column-gap: 56px;
-  }
-
-  .home-col {
-    display: contents;
-  }
-
-  .home-grid > .home-col > .section {
-    display: inline-block;
-    width: 100%;
-    break-inside: avoid;
-  }
-
   .detail-grid {
     grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
     gap: 0 72px;
@@ -4589,11 +4439,6 @@ a.vitals:hover .vital-label {
   background: color-mix(in srgb, var(--raised) 94%, transparent);
   backdrop-filter: blur(8px);
   margin-bottom: 16px;
-}
-
-.board-bar-title {
-  font-weight: 600;
-  color: var(--head);
 }
 
 .board-bar-hint {
@@ -4716,10 +4561,10 @@ a.vitals:hover .vital-label {
   min-height: var(--ctl-sm-h);
   padding: 3px 8px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: var(--raised);
   color: var(--ink-2);
-  font: 400 var(--ctl-sm-fs)/1.2 var(--f-body);
+  font: 500 var(--ctl-sm-fs)/1.2 var(--f-body);
   cursor: pointer;
   transition: border-color var(--dur-1) ease, color var(--dur-1) ease;
 }
@@ -4883,7 +4728,6 @@ a.vitals:hover .vital-label {
   color: var(--head);
   margin-right: 3px;
 }
-
 
 @media (max-width: 760px) {
   /* minmax(0, ...) so a wide child (a poster strip) can't stretch the column. */
@@ -5119,16 +4963,6 @@ a.jw-title:hover {
   }
 }
 
-/* ---------- Sorting rows and rearranging ---------- */
-
-.sort-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-}
-
 .seg-small {
   display: flex;
   flex-wrap: wrap;
@@ -5202,7 +5036,6 @@ a.jw-title:hover {
   cursor: inherit;
 }
 
-
 @media (max-width: 760px) {
   .arrange-head {
     display: flex;
@@ -5258,13 +5091,6 @@ a.jw-title:hover {
   border-bottom: 0;
 }
 
-/* ---------- Feeds overview, when no article is open ---------- */
-
-/* The overview fills the pane; the article's reading margins would waste it. */
-.reader:has(> .reader-overview) {
-  padding: 28px 32px 64px;
-}
-
 .reader-hint {
   margin: 0 0 18px;
   color: var(--ink-3);
@@ -5294,7 +5120,7 @@ a.jw-title:hover {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: box-shadow 160ms ease, background-color 160ms ease;
+  transition: box-shadow var(--dur-1) ease, background-color var(--dur-1) ease;
 }
 
 .feed-card:hover {
@@ -5333,7 +5159,6 @@ a.jw-title:hover {
   font-size: 12.5px;
   color: var(--ink-3);
 }
-
 
 /* Disks in Server's side column: the essentials on top, the model in full
    underneath, so nothing is cut off at any width. */
@@ -5400,7 +5225,6 @@ a.jw-title:hover {
   flex-wrap: wrap;
 }
 
-
 /* ---------- Arranging: group names, moves between groups ---------- */
 
 .arrange-name {
@@ -5453,10 +5277,6 @@ a.jw-title:hover {
   opacity: 0;
   cursor: pointer;
   font-size: 16px;
-}
-
-.add-group {
-  justify-self: start;
 }
 
 /* Phones: one app per row while arranging, so the buttons have room. */
@@ -5515,7 +5335,7 @@ body.is-sorting * {
   height: 44px;
   border-radius: 2px;
   background: var(--line);
-  transition: background-color 150ms ease, height 150ms ease;
+  transition: background-color var(--dur-1) ease, height var(--dur-1) ease;
 }
 
 .cell-resize:hover::before,
@@ -5827,10 +5647,6 @@ body.is-sorting * {
   gap: 8px 16px;
 }
 
-.reader-tools {
-  padding: 0 20px 4px;
-}
-
 .page-panel {
   width: min(620px, calc(calc(100vw / var(--zoom)) - 24px));
 }
@@ -5983,7 +5799,7 @@ a.vw {
   border-radius: var(--radius);
   margin: -4px;
   padding: 4px;
-  transition: background-color 150ms ease;
+  transition: background-color var(--dur-1) ease;
 }
 
 a.vw:hover {
@@ -6307,7 +6123,8 @@ a.vw:hover {
 }
 
 .rel-art .poster-type span {
-  font-size: 7px;
+  display: none;
+  font-size: 11px;
   line-height: 1.1;
   padding: 3px;
 }
@@ -6780,10 +6597,6 @@ a.date:hover {
     animation: none !important;
     transition: none !important;
   }
-}
-
-.file-button {
-  cursor: pointer;
 }
 
 .starter-pick {
@@ -7911,7 +7724,7 @@ button.ha-act:hover {
 
 .kuma-num {
   font: 400 12.5px/1 var(--f-mono);
-  color: var(--muted);
+  color: var(--ink-3);
   text-align: right;
   white-space: nowrap;
 }
@@ -7928,7 +7741,7 @@ button.ha-act:hover {
   grid-column: 1 / -1;
   margin-top: 3px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--ink-3);
 }
 
 .beats {
@@ -7962,7 +7775,7 @@ button.ha-act:hover {
   display: inline-block;
   margin-top: 10px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--ink-3);
 }
 
 /* Narrower cards keep fewer checks, so names stay whole. */
@@ -8029,17 +7842,6 @@ button.ha-act:hover {
   padding: 5px 8px;
   font-size: 13px;
   width: auto;
-}
-
-.feeds-confirm {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 4px 10px;
-  white-space: nowrap;
-  font-size: 13.5px;
-  color: var(--ink-2);
 }
 
 .entry.has-thumb {
@@ -8751,7 +8553,7 @@ button.ha-act:hover {
 
 .section-head,
 .integration {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color var(--dur-2) ease, box-shadow var(--dur-2) ease;
 }
 
 .section.is-landing > .section-head,
@@ -8777,7 +8579,7 @@ button.ha-act:hover {
   place-items: center;
   border-radius: 50%;
   background: var(--raised);
-  box-shadow: 0 0 0 1px var(--line), 0 4px 14px rgb(0 0 0 / 0.25);
+  box-shadow: 0 0 0 1px var(--line), var(--float-shadow);
   pointer-events: none;
 }
 
@@ -8823,7 +8625,7 @@ button.ha-act:hover {
 .roll-reel {
   display: flex;
   flex-direction: column;
-  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 700ms var(--ease-out);
 }
 
 .roll-reel > span {
@@ -8851,7 +8653,7 @@ button.ha-act:hover {
   transform: scaleX(0);
   transform-origin: left;
   background: color-mix(in srgb, var(--warn) 24%, transparent);
-  transition: transform 160ms ease-out;
+  transition: transform var(--dur-1) ease-out;
   pointer-events: none;
 }
 
@@ -8894,7 +8696,7 @@ button.ha-act:hover {
   stroke-linejoin: round;
   stroke-dasharray: 16;
   stroke-dashoffset: 16;
-  animation: check-draw 420ms 80ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: check-draw 420ms 80ms var(--ease-out) forwards;
 }
 
 @keyframes check-draw {
@@ -9094,7 +8896,6 @@ button.ha-act:hover {
   gap: 12px 16px;
   margin-top: 8px;
 }
-
 
 /* ---------- Boards: tabs over the board, and the arrange bar in two rows ---------- */
 
@@ -9342,7 +9143,7 @@ button.ha-act:hover {
   color: inherit;
   text-decoration: none;
   border-radius: var(--radius-lg);
-  transition: background-color 150ms ease;
+  transition: background-color var(--dur-1) ease;
   grid-template-columns: fit-content(260px) minmax(130px, 1fr);
   align-items: center;
   flex: 0 1 400px;
@@ -9353,7 +9154,6 @@ button.ha-act:hover {
   border: 1px solid var(--line-soft);
   background: var(--raised);
 }
-.home-header .header-weather.is-current { flex: 0 1 auto; max-width: 260px; grid-template-columns: minmax(0, 1fr); }
 .home-header .header-weather:hover { background: var(--surface); }
 .header-weather-now { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .home-header .temp { font-size: 38px; line-height: 1; white-space: nowrap; }
@@ -9402,7 +9202,6 @@ button.ha-act:hover {
 .header-server-metric:hover .header-server-value { text-decoration: underline; text-underline-offset: 4px; }
 .header-server-value { font: 400 24px/1.1 var(--f-mono); color: var(--head); white-space: nowrap; }
 .header-server-label { color: var(--ink-3); font-size: 11px; }
-.header-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 @media (max-width: 760px) { .header-server { padding-left: 0; border-left: 0; } }
 
 /* Playback colors identify a service, while state stays explicit in the text. */
@@ -9438,10 +9237,10 @@ button.ha-act:hover {
   overflow: auto;
   padding: 16px;
   border: 1px solid var(--line);
-  box-shadow: inset 0 3px 0 var(--playback-accent);
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: 0 8px 32px color-mix(in srgb, var(--bg) 75%, transparent);
+  /* The service's color along the top, over the shared float shadow. */
+  box-shadow: inset 0 3px 0 var(--playback-accent), var(--float-shadow);
 }
 .playback-preview-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .playback-service { color: var(--playback-accent); font-size: 13px; font-weight: 600; }
@@ -9478,10 +9277,8 @@ button.ha-act:hover {
 .home-header.clock-medium .header-context .clock { font-size: 40px; }
 .home-header.clock-large .header-context .clock { font-size: 52px; }
 .home-header .header-context .date { font-size: 12px; }
-.home-header .header-context .header-weather { flex: none; width: 100%; max-width: none; padding: 0; border: 0; background: none; border-radius: var(--radius); }
+.home-header .header-context .header-weather { flex: none; width: 100%; max-width: none; padding: 0; border: 0; background: none; border-radius: var(--radius); grid-template-columns: minmax(0, 1fr); }
 .home-header .header-context .header-weather:hover { background: var(--surface); }
-.home-header .header-context .header-weather.is-current { grid-template-columns: minmax(0, 1fr); }
-.home-header .header-context .header-weather:not(.is-current) { grid-template-columns: minmax(0, 1fr); }
 .header-context .header-weather-now { gap: 10px; justify-content: center; }
 .home-header .header-context .temp { font-size: 30px; }
 .home-header .header-context .weather-text { gap: 0; font-size: 11px; text-align: center; }
@@ -9520,7 +9317,7 @@ button.ha-act:hover {
   margin-right: auto;
   color: var(--ink-3);
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: var(--act-fs);
 }
 
 .version-line.is-news {
@@ -9581,7 +9378,7 @@ button.ha-act:hover {
 .is-editing .cell-inner { padding: 0 0 24px; }
 .is-editing .cell-body { opacity: 1; max-height: none; overflow: visible; mask-image: none; }
 .is-editing .board-bar { position: fixed; top: auto; bottom: 16px; left: 32px; right: 32px; max-height: 38vh; overflow: auto; margin: 0; background: var(--raised); backdrop-filter: none; }
-.cell-tools { position: absolute; z-index: 3; top: 8px; left: 8px; right: 8px; flex-wrap: wrap; margin: 0; opacity: 0; pointer-events: none; box-shadow: 0 4px 12px color-mix(in srgb, var(--bg) 65%, transparent); }
+.cell-tools { position: absolute; z-index: 3; top: 8px; left: 8px; right: 8px; flex-wrap: wrap; margin: 0; opacity: 0; pointer-events: none; box-shadow: var(--float-shadow); }
 .cell:is(:hover, :focus-within) .cell-tools { opacity: 1; pointer-events: auto; }
 @media (hover: none) { .cell-tools { opacity: 1; pointer-events: auto; } }
 @media (max-width: 760px) {
@@ -9628,7 +9425,6 @@ button.ha-act:hover {
 .upcoming-brief .agenda-compact .rel-title { flex: 0 1 auto; }
 .upcoming-brief .agenda-compact .rel-sub { flex: 0 1 auto; margin-left: 0; }
 .upcoming-brief .rel-time, .upcoming-brief .rel-src { white-space: nowrap; }
-
 
 .header-context .weather-text,
 .header-context .weather-text strong,
@@ -10486,7 +10282,6 @@ a.req-come:hover .req-title {
   color: var(--warn);
 }
 
-
 /* Connections' parts are a level below the Settings tabs: text with an
    underline, not another row of buttons. */
 .seg.settings-parts {
@@ -10604,7 +10399,7 @@ a.req-come:hover .req-title {
 
 /* Light schemes: pale brand marks (Dozzle, Uptime Kuma, Caddy) darken and
    take a hairline, so no grayscale icon disappears into the page. */
-:root[data-scheme='light']:not([data-icons='color']) :is(.jack-socket, .app, .srow-icon, .detail-icon, .tile-icon) .icon-img {
+:root[data-scheme='light']:not([data-icons='color']) :is(.jack-socket, .srow-icon, .detail-icon, .tile-icon) .icon-img {
   /* Pale marks come down further than dark ones can go: the set reads even. */
   filter: grayscale(1) brightness(0.6) contrast(1.6) drop-shadow(0 0 0.6px rgba(20, 22, 26, 0.6));
   opacity: 1;
@@ -10671,13 +10466,6 @@ a.req-come:hover .req-title {
   .hold:disabled::after {
     opacity: 0;
   }
-}
-
-/* Widget settings: Column sits as a field like the rest. */
-.widget-settings .settings-label {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 14px;
 }
 
 /* The narrowest phones: the header's server numbers two by two. */
@@ -11053,7 +10841,7 @@ a.req-title:hover {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--raised);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 70%, transparent);
+  box-shadow: var(--float-shadow);
   font-size: 13px;
   line-height: 1.35;
 }

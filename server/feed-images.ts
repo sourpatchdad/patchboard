@@ -3,11 +3,14 @@
 // /api/feed-img/<entry>/<n>; the real address stays on the server, so
 // Patchboard fetches only pictures from articles it handed out itself.
 // Publishers choose those addresses, so the fetch goes to public addresses
-// only (no LAN, no loopback, no metadata), checked again on each redirect.
+// only (no LAN, no loopback, no metadata), checked as each connection opens,
+// so redirects and DNS answers get the same check.
 // Nothing is kept on disk: the browser caches each picture for a day.
 
-import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import { lookup as dnsLookup } from 'node:dns';
+import { request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
+import { isIP, type LookupFunction } from 'node:net';
 
 const MAX_URLS = 5000;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -39,53 +42,95 @@ export function proxyContent(entry: number, html: string, first = 1): string {
     );
 }
 
-/** True for an address anyone on the internet could reach. */
+/** Private, reserved and documentation IPv4 ranges: [first octet, second-octet floor, ceiling]. */
+const PRIVATE_V4: [number, number, number][] = [
+  [0, 0, 255],
+  [10, 0, 255],
+  [100, 64, 127], // carrier-grade NAT, Tailscale
+  [127, 0, 255],
+  [169, 254, 254],
+  [172, 16, 31],
+  [192, 168, 168],
+  [198, 18, 19], // benchmarking
+];
+const PRIVATE_V4_24 = ['192.0.0.', '192.0.2.', '198.51.100.', '203.0.113.'];
+
+/**
+ * True for an address anyone on the internet could reach. IPv6 forms that
+ * carry an IPv4 address inside (mapped, compatible, NAT64, 6to4) are refused
+ * outright: a public picture host never needs them, and they are how a
+ * check like this gets fooled ("::ffff:7f00:1" is 127.0.0.1).
+ */
 export function publicAddress(ip: string): boolean {
-  if (isIP(ip) === 4) {
+  const kind = isIP(ip);
+  if (kind === 4) {
     const [a, b] = ip.split('.').map(Number);
-    if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
-    if (a === 100 && b >= 64 && b <= 127) return false; // carrier-grade NAT, Tailscale
-    if (a === 169 && b === 254) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && b === 168) return false;
-    return true;
+    if (a >= 224) return false;
+    if (PRIVATE_V4.some(([x, lo, hi]) => a === x && b >= lo && b <= hi)) return false;
+    return !PRIVATE_V4_24.some((p) => ip.startsWith(p));
   }
+  if (kind !== 6) return false;
   const v6 = ip.toLowerCase();
   if (v6 === '::' || v6 === '::1') return false;
-  if (v6.startsWith('::ffff:')) return publicAddress(v6.slice(7));
+  if (/^::(ffff:)?[0-9a-f.:]/.test(v6)) return false;
+  if (/^(64:ff9b:|2002:|2001:db8:|100::)/.test(v6)) return false;
   return !/^(f[cd]|fe[89ab]|ff)/.test(v6);
 }
 
-async function fenced(url: URL): Promise<void> {
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Only http and https');
-  const host = url.hostname.replace(/^\[|\]$/g, '');
-  const addrs = isIP(host) ? [host] : (await lookup(host, { all: true })).map((a) => a.address);
-  if (!addrs.length || !addrs.every(publicAddress)) throw new Error('Not a public address');
+/**
+ * Name resolution for these requests only: every answer has to be public,
+ * checked as the socket connects, so a name can't pass a check and then
+ * resolve somewhere else for the real request.
+ */
+const publicLookup: LookupFunction = (host, options, callback) => {
+  dnsLookup(host, { all: true }, (err, addrs) => {
+    if (err) return callback(err, '', 4);
+    if (!addrs.length || !addrs.every((a) => publicAddress(a.address))) return callback(new Error('Not a public address'), '', 4);
+    if ((options as { all?: boolean }).all) return (callback as unknown as (e: null, a: typeof addrs) => void)(null, addrs);
+    callback(null, addrs[0].address, addrs[0].family);
+  });
+};
+
+interface Answer {
+  status: number;
+  location?: string;
+  type: string;
+  body: Uint8Array<ArrayBuffer> | null;
 }
 
-/** The body, read until it passes MAX_BYTES and then dropped. */
-async function capped(res: Response): Promise<Uint8Array<ArrayBuffer> | null> {
-  const reader = res.body?.getReader();
-  if (!reader) return null;
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.length;
-    if (size > MAX_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  const out = new Uint8Array(size);
-  let at = 0;
-  for (const c of chunks) {
-    out.set(c, at);
-    at += c.length;
-  }
-  return out;
+/** One GET to a public address, read up to MAX_BYTES of an image. */
+function get(url: URL): Promise<Answer> {
+  return new Promise((resolve, reject) => {
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return reject(new Error('Only http and https'));
+    const host = url.hostname.replace(/^\[|\]$/g, '');
+    // An address in the URL skips name lookup, so it's checked here.
+    if (isIP(host) && !publicAddress(host)) return reject(new Error('Not a public address'));
+    const send = url.protocol === 'https:' ? httpsRequest : httpRequest;
+    const req = send(url, { headers: { Accept: 'image/*', 'User-Agent': 'Patchboard/1 (reader)' }, lookup: publicLookup, timeout: TIMEOUT }, (res) => {
+      const status = res.statusCode ?? 0;
+      const type = String(res.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+      const empty = (extra: Partial<Answer> = {}) => {
+        res.resume();
+        resolve({ status, type, body: null, ...extra });
+      };
+      if (status >= 300 && status < 400) return empty({ location: res.headers.location });
+      if (status !== 200 || !type.startsWith('image/') || Number(res.headers['content-length'] ?? 0) > MAX_BYTES) return empty();
+      const chunks: Buffer[] = [];
+      let size = 0;
+      res.on('data', (c: Buffer) => {
+        size += c.length;
+        if (size > MAX_BYTES) {
+          req.destroy();
+          resolve({ status, type, body: null });
+        } else chunks.push(c);
+      });
+      res.on('end', () => size <= MAX_BYTES && resolve({ status, type, body: Uint8Array.from(Buffer.concat(chunks)) }));
+      res.on('error', reject);
+    });
+    req.on('timeout', () => req.destroy(new Error('Too slow')));
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 export interface Picture {
@@ -100,16 +145,12 @@ export async function feedPicture(entry: string, n: string): Promise<Picture | n
   try {
     let url = new URL(address);
     for (let hop = 0; hop < 4; hop++) {
-      await fenced(url);
-      const res = await fetch(url, { headers: { Accept: 'image/*', 'User-Agent': 'Patchboard/1 (reader)' }, redirect: 'manual', signal: AbortSignal.timeout(TIMEOUT) });
-      if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
-        url = new URL(res.headers.get('location')!, url);
+      const res = await get(url);
+      if (res.location) {
+        url = new URL(res.location, url);
         continue;
       }
-      const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
-      if (!res.ok || !type.startsWith('image/') || Number(res.headers.get('content-length') ?? 0) > MAX_BYTES) return null;
-      const body = await capped(res);
-      return body?.length ? { body, type } : null;
+      return res.body?.length ? { body: res.body, type: res.type } : null;
     }
   } catch {
     // Unreachable, blocked or too slow: the card hides its picture.

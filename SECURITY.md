@@ -27,7 +27,7 @@ it anywhere.
 | `none` (default) | Only you can reach the address: Tailscale, or a LAN you control. On a shared network, publish the port on a private address only, such as `"100.64.0.5:3200:3200"`. |
 | `forward` | A reverse proxy (Authelia, Authentik, Cloudflare Access, oauth2-proxy) signs people in and passes the user in `TRUSTED_USER_HEADER`. Bind Patchboard to `127.0.0.1` or a network only the proxy shares, or anyone can send that header. |
 | `oidc` | You have an identity provider: Authentik, Authelia, Keycloak, Pocket ID, Zitadel, Google. Patchboard uses the authorization-code flow with PKCE and checks the ID token's signature, issuer, audience, expiry and nonce. Set `OIDC_ALLOWED` to the emails, usernames or groups that may sign in; without it, anyone your provider signs in gets in. |
-| `password` | You have no proxy or provider. Turn it on in Settings, Sign-in, which stores a salted scrypt hash, or set `PATCHBOARD_PASSWORD`. A new password signs out every other device; changing or removing it needs the current one. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
+| `password` | You have no proxy or provider. Turn it on in Settings, Connections, Sign-in and keys, which stores a salted scrypt hash, or set `PATCHBOARD_PASSWORD`. A new password signs out every other device; changing or removing it needs the current one. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
 
 With sign-in on, webhooks send `HOOK_TOKEN` as `Authorization: Bearer <token>`
 or `?token=`. Turning on a password in Settings generates one.
@@ -71,7 +71,8 @@ container creation, which comes close to full access.
   the GitHub container registry about its image and reads its release notes
   from GitHub, at most once an hour; neither request carries anything about
   you.
-  App icons named from the dashboard-icons set are fetched once from
+  App icons named from the dashboard-icons set are fetched once (and again
+  monthly, in case the set redrew one) from
   jsDelivr and kept in `DATA_DIR`, so your browser gets them from
   Patchboard. Fonts ship inside the image. Article pictures in Reading load
   through Patchboard too, from public addresses only, so publishers never
@@ -115,10 +116,14 @@ container creation, which comes close to full access.
   hold it. Error messages never include URLs, because some APIs put keys in
   the query string. Patchboard proxies Plex and calendar
   artwork for the same reason.
-- **Fetching on your behalf is fenced.** The server fetches only URLs saved
-  in a board or the app layout; the browser asks by id. It follows no
-  redirects, refuses link-local and cloud-metadata addresses, and stops at
-  8 seconds or 512 KB.
+- **Fetching on your behalf is fenced.** The server fetches only addresses
+  it already holds: URLs saved in a board or the app layout, and pictures
+  from articles it served. The browser asks by id. API numbers follow no
+  redirects and stop at 8 seconds or 512 KB; feeds follow up to three
+  redirects and stop at 8 seconds or 1 MB; both refuse link-local and
+  cloud-metadata addresses, however they're written. Article pictures go
+  to public addresses only, checked as each connection opens, and stop at
+  10 seconds or 5 MB.
 - **Logs are masked on the server.** Apps write their own keys into their
   logs (Sonarr's indexer URLs carry the API key and torrent passkey, Plex
   logs its token). Patchboard masks API keys, tokens, passkeys, passwords,

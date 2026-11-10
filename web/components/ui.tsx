@@ -116,7 +116,7 @@ export function Icon({ name, icon, size = 22 }: { name: string; icon?: string; s
   const src = iconUrl(icon);
   if (!src || broken) {
     return (
-      <span className="icon-mono" style={{ width: size, height: size, fontSize: size * 0.5 }} aria-hidden>
+      <span className="icon-mono" style={{ width: size, height: size, fontSize: Math.max(11, size * 0.5) }} aria-hidden>
         {name.slice(0, 1)}
       </span>
     );

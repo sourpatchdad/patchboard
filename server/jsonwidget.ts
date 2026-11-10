@@ -39,6 +39,12 @@ export function blockedAddress(ip: string): boolean {
     return a === 169 && b === 254; // link-local, including cloud metadata 169.254.169.254
   }
   const v6 = ip.toLowerCase();
+  // An IPv4 address written inside IPv6 ("::ffff:a9fe:a9fe" is 169.254.169.254) is checked as IPv4.
+  const inner = /^::(?:ffff:)?(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/.exec(v6);
+  if (inner) {
+    const v4 = inner[1] ?? [inner[2], inner[3]].flatMap((w) => { const n = parseInt(w, 16); return [n >> 8, n & 255]; }).join('.');
+    return blockedAddress(v4);
+  }
   return v6.startsWith('fe80:') || v6 === 'fd00:ec2::254';
 }
 

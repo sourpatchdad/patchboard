@@ -59,7 +59,7 @@ export function iconCache(dir: string, cdn = CDN, timeoutMs = 10_000) {
 
   return {
     async get(kind: string, file: string, now = Date.now()): Promise<IconFile | null> {
-      if (!(kind in MIME)) return null;
+      if (!Object.hasOwn(MIME, kind)) return null;
       const k = kind as IconKind;
       const base = file.endsWith(`.${k}`) ? file.slice(0, -(k.length + 1)) : '';
       if (!NAME.test(base) || base.length > 100) return null;
@@ -77,6 +77,8 @@ export function iconCache(dir: string, cdn = CDN, timeoutMs = 10_000) {
       if ((misses.get(key) ?? 0) > now) return null;
       const body = await fetchOnce(k, file);
       if (!body) {
+        // Remembered misses stay bounded: past a thousand, start over.
+        if (misses.size > 1000) misses.clear();
         misses.set(key, now + MISS_MS);
         return null;
       }

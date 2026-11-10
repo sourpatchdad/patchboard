@@ -568,7 +568,7 @@ export const INTEGRATIONS: Integration[] = [
     adds: 'Marks containers with a newer image; the mark clears once the container runs it.',
     env: [],
     optional: ['HOOK_TOKEN'],
-    where: 'Point Diun’s webhook notifier at http://<patchboard>/api/hooks/diun. With a password on, Settings, Sign-in shows the address with its token.',
+    where: 'Point Diun’s webhook notifier at http://<patchboard>/api/hooks/diun. With a password on, Settings, Connections, Sign-in and keys shows the address with its token.',
     source: false,
   },
   {
