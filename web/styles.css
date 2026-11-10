@@ -64,7 +64,7 @@
   --display-tracking: -0.025em;
   --clock-weight: 300;
   --quiet: color-mix(in srgb, var(--ink-3) 55%, transparent);
-  --sq-up: color-mix(in srgb, var(--accent) 55%, var(--surface));
+  --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
 }
 
 :root[data-scheme='light'] {
@@ -89,7 +89,7 @@
   --socket: #ffffff;
   --socket-hi: #ffffff;
   --tape-ink: #6b7079;
-  --sq-up: color-mix(in srgb, var(--accent) 60%, var(--surface));
+  --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
 }
 
 /* ---------- nbnstack: warm, serif titles, patch-bay hardware ---------- */
@@ -125,7 +125,7 @@
   --display-weight: 400;
   --display-tracking: 0;
   --clock-weight: 400;
-  --sq-up: color-mix(in srgb, var(--accent) 55%, var(--surface));
+  --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
 }
 
 :root[data-theme='nbnstack'][data-scheme='light'] {
@@ -2678,6 +2678,13 @@ a.vitals:hover .vital-label {
   overflow-wrap: anywhere;
 }
 
+.detail-id {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
 .detail-actions {
   margin-left: auto;
   display: flex;
@@ -3139,6 +3146,28 @@ a.vitals:hover .vital-label {
     width: 100%;
   }
 
+  /* The fix before the links: name, state and Start, then Edit app and Dozzle. */
+  .page.detail {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page.detail > * {
+    order: 5;
+  }
+
+  .page.detail > .crumbs { order: 0; }
+  .page.detail > .detail-head { display: contents; }
+  .detail-id { order: 1; gap: 14px; }
+  .page.detail > .detail-state-row { order: 2; }
+  .detail-actions { order: 3; margin: 4px 0 16px; }
+
+  /* Runbook commands wrap rather than run off the side; Copy still copies them whole. */
+  .rb-body pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   .detail-state {
     font-size: 19px;
     align-items: flex-start;
@@ -3240,6 +3269,14 @@ a.vitals:hover .vital-label {
 
 :root:not([data-theme='nbnstack']) .jack-led {
   border-color: var(--raised);
+}
+
+/* Trouble reads at a glance: a down or failing app's light is larger than a healthy one's. */
+.jack:is([data-state='down'], [data-state='warn']) .jack-led {
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
 }
 
 :root:not([data-theme='nbnstack']) .jack-label {
@@ -10916,4 +10953,14 @@ a.req-title:hover {
 .settings-note,
 .alert-detail {
   text-wrap: pretty;
+}
+
+/* Right now folded by Fit: under each heading, one line of what's playing. */
+.now-compact {
+  margin: 2px 0 0;
+  padding-left: 22px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

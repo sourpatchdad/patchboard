@@ -174,17 +174,20 @@ export function ContainerPage() {
     <div className="page detail">
       <Crumbs project={ctr.project} />
       <header className="detail-head">
-        {svc?.icon && (
-          <span className="detail-icon">
-            <Icon name={svc.name} icon={svc.icon} size={36} />
-          </span>
-        )}
-        <div className="detail-titles">
-          <h1 className="page-title">{svc?.name ?? name}</h1>
-          <p className="detail-ident">
-            <Ident>{name}</Ident>
-            <span className="mono">{ctr.image}</span>
-          </p>
+        {/* On a phone the header opens up: name, then state and Start, then these links. */}
+        <div className="detail-id">
+          {svc?.icon && (
+            <span className="detail-icon">
+              <Icon name={svc.name} icon={svc.icon} size={36} />
+            </span>
+          )}
+          <div className="detail-titles">
+            <h1 className="page-title">{svc?.name ?? name}</h1>
+            <p className="detail-ident">
+              <Ident>{name}</Ident>
+              <span className="mono">{ctr.image}</span>
+            </p>
+          </div>
         </div>
         <div className="detail-actions">
           {svc?.href && isExternal(svc.href) && (

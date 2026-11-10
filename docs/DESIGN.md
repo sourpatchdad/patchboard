@@ -28,7 +28,10 @@ one click.
 
 - **Exceptions, not inventory.** A healthy app gets an icon and a quiet
   number. Space goes to what's broken, new, in progress or upcoming. A widget
-  stays neutral until a threshold is crossed.
+  stays neutral until a threshold is crossed. History squares follow the
+  same rule: a healthy day is ink, and only a bad day takes color. The
+  header, the tab title, Needs attention and Jump to count trouble from
+  one list, so they always agree.
 - **Playback identity.** Playback rows and previews use service colors:
   Plex gold, Jellyfin purple, Emby green, Audiobookshelf amber, Navidrome
   cyan and Tracearr blue. This is a narrow exception to healthy-neutral
@@ -58,8 +61,11 @@ one click.
   footer height, and report any remaining overflow. Fit is a temporary view
   adjustment and never rewrites the saved board. If list cuts are insufficient,
   artwork can shrink with its proportions intact; every poster remains in
-  the horizontal row. When nothing makes it fit, Fit gives every list its
-  full length back: a page that scrolls anyway shouldn't also be cut short.
+  the horizontal row. Right now can fold all the way, each service to its
+  heading and one line of titles. Once the board fits, Fit gives rows back
+  to the lists it cut deepest, as far as the window allows. When nothing
+  makes it fit, Fit gives every list its full length back: a page that
+  scrolls anyway shouldn't also be cut short.
 - **Use the width.** The board has the columns you choose; each widget lays
   itself out for the width it gets (container queries), so nothing clips.
 - **The UI sits on top of files.** Apps, groups, icons, live numbers, the

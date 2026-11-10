@@ -106,7 +106,7 @@ function useBoard(id: string) {
  * scrolls anyway, so every list gets its full length back. Starts over when
  * the window's size changes or the board is saved.
  */
-function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
+function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arranging = false, layout = ''): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
   const [trim, setTrim] = useState<Record<string, number>>({});
   const [posters, setPosters] = useState<Record<string, number>>({});
   /** Pixels still past the window once nothing more can be trimmed. */
@@ -123,6 +123,10 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
   const lastCut = useRef<{ id: string; before?: number; height: number; expect: number } | null>(null);
   /** Widgets whose cuts bought nothing (a poster row, a list already shorter than its count). */
   const noGain = useRef(new Set<string>());
+  /** A row given back once the board fit, to undo if it ran over: the widget and its count before. */
+  const lastGrow = useRef<{ id: string; before: number } | null>(null);
+  /** Widgets that can't take a row back without running over. */
+  const full = useRef(new Set<string>());
   const shape = JSON.stringify(widgets.map(({ id, type, size, span, config }) => ({ id, type, size, span, config })).sort((a, b) => a.id.localeCompare(b.id)));
   useEffect(() => {
     setTrim({});
@@ -131,6 +135,8 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     setGaveUp(false);
     lastCut.current = null;
     noGain.current = new Set();
+    lastGrow.current = null;
+    full.current = new Set();
   }, [on, viewport, shape]);
   useEffect(() => {
     if (!on || !el) return;
@@ -151,6 +157,8 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       setGaveUp(false);
       lastCut.current = null;
       noGain.current = new Set();
+      lastGrow.current = null;
+      full.current = new Set();
     });
     ro.observe(home);
     for (const child of home.children) if (!child.contains(el)) ro.observe(child);
@@ -187,6 +195,35 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
         }
       }
       const over = cells.filter((x) => x.r.bottom > floor).sort((a, b) => b.r.bottom - a.r.bottom);
+      // A row given back ran over: take it away again, and leave that list as it is.
+      const grew = lastGrow.current;
+      if (grew) {
+        lastGrow.current = null;
+        if (over.length) {
+          full.current.add(grew.id);
+          setTrim((t) => ({ ...t, [grew.id]: grew.before }));
+          return;
+        }
+      }
+      // It fits. Cuts made early (before Right now folded, say) may have gone
+      // further than needed: give rows back, one at a time, to the list cut
+      // deepest, until each would run over.
+      if (!over.length) {
+        const back = Object.entries(trim)
+          .filter(([id]) => !full.current.has(id))
+          .map(([id, n]) => {
+            const w = widgets.find((x) => x.id === id);
+            const all = w ? Number(w.config?.limit ?? WIDGET_INFO[w.type].options.limit?.[0] ?? 0) : 0;
+            return { id, n, all, cut: all ? (all - n) / all : 0 };
+          })
+          .filter((x) => x.n < x.all)
+          .sort((a, b) => b.cut - a.cut)[0];
+        if (back) {
+          lastGrow.current = { id: back.id, before: back.n };
+          setTrim((t) => ({ ...t, [back.id]: back.n + 1 }));
+          return;
+        }
+      }
       for (const low of over) {
         // Anything sharing its columns, at or above it, can make room. The
         // list with the most to spare goes first, so cuts spread evenly
@@ -205,7 +242,9 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
             const items = Math.max(1, Math.min(now, rows || now));
             // Height per row across the whole widget, for what a cut should save.
             const perRow = x.r.height / Math.max(1, blocks.length ? blocks.reduce((a, b) => a + b, 0) : rows || items);
-            return { ...x, w: x.w!, now, items, perRow, min: lim?.[1] ?? Infinity };
+            // Right now can go to no rows at all: each service folds to one line, its heading
+            // and what's playing, which still answers who's watching.
+            return { ...x, w: x.w!, now, items, perRow, min: x.w!.type === 'now' ? 0 : (lim?.[1] ?? Infinity) };
           })
           .filter((x) => x.items > x.min)
           .sort((a, b) => b.items - b.min - (a.items - a.min) || b.r.height - a.r.height)[0];
@@ -241,12 +280,29 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       window.clearTimeout(timer);
     };
   }, [on, el, widgets, trim, posters, gaveUp]);
-  if (!on) return { trim: {}, posters: {}, over: 0 };
-  return gaveUp ? { trim: {}, posters: {}, over } : { trim, posters, over };
+  const result = !on ? { trim: {}, posters: {}, over: 0 } : gaveUp ? { trim: {}, posters: {}, over } : { trim, posters, over };
+  // Arranging shows the board exactly as you were viewing it, counts and all,
+  // until you change it (a column, a width, a widget added or removed). From
+  // then on Fit works live, so the preview is what Save keeps.
+  return useHeldWhileArranging(result, arranging, shape + layout);
 }
 
 /** Align close-sized reading/calendar cards without adding more than 48px. */
-function useListCardAlignment(el: HTMLDivElement | null, widgets: string): Record<string, number> {
+/** While arranging and until the board changes, the value from when you were viewing it. */
+function useHeldWhileArranging<T>(value: T, arranging: boolean, key: string): T {
+  const viewed = useRef<{ key: string; value: T; changed?: boolean } | null>(null);
+  if (!arranging || !viewed.current) {
+    viewed.current = { key, value };
+    return value;
+  }
+  if (viewed.current.changed || viewed.current.key !== key) {
+    viewed.current.changed = true;
+    return value;
+  }
+  return viewed.current.value;
+}
+
+function useListCardAlignment(el: HTMLDivElement | null, widgets: string, arranging = false): Record<string, number> {
   const [aligned, setAligned] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!el) return;
@@ -286,7 +342,7 @@ function useListCardAlignment(el: HTMLDivElement | null, widgets: string): Recor
     queue();
     return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('resize', queue); };
   }, [el, widgets]);
-  return aligned;
+  return useHeldWhileArranging(aligned, arranging, widgets);
 }
 
 export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: number; onWidgets?: (types: string[]) => void }) {
@@ -365,8 +421,9 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   }, [boardEl]);
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
-  const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE);
-  const alignedHeights = useListCardAlignment(boardEl, shown?.widgets.map((w) => `${w.id}:${w.column ?? ''}:${w.span ?? ''}`).join(',') ?? '');
+  const layoutKey = shown?.widgets.map((w) => `${w.id}:${w.column ?? ''}:${w.span ?? ''}`).join(',') ?? '';
+  const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE, editing, layoutKey);
+  const alignedHeights = useListCardAlignment(boardEl, layoutKey, editing);
   const short = over;
   const sort = useDragSort('cell', () => {}, { onPoint: (drag, x, y) => {
     if (!boardEl || !draft) return;

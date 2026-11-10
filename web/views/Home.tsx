@@ -51,6 +51,7 @@ import {
 } from '../lib/format.ts';
 import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
+import { byUrgency, needsYou } from '../lib/attention.ts';
 
 export function Home() {
   const { snap } = useStore();
@@ -221,7 +222,7 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   const [all, setAll] = useState(false);
   // Problems first, worst first; then quiet notes, like an app Patchboard
   // can't reach, in gray.
-  const list = [...alerts.filter((a) => a.level === 'critical'), ...alerts.filter((a) => a.level === 'warn'), ...alerts.filter((a) => a.level === 'info')];
+  const list = byUrgency(alerts);
   if (!list.length) return null;
   const SHOWN = 3;
   const shown = all ? list : list.slice(0, SHOWN);
@@ -245,7 +246,7 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
         );
         return (
           <li key={a.id} className={`head-alert alert-${a.level}`} title={a.detail}>
-            {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer">{body}</a> : <Link to={a.href}>{body}</Link> : <span>{body}</span>}
+            {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>{body}</a> : <Link to={a.href} aria-label={spoken(a, now)}>{body}</Link> : <span>{body}</span>}
           </li>
         );
       })}
@@ -296,7 +297,7 @@ function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): stri
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
   const { snap } = useStore();
   const blind = snap ? blindSpot(snap) : null;
-  const serious = alerts.filter((a) => a.level !== 'info').length;
+  const serious = needsYou(alerts).length;
   const h = new Date(now).getHours();
   const night = h >= 23 || h < 6;
   // The otter stays whenever nothing is wrong, even with a quiet note below.
@@ -330,9 +331,9 @@ export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
             <li key={a.id} className={`alert alert-${a.level}`}>
               {a.href ? (
                 isExternal(a.href) ? (
-                  <a href={a.href} target="_blank" rel="noreferrer">{body}</a>
+                  <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>{body}</a>
                 ) : (
-                  <Link to={a.href}>{body}</Link>
+                  <Link to={a.href} aria-label={spoken(a, now)}>{body}</Link>
                 )
               ) : (
                 <div>{body}</div>
@@ -419,6 +420,8 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
   // Rows per server or client, so a busy evening doesn't push the board down.
   // Each heading already gives the full count.
   const { limit = 6 } = useWidget();
+  /** Fit took every row: each service is its heading and one line of titles. */
+  const compact = limit === 0;
   const { servers, configured } = useMediaServers();
   const all = useDownloadClients();
   const clients = downloads ? all.clients : [];
@@ -462,11 +465,12 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
             <Led state="ok" />
             <AppLink container={m.container}>{`${plural(m.data.streams.length, 'stream')} on ${m.label}`}</AppLink>
           </h3>
+          {compact && <p className="now-foot now-compact">{m.data.streams.map((s) => s.title).join(', ')}</p>}
           {m.data.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
           ))}
           {/* Fit or a small limit cut the list: say so, and lead to the rest. */}
-          {m.data.streams.length > limit && (
+          {!compact && m.data.streams.length > limit && (
             <p className="now-foot now-more">
               <AppLink container={m.container}>{m.data.streams.length - limit} more on {m.label}</AppLink>
             </p>
@@ -480,6 +484,7 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
             <Led state="ok" />
             <AppLink container={l.id}>{l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}</AppLink>
           </h3>
+          {compact && <p className="now-foot now-compact">{l.data!.streams.map((s) => s.title).join(', ')}</p>}
           {l.data!.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} />
           ))}
@@ -541,12 +546,12 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
                 <Meter label={`${t.name} download progress`} value={t.progress * 100} level="ok" />
               </div>
             ))}
-          {!d.data.paused && d.data.active.length > limit && (
+          {!compact && !d.data.paused && d.data.active.length > limit && (
             <p className="now-foot now-more">
               <AppLink container={d.container}>{d.data.active.length - limit} more in {d.label}</AppLink>
             </p>
           )}
-          {d.data.kind !== 'usenet' && !d.data.paused && (
+          {!compact && d.data.kind !== 'usenet' && !d.data.paused && (
             <p className="now-foot">
               Seeding {d.data.seeding}, uploading at {speed(d.data.up)}
               {d.data.stalled ? `. ${d.data.stalled} stalled` : ''}.
@@ -676,6 +681,11 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
 }
 
 const sourceName = { sonarr: 'Sonarr', radarr: 'Radarr', trakt: 'Trakt' };
+
+/** An alert as one spoken sentence: its parts sit side by side on screen, so a reader needs the pauses. */
+function spoken(a: Alert, now: number): string {
+  return [a.title, a.since ? agoLong(a.since, now) : '', a.detail ?? ''].filter(Boolean).join('. ');
+}
 
 /** An alert wears the status light: red down, amber trouble, a dark socket for a note. */
 const alertLed = { critical: 'crit', warn: 'warn', info: 'idle' } as const;

@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- One trouble count: the header, the tab title, Needs attention and Jump
+  to read the same list. Jump to shows the first three and a row for all
+  of them when more need you.
+- Fit the window folds Right now to one line per service (the heading and
+  what's playing), then gives rows back to the lists it cut deepest. Home
+  fits a 1440 by 900 window with the demo board.
+- History squares: a healthy day is quiet ink; only warning and down days
+  take color.
+- An app that's down or failing wears a larger light on its icon. Alerts
+  read to screen readers as one sentence with pauses.
+- Container page on a phone: the name, then the state and Start, then
+  Edit app and Dozzle. Runbook commands wrap instead of running off the
+  side.
 - Container page: Update stays labeled Update while a start, stop or
   restart runs, instead of claiming to update.
 - Stopping a container from Patchboard turns its light dark at once, not

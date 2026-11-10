@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import type { FastmailData, MinifluxData } from '../../shared/types.ts';
 import { setAppearance, THEMES } from '../lib/appearance.ts';
 import { useStore } from '../lib/store.tsx';
+import { needsYou } from '../lib/attention.ts';
 import { containerMap, isExternal } from '../lib/services.ts';
 import { Icon, Led } from './ui.tsx';
 
@@ -192,9 +193,10 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     // Nothing typed: what needs you, what you picked last, then the pages.
     if (!q.trim()) {
       const ctrs = snap ? containerMap(snap) : new Map();
-      const attention: Item[] = (snap?.alerts ?? [])
-        .filter((a) => a.level !== 'info')
-        .slice(0, 4)
+      const trouble = needsYou(snap?.alerts);
+      // The first four by name; past that, one row that says how many and opens the rest on Home.
+      const attention: Item[] = trouble
+        .slice(0, trouble.length > 4 ? 3 : 4)
         .map((a) => {
           const to = a.href ?? (a.subject && ctrs.has(a.subject) ? `/c/${encodeURIComponent(a.subject)}` : '/');
           return {
@@ -205,6 +207,14 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
             led: a.level === 'critical' ? 'crit' : 'warn',
             run: () => (isExternal(to) ? window.open(to, '_blank', 'noopener') : navigate(to)),
           };
+        });
+      if (trouble.length > 4)
+        attention.push({
+          id: 'al-more',
+          label: `All ${trouble.length} that need you`,
+          hint: 'Home',
+          group: 'Needs attention',
+          run: () => navigate('/'),
         });
       const byId = new Map(items.map((it) => [it.id, it]));
       const recent = readRecent()

@@ -154,7 +154,8 @@ its controls, or choose a Column in its settings. Editing keeps the full
 card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Fit the window trims lists until the
 board ends at the bottom of the screen. Recently added keeps every selected
-poster in one horizontal row, rather than losing titles to fit. If lists
+poster in one horizontal row, rather than losing titles to fit. Right now
+folds to one line per service before the other lists lose much. If lists
 alone cannot fit the board, they keep their full length, the page scrolls,
 and Arrange board reports how far it runs over. Fit
 recalculates when the window width or header height changes. New board,

@@ -10,6 +10,7 @@ import { Otter } from './Otter.tsx';
 import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 import { HELP } from '../lib/docs.ts';
+import { needsYou } from '../lib/attention.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -146,7 +147,7 @@ export function Shell() {
 
   // The otter follows the server: the header mark, the tab icon, the title
   // count and an installed app's badge. Quiet nights, it sleeps.
-  const serious = snap?.alerts.filter((a) => a.level !== 'info') ?? [];
+  const serious = needsYou(snap?.alerts);
   const level = serious.some((a) => a.level === 'critical') ? 'critical' : serious.length ? 'warn' : null;
   const hour = new Date().getHours();
   const notes = snap?.alerts.filter((a) => a.level === 'info').length ?? 0;
