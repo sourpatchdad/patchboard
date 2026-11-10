@@ -25,6 +25,8 @@ interface Item {
   confirm?: string;
   /** Sorts ahead of its peers, such as an action on a container that's down. */
   boost?: number;
+  /** An action's verb ("start"). It ranks below pages until you type it. */
+  verb?: string;
   /** More words it answers to, such as an app's container name. */
   terms?: string;
   /** The same thing's other pages, at the end of its row: Details, Logs. */
@@ -164,8 +166,9 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
             id: `a-${a}-${c.name}`,
             label: `${verb} ${c.name}`,
             hint: 'Action',
+            verb: a,
             ...(a !== 'start' ? { confirm: `${a} ${c.name}` } : {}),
-            // A container in trouble comes first: that's the one you came for.
+            // Among actions, a container in trouble comes first.
             boost: trouble ? 200 : 0,
             run: async () => {
               const res = await fetch(`/api/containers/${encodeURIComponent(c.name)}/action`, {
@@ -239,10 +242,14 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
             : -1
           : Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50, it.terms ? score(q, `${it.label} ${it.terms}`) - 60 : -1);
         // The boost ranks a match; it never makes one.
-        return { it, s: s > 0 && q.trim() ? s + (it.boost ?? 0) : s };
+        const words = q.trim().toLowerCase().split(/\s+/);
+        // Typing a name and pressing Enter opens its page, where the runbook
+        // and logs are. An action leads only once you type its verb.
+        const tier = it.verb && !words.some((w) => w.length >= 3 && it.verb!.startsWith(w)) ? 1 : 0;
+        return { it, tier, s: s > 0 && q.trim() ? s + (it.boost ?? 0) : s };
       })
       .filter((r) => r.s > 0)
-      .sort((a, b) => b.s - a.s || a.it.label.localeCompare(b.it.label))
+      .sort((a, b) => a.tier - b.tier || b.s - a.s || a.it.label.localeCompare(b.it.label))
       .slice(0, 9)
       .map((r) => r.it);
     if (q.trim()) {

@@ -14,6 +14,11 @@
 - Widget titles step up a size, long text no longer leaves one word alone
   on its last line, and quiet text on a selected row keeps its contrast.
 - Logs' container rows are a full finger tall on a phone.
+- Jump to: typing an app's name and pressing Enter opens its page, with
+  the runbook and logs, instead of starting or restarting it. An action
+  leads once you type its verb ("start unpack").
+- Arrange board's controls are the regular small control size, and
+  Connections' parts read as tabs under the Settings tabs.
 
 ## 1.0.0 (2026-11-10)
 
