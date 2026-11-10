@@ -1016,7 +1016,7 @@ function Welcome() {
             try {
               localStorage.setItem('pb-welcome-hidden', '1');
             } catch {
-              /* fine: it just comes back next time */
+              /* fine: it comes back next time */
             }
           }}
         >

@@ -67,7 +67,7 @@ async function fetchText(address: string): Promise<string> {
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    if (text.length > MAX_BYTES) throw new Error('Too large');
+    if (text.length > MAX_BYTES) throw new Error('Over 1 MB');
     return text;
   }
   throw new Error('Too many redirects');

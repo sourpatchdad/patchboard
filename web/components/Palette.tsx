@@ -216,7 +216,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           label: `All ${trouble.length} that need you`,
           hint: 'Home',
           group: 'Needs attention',
-          // Home opens its full list on arrival, not just the first three.
+          // Home opens its full list on arrival, past the first three.
           run: () => navigate('/', { state: { attention: true } }),
         });
       const byId = new Map(items.map((it) => [it.id, it]));

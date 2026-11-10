@@ -71,8 +71,7 @@ Commit to `dev`, or open a PR against it. CI runs on both. Add a line under
    git push --atomic origin main dev v1.3.0
    ```
 
-The release workflow runs this preflight before publishing any image.
-A version or notes mismatch stops the publication jobs. Once validated, it
-builds the image, moves `latest`, `1` and `1.3`, and
-publishes the GitHub Release. It fails when CHANGELOG.md has no section for
-the tag.
+The release workflow runs this preflight before it publishes any image. A
+version or notes mismatch stops the publication jobs. When the check passes,
+the workflow builds the image, moves `latest`, `1` and `1.3`, and publishes
+the GitHub Release. It fails when CHANGELOG.md has no section for the tag.

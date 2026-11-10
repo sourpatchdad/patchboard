@@ -15,8 +15,8 @@ it anywhere.
   off, try another release or search in Sonarr and Radarr, toggle the
   Home Assistant lights and scenes you pinned, wake a machine you listed,
   pause Pi-hole or AdGuard Home for at most an hour, and approve or decline
-  an Overseerr request that is waiting. Each is a POST with
-  the action header, and each lands in the audit log.
+  a waiting Overseerr request. Each is a POST with the action header, and
+  each lands in the audit log.
 
 ## Three choices when you deploy
 
@@ -83,8 +83,9 @@ container creation, which comes close to full access.
   webhook address works like a password: Patchboard stores it encrypted,
   sends only to discord.com, and turns off @mentions in what it posts.
 - **Keys are write-only.** Typed in Settings, they live encrypted in the
-  database in `DATA_DIR`; set in the environment, they live there. The browser can set a key but
-  never read one back: the API says whether a key is set, never what it is.
+  database in `DATA_DIR`; set in the environment, they live there. The
+  browser can set a key but never read one back: the API says whether a key
+  is set, never what it is.
   The setup file export carries no keys and no addresses.
 - **Saved keys are encrypted at rest** with AES-256-GCM. The key that seals
   them sits apart from the database, in `DATA_DIR/secret.key` (owner-only),
@@ -92,22 +93,24 @@ container creation, which comes close to full access.
   its own reveals nothing. Anyone who can read both files, or the running
   process, can read the keys, the same as an env file; protect `DATA_DIR`
   the same way.
-- **Setting up an integration in the UI is guarded like any change:** sign-in
+- **Setting up an integration in the UI gets the same guards as any change:** sign-in
   when it's on, the action header, refused under `READ_ONLY`, recorded in
   Activity. An environment variable always wins and shows as locked.
   Settings can turn a password on, and change or remove it with the current
   one. A reverse proxy, OIDC, Docker access and folder mounts come only from
-  the environment, so a session can't hand itself a new way in. Forgot the
-  password? `AUTH=none` or `PATCHBOARD_PASSWORD` in the environment wins. **Test connection** runs one request with the values in the form,
-  on a scoped copy of the settings, so live polling never sees unsaved
-  values. Tests are limited to one every two seconds per integration.
+  the environment, so a session can't hand itself a new way in. If you
+  forget the password, set `AUTH=none` or `PATCHBOARD_PASSWORD` in the
+  environment; it wins. **Test connection** runs one request with the values
+  in the form, on a scoped copy of the settings, so live polling never sees
+  unsaved values. Patchboard allows one test every two seconds per
+  integration.
 - **Requests fill in keys late.** Requests refer to keys as
   `${secret:NAME}` or `${env:WIDGET_NAME}`, and the server fills them in only
   when it makes the call. A key typed straight into an API numbers widget's
   header or URL moves to the encrypted key store when the board is saved,
   leaving a reference behind, so a board, a browser and a setup file never
-  hold it. Error messages never include URLs, because some
-  APIs put keys in the query string. Patchboard proxies Plex and calendar
+  hold it. Error messages never include URLs, because some APIs put keys in
+  the query string. Patchboard proxies Plex and calendar
   artwork for the same reason.
 - **Fetching on your behalf is fenced.** The server fetches only URLs saved
   in a board or the app layout; the browser asks by id. It follows no
@@ -126,7 +129,8 @@ container creation, which comes close to full access.
   `PATH`, `HOME` and `DOCKER_HOST`, so its keys never reach a stack. To update
   itself it starts a one-off helper from the image it just pulled, with the
   same Docker socket and the compose folder read-only, which recreates
-  Patchboard and removes itself. Behind a socket proxy it won't.
+  Patchboard and removes itself. Behind a socket proxy it skips the
+  self-update.
 - **CI** runs gitleaks over the full history on every push.
 
 ## Reporting a vulnerability

@@ -1,6 +1,6 @@
 // Arriving from a link that points at one part of a page: scroll to it and
-// mark it, so the eye lands where the click meant. The mark is still (the
-// rule under it takes the accent) and clears the moment you do something.
+// mark it, so you see what the link pointed at. The mark doesn't animate (the
+// rule under it takes the accent) and clears as soon as you do something.
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';

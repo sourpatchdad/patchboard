@@ -159,7 +159,7 @@ export function statsAdapter(): Adapter<StatsData> {
             const cache = m?.stats?.inactive_file ?? m?.stats?.total_inactive_file ?? 0;
             out[c.name] = { cpu: Math.min(100, pct), memBytes: Math.max(0, (m?.usage ?? 0) - cache) };
           } catch {
-            // A container that stopped mid-poll just drops out of this round.
+            // A container that stopped mid-poll drops out of this round.
           }
         }),
       );
@@ -203,7 +203,7 @@ function hostBinding(binds: { HostIp: string; HostPort: string }[] | null): stri
 }
 
 /**
- * One container's detail. Deliberately leaves out Config.Env: environment
+ * One container's detail, without Config.Env: environment
  * variables are where secrets live, and the browser never needs them.
  */
 export async function inspectContainer(name: string, all: Container[]): Promise<ContainerDetail> {

@@ -21,7 +21,7 @@ const BACKOFF = 5 * 60_000;
 async function signIn(origin: string, secret: string): Promise<string> {
   const key = `${origin}|${secret}`;
   const blocked = failedUntil.get(key);
-  if (blocked && Date.now() < blocked) throw new Error('Sign-in failed recently; trying again in a few minutes');
+  if (blocked && Date.now() < blocked) throw new Error('The last sign-in failed. Patchboard tries again in 5 minutes.');
   const password = getSecret(secret);
   if (!password) throw new Error(`No key saved as ${secret}`);
   const res = await fetch(`${origin}/api/auth`, {

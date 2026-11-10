@@ -1,4 +1,4 @@
-// Update one container from the UI: pull its image, recreate just that
+// Update one container from the UI: pull its image, recreate only that
 // service with Docker Compose, then wait until it's running, healthy and
 // (when Patchboard checks it) answering. If it doesn't come back, the
 // previous image is one click away.

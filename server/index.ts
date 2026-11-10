@@ -226,7 +226,7 @@ app.use('*', securityHeaders(existsSync(indexPathForCsp) ? readFileSync(indexPat
 // attacker's hostname still arrives in the Host header, so the API only
 // answers requests addressed to an IP literal, localhost, or a hostname listed
 // in ALLOWED_HOSTS. Changes must also carry a matching Origin when one is sent.
-// (Homepage's CVE-2024-42364 was this attack.)
+// (CVE-2024-42364 describes this attack.)
 // Names nobody can register on the public internet, so a hostile page can't
 // point one at Patchboard: nas, nas.local, server.lan, box.home.arpa.
 const HOME_NAME = /^(localhost|[a-z0-9-]+|[a-z0-9.-]+\.(local|lan|home|home\.arpa|internal|localdomain|localhost))$/;
@@ -238,7 +238,7 @@ function hostAllowed(hostHeader: string | undefined): boolean {
 app.use('/api/*', async (c, next) => {
   const host = c.req.header('host');
   if (!hostAllowed(host)) {
-    return c.json({ error: `Requests to ${host ?? 'an unknown host'} are refused. Open Patchboard by its IP address and add it in Settings, Sign-in.` }, 403);
+    return c.json({ error: `Patchboard refuses requests addressed to ${host ?? 'an unknown host'}. Open Patchboard by its IP address and add the name in Settings, Sign-in.` }, 403);
   }
   if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
     const origin = c.req.header('origin');
@@ -887,7 +887,7 @@ async function testIntegration(id: string): Promise<string> {
     return `${n} machine${n === 1 ? '' : 's'} ready: ${config.wake.devices.map((d) => d.name).join(', ')}.`;
   }
   if (id === 'ntfy' || id === 'gotify' || id === 'pushover' || id === 'email' || id === 'discord' || id === 'webhook') {
-    if (!config.notify[id]) throw new Error('Those settings are incomplete.');
+    if (!config.notify[id]) throw new Error("Patchboard couldn't use these settings. Check the address starts with http:// or https:// and the other values for typos.");
     // Only the one being tested, so a broken Gotify doesn't fail an ntfy test.
     await send({ title: 'Patchboard can reach you here', body: 'Problems that last two minutes will show up like this, and again when they clear.', level: 'test' }, id);
     return id === 'email'
@@ -904,7 +904,7 @@ async function testIntegration(id: string): Promise<string> {
   }
   // Hardcover and Goodreads share one source.
   const made = FACTORIES[id === 'hardcover' || id === 'goodreads' ? 'books' : id]?.();
-  if (!made) throw new Error('Those settings are incomplete.');
+  if (!made) throw new Error("Patchboard couldn't use these settings. Check the address starts with http:// or https:// and the other values for typos.");
   const data = await Promise.race([
     made.adapter.fetch(),
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error('No answer in 15 seconds')), 15_000)),
@@ -1058,7 +1058,7 @@ app.get('/api/appearance', (c) => c.json({ appearance: kvGet<unknown>('appearanc
 app.put('/api/appearance', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const text = await c.req.text();
-  if (text.length > 16_000) return c.json({ error: 'Too large' }, 413);
+  if (text.length > 16_000) return c.json({ error: 'The saved look is over 16,000 characters.' }, 413);
   let v: unknown;
   try {
     v = JSON.parse(text);

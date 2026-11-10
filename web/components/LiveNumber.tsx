@@ -87,7 +87,7 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
         const list = (await (await fetch('/api/secrets')).json()) as { name: string }[];
         setHasKey(list.some((s) => s.name === secretName(app.name)));
       } catch {
-        /* unknown; the field just won't say "saved" */
+        /* unknown; the field won't say "saved" */
       }
     })();
   }, [app.name]);

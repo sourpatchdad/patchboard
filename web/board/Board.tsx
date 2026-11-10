@@ -1,5 +1,5 @@
 // The Home board: widgets on a 12-column grid, packed like masonry so tall
-// and short widgets never leave ragged gaps. View mode has no handles at all.
+// and short widgets never leave ragged gaps. View mode has no handles.
 // Customize enters edit mode: drag to reorder (or use the arrow buttons),
 // pick a size, remove, add from the drawer; Save or Cancel. The board is
 // stored on the server, so every device shows the same one; phones show it
@@ -202,7 +202,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arran
           .map((x) => {
             const lim = WIDGET_INFO[x.w!.type].options.limit;
             const now = shown(x.w!);
-            // Rows actually shown: list items, or for Right now the longest server or client's rows.
+            // Rows shown: list items, or for Right now the longest server or client's rows.
             const blocks = [...x.c.querySelectorAll('.now-block')].map((b) => b.querySelectorAll('.stream').length);
             const rows = blocks.length ? Math.max(...blocks) : x.c.querySelectorAll('li').length;
             const items = Math.max(1, Math.min(now, rows || now));
@@ -241,7 +241,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arran
     };
     const queue = () => {
       window.clearTimeout(timer);
-      // Mid-sequence (a cut just made), measure again sooner: Fit settles in a blink, not a crawl.
+      // Mid-sequence (a cut just made), measure again sooner so Fit settles fast.
       timer = window.setTimeout(check, lastCut.current ? 30 : 90);
     };
     const ro = new ResizeObserver(queue);
@@ -333,7 +333,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     setNotice('');
   }, [id]);
   const editing = draft !== null;
-  // Unsaved arranging asks before it's thrown away: leaving the page, the
+  // Ask before discarding unsaved arranging: leaving the page, the
   // tab, or switching boards.
   const dirty = editing && !quick && JSON.stringify(draft) !== JSON.stringify(board);
   useLeaveGuard(dirty, 'Leave without saving your changes to this board?');
@@ -383,7 +383,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     setDraft((d) => {
       if (!d) return d;
       // Pin the current columns on the first placement, so other columns do
-      // not get repacked merely because this card became shorter or moved.
+      // not get repacked because this card became shorter or moved.
       const ws = d.widgets.map((w) => {
         const cell = cells.find((c) => c.id === w.id);
         return { ...w, column: w.id === drag ? column : w.column ?? (cell ? Math.round((cell.rect.left - rect.left) / unit) + 1 : undefined) };
@@ -456,7 +456,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               Tools
             </button>
             {dirty ? (
-              <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''), backToArrange())}>
+              <HoldButton className="text-button" danger hint="Hold to discard changes" onConfirm={() => (setDraft(null), setNotice(''), backToArrange())}>
                 Discard changes
               </HoldButton>
             ) : (
@@ -1090,7 +1090,7 @@ function NewBoard({ onClose }: { onClose: () => void }) {
   const choices = [{ id: 'empty', name: 'Empty', about: 'Nothing yet. Add the widgets you want.', board: EMPTY_BOARD }, ...STARTERS];
   const create = async () => {
     const clean = cleanBoardName(name);
-    if (!clean) return setError('Give it a name');
+    if (!clean) return setError('Give it a name.');
     const st = choices.find((c) => c.id === pick) ?? choices[0];
     setBusy(true);
     const res = await fetch('/api/boards', { method: 'POST', headers: ACTION, body: JSON.stringify({ ...forThisServer(st.board, snap), name: clean }) });

@@ -1,9 +1,9 @@
 // Drag to reorder with pointer events: mouse, touch and pen. The list
-// reorders live under the pointer (no ghost image, no drop guessing), which
-// is what makes it feel direct. Items carry data-<attr>="<id>"; while one is
-// dragged it ignores the pointer, so whatever is under the pointer is the
-// target. With a mouse, the whole item drags; with touch, only an element
-// marked data-grip="<attr>" does, so the page still scrolls under a finger.
+// reorders live under the pointer, with no ghost image and no drop guessing.
+// Items carry data-<attr>="<id>"; while one is dragged it ignores the pointer,
+// so whatever is under the pointer is the target. With a mouse, the whole item
+// drags; with touch, only an element marked data-grip="<attr>" does, so the
+// page still scrolls under a finger.
 
 import { type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react';
 

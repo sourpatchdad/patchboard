@@ -108,7 +108,7 @@ export function useSource<T>(id: SourceId): { state: SourceState<T> | undefined;
   return { state, data: state?.data ?? null };
 }
 
-/** Re-render on an interval so relative times stay honest. */
+/** Re-render on an interval so relative times stay current. */
 export function useNow(intervalMs = 30_000): number {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {

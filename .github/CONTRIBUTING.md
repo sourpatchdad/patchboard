@@ -42,13 +42,14 @@ Some house rules:
   works: no enums, namespaces or constructor parameter properties. Imports
   end in `.ts`.
 - **Docs ship with the code,** in the same pull request: README, the
-  matching file in `docs/`, CHANGELOG.md, `examples/env.example` and the example
-  compose files. Run `npm run screenshots` when the change shows on screen.
+  matching file in `docs/`, CHANGELOG.md, `examples/env.example` and the
+  example compose files. Run `npm run screenshots` when the change shows on screen.
 - **Check every screen size.** Look at a change at 1440 by 900, 1920 by 1080
   and a 390-pixel phone. Pages should fit a desktop screen with little or no
   scrolling, and nothing on a phone should scroll sideways.
 - **Color means trouble.** Healthy things stay neutral. Styles use the theme
-  tokens in `web/lib/themes.ts`, never raw colors. [docs/DESIGN.md](../docs/DESIGN.md) has the reasons.
+  tokens in `web/lib/themes.ts`, never raw colors.
+  [docs/DESIGN.md](../docs/DESIGN.md) has the reasons.
 - **Anything that changes state** (a container action, a sign-in, a saved
   setting) is a POST that requires the `X-Patchboard: action` header and
   writes to the audit log.
@@ -75,9 +76,10 @@ example. A new one touches these files:
 5. **`shared/integrations.ts`:** name, what it adds, its variables and where
    to find a key. `npm run docs` turns this into docs/INTEGRATIONS.md.
 6. **`shared/setup.ts`:** add the id to `UI_SETUP` so Settings can set it up.
-   Secrets are encrypted at rest and never sent back to a browser.
-7. **`examples/env.example`:** every variable, with a realistic placeholder. A test
-   fails when one is missing.
+   Patchboard encrypts secrets at rest and never sends them back to a
+   browser.
+7. **`examples/env.example`:** every variable, with a realistic placeholder.
+   A test fails when one is missing.
 8. **`server/demo.ts`:** invented data in the same shape. Demo mode has to
    keep working.
 9. **`server/test/<name>.test.ts`:** the mapping, against a fixture shaped

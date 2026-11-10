@@ -38,7 +38,7 @@ export function iconCache(dir: string, cdn = CDN, timeoutMs = 10_000) {
         writeFileSync(tmp, body);
         renameSync(tmp, join(dir, kind, file));
       } catch {
-        // A read-only data folder still gets the icon, just not a saved copy.
+        // A read-only data folder still gets the icon, without a saved copy.
       }
       return body;
     } catch {

@@ -51,7 +51,7 @@ function api(cmd: string, extra = ''): string {
 
 async function call<T>(cmd: string, extra = ''): Promise<T> {
   const r = await getJson<TautulliResponse<T>>(api(cmd, extra));
-  if (r.response.result !== 'success') throw new Error(r.response.message ?? 'Tautulli error');
+  if (r.response.result !== 'success') throw new Error(r.response.message ?? 'Tautulli refused the request');
   return r.response.data;
 }
 

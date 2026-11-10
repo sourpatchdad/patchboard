@@ -4,9 +4,9 @@
 // Patchboard writes once to DATA_DIR/secret.key (owner-only). A copy of
 // patchboard.db on its own, in a backup or a bug report, reveals nothing.
 //
-// This guards the database file, not the running box: anyone who can read
-// both files, or the process memory, can read the keys. That's the same line
-// your .env sits behind.
+// This guards the database file. Anyone who can read both files, or the
+// process memory, can read the keys: the same protection your .env file
+// has.
 //
 // Setting PATCHBOARD_SECRET_KEY later is safe: while secret.key is still
 // there, values sealed with it still open, and setup.ts seals them again

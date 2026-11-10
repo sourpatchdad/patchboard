@@ -1,4 +1,4 @@
-// "Needs attention" rules. Home shows exceptions, not inventory, so these
+// "Needs attention" rules. Home lists only what needs a person, so these
 // rules decide what earns space on the page. Keep them few and specific.
 
 import { HOME_ID, type WidgetType } from '../shared/board.ts';

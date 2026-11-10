@@ -32,7 +32,7 @@ async function memory(): Promise<SystemData['mem']> {
       const stats = await readFile('/proc/spl/kstat/zfs/arcstats', 'utf8');
       arc = Number(/^size\s+\d+\s+(\d+)/m.exec(stats)?.[1] ?? 0);
     } catch {
-      // Not a ZFS host, or not visible: memory is then just used vs available.
+      // Not a ZFS host, or not visible: memory is then used vs available.
     }
     return total ? { total, available, arc } : null;
   } catch {

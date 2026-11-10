@@ -28,4 +28,4 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] Translations
 - [ ] A read-only API for scripts and AI tools
 
-Want something here sooner, or something missing? Open an issue.
+Open an issue if you want something here sooner or don't see it here.

@@ -1,6 +1,6 @@
 // The patch row: every service as a jack on a patch bay, grouped into bays
 // with a scribble-strip label under each jack. The LED shows container state;
-// clicking a jack opens the service. One glance answers "is everything up?"
+// clicking a jack opens the service.
 
 import { Link } from 'react-router-dom';
 import { numberText, useAppNumbers } from '../lib/appstats.ts';

@@ -1,6 +1,6 @@
 // The one line under each app tile: the most useful thing to know about that
-// app right now. Trouble always wins; otherwise the app's own integration
-// speaks (streams, queue, unread), and failing that, how fast it answers or
+// app right now. Trouble comes first; otherwise the app's own integration's
+// number (streams, queue, unread), and failing that, how fast it answers or
 // how long it has been up.
 
 import type {

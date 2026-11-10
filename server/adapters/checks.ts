@@ -1,4 +1,4 @@
-// Reachability: does each app actually answer? A container can be "running"
+// Reachability: does each app answer? A container can be "running"
 // while the app inside serves 502s or hangs, and only a request finds that.
 // Every minute, one GET per service link, redirects not followed. Any HTTP
 // answer below 500 counts as up (a login redirect or 401 still means the app

@@ -43,10 +43,12 @@ an app, grouped by compose stack.
 ![First run: Patchboard picks out the 22 of 30 running containers that look like apps and offers to add them all](docs/screenshots/first-run.webp)
 
 Then connect what you run from Settings, Connections: press **Set up**,
-paste the address and key, test, save. It connects at once, and the key is
-encrypted on the server. Sonarr, Radarr,
-Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge,
-SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS, weather and more. [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
+paste the address and key, test, save. It connects at once, and the server
+stores the key encrypted. You can connect Sonarr, Radarr, Plex through
+Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge, SABnzbd,
+NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home,
+Speedtest Tracker, Overseerr, TrueNAS, weather and more.
+[docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
 No `.env` and no config files: the compose file sets the time zone, and the
 rest lives in Settings. Prefer config as code? Environment variables and a
@@ -64,9 +66,10 @@ use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 ## What you get
 
-**It answers before you ask.** The top of Home says "All quiet" or "6 things
-need you", with each problem on its own line under it, linked to its fix. A container that crashed at
-3 AM still shows under Changes at breakfast. Turn on ntfy, Gotify, Pushover,
+**It answers before you ask.** The top of Home says "All quiet" or "6
+things need you", with each problem on its own line under it, linked to its
+fix. A container that crashed at 3 AM still shows under Changes at
+breakfast. Turn on ntfy, Gotify, Pushover,
 Discord, email or a webhook and a problem that lasts two minutes reaches
 you, then again when it clears.
 
@@ -85,21 +88,21 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
 move, drag an edge to resize, rename any widget, choose how many items it
 shows, or turn on Fit the window to trim lists to one screen. Recently
-added keeps its whole poster row; if the board still runs over, Arrange board
-says by how much. Add more boards and name them: one for the TV, one for the rack.
-Every other page has a Customize button too. Five themes, each dark and
+added keeps its whole poster row; if the board still runs over, Arrange
+board says by how much. Add more boards and name them: one for the TV, one
+for the rack. Every other page has a Customize button too. Five themes, each dark and
 light, or a Custom one built from three colors. Call it whatever your household
 calls it.
 
 **See what is playing.** Hover, focus or tap a playback row for its artwork,
-playback details and a link to the configured app. Time and remaining time
+playback details and a link to its app. Time and remaining time
 appear when the service reports them.
 
-**A compact header by default.** Status stays beside server graphs, with
-time and date above weather in a shared column. Header settings on Home
-opens the on/off switches in Settings, Home. Sizes and forecast detail
-are optional adjustments. Arrange board changes the shared widget layout;
-header controls change this device and leave saved boards intact.
+**A compact header by default.** Status sits beside the server graphs, and
+the time and date sit above the weather in one column. Header settings on
+Home opens the on/off switches in Settings, Home. You can also change sizes
+and forecast detail. Arrange board changes the widget layout every device
+shares; header controls change this device and leave saved boards intact.
 
 **An otter keeps watch.** The otter beside the status follows your server: calm
 when all is quiet, eyes open when updates wait, asleep at night, looking up
@@ -109,9 +112,9 @@ from across the room.
 
 ![The otter's moods and what brings each one on](docs/screenshots/otter-moods.webp)
 
-**It's safe to run.** Keys stay on the server. Read-only mode, a Docker socket
-proxy, forward auth and an activity log let you decide how much it can do and
-see who did what.
+**It's safe to run.** Keys stay on the server. Read-only mode, a Docker
+socket proxy, forward auth and an activity log let you decide how much it
+can do and see who did what.
 
 ## Pages
 

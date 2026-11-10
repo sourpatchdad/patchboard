@@ -56,7 +56,7 @@ export function qbitClient(): { adapter: Adapter<QbitData>; control: DownloadCon
   function login(): Promise<void> {
     pending ??= (async () => {
       if (Date.now() < blockedUntil) {
-        throw new Error('qBittorrent login failed earlier; check QBIT_USERNAME/QBIT_PASSWORD. Retrying later.');
+        throw new Error('qBittorrent rejected the last login. Check QBIT_USERNAME and QBIT_PASSWORD; Patchboard tries again in 30 minutes.');
       }
       try {
         const res = await request(`${url}/api/v2/auth/login`, {

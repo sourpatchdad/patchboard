@@ -35,7 +35,7 @@ interface Pending {
 
 export interface TraktStatus {
   configured: boolean;
-  /** Device flow possible (client secret present). */
+  /** Device flow possible (a Client ID is set). */
   canConnect: boolean;
   connected: boolean;
   user?: string;

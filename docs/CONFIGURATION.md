@@ -12,20 +12,20 @@ You configure almost everything in the UI:
 | Settings, Look and Home | Theme, colors, type, density, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
 
-Settings, Home controls the header on this device. Its default is status,
-full server graphs and a shared column with time and date above weather.
-Use the four Show switches to turn each part on or off. Sizes and forecast
-details contains the optional sizes and weather chart. Restore default
-header returns to the compact graphical layout. Older numeric header
-preferences adopt this default; an explicit off choice stays off.
+Settings, Home controls the header on this device. By default it shows
+status, full server graphs, and one column with the time and date above the
+weather. The four Show switches turn each part on or off. Sizes and forecast
+details holds the optional sizes and weather chart. Restore default header
+brings back the compact graphical layout. Older numeric header preferences
+adopt this default; a part you switched off stays off.
 
-Header settings beside Arrange board opens these controls directly.
-Header choices never rewrite a saved board. New boards do not duplicate
-server details in the grid; existing saved Server widgets stay where you
-put them. Arrange board changes widgets and placement for every device.
-Appearance export lives in Settings, Look; setup backups live in Connections.
+Header settings beside Arrange board opens these controls. Header choices
+never rewrite a saved board. New boards don't repeat the server details in
+the grid; saved Server widgets stay where you put them. Arrange board changes
+widgets and placement for every device. You export appearance from Settings,
+Look, and back up your setup from Connections.
 
-Files still work for anyone who keeps config in git. Any variable below, in
+If you keep config in git, files still work. Any variable below, in
 the compose file's `environment:` or an `env_file`, wins over the UI and
 shows there as locked; `config/services.yaml` and Docker labels list apps
 underneath your UI changes. See [INTEGRATIONS.md](INTEGRATIONS.md) for those.
@@ -38,12 +38,12 @@ uploaded icons stay behind.
 
 ## Moving off files
 
-Started with a `.env` full of integration keys and a `services.yaml`? Patchboard
-can take both over, so the UI is the one place you change things.
+If you started with a `.env` full of integration keys and a `services.yaml`,
+Patchboard can take both over, so the UI is the one place you change things.
 
-1. **Settings, Connections, Integrations: Save them in Patchboard.** Every
-   integration value in your `.env` is copied into Patchboard's encrypted
-   store. The `.env` keeps winning while it still has them, so nothing
+1. **Settings, Connections, Integrations: Save them in Patchboard.**
+   Patchboard copies every integration value in your `.env` into its
+   encrypted store. The `.env` keeps winning while it still has them, so nothing
    changes yet. Each field it copied now reads "Saved here too".
 2. **Settings, Connections, Apps: Copy into Patchboard.** Every app in
    `services.yaml` becomes one saved in Patchboard, with its group, order,
@@ -53,8 +53,9 @@ can take both over, so the UI is the one place you change things.
 4. **Remove what was copied:** the `.env` (or all of it but the time zone),
    `services.yaml` and the `./config` mount, and the folder variables for
    mounts at /pool, /docs and /logs.
-5. **Recreate Patchboard** with `docker compose up -d`. Apps, links and connections are all still there,
-   and from now on you change them in the UI.
+5. **Recreate Patchboard** with `docker compose up -d`. Apps, links and
+   connections are all still there, and from now on you change them in the
+   UI.
 
 To keep a copy in git, Settings, Connections, Apps has Download
 services.yaml.
@@ -109,7 +110,7 @@ as environment variables, which win and show there as locked.
 
 ## Mounts
 
-Each turns on by being mounted, read-only, at its place.
+Mount each one read-only at its place to turn it on.
 [examples/everything](../examples/everything/docker-compose.yml) has all four.
 
 | Mount at | What | Adds |
@@ -124,9 +125,9 @@ Each turns on by being mounted, read-only, at its place.
 
 ## The catalog file
 
-Optional. Most installs add apps with one click and Edit apps. A catalog file
-suits anyone who wants the list in git: `config/services.yaml` lists apps in
-groups, plus bookmarks. Settings, Connections, Apps, Download
+Optional. Most installs add apps with one click and Edit apps. If you want
+the list in git, `config/services.yaml` lists apps in groups, plus
+bookmarks. Settings, Connections, Apps, Download
 services.yaml gives you your current apps as a starting file.
 
 | Field | |

@@ -251,7 +251,7 @@ export const INTEGRATIONS: Integration[] = [
     adds: 'The same notifications by email, subject first: [Down], [Warning] or [Fixed]. Test sends a real one.',
     env: ['SMTP_HOST', 'SMTP_FROM', 'SMTP_TO'],
     optional: ['SMTP_USERNAME', 'SMTP_PASSWORD', 'SMTP_VERIFY_TLS', 'NOTIFY_LEVEL', 'PATCHBOARD_URL'],
-    where: 'Any mail server: port 465 for TLS, or 587 with STARTTLS. Gmail and iCloud need an app password; Fastmail an app password too. A relay on your network may need no sign-in.',
+    where: 'Any mail server: port 465 for TLS, or 587 with STARTTLS. Gmail, iCloud and Fastmail need an app password. A relay on your network may need no sign-in.',
     source: false,
   },
   {
@@ -376,7 +376,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Nextcloud',
     adds: 'Files, users and app updates waiting, on the Nextcloud tile. App updates show in Needs attention as a quiet note.',
     env: ['NEXTCLOUD_URL', 'NEXTCLOUD_USERNAME', 'NEXTCLOUD_PASSWORD'],
-    where: 'An admin account: Personal settings, Security, Devices & sessions, Create new app password. Use that, not the real password.',
+    where: 'An admin account: Personal settings, Security, Devices & sessions, Create new app password, and give Patchboard that one.',
     source: true,
   },
   {
@@ -408,7 +408,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Calendars (iCal)',
     adds: 'A Calendar widget: the days ahead from every calendar you add, recurring events included. Google, iCloud, Outlook, Nextcloud, Proton and Fastmail all give an iCal address.',
     env: ['CALENDAR_URLS'],
-    where: "Google: calendar Settings, Integrate calendar, Secret address in iCal format. iCloud: share the calendar as Public and copy the link. Outlook: Settings, Shared calendars, Publish, ICS. Nextcloud: the calendar's menu, Copy subscription link. Several calendars: separate the addresses with commas. They are stored encrypted, since they work like passwords.",
+    where: "Google: calendar Settings, Integrate calendar, Secret address in iCal format. iCloud: share the calendar as Public and copy the link. Outlook: Settings, Shared calendars, Publish, ICS. Nextcloud: the calendar's menu, Copy subscription link. Several calendars: separate the addresses with commas. Patchboard stores them encrypted, since they work like passwords.",
     source: true,
   },
   {
@@ -481,7 +481,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Overseerr or Jellyseerr',
     adds: 'A Requests widget: what people asked for, with posters, and Approve or Decline on each.',
     env: ['OVERSEERR_URL', 'OVERSEERR_KEY'],
-    where: 'Settings, General, API Key. Jellyseerr works the same way.',
+    where: 'Settings, General, API Key, in Overseerr or Jellyseerr.',
     source: true,
   },
   {

@@ -226,7 +226,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          Used when an Apps widget follows Your Settings default. <strong>Arrange board → Apps settings</strong> can give a widget its own look. Widget placement is shared across devices.
+          Used when an Apps widget follows this default. <strong>Arrange board → Apps settings</strong> can give a widget its own look. Widget placement is shared across devices.
         </p>
       </Section>
 
@@ -351,7 +351,7 @@ function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }) {
   const u = useUpdateJob(name);
   const j = u.job;
   if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
-  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">The update failed. Open it</Link>;
+  if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">Update failed. Open it</Link>;
   if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>Already the newest image.</span>;
   return (
     <>
@@ -450,7 +450,7 @@ function Portability() {
           disabled={!text.trim()}
           onClick={() => {
             const ok = importAppearance(text);
-            setMsg(ok ? 'Applied.' : "That isn't a settings string from Patchboard.");
+            setMsg(ok ? 'Applied.' : "That isn't a Patchboard settings string. Use Copy settings on the other device.");
             if (ok) setText('');
           }}
         >
@@ -494,7 +494,7 @@ function Connections() {
     setErr('');
     const res = await fetch('/api/trakt/connect', { method: 'POST', headers: ACTION });
     const body = (await res.json()) as { error?: string };
-    if (!res.ok) setErr(body.error ?? 'Could not start');
+    if (!res.ok) setErr(body.error ?? "Couldn't start the Trakt sign-in. Try again.");
     await load();
   };
   const disconnect = async () => {
@@ -596,11 +596,11 @@ function CatalogCheck() {
               services.yaml lists {audit.yamlApps} {audit.yamlApps === 1 ? 'app' : 'apps'}
               {audit.yamlLinks ? ` and ${audit.yamlLinks} ${audit.yamlLinks === 1 ? 'link' : 'links'}` : ''}.
             </strong>{' '}
-            Copy them into Patchboard, with their groups, order, icons and checks, and the file is no longer needed. Patchboard never edits the file;
+            Copy them into Patchboard, with their groups, order, icons and checks, and you no longer need the file. Patchboard never edits the file;
             delete it yourself afterward.
           </p>
           <button type="button" className="button" disabled={adoptState === 'busy'} onClick={() => void adoptYaml()}>
-            {adoptState === 'busy' ? 'Copying…' : adoptState === 'done' ? 'Copied. Safe to delete services.yaml' : 'Copy into Patchboard'}
+            {adoptState === 'busy' ? 'Copying...' : adoptState === 'done' ? 'Copied. Safe to delete services.yaml' : 'Copy into Patchboard'}
           </button>
           {adoptErr && <p className="crit-text" role="alert">{adoptErr}</p>}
         </div>
@@ -961,7 +961,7 @@ function Integrations() {
             changes until you do; the .env keeps winning while it has them.
           </p>
           <button type="button" className="button" disabled={adopting} onClick={() => void adopt()}>
-            {adopting ? 'Saving…' : 'Save them in Patchboard'}
+            {adopting ? 'Saving...' : 'Save them in Patchboard'}
           </button>
           {moveErr && <p className="crit-text" role="alert">{moveErr}</p>}
         </div>
@@ -1054,7 +1054,7 @@ function SetupFile() {
     try {
       setPending({ name: f.name, body: JSON.parse(await f.text()) });
     } catch {
-      setErr("That file isn't JSON.");
+      setErr("That file isn't JSON. Pick one saved with Download setup.");
     }
   };
   const replace = async () => {
@@ -1189,7 +1189,7 @@ function Alerts() {
       {!readOnly && (
         <div className="thresholds-save">
           <button type="button" className="button" disabled={!changed || busy} onClick={() => void save()}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? 'Saving...' : 'Save'}
           </button>
           {changed && (
             <button type="button" className="text-button" onClick={() => take(state)}>

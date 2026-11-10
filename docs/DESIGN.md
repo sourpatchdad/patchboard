@@ -42,42 +42,41 @@ one click.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
 - **Compact header.** Status, server graphs, and time above weather form
-  three matching cards with aligned edges. Time and weather are centered
-  in one shared card; weather has no separate box. Quiet status stays on
-  one desktop line. Full graphs are
-  the default, with on/off controls in Settings, Home and a Header settings
-  link beside Arrange board. Sizes and forecasts are secondary controls.
-  Header choices apply per device and preserve saved boards. New boards
-  avoid a duplicate Server card; existing saved widgets remain explicit.
-  An unreachable integration leads with the connection problem, never a
-  reassuring statement that contradicts it.
+  three matching cards with aligned edges. Time and weather share one
+  centered card; weather has no box of its own. Quiet status stays on one
+  desktop line. Full graphs are the default, with on/off controls in
+  Settings, Home and a Header settings link beside Arrange board. Sizes and
+  forecasts are secondary controls. Header choices apply per device and
+  leave saved boards alone. New boards leave out a duplicate Server card;
+  saved widgets stay as they are. An unreachable integration leads with the
+  connection problem, never a reassuring line that contradicts it.
 - **List alignment.** Reading metadata and calendar rows keep consistent
-  desktop baselines. Close-height neighboring Reading and This week cards
-  can share a bottom edge when a small adjustment fits in the available
-  room. Placement and page fit take priority over forced equal heights.
+  desktop baselines. When Reading and This week sit side by side at close
+  heights, they can share a bottom edge if a small adjustment fits.
+  Placement and page fit come before equal heights.
 - **Fit without losing the row.** Fit can shorten vertical lists. A single
   horizontal poster row keeps its selected items. Recalculate on width
   changes and changes to the space above the board. Reserve the measured
   footer height, and report any remaining overflow. Fit is a temporary view
-  adjustment and never rewrites the saved board. If list cuts are insufficient,
-  artwork can shrink with its proportions intact; every poster remains in
-  the horizontal row. Right now folds first and can fold all the way, each
-  service to its heading and one line of titles, so the other lists keep
-  their rows. When nothing
-  makes it fit, Fit gives every list its full length back: a page that
-  scrolls anyway shouldn't also be cut short.
+  adjustment and never rewrites the saved board. If shorter lists aren't
+  enough, artwork can shrink with its proportions intact; every poster stays
+  in the horizontal row. Right now folds first and can fold all the way,
+  each service to its heading and one line of titles, so the other lists
+  keep their rows. When nothing makes it fit, Fit gives every list its full
+  length back: a page that scrolls anyway shouldn't also be cut short.
 - **Use the width.** The board has the columns you choose; each widget lays
   itself out for the width it gets (container queries), so nothing clips.
 - **The UI sits on top of files.** Apps, groups, icons, live numbers, the
   board and page settings live in Patchboard's database. services.yaml and
   Docker labels keep working underneath, and the UI never rewrites them.
 - **One pattern per job.** Every page customizes through the same panel;
-  every list sorts through the same control; sorts live in the URL. Arrange board
-  keeps the viewed card sizes and fitted item counts, with floating controls
-  and a bottom arrange bar: everyday moves in one row, the rest under
-  Tools with Reset apart from Save. Hidden header widgets stay out of the grid.
-  Dragging assigns a starting column and relative vertical position, so
-  neighboring columns stay stable; narrower screens clamp the column.
+  every list sorts through the same control; sorts live in the URL.
+  Arrange board keeps the viewed card sizes and fitted item counts, with
+  floating controls and a bottom arrange bar: everyday moves in one row,
+  the rest under Tools with Reset apart from Save. Hidden header widgets
+  stay out of the grid. Dragging assigns a starting column and relative
+  vertical position, so neighboring columns stay put; narrower screens
+  clamp the column.
   Dotted editing outlines surround card content and leave the gutters clear.
 - **Two control sizes.** Buttons and Settings choices are 36 pixels tall;
   sort and filter rows inside a list are 30. Every text action (Details,
@@ -112,8 +111,9 @@ one click.
   past the last answer. Plex (through Tautulli) and Navidrome can't push,
   so they poll every 5 seconds while something plays. A camera's frame
   refreshes every 5 seconds only while it's on screen and the tab is in
-  front, swapped in whole so it never flickers. Tapping a camera opens it live: Frigate's motion-JPEG feed passed
-  straight through, one chunk at a time, at most three at once, ending when
+  front, swapped in whole so it never flickers. Tapping a camera opens it
+  live: Frigate's motion-JPEG feed passed straight through, one chunk at a
+  time, at most three at once, ending when
   the view closes, the tab goes to the back, or ten minutes pass. Patchboard
   never decodes a frame, so a camera costs bandwidth, not memory.
 - **Server-sent events** push changes to every open tab.
@@ -136,8 +136,9 @@ tokens and a type pairing. `web/lib/appearance.ts` turns it into CSS
 variables on `<html>`, and every rule in `web/styles.css` uses those tokens.
 Keep `ok`, `warn` and `crit` apart from `accent`, and quiet text (`ink3`) at
 4.5:1 or better on `bg`. No text goes below 11px: labels and `<small>`
-shrink with their line down to that floor. The inline script in `web/index.html` paints the
-saved theme before the page loads; keep it in step with `appearance.ts`.
+  shrink with their line down to that floor. The inline script in
+`web/index.html` paints the saved theme before the page loads; keep it in
+step with `appearance.ts`.
 
 ## The status light
 
@@ -150,8 +151,9 @@ dropped connection turns the whole board amber at once. Right now, Changes,
 Logs, a container's state line and every alert (Needs attention, weather,
 TrueNAS) use the same light at list size, in place of a colored stripe. An
 app's light follows the alerts that name it, so Home, Apps and Needs
-attention never disagree. A stop stays red only while it's unexplained: a container that runs again, a
-scheduled job, or one you stopped from Patchboard goes quiet. Color still
+attention never disagree. A stop stays red only while it's unexplained: a
+container that runs again, a scheduled job, or one you stopped from
+Patchboard goes quiet. Color still
 means trouble; only the top bar's Live light is green.
 
 ## The otter
@@ -160,8 +162,8 @@ An otter peeking over the edge of the water, keeping an eye on your server
 so you don't have to. An otter floats calm with its tools at hand until
 something needs it, and Patchboard should feel the same.
 
-- **The art.** The designed artwork lives outside the repo, one 1254-pixel image
-  per mood (hello, calm, alert, worried, asleep, happy, lost), each the
+- **The art.** The designed artwork lives outside the repo, one 1254-pixel
+  image per mood (hello, calm, alert, worried, asleep, happy, lost), each the
   otter on a navy tile: a brown dome with round ears, a cream face from the
   eyes down, a nose over a wide "w" mouth, cream whiskers, two paws on one
   band of water. The app icon wears the hello face.
@@ -182,16 +184,16 @@ something needs it, and Patchboard should feel the same.
   the mascot off per device; the header mark stays.
 - **The header mark and the tab icon** are the otter with no tile, cropped
   close, wearing the server's mood. The tab adds an amber or red dot.
-- **Files.** `npm run icons -- /path/to/otter-art` reads the art and writes, per mood,
-  `web/public/otter/<mood>.png` (navy tile), `<mood>-clear.png` (no tile,
-  for the mascot) and `<mood>-mark.png`
-  (no tile, cropped close, for the header). It also writes the home-screen
+- **Files.** `npm run icons -- /path/to/otter-art` reads the art and
+  writes, per mood, `web/public/otter/<mood>.png` (navy tile),
+  `<mood>-clear.png` (no tile, for the mascot) and `<mood>-mark.png` (no
+  tile, cropped close, for the header). It also writes the home-screen
   PNGs with square corners (the platform rounds them), maskable PNGs with
   the otter inside Android's safe zone, `favicon.png` and `favicon.ico`. To
   change the otter, replace the art and run it again.
 - **Per device.** Settings, Look, App icon picks match the mode, dark or
-  light. Patchboard points the Apple touch icon and the install
-  manifest at the choice, and `index.html` does the same before the bundle
+  light. Patchboard points the Apple touch icon and the install manifest at
+  the choice, and `index.html` does the same before the bundle
   loads. Browsers read those links when you add to a home screen or install,
   so the pick is what gets installed. A home-screen icon can't change after
   that on iOS or Android; the badge count is how an installed app shows

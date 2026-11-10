@@ -2,14 +2,17 @@
 
 ## Unreleased
 
+- Plainer words throughout: errors say what to do next ("Couldn't connect.
+  Check the address and key."), one action keeps one name, and the docs
+  read tighter.
 - Pictures in Reading load through Patchboard instead of straight from
-  each publisher, so your browser only ever talks to Patchboard. Patchboard
+  each publisher, so your browser talks only to Patchboard. Patchboard
   fetches only pictures from articles it served, from public addresses.
 - App icons come from Patchboard: it fetches each dashboard-icons file
   once, keeps it in the data folder and serves it, so the browser no longer
   calls a CDN and known icons still show with the internet down. Fonts
   already ship inside the image.
-- Camera frames really stop flickering: the next frame loads behind the
+- Camera frames no longer flicker: the next frame loads behind the
   visible one and takes its place only once it's ready. (Patchboard's own
   security policy was blocking the frames the last fix swapped in.)
 - Right now says how long is left beside who's watching ("Sam, 26 min
@@ -173,7 +176,7 @@
 - Reading: with nothing open, the edition is the whole page, with a link
   to the rest of each category; the article list appears beside an open
   article only, so the same stories no longer show twice. Search, feed,
-  time and sort sit in one tidy block; on a phone they fold under Filter
+  time and sort sit in one block; on a phone they fold under Filter
   and sort beside Mark all read. Escape and Back return focus to the
   edition.
 - Rows in This week, Upcoming and Requests open the item in Sonarr,
@@ -342,7 +345,7 @@
 - This week and Upcoming count the same way: the next seven days, a season
   drop once. Weather is back in the phone's More.
 - Settings shows Update only when there is one, or when Patchboard can't
-  tell. Selected buttons are filled, so they never look merely focused.
+  tell. Selected buttons are filled, so you can tell them from focused ones.
   Grayscale icons stay visible in light themes; the header weather's small
   lines are 12px; a phone's app rows fade at the edge that scrolls.
 
@@ -374,7 +377,7 @@
 
 - Start, Stop and Restart show their progress: the state line says
   "Starting..." with a pulsing light until Docker reports the change, or
-  says plainly if nothing changed after 30 seconds. A container that just
+  says so if nothing changed after 30 seconds. A container that just
   started says so.
 - Jump to runs actions by name: "Restart sonarr", "Stop plex", "Start
   unpackerr". Stop and restart ask first.
@@ -505,71 +508,71 @@
   that keeps failing logs its error once.
 
 - Enlarged text no longer overlaps in Home weather, Reading metadata or
-  calendar times. Calendar rows share expanding time and source columns.
-  Browser checks now exercise actual 200% and 400% zoom, reachable editor
-  actions and a 24px minimum font without changing saved boards.
+  calendar times. Calendar rows share time and source columns that grow
+  with the text. Browser checks run real 200% and 400% zoom, reachable
+  editor actions and a 24px minimum font without changing saved boards.
 
-- Usage and playback bars now expose names with their percentage values.
-  Empty charts announce when history is unavailable. High-contrast palettes
-  retain usage bars, memory segments and the boundaries of Home header cards.
-  CI checks accessible names, landmarks, narrow reflow and high-contrast graphics.
+- Usage and playback bars give screen readers a name and a percentage.
+  Empty charts say when history is unavailable. High-contrast palettes keep
+  usage bars, memory segments and the edges of Home header cards. CI checks
+  accessible names, landmarks, narrow reflow and high-contrast graphics.
 
 - Release tags must match the package and both lockfile versions, with one
-  exact changelog section containing release notes. This preflight runs
-  before publishing images, and the release page uses the same validated
-  notes rather than a loose version-pattern match.
+  changelog section for that exact version holding the notes. This
+  preflight runs before any image publishes, and the release page uses the
+  same checked notes instead of a loose version-pattern match.
 
-- App editing, page customization, Homepage import and keyboard help now
+- App editing, page customization, Homepage import and keyboard help
   contain keyboard focus, close with Escape, and return focus to their
-  opener. Background scrolling is locked without shifting the board.
-  Form errors are announced, keyboard help has a visible Close button, and
-  importing a setup file works from the keyboard.
+  opener. The background stops scrolling without shifting the board. Screen
+  readers announce form errors, keyboard help has a visible Close button,
+  and importing a setup file works from the keyboard.
 
-- Status, server details, and time with weather now use matching header
-  cards with aligned top and bottom edges. Time and weather are centered
-  together inside one card, with a single outer edge and no nested box.
-  The quiet status stays on one desktop line and the compact height is kept.
+- Status, server details, and time with weather sit in matching header
+  cards with aligned top and bottom edges. Time and weather share one
+  centered card, with a single outer edge and no box inside it. The quiet
+  status stays on one desktop line, and the header keeps its compact height.
 
 - The default header uses full server graphs in a shorter card, a quiet
   status line that fits on one desktop line, and time and date stacked
   above weather. Existing numeric header preferences adopt this layout;
-  explicit off choices stay off. New boards avoid duplicate Server cards;
-  saved boards stay intact.
-- Header settings and Arrange board name their separate jobs. Settings,
+  parts you switched off stay off. New boards leave out a duplicate Server
+  card; saved boards stay as they are.
+- Header settings and Arrange board each say what they change. Settings,
   Home starts with four header on/off switches; sizing and forecast detail
-  live in a secondary disclosure. Appearance export lives in Look and setup
-  backups in Connections.
+  sit in a section you open. You export appearance from Look and back up
+  your setup from Connections.
 - Editing outlines leave clear gutters between cards. Resize handles show
-  on the active card. Reading and This week use steady row baselines and
-  close-height neighboring cards align when there is room.
-- An unreachable integration leads with “Can't reach Nextcloud.” rather
-  than “Nothing wrong.” The attention card also names the connection issue.
+  on the active card. Reading and This week keep steady row baselines, and
+  neighboring cards of close heights line up when there is room.
+- An unreachable integration leads with "Can't reach Nextcloud." instead
+  of "Nothing wrong." The attention card names the connection problem too.
 
-- Fit can shrink poster artwork after trimming vertical lists, preserving
-  each cover's proportions and every item in the full horizontal row.
+- After trimming vertical lists, Fit can shrink poster artwork. Each cover
+  keeps its proportions, and the horizontal row keeps every item.
 
-- Board dragging places a card in a column and above or below its neighbors,
-  with a live layout preview. Columns stay where you place them after Save,
-  with automatic clamping on narrower screens. Existing boards keep their
+- Dragging on the board places a card in a column, above or below its
+  neighbors, and previews the layout as you drag. Cards stay in the columns
+  you chose after Save, and narrower screens clamp them. Existing boards keep their
   arrangement until you move a card. Widget settings also offer a Column
   picker for keyboard placement.
 
-- Arrange board preserves fitted item counts, full card heights and the visible
-  widget set. Its controls float over the board and its arrange bar stays
-  at the bottom, so entering edit mode no longer repacks the layout.
-  Needs attention settings remain available without inserting a placeholder
-  card. Fit keeps useful height savings even in widgets with large headings.
+- Arrange board keeps fitted item counts, full card heights and the visible
+  widgets. Its controls float over the board and its arrange bar stays at
+  the bottom, so opening it no longer repacks the layout. Needs attention
+  settings stay reachable without a placeholder card. Fit keeps the height
+  it saves in widgets with large headings too.
 
-- Reading counts use locale grouping throughout navigation, Home and the
+- Reading counts group digits by your locale in navigation, Home and the
   reader: 1,006 unread instead of 1006. Shared plural counts do the same.
 
-- Fit reserves the actual space for Arrange board and New board, responds to
-  Welcome and board-tab changes, and tightens Right now's source spacing.
-  Small remaining overflows are explained in Arrange board. Saved boards and
-  full horizontal poster rows stay intact.
+- Fit reserves the space Arrange board and New board take, follows Welcome
+  and board-tab changes, and tightens Right now's source spacing. Arrange
+  board explains any small overflow left. Saved boards and full horizontal
+  poster rows stay as they are.
 - Board drawers and Jump to contain keyboard focus, close with Escape and
-  return focus to their opener. Background controls are unavailable while
-  a drawer is open. Board names and search have screen-reader labels;
+  return focus to their opener. You can't reach the controls behind an
+  open drawer. Board names and search have screen-reader labels;
   Skip to content bypasses navigation.
 
 What's in Patchboard:
@@ -577,17 +580,17 @@ What's in Patchboard:
 - **Home** has a compact graphical header by default: status beside CPU
   history, memory, storage and uptime, with time and date above weather.
   Header settings leads to four per-device on/off switches in Settings,
-  Home; sizes and forecasts are secondary choices. Existing saved boards
-  stay intact. Below the header, arrange apps with live numbers, Right now,
+  Home; sizes and forecasts are secondary choices. Saved boards stay as
+  they are. Below the header, arrange apps with live numbers, Right now,
   This week, Reading, mail, changes, recently added and more.
   The board starts right under the header; Arrange board waits at its foot.
   Right now keeps quiet sources to one line each: nobody watching, nothing
   downloading.
-  Hover, focus or tap a playback row for an artwork preview, reported
-  playback time and remaining time, and a link to the configured app.
-  Escape, Close or a tap outside dismisses it. Service colors identify
-  playback sources; paused and buffering states stay explicit. Navidrome
-  omits unavailable progress, and Tracearr remains aggregate activity.
+  Hover, focus or tap a playback row for an artwork preview, the playback
+  time and remaining time the service reports, and a link to its app.
+  Escape, Close or a tap outside dismisses it. Each playback source wears
+  its service color; paused and buffering rows say so in words. Navidrome
+  shows no progress it doesn't have, and Tracearr shows overall activity.
   A widget made wider flows its list into columns instead of stretching
   one line across the screen.
   App tiles speak for more integrations: who's listening, requests waiting,
@@ -596,9 +599,8 @@ What's in Patchboard:
   Plex and Jellyfin group a season differently, and each poster opens that
   title, on Plex too.
   Each number in the Server widget opens the section that explains it,
-  and an empty page links straight to the setting that fills it.
-  Add as many boards as you like (twelve), each with its own name, widgets
-  and columns, switched by tabs over the board. A new board starts empty or
+  and an empty page links to the setting that fills it.
+  Add up to twelve boards, each with its own name, widgets and columns, switched by tabs over the board. A new board starts empty or
   from a layout, and a layout leaves out widgets for integrations you
   haven't set up. Fit the window trims each board's lists to one screen,
   keeping only cuts that save room, so a poster row never loses posters.
@@ -608,8 +610,8 @@ What's in Patchboard:
   A fresh install's Home is one screen at 1920 by 1080: the server, Right
   now, apps as icons, the week, reading and changes, fit to the window, with
   Customize in view. The old everything-board is the Everything layout.
-  When an integration is unreachable, Home names the connection problem
-  directly, without an all-clear lead-in. A board saved on one device
+  When an integration is unreachable, Home leads with the connection
+  problem, never an all-clear. A board saved on one device
   redraws on every open screen. On a phone, each alert in the header shows
   why under its title.
 - **Every glance leads to an action.** A stopped container is two clicks
@@ -630,12 +632,13 @@ What's in Patchboard:
   Edit apps say Apply. On a phone, a stopped container's page opens on its
   live logs.
 - **One compose file, no config files.** Add every running container as an
-  app in one click, arrange them and add links in Edit apps, connect integrations and turn
-  on a password in Settings, with keys encrypted on the server. Mounts at
+  app in one click, arrange them and add links in Edit apps, connect
+  integrations and turn on a password in Settings, with keys encrypted on
+  the server. Mounts at
   /pool, /docs and /logs turn on by being there. Integrations sit in
   categories, A to Z, with a search and On or Not set up, and say when a
-  saved one is set aside for another (Goodreads under Hardcover). A `services.yaml`, Docker
-  labels and environment variables still work, and Settings can copy them
+  saved one is set aside for another (Goodreads under Hardcover). A
+  `services.yaml`, Docker labels and environment variables still work, and Settings can copy them
   in so the files can go. Coming from Homepage, paste its `services.yaml`
   and the apps come over.
   The welcome asks for a name (empty keeps Patchboard), stays through the
@@ -650,13 +653,18 @@ What's in Patchboard:
   The examples are complete compose files with a line or two of comment
   each; the env template lists every variable in Settings' order, with the
   secret key near the top.
-- **65 integrations,** among them Sonarr, Radarr, Lidarr, Readarr, Prowlarr, Bazarr, Plex through Tautulli,
-  Jellyfin, Emby, qBittorrent, SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances, NUT, Scrutiny, Beszel, Syncthing, Netdata, Prometheus, UniFi, Tailscale, Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal calendars, Hardcover, Goodreads, Home
-  Assistant, Frigate, Uptime Kuma, Gatus, Healthchecks.io, Pi-hole, AdGuard Home, Speedtest Tracker,
-  Overseerr, Tracearr, Miniflux and Trakt, plus a live number from any JSON API.
-- **Pages:** Server (pools, disks, backups, CPU by hour; four columns that fit
-  one 1920 by 1080 screen), Stacks, Logs (opens on whatever is in trouble), Reading,
-  Upcoming (a calendar that fits one screen), Apps, Weather and a
+- **65 integrations,** among them Sonarr, Radarr, Lidarr, Readarr,
+  Prowlarr, Bazarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent,
+  SABnzbd, TrueNAS, Unraid, Synology, QNAP, Proxmox, Portainer, Glances,
+  NUT, Scrutiny, Beszel, Syncthing, Netdata, Prometheus, UniFi, Tailscale,
+  Immich, Paperless-ngx, Nextcloud, Audiobookshelf, Navidrome, Gitea, iCal
+  calendars, Hardcover, Goodreads, Home Assistant, Frigate, Uptime Kuma,
+  Gatus, Healthchecks.io, Pi-hole, AdGuard Home, Speedtest Tracker,
+  Overseerr, Tracearr, Miniflux and Trakt, plus a live number from any JSON
+  API.
+- **Pages:** Server (pools, disks, backups, CPU by hour; four columns that
+  fit one 1920 by 1080 screen), Stacks, Logs (opens on whatever is in
+  trouble), Reading, Upcoming (a calendar that fits one screen), Apps, Weather and a
   page for every container, with what that app itself says: Sonarr's
   queue, Immich's jobs, Nextcloud's updates, who's listening, Tracearr's
   servers and more.
@@ -667,8 +675,8 @@ What's in Patchboard:
 - **For the household:** a Calendar widget from any iCal address (Google,
   iCloud, Outlook, Nextcloud), and Notes the house shares, with checklists
   you tick right on the board.
-- **Notifications** through ntfy, Gotify, Pushover, Discord, email or any webhook for problems that last two
-  minutes, and again when they clear. Updates and restarts never count as
+- **Notifications** through ntfy, Gotify, Pushover, Discord, email or any
+  webhook for problems that last two minutes, and again when they clear. Updates and restarts never count as
   outages.
 - **The otter** keeps watch in the header, the browser tab and beside the
   status line on Home: calm, eyes open when updates wait, asleep at night,
@@ -676,13 +684,13 @@ What's in Patchboard:
 - **Yours to style:** six themes plus your own colors, three type pairings,
   three densities, and light and dark, per device. Give it your own name,
   with or without the otter. Works on a phone, where healthy stacks fold
-  and the app rack packs tight, and installs as an app,
-  with pull to refresh and room under the status bar.
-- **Safe to trust:** sign-in with a password, forward auth or OIDC, a read-only mode, a
-  socket proxy example, an activity log, and keys that never reach the
-  browser, and keys an app writes into its own logs are masked before
-  Patchboard shows them. Setting `PATCHBOARD_SECRET_KEY` later moves saved keys over
-  instead of locking them away. A key pasted into an API numbers widget
+  and the app rack packs tight, and installs as an app, with pull to
+  refresh and room under the status bar.
+- **Safe to trust:** sign-in with a password, forward auth or OIDC, a
+  read-only mode, a socket proxy example, an activity log, and keys that
+  never reach the browser. Patchboard masks keys an app writes into its own
+  logs before it shows them. Setting `PATCHBOARD_SECRET_KEY` later moves
+  saved keys over instead of locking them away. A key pasted into an API numbers widget
   moves to the key store when the board is saved, so boards and setup files
   never carry one. TrueNAS honors Check the certificate set in Settings.
   SECURITY.md has the details.

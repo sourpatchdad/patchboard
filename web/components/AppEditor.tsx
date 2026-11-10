@@ -539,7 +539,7 @@ function AppForm({
       if (!res.ok || !body.icon) setErr(body.error ?? `Upload failed (HTTP ${res.status})`);
       else setV({ ...v, icon: body.icon });
     } catch {
-      setErr('Upload failed.');
+      setErr('Upload failed. Try again.');
     }
     setBusy(false);
   };
@@ -593,7 +593,7 @@ function AppForm({
               <label>
                 <span>Container, for its status, logs and actions</span>
                 <select className="field" value={v.container ?? ''} onChange={(e) => setV({ ...v, container: e.target.value || undefined })}>
-                  <option value="">None, it's just a link</option>
+                  <option value="">None, only a link</option>
                   {containers.map((c) => (
                     <option key={c} value={c}>
                       {c}

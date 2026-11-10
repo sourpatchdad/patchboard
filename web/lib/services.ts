@@ -24,7 +24,7 @@ export function containerMap(snap: Snapshot | null): Map<string, Container> {
 }
 
 /**
- * The container an integration's app actually runs in: the one its app in the
+ * The container an integration's app runs in: the one its app in the
  * catalog names, else one called the usual name, else one whose image is the
  * app's (plexinc/pms-docker, lscr.io/linuxserver/qbittorrent). Undefined when
  * nothing here runs it, so a heading stays plain text instead of a dead link.

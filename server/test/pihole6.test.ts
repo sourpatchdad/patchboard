@@ -75,6 +75,6 @@ test('a wrong password backs off instead of retrying', async () => {
   const a = await fetchJsonWidget(cfg('APP_PH_BAD'));
   const b = await fetchJsonWidget(cfg('APP_PH_BAD'));
   assert.match(a.error ?? '', /refused the password/);
-  assert.match(b.error ?? '', /trying again in a few minutes/);
+  assert.match(b.error ?? '', /tries again in 5 minutes/);
   assert.equal(signIns, 1);
 });

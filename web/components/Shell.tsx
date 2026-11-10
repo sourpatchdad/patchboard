@@ -249,7 +249,7 @@ export function Shell() {
         <div className="topbar-end">
           {snap?.demo && <span className="pill demo-pill">Demo data</span>}
           {snap?.readOnly && (
-            <span className="pill" title="READ_ONLY=1: nothing on this server can be changed from here">
+            <span className="pill" title="READ_ONLY=1: you can't change anything on this server from here">
               Read-only
             </span>
           )}

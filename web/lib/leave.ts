@@ -1,4 +1,4 @@
-// Unsaved work asks before it's thrown away: leaving the page inside the app
+// Ask before discarding unsaved work: leaving the page inside the app
 // (a nav link, Back) or closing the tab. Arrange board and Edit apps use it.
 
 import { useEffect } from 'react';

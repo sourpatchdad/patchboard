@@ -5,23 +5,24 @@ they match the current code.
 
 ## Home
 
-The default header places status beside full server graphs, then time and
-date above weather in a centered card. All three header cards share
-the same surface and line up along their top and bottom edges. The quiet status stays on one line
-on a desktop. Header settings on Home opens Settings, Home: four
-checkboxes, with sizing and forecasts in Sizes and forecast details.
-Header preferences apply to this device. Arrange board controls the shared
-widget layout, and existing saved boards are preserved.
-Below it sits a board of widgets on the columns you choose. Right now shows who is watching Plex,
-Jellyfin or Emby and what each download client is doing, with a Pause button
+The default header puts status beside full server graphs, then the time and
+date above the weather in a centered card. All three header cards share one
+surface and line up along their top and bottom edges. On a desktop, the
+quiet status stays on one line. Header settings on Home opens Settings,
+Home: four checkboxes, with sizing and forecasts in Sizes and forecast
+details. Header preferences apply to this device. Arrange board controls the
+shared widget layout and leaves saved boards as they are.
+
+Below the header sits a board of widgets on the columns you choose. Right
+now shows who is watching Plex, Jellyfin or Emby and what each download client is doing, with a Pause button
 per client. Recently added merges every server newest first. A file Plex and
 Jellyfin both added shows once, labeled Plex + Jellyfin, even when the two
 name it a little differently.
 
 Hover, focus or tap a playback row in Right now to see its artwork and
-playback details. This is artwork, not a live video frame. Time played and
-remaining appear where reported; Navidrome does not invent missing progress.
-Open the configured app from the preview. Close it with Escape, Close or a
+playback details. The preview shows artwork, never a live video frame. Time
+played and remaining appear when the service reports them; Navidrome shows
+no progress it doesn't have. Open the app from the preview. Close it with Escape, Close or a
 tap outside. Service colors identify Plex, Jellyfin, Emby, Audiobookshelf
 and Navidrome; Tracearr has its own marker for aggregate activity.
 
@@ -35,12 +36,11 @@ and Navidrome; Tracearr has its own marker for aggregate activity.
 
 **The otter** follows the server in the header and the browser tab: calm,
 eyes open when image updates wait, asleep on quiet nights, alert with an
-amber dot, worried with a red one. The
-tab title counts what needs you, as in "(2) Patchboard". When nothing does,
+amber dot, worried with a red one. The tab title counts what needs you, as in "(2) Patchboard". When nothing does,
 it sits beside "All quiet" and keeps watch. Settings, Look hides it.
 
-**Needs attention** sits in Home's header, with problem links wrapping under the
-status line, worst first, with three showing and the rest in a panel a
+**Needs attention** sits in Home's header, with problem links wrapping under
+the status line, worst first. Three show, and the rest wait in a panel a
 click away, so the board never moves. To keep it as a card on the board
 instead, open Arrange board, then Tools, then Needs attention settings,
 and pick A card on the board. Hiding header status also shows this widget
@@ -156,16 +156,15 @@ its controls, or choose a Column in its settings. Editing keeps the full
 card preview and the same fitted counts; the arrange bar floats at the
 bottom instead of pushing the board down. Its row holds the everyday moves,
 Add widget, Cancel and Save; columns, Fit, layouts and Reset sit under
-Tools. Fit the window trims lists until the
-board ends at the bottom of the screen. Recently added keeps every selected
-poster in one horizontal row, rather than losing titles to fit. Right now
-folds to one line per service before the other lists lose much. If lists
-alone cannot fit the board, they keep their full length, the page scrolls,
-and Arrange board reports how far it runs over. Fit
-recalculates when the window width or header height changes. New board,
-at the foot of any board, adds another with
-its own name, starting empty or from a layout; tabs over the board switch
-between them.
+Tools. Fit the window trims lists until the board ends at the bottom of the
+screen. Recently added keeps every selected poster in one horizontal row,
+rather than losing titles to fit. Right now folds to one line per service
+before the other lists lose much. If lists alone can't fit the board, they
+keep their full length, the page scrolls, and Arrange board reports how far
+it runs over. Fit recalculates when the window width or header height
+changes. New board, at the foot of any board, adds another with its own
+name, starting empty or from a layout; tabs over the board switch between
+them.
 
 ![Arrange board with clear card gutters](screenshots/customize.webp)
 
@@ -189,16 +188,16 @@ Cameras picks its cameras the same way.
 ![Customize a page](screenshots/page-customize.webp)
 
 **Settings** has themes, colors, type and density, saved per device; units
-and the header are under Home.
-A new browser or home-screen app starts from the last look you saved.
+and the header are under Home. A new browser or home-screen app starts from
+the last look you saved.
 
 ![Settings](screenshots/settings-look.webp)
 
 ![Settings, Home: the header switches, app appearance, units and time](screenshots/settings-home.webp)
 
 **Connections** shows which integrations run. **Set up** takes an address and
-a key, tests the connection, and saves. Keys are encrypted on the server and
-never shown again; anything set in the environment file shows as locked.
+a key, tests the connection, and saves. The server encrypts keys and never
+shows them again; anything set in the environment file shows as locked.
 
 **Settings, Alerts** sets when storage counts as full and a drive as hot,
 with a warning and an alarm level for each, for every device at once.
@@ -237,8 +236,8 @@ grouped by compose stack.
 
 ![First run](screenshots/first-run.webp)
 
-Coming from Homepage? Paste its `services.yaml` in Settings, Connections,
-and your apps, groups, icons and links come over. Its widget keys stay
+If you're coming from Homepage, paste its `services.yaml` in Settings,
+Connections, and your apps, groups, icons and links come over. Its widget keys stay
 behind; Patchboard names the integrations worth connecting instead.
 
 ![Import from Homepage](screenshots/import-homepage.webp)
@@ -248,6 +247,6 @@ behind; Patchboard names the integrations worth connecting instead.
 Server details are in the header by default, including CPU history, memory,
 storage, uptime and the Details link. Use Header settings on Home to turn
 parts off for this device. If your saved board still has a Server card,
-Arrange board can remove that copy explicitly.
+Arrange board can remove that copy.
 
 ![Server graphs with status and time above weather](screenshots/home-header-server.webp)

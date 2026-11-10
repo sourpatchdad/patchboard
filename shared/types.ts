@@ -1023,7 +1023,7 @@ export interface FeedCategory {
 }
 
 export interface FeedsResponse {
-  /** Unread in Miniflux for this view (all, or one category), not just what loaded. */
+  /** Unread in Miniflux for this view (all, or one category), counting articles not loaded yet. */
   total: number;
   entries: FeedEntry[];
   categories: FeedCategory[];

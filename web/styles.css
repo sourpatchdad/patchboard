@@ -6,7 +6,7 @@
 
    Rules every theme keeps:
    - Color means trouble. Healthy is a quiet neutral; only warning and error
-     get a tone, so one amber square among sixty is impossible to miss.
+     get a tone, so one amber square among sixty stands out.
    - The accent is used thinly: links, the current page, focus, heat levels.
    - Mono is the label and data layer: names, codes, times, counts. */
 
@@ -747,7 +747,7 @@ h2.status-line {
   background: transparent;
 }
 
-/* A healthy jack is quiet: no dot at all. Only trouble gets color and light. */
+/* A healthy jack has no dot. Only trouble gets color and light. */
 .jack[data-state='up'] .jack-led {
   display: none;
 }
@@ -4275,7 +4275,7 @@ a.vitals:hover .vital-label {
   zoom: 1.1;
 }
 
-/* ---------- Polish: lists that wrap instead of clipping ---------- */
+/* ---------- Lists that wrap instead of clipping ---------- */
 
 .task-list li {
   display: grid;
@@ -7763,7 +7763,7 @@ button.ha-act:hover {
   color: var(--warn);
 }
 
-/* Paused: the number is yesterday's news; the state line carries the page. */
+/* Paused: the number is stale, so the state line leads. */
 .dns-one.is-paused .dns-pct {
   color: var(--ink-3);
 }
@@ -9549,7 +9549,7 @@ button.ha-act:hover {
   gap: 4px 14px;
   margin: 6px 0 0;
   font-size: 13.5px;
-  /* An update waiting is news, not trouble: color stays for trouble. */
+  /* An update waiting gets no trouble color: amber and red stay for trouble. */
   color: var(--ink-2);
 }
 
@@ -10494,21 +10494,21 @@ a.req-come:hover .req-title {
   margin-bottom: 0;
 }
 
-/* 15. A confirmed hold drops its tooltip; a busy button has no hint to give. */
+/* A confirmed hold drops its tooltip; a busy button has no hint to give. */
 @media (hover: hover) {
   .hold:disabled::after {
     opacity: 0;
   }
 }
 
-/* 16. Widget settings: Column sits as a field like the rest. */
+/* Widget settings: Column sits as a field like the rest. */
 .widget-settings .settings-label {
   display: grid;
   gap: 6px;
   margin-bottom: 14px;
 }
 
-/* 9. The narrowest phones: the header's server numbers two by two. */
+/* The narrowest phones: the header's server numbers two by two. */
 @media (max-width: 480px) {
   .header-board-vitals .vw-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10516,7 +10516,7 @@ a.req-come:hover .req-title {
   }
 }
 
-/* 17. Phone Reading: the sort row lines up with the filters; categories fade at the edge they scroll. */
+/* Phone Reading: the sort row lines up with the filters; categories fade at the edge they scroll. */
 @media (max-width: 760px) {
   .feeds-cats {
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
@@ -10585,7 +10585,7 @@ a.req-come:hover .req-title {
   }
 }
 
-/* 14. The playback details' Close is a real target. */
+/* The playback details' Close is a real target. */
 .playback-preview .text-button {
   min-height: 32px;
   padding-inline: 4px;
@@ -10913,7 +10913,7 @@ a.req-title:hover {
   }
 }
 
-/* Touch: the small links and controls the audit found under 44 pixels get
+/* Touch: small links and controls under 44 pixels get
    the same invisible hit area as the rest, or grow for real where they're
    controls in a row. */
 @media (pointer: coarse) {
@@ -11010,7 +11010,7 @@ a.req-title:hover {
   outline: none;
 }
 
-/* A camera tile is a button now: it opens the camera live. Same look as before. */
+/* A camera tile is a button that opens the camera live, with the plain tile's look. */
 button.cam {
   display: block;
   width: 100%;

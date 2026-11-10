@@ -45,7 +45,7 @@ export function useLivePosition(s: Stream): Stream {
   return { ...s, positionSec, progress: (positionSec / s.durationSec!) * 100 };
 }
 
-/** `compact`: just the title, inline, for Right now folded by Fit; it opens the same details. */
+/** `compact`: only the title, inline, for Right now folded by Fit; it opens the same details. */
 export function StreamRow({ stream: reported, service, label, href, compact = false }: { stream: Stream; service: MediaService; label: string; href?: string; compact?: boolean }) {
   const s = useLivePosition(reported);
   const Wrap = compact ? 'span' : 'div';

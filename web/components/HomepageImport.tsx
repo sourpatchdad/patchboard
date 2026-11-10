@@ -125,7 +125,7 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
                   {preview.groups.length > 0 && `Groups: ${preview.groups.join(', ')}.`}
                 </p>
                 <button type="button" className="button" disabled={busy || !(preview.apps || preview.links)} onClick={() => void add()}>
-                  {busy ? 'Adding…' : 'Add to Patchboard'}
+                  {busy ? 'Adding...' : 'Add to Patchboard'}
                 </button>
               </div>
             )}

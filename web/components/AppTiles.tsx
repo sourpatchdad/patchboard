@@ -1,8 +1,8 @@
 // App tiles: every service in the catalog as a compact tile with its icon,
 // full name and one live line (see appstat.ts). Clicking the tile opens the
 // app; the chevron opens its container page. Groups come from the catalog.
-// A group header counts only what needs attention, so a quiet group says
-// nothing at all.
+// A group header counts only what needs attention, so a quiet group shows
+// no count.
 
 import { Roving } from './Roving.tsx';
 import { Link } from 'react-router-dom';
