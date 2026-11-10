@@ -288,14 +288,19 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arran
 }
 
 /** Align close-sized reading/calendar cards without adding more than 48px. */
-/** While arranging and until the board changes, the value from when you were viewing it. */
+/**
+ * While arranging and until you change the board, the value from when you
+ * were viewing it. The baseline is the board as Arrange opened it, so
+ * opening Arrange (which can pin columns) never counts as a change.
+ */
 function useHeldWhileArranging<T>(value: T, arranging: boolean, key: string): T {
-  const viewed = useRef<{ key: string; value: T; changed?: boolean } | null>(null);
+  const viewed = useRef<{ value: T; base?: string; changed?: boolean } | null>(null);
   if (!arranging || !viewed.current) {
-    viewed.current = { key, value };
+    viewed.current = { value };
     return value;
   }
-  if (viewed.current.changed || viewed.current.key !== key) {
+  viewed.current.base ??= key;
+  if (viewed.current.changed || viewed.current.base !== key) {
     viewed.current.changed = true;
     return value;
   }
