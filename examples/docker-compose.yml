@@ -4,7 +4,7 @@ services:
     container_name: patchboard
     restart: unless-stopped
     environment:
-      - TZ=America/Chicago
+      - TZ=America/New_York
     ports:
       - "3200:3200"
     volumes:

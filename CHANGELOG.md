@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Pictures in Reading load through Patchboard instead of straight from
+  each publisher, so your browser only ever talks to Patchboard. Patchboard
+  fetches only pictures from articles it served, from public addresses.
 - App icons come from Patchboard: it fetches each dashboard-icons file
   once, keeps it in the data folder and serves it, so the browser no longer
   calls a CDN and known icons still show with the internet down. Fonts

@@ -1,9 +1,8 @@
 /* Patchboard
-   Themes are token sets on <html>: data-theme picks the look, data-scheme
-   (resolved before first paint) picks dark or light, data-accent swaps the
-   one accent color, and data-icons chooses grayscale or color service icons.
-   Everything below the token blocks is written against the tokens only, so a
-   new theme is one block of variables.
+   Themes are data in web/lib/themes.ts; appearance.ts writes the chosen
+   one's tokens (and the accent) onto <html> as variables before first paint.
+   The blocks below are Graphite, the look before any of that runs. Every
+   rule after them uses the tokens only, so a new theme needs no CSS.
 
    Rules every theme keeps:
    - Color means trouble. Healthy is a quiet neutral; only warning and error
@@ -50,12 +49,6 @@
   --slate: #2a3038;
   --term-bg: #08090b;
 
-  --rack: #141619;
-  --socket: #1d2024;
-  --socket-hi: #1d2024;
-  --screw: transparent;
-  --tape: transparent;
-  --tape-ink: #8a8f98;
 
   --f-display: var(--f-sans-graphite);
   --f-body: var(--f-sans-graphite);
@@ -85,90 +78,10 @@
   --slate: #d5d8de;
   --term-bg: #fbfbfc;
 
-  --rack: #efeff1;
-  --socket: #ffffff;
-  --socket-hi: #ffffff;
-  --tape-ink: #6b7079;
   --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
 }
 
-/* ---------- nbnstack: warm, serif titles, patch-bay hardware ---------- */
-
-:root[data-theme='nbnstack'] {
-  color-scheme: dark;
-  --bg: #0e1114;
-  --raised: #14181c;
-  --surface: #1a1f24;
-  --line: #2b3238;
-  --line-soft: #1f252a;
-  --ink: #e8e5dc;
-  --ink-2: #b0ada5;
-  --ink-3: #8b8983;
-  --head: #f2efe7;
-  --accent: #69aee8;
-  --ok: #7fb08f;
-  --warn: #e0a458;
-  --crit: #e07a6a;
-  --slate: #304251;
-  --term-bg: #0b0d10;
-
-  --rack: #121619;
-  --socket: #07090b;
-  --socket-hi: #1d2328;
-  --screw: #363e45;
-  --tape: #e3dfd3;
-  --tape-ink: #24272b;
-
-  --f-display: 'DM Serif Display', Georgia, serif;
-  --f-body: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
-  --f-mono: 'DM Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
-  --display-weight: 400;
-  --display-tracking: 0;
-  --clock-weight: 400;
-  --sq-up: color-mix(in srgb, var(--ink-3) 50%, var(--surface));
-}
-
-:root[data-theme='nbnstack'][data-scheme='light'] {
-  color-scheme: light;
-  --bg: #f5f2eb;
-  --raised: #eeeae1;
-  --surface: #e6e1d6;
-  --line: #d9d4ca;
-  --line-soft: #e6e1d7;
-  --ink: #24272b;
-  --ink-2: #4d5156;
-  --ink-3: #62656a;
-  --head: #16181b;
-  --accent: #2c6699;
-  --ok: #3d7a55;
-  --warn: #94580f;
-  --crit: #b0402f;
-  --slate: #304251;
-  --term-bg: #fbf9f4;
-
-  --rack: #e9e5dc;
-  --socket: #1a1f24;
-  --socket-hi: #3a434b;
-  --screw: #c9c3b8;
-  --tape: #fdfbf6;
-  --tape-ink: #24272b;
-}
-
-/* ---------- Accents: one color, swapped across every theme ---------- */
-
-:root[data-accent='blue'] { --accent: #6ea8fe; }
-:root[data-accent='green'] { --accent: #5fcf8a; }
-:root[data-accent='amber'] { --accent: #f0b45a; }
-:root[data-accent='violet'] { --accent: #a99bff; }
-:root[data-accent='rose'] { --accent: #ff8fa3; }
-:root[data-accent='mono'] { --accent: var(--head); }
-:root[data-scheme='light'][data-accent='blue'] { --accent: #2563c9; }
-:root[data-scheme='light'][data-accent='green'] { --accent: #1d7a45; }
-:root[data-scheme='light'][data-accent='amber'] { --accent: #97600a; }
-:root[data-scheme='light'][data-accent='violet'] { --accent: #5b4bd1; }
-:root[data-scheme='light'][data-accent='rose'] { --accent: #b4234a; }
-
-/* Display type: serif in nbnstack, tight Geist in graphite. */
+/* Display type: the theme's display face (serif in Paper, tight Geist in Graphite). */
 .wordmark,
 .fatal h1,
 .page-title,
@@ -373,7 +286,7 @@ a.ident:hover,
   gap: 4px;
 }
 
-/* Current page: a thin blue line along the bottom edge, as on nbnstack.com. */
+/* Current page: a thin accent line along the bottom edge. */
 .nav-link {
   position: relative;
   display: flex;
@@ -768,14 +681,8 @@ h2.status-line {
   gap: 20px 36px;
   padding: 20px 34px 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--line);
-  background-color: var(--rack);
-  /* Rack screws in the four corners. */
-  background-image:
-    radial-gradient(circle at 13px 13px, var(--screw) 2.5px, transparent 3px),
-    radial-gradient(circle at calc(100% - 13px) 13px, var(--screw) 2.5px, transparent 3px),
-    radial-gradient(circle at 13px calc(100% - 13px), var(--screw) 2.5px, transparent 3px),
-    radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), var(--screw) 2.5px, transparent 3px);
+  border: 1px solid var(--line-soft);
+  background-color: var(--raised);
 }
 
 .patchrow-loading {
@@ -800,19 +707,6 @@ h2.status-line {
   display: flex;
 }
 
-/* Label-maker tape under each bay. */
-.bay-jacks::after {
-  content: '';
-  position: absolute;
-  left: -3px;
-  right: -3px;
-  bottom: 0;
-  height: 20px;
-  border-radius: 2px;
-  background: var(--tape);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-}
-
 .jack {
   position: relative;
   z-index: 1;
@@ -829,14 +723,11 @@ h2.status-line {
   position: relative;
   width: 42px;
   height: 42px;
-  border-radius: 50%;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 36%, var(--socket-hi), var(--socket) 74%);
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.6),
-    0 0 0 1px var(--line),
-    0 1px 0 1px rgba(255, 255, 255, 0.03);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
   transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
 }
 
@@ -852,7 +743,7 @@ h2.status-line {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid var(--rack);
+  border: 2px solid var(--raised);
   background: transparent;
 }
 
@@ -888,18 +779,16 @@ h2.status-line {
 .jack-label {
   height: 20px;
   padding: 0 4px;
-  font: 400 11px/20px var(--f-mono);
+  font: 400 11.5px/20px var(--f-mono);
   letter-spacing: -0.02em;
-  color: var(--tape-ink);
+  color: var(--ink-3);
   white-space: nowrap;
 }
 
 a.jack:hover .jack-socket,
 a.jack:focus-visible .jack-socket {
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.6),
-    0 0 0 2px var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
 }
 
 a.jack:focus-visible {
@@ -949,7 +838,7 @@ a.jack:focus-visible {
   color: var(--warn);
 }
 
-/* Links: text color with an accent rule, as on nbnstack.com. */
+/* Links: text color with an accent rule. */
 .section-action {
   margin-left: auto;
   font-size: var(--act-fs);
@@ -996,7 +885,7 @@ a.jack:focus-visible {
 .head-alert .led {
   width: 10px;
   height: 10px;
-  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--surface) 3px);
 }
 
 /* The card's grid centers the light on the title's first line; the header's flex row sits it on the baseline. */
@@ -2032,7 +1921,7 @@ input[type='checkbox'] {
   transition: border-color 200ms var(--ease-out), transform 200ms var(--ease-out);
 }
 
-/* nbnstack.com card hover: a 1px blue edge along the top and a 2px lift. */
+/* Card hover: a 1px accent edge along the top and a 2px lift. */
 a.app:hover {
   border-color: var(--line);
   border-top-color: var(--accent);
@@ -2659,11 +2548,9 @@ a.vitals:hover .vital-label {
   place-items: center;
   width: 56px;
   height: 56px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 36%, var(--socket-hi), var(--socket) 74%);
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.6),
-    0 0 0 1px var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .detail-titles {
@@ -3104,7 +2991,7 @@ a.vitals:hover .vital-label {
   align-self: center;
   width: 10px;
   height: 10px;
-  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--surface) 3px);
 }
 
 .nas-level {
@@ -3259,44 +3146,12 @@ a.vitals:hover .vital-label {
 
 /* ---------- Graphite: flat hardware ---------- */
 
-:root:not([data-theme='nbnstack']) .patchrow {
-  background-image: none;
-  background-color: var(--raised);
-  border-color: var(--line-soft);
-}
-
-:root:not([data-theme='nbnstack']) .bay-jacks::after {
-  display: none;
-}
-
-:root:not([data-theme='nbnstack']) :is(.jack-socket, .detail-icon) {
-  border-radius: 10px;
-  background: var(--socket);
-  box-shadow: 0 0 0 1px var(--line);
-}
-
-:root:not([data-theme='nbnstack']) .jack-led {
-  border-color: var(--raised);
-}
-
 /* Trouble reads at a glance: a down or failing app's light is larger than a healthy one's. */
 .jack:is([data-state='down'], [data-state='warn']) .jack-led {
   top: -3px;
   right: -3px;
   width: 14px;
   height: 14px;
-}
-
-:root:not([data-theme='nbnstack']) .jack-label {
-  font-size: 11.5px;
-}
-
-:root:not([data-theme='nbnstack']) a.jack:is(:hover, :focus-visible) .jack-socket {
-  box-shadow: 0 0 0 1.5px var(--accent);
-}
-
-:root:not([data-theme='nbnstack']) .detail-icon {
-  border-radius: 12px;
 }
 
 /* ---------- Squares ---------- */
@@ -5761,19 +5616,10 @@ body.is-sorting * {
     display: none;
   }
 
-  .bay-jacks::after {
-    display: none;
-  }
-
   .bay-jacks .jack {
     flex: none;
     min-width: 64px;
     scroll-snap-align: start;
-  }
-
-  .bay-jacks .jack-label {
-    border-radius: 2px;
-    background: var(--tape);
   }
 
   .patchrow.icons-only .bay-jacks .jack {
@@ -6090,7 +5936,7 @@ a.vw:hover {
   align-self: center;
   width: 10px;
   height: 10px;
-  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--surface) 3px);
 }
 
 .weather-alert.sev-extreme,
@@ -10293,7 +10139,7 @@ a.req-come:hover .req-title {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--led) 0 3px, var(--socket) 3.6px);
+  background: radial-gradient(circle, var(--led) 0 3px, var(--surface) 3.6px);
   box-shadow:
     inset 0 1px 2px rgb(0 0 0 / 0.5),
     0 0 0 1px var(--line);
@@ -10308,7 +10154,7 @@ a.req-come:hover .req-title {
 .ctr-link .dot {
   width: 10px;
   height: 10px;
-  background: radial-gradient(circle, var(--led) 0 2.4px, var(--socket) 3px);
+  background: radial-gradient(circle, var(--led) 0 2.4px, var(--surface) 3px);
 }
 
 .led[data-state='ok'],
@@ -10371,7 +10217,7 @@ a.req-come:hover .req-title {
   --led: var(--warn);
   width: 12px;
   height: 12px;
-  background: radial-gradient(circle, var(--led) 0 3px, var(--socket) 3.6px);
+  background: radial-gradient(circle, var(--led) 0 3px, var(--surface) 3.6px);
   box-shadow:
     inset 0 1px 2px rgb(0 0 0 / 0.5),
     0 0 0 1px var(--line);

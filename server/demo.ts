@@ -316,7 +316,7 @@ export const demoFeeds: FeedEntry[] = [
   feed(5, 'The quiet return of the 4:3 monitor', 'Desk Setup Weekly', 'Tech', 7 * H, 3),
   feed(6, 'Smoked brisket on a pellet grill without the stall panic', 'Low & Slow', 'Food', 9 * H, 6),
   feed(7, 'Writing release notes people actually read', 'Plain Text Engineering', 'Dev', 13 * H, 4),
-  feed(8, 'North Texas fall planting calendar', 'Backyard Ledger', 'Outdoors', 20 * H, 5),
+  feed(8, 'A fall planting calendar for warm zones', 'Backyard Ledger', 'Outdoors', 20 * H, 5),
   feed(9, 'Container image updates without surprises', 'Small Servers', 'Homelab', 26 * H, 8),
   feed(10, 'What 400 days of power monitoring taught me about idle draw', 'Disk Pressure', 'Homelab', 30 * H, 11),
   feed(11, 'Keyboard-first interfaces, revisited', 'Interface Notes', 'Tech', 36 * H, 6),

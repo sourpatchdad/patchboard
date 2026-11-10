@@ -1,0 +1,33 @@
+name: Prune images
+
+# Every push publishes dev-<sha> or edge-<sha>. Weekly, keep the newest ten
+# of each and delete the rest, with the platform images inside them.
+# Releases, edge, dev and latest are never touched. Run it by hand from the
+# Actions tab; it only lists what it would delete unless you untick dry run.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: List what would be deleted, delete nothing
+        type: boolean
+        default: true
+
+permissions:
+  packages: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Prune per-commit images
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+        run: node scripts/prune-images.mjs

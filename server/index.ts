@@ -91,6 +91,7 @@ import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
 import { iconCache } from './icon-cache.ts';
+import { feedPicture } from './feed-images.ts';
 
 /** Pause and resume for each configured download client. */
 const downloadControls = new Map<DownloadClientId, DownloadControl>();
@@ -432,6 +433,17 @@ app.get('/api/feeds', async (c) => {
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
   }
+});
+
+// A picture from an article Patchboard handed out; see feed-images.ts.
+app.get('/api/feed-img/:entry/:n', async (c) => {
+  const got = await feedPicture(c.req.param('entry'), c.req.param('n'));
+  if (!got) return c.body(null, 404);
+  return c.body(got.body, 200, {
+    'Content-Type': got.type,
+    'Cache-Control': 'private, max-age=86400',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+  });
 });
 
 // Mark a whole category read, or everything. The header guards it like any action.

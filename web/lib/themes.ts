@@ -42,8 +42,6 @@ export interface ThemeDef {
   name: string;
   note: string;
   fonts: FontSet;
-  /** The skeuomorphic patch bay: round sockets, tape labels, rack screws. */
-  hardware?: boolean;
   dark: Tokens;
   light: Tokens;
 }

@@ -13,6 +13,11 @@
 Demo mode ships in every image (`DEMO=1`), so the demo needs no branch or
 image of its own.
 
+The per-commit tags (`dev-<sha>`, `edge-<sha>`) are for trying or rolling
+back a recent build. A weekly workflow, Prune images, keeps the newest ten
+of each and deletes older ones; releases, `edge`, `dev` and `latest` are
+never pruned.
+
 ## Which tag to pull
 
 - `latest`: the newest release. Most installs want this.

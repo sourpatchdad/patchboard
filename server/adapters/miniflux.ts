@@ -4,6 +4,7 @@
 
 import type { FeedCategory, FeedEntry, FeedFilter, FeedsResponse, MinifluxData } from '../../shared/types.ts';
 import { config } from '../config.ts';
+import { proxied, proxyContent } from '../feed-images.ts';
 import { getJson, request } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 
@@ -36,6 +37,7 @@ export function previewImage(e: Pick<RawEntry, 'content' | 'enclosures'>): strin
 }
 
 function toEntry(e: RawEntry, withContent: boolean): FeedEntry {
+  const image = previewImage(e);
   return {
     id: e.id,
     title: e.title,
@@ -46,8 +48,9 @@ function toEntry(e: RawEntry, withContent: boolean): FeedEntry {
     categoryId: e.feed.category.id,
     publishedAt: e.published_at,
     readingTime: e.reading_time,
-    image: previewImage(e),
-    content: withContent ? e.content : undefined,
+    // Pictures load through Patchboard, never straight from the publisher.
+    image: image ? proxied(e.id, 0, image) : undefined,
+    content: withContent ? proxyContent(e.id, e.content ?? '') : undefined,
   };
 }
 

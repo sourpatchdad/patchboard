@@ -153,14 +153,8 @@ function varsFor(a: Appearance, scheme: 'dark' | 'light'): Record<string, string
     '--clock-weight': String(fonts.clock),
   };
   for (const [name, colors] of Object.entries(MEDIA_COLORS)) v[`--media-${name}`] = colors[scheme];
-  // Flat themes take their sockets from the surfaces; the patch-bay theme keeps its own hardware colors from CSS.
-  if (!def?.hardware) {
-    Object.assign(v, { '--rack': t.raised, '--socket': t.surface, '--socket-hi': t.surface, '--screw': 'transparent', '--tape': 'transparent', '--tape-ink': t.ink3 });
-  }
   return v;
 }
-
-const HARDWARE_VARS = ['--rack', '--socket', '--socket-hi', '--screw', '--tape', '--tape-ink'];
 
 function resolvedScheme(a: Appearance): 'dark' | 'light' {
   if (a.theme === 'custom') return contrast(a.custom.bg, '#000000') > contrast(a.custom.bg, '#ffffff') ? 'light' : 'dark';
@@ -171,14 +165,12 @@ function apply(a: Appearance): void {
   const r = document.documentElement;
   const scheme = resolvedScheme(a);
   const vars = { dark: varsFor(a, 'dark'), light: varsFor(a, 'light') };
-  for (const k of HARDWARE_VARS) r.style.removeProperty(k);
   for (const [k, v] of Object.entries(vars[scheme])) r.style.setProperty(k, v);
   const def = THEMES.find((x) => x.id === a.theme);
-  r.dataset.theme = def?.hardware ? def.id : a.theme === 'custom' ? 'custom' : (def?.id ?? 'graphite');
+  r.dataset.theme = a.theme === 'custom' ? 'custom' : (def?.id ?? 'graphite');
   r.dataset.scheme = scheme;
   r.dataset.icons = a.icons;
   r.dataset.density = a.density;
-  delete r.dataset.accent;
   try {
     localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, appIcon: a.appIcon, attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));
   } catch {

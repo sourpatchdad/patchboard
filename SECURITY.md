@@ -70,9 +70,11 @@ container creation, which comes close to full access.
   Weather Service, Tessie, Trakt, Fastmail, TVmaze and TMDB for posters).
   App icons named from the dashboard-icons set are fetched once from
   jsDelivr and kept in `DATA_DIR`, so your browser gets them from
-  Patchboard. Fonts ship inside the image. Your browser loads only article
-  pictures from their publishers, and an icon you give as a full address
-  from that address. No key or address rides along on any of those.
+  Patchboard. Fonts ship inside the image. Article pictures in Reading load
+  through Patchboard too, from public addresses only, so publishers never
+  see your browser. The one thing your browser loads from elsewhere is an
+  icon you give as a full address. No key or address rides along on any of
+  those.
 - **Notifications are opt-in and go where you point them.** With a notifier
   set up, an alert's title and detail (a container name, a disk
   temperature) go to that service. A self-hosted ntfy, Gotify or webhook
