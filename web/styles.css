@@ -5640,6 +5640,31 @@ body.is-sorting * {
   display: none;
 }
 
+/* An app with a problem keeps its name under the icon, in its trouble
+   color: a warning is never an unnamed dot. Healthy apps stay icons. */
+.patchrow.icons-only .jack:is([data-state='warn'], [data-state='down']) {
+  min-width: 64px;
+}
+
+.patchrow.icons-only .jack:is([data-state='warn'], [data-state='down']) .jack-label {
+  display: block;
+  max-width: 84px;
+  height: auto;
+  padding: 0 4px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.patchrow.icons-only .jack[data-state='warn'] .jack-label {
+  color: var(--warn);
+}
+
+.patchrow.icons-only .jack[data-state='down'] .jack-label {
+  color: var(--crit);
+}
+
 .patchrow.icons-only .bay-jacks {
   gap: 4px;
   /* Wider than phone: a big group wraps onto another row instead of running

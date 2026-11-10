@@ -27,7 +27,9 @@ one click.
 ## In the interface
 
 - **Exceptions, not inventory.** A healthy app gets an icon and a quiet
-  number. Space goes to what's broken, new, in progress or upcoming. A widget
+  number. Space goes to what's broken, new, in progress or upcoming. On
+  Home's icon rack a healthy app is just its icon; one with a problem also
+  shows its name, so trouble is never an unnamed dot. A widget
   stays neutral until a threshold is crossed. History squares follow the
   same rule: a healthy day is ink, and only a bad day takes color. The
   header, the tab title, Needs attention and Jump to count trouble from

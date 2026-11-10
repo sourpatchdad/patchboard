@@ -19,6 +19,8 @@
   leads once you type its verb ("start unpack").
 - Arrange board's controls are the regular small control size, and
   Connections' parts read as tabs under the Settings tabs.
+- On Home's icon rack, an app with a problem shows its name under the icon
+  in its warning or down color; healthy apps stay icons.
 
 ## 1.0.0 (2026-11-10)
 
