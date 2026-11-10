@@ -76,7 +76,8 @@ export function layoutOf(d: Draft, prevRenamed?: Record<string, string>): AppOrd
 
 /** Problems that would stop a save, in plain words. */
 export function draftProblem(d: Draft): string | null {
-  const names = d.groups.map((g) => g.name.trim());
+  // "Tools" and "tools" are the same group to a reader, so they count as one name.
+  const names = d.groups.map((g) => g.name.trim().toLowerCase());
   if (names.some((n) => !n)) return 'Every group needs a name.';
   if (new Set(names).size !== names.length) return 'Two groups have the same name.';
   return null;
@@ -200,7 +201,7 @@ export function EditApps({
     () => new Set([...groups.flatMap((g) => g.services.map((s) => s.name)), ...draft.hidden.map((h) => h.service.name)]),
     [groups, draft.hidden],
   );
-  const dupes = new Set(groups.map((g) => g.name.trim()).filter((n, i, all) => all.indexOf(n) !== i));
+  const dupes = new Set(groups.map((g) => g.name.trim().toLowerCase()).filter((n, i, all) => all.indexOf(n) !== i));
   const listed = new Set(groups.flatMap((g) => g.services.map((s) => s.container)).filter(Boolean));
   const adoptable = discovered.filter((d) => !listed.has(d.container) && !allNames.has(d.name));
 
@@ -232,11 +233,17 @@ export function EditApps({
                 ⠿
               </span>
               <input
-                className={`field group-name ${dupes.has(g.name.trim()) || !g.name.trim() ? 'is-bad' : ''}`}
+                className={`field group-name ${dupes.has(g.name.trim().toLowerCase()) || !g.name.trim() ? 'is-bad' : ''}`}
                 value={g.name}
                 maxLength={60}
                 aria-label={`Group name: ${g.name || 'unnamed'}`}
-                onChange={(e) => setGroups(groups.map((x, j) => (j === gi ? { ...x, name: e.target.value } : x)))}
+                // Hidden apps remember their group by name: a rename takes them along.
+                onChange={(e) =>
+                  set({
+                    groups: groups.map((x, j) => (j === gi ? { ...x, name: e.target.value } : x)),
+                    hidden: draft.hidden.map((h) => (h.group === g.name ? { ...h, group: e.target.value } : h)),
+                  })
+                }
               />
             </span>
             <span className="arrange-btns">
@@ -425,7 +432,7 @@ export function EditApps({
           groups={groups.map((g) => g.name)}
           containers={containers}
           stat={draft.stats[form.app.name]}
-          taken={(n) => n !== form.app.name && allNames.has(n)}
+          taken={(n) => n.trim().toLowerCase() !== form.app.name.toLowerCase() && [...allNames].some((x) => x.toLowerCase() === n.trim().toLowerCase())}
           onClose={() => setForm(null)}
           onSave={(app, group, stat) => {
             const stats = { ...draft.stats };

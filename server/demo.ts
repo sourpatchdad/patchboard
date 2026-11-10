@@ -146,13 +146,16 @@ export const demoStopped = (name: string) => demoActed.get(name)?.state === 'exi
 
 /** When a container started, for the ones started from the demo. */
 export const demoStartedAt: Record<string, number> = {};
-export function demoContainerAction(name: string, action: 'start' | 'stop' | 'restart'): void {
-  // A moment later, the way Docker answers: the poll after the action sees it.
-  setTimeout(() => {
+export function demoContainerAction(name: string, action: 'start' | 'stop' | 'restart', delay = 1500): void {
+  const apply = () => {
     demoActed.set(name, { state: action === 'stop' ? 'exited' : 'running', at: Date.now() });
     if (action === 'stop') demoStoppedAt[name] = Date.now();
     else demoStartedAt[name] = Date.now();
-  }, 1500);
+  };
+  // A moment later, the way Docker answers: the poll after the action sees it.
+  // An update or rollback has already recreated the container: at once.
+  if (delay) setTimeout(apply, delay);
+  else apply();
 }
 
 const sinceText = (ms: number) => {
@@ -355,10 +358,15 @@ const demoMail = (): FastmailData => ({
 
 /** Invented timing uses the same position as the visible progress bar. */
 const demoTiming = (progress: number, durationSec: number) => ({ progress, positionSec: Math.round((progress / 100) * durationSec), durationSec });
+/** A demo stream that plays: it starts at `fromPct` when the demo boots and moves on in real time, looping at the end. */
+const demoPlaying = (fromPct: number, durationSec: number) => {
+  const pos = ((fromPct / 100) * durationSec + (Date.now() - DEMO_BOOT) / 1000) % durationSec;
+  return { progress: (pos / durationSec) * 100, positionSec: Math.round(pos), durationSec };
+};
 
 const demoPlex = (): TautulliData => ({
   streams: [
-    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoTiming(Math.round(jitter(48, 2)), 3000), state: 'playing', transcode: false, thumb: poster('Severance') },
+    { user: 'Sam', title: 'Severance', subtitle: 'S02E05', ...demoPlaying(48, 3000), state: 'playing', transcode: false, thumb: poster('Severance') },
     { user: 'Kit', title: 'Poor Things', ...demoTiming(81, 8460), state: 'paused', transcode: true, thumb: poster('Poor Things') },
   ],
   recent: [
@@ -383,7 +391,7 @@ const demoPlex = (): TautulliData => ({
 });
 
 const demoJellyfin = (): MediaServerData => ({
-  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoTiming(Math.round(jitter(22, 2)), 2700), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
+  streams: [{ user: 'Jo', title: 'Slow Horses', subtitle: 'S05E02', ...demoPlaying(22, 2700), state: 'playing', transcode: false, thumb: poster('Slow Horses') }],
   recent: [
     { id: 'j1', type: 'episode', title: 'Silo', thumb: poster('Silo'), subtitle: 'S02E10', addedAt: Date.now() - 5 * H },
     // The same file on Plex too: Home shows it once, labeled Plex + Jellyfin.
@@ -577,7 +585,8 @@ function demoSab(): QbitData {
     stalled: 0,
     errored: [],
     active: [
-      { name: 'Silo.S02E10.2160p.ATVP.WEB-DL', progress: (Date.now() / 1000 / 300) % 1, speed: rate, etaSec: paused ? -1 : 95 },
+      // Progress and time left run off one clock, so they agree.
+      { name: 'Silo.S02E10.2160p.ATVP.WEB-DL', progress: (Date.now() / 1000 / 300) % 1, speed: rate, etaSec: paused ? -1 : Math.round((1 - ((Date.now() / 1000 / 300) % 1)) * 300) },
       { name: 'Andor.S02E08.1080p.DSNP.WEB-DL', progress: 0, speed: 0, etaSec: -1 },
     ],
   };
@@ -619,7 +628,7 @@ function demoQbit(): QbitData {
   const s1 = run('a1b2') ? jitter(28e6, 6e6) * slow : 0;
   const s2 = run('c3d4') ? jitter(9e6, 3e6) * slow : 0;
   const items: QueueItem[] = [
-    { id: 'a1b2', name: 'The.Bear.S04E04.1080p.WEB.h264', progress: bearHeld ?? bearNow(), speed: s1, etaSec: s1 ? 340 : -1, state: run('a1b2') ? 'downloading' : 'paused' },
+    { id: 'a1b2', name: 'The.Bear.S04E04.1080p.WEB.h264', progress: bearHeld ?? bearNow(), speed: s1, etaSec: s1 ? Math.round((1 - bearNow()) * 600) : -1, state: run('a1b2') ? 'downloading' : 'paused' },
     { id: 'c3d4', name: 'One.Battle.After.Another.2025.2160p.WEB-DL', progress: 0.37, speed: s2, etaSec: s2 ? 2900 : -1, state: run('c3d4') ? 'downloading' : 'paused' },
     { id: 'e5f6', name: 'Slow.Horses.S05E02.1080p.ATVP.WEB-DL', progress: 0.62, speed: 0, etaSec: -1, state: demoItemPaused.has('e5f6') ? 'paused' : 'stalled' },
   ].filter((i) => !demoItemRemoved.has(i.id)) as QueueItem[];

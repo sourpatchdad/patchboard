@@ -88,6 +88,8 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
   const [armed, setArmed] = useState<string | null>(null);
+  /** A touch screen has no Enter: the second press is a tap. */
+  const coarse = matchMedia('(pointer: coarse)').matches;
   /** Which part of the selected row: 0 the row itself, then its subs. */
   const [part, setPart] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -162,7 +164,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
             id: `a-${a}-${c.name}`,
             label: `${verb} ${c.name}`,
             hint: 'Action',
-            ...(a !== 'start' ? { confirm: `Press Enter again to ${a} ${c.name}` } : {}),
+            ...(a !== 'start' ? { confirm: `${a} ${c.name}` } : {}),
             // A container in trouble comes first: that's the one you came for.
             boost: trouble ? 200 : 0,
             run: async () => {
@@ -214,7 +216,8 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
           label: `All ${trouble.length} that need you`,
           hint: 'Home',
           group: 'Needs attention',
-          run: () => navigate('/'),
+          // Home opens its full list on arrival, not just the first three.
+          run: () => navigate('/', { state: { attention: true } }),
         });
       const byId = new Map(items.map((it) => [it.id, it]));
       const recent = readRecent()
@@ -343,7 +346,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
                 onClick={() => choose(it, 0)}
               >
                 <span className="palette-icon">{it.led ? <Led state={it.led} /> : it.icon ? <Icon name={it.label} icon={it.icon} size={18} /> : null}</span>
-                <span className={`palette-label ${armed === it.id ? 'is-armed' : ''}`}>{armed === it.id ? it.confirm : it.label}</span>
+                <span className={`palette-label ${armed === it.id ? 'is-armed' : ''}`}>{armed === it.id ? `${coarse ? 'Tap' : 'Press Enter or click'} again to ${it.confirm}` : it.label}</span>
                 <span className="palette-hint">{it.hint}</span>
                 {it.subs && (
                   <span className="palette-subs" aria-hidden>

@@ -11,9 +11,9 @@ import { NameForm } from '../components/BrandName.tsx';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
-import { Link, NavLink, useParams } from 'react-router-dom';
+import { Link, NavLink, useLocation, useParams } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
 import { sameRelease } from '../../shared/media.ts';
 import { itemHref, type MergedItem, mergeRecent, useMediaServers } from '../lib/media.ts';
@@ -220,41 +220,79 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
  */
 function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   const [all, setAll] = useState(false);
+  // Arriving from Jump to's "All N that need you": open the rest straight away.
+  const arrived = useLocation();
+  useEffect(() => {
+    if ((arrived.state as { attention?: boolean } | null)?.attention) setAll(true);
+  }, [arrived.key]);
+  const pop = useRef<HTMLUListElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
   // Problems first, worst first; then quiet notes, like an app Patchboard
   // can't reach, in gray.
   const list = byUrgency(alerts);
-  if (!list.length) return null;
   const SHOWN = 3;
-  const shown = all ? list : list.slice(0, SHOWN);
   const hidden = list.slice(SHOWN);
+  // The rest open in a panel over the page, so the board below never moves.
+  // Escape or a click elsewhere closes it, and focus goes back to the link.
+  useEffect(() => {
+    if (!all) return;
+    pop.current?.querySelector<HTMLElement>('a, [tabindex]')?.focus();
+    const close = (back: boolean) => {
+      setAll(false);
+      if (back) opener.current?.focus();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close(true);
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!pop.current?.contains(t) && !opener.current?.contains(t)) close(false);
+    };
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('pointerdown', onDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('pointerdown', onDown, true);
+    };
+  }, [all]);
+  if (!list.length) return null;
   const notes = hidden.filter((a) => a.level === 'info').length;
   const problems = hidden.length - notes;
   const more = [problems && `${problems} more`, notes && plural(notes, 'note')].filter(Boolean).join(', ');
+  const row = (a: Alert) => {
+    const body = (
+      <>
+        <Led state={alertLed[a.level]} />
+        <span className="head-alert-title">
+          <WithSubject title={a.title} subject={a.subject} />
+        </span>
+        {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
+        {/* Shown on touch screens, where the hover title can't be read. */}
+        {a.detail && <span className="head-alert-detail">{a.detail}</span>}
+      </>
+    );
+    return (
+      <li key={a.id} className={`head-alert alert-${a.level}`} title={a.detail}>
+        {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>{body}</a> : <Link to={a.href} aria-label={spoken(a, now)}>{body}</Link> : <span tabIndex={-1}>{body}</span>}
+      </li>
+    );
+  };
   return (
     <ul className="head-alerts" aria-label="Needs attention">
-      {shown.map((a) => {
-        const body = (
-          <>
-            <Led state={alertLed[a.level]} />
-            <span className="head-alert-title">
-              <WithSubject title={a.title} subject={a.subject} />
-            </span>
-            {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
-            {/* Shown on touch screens, where the hover title can't be read. */}
-            {a.detail && <span className="head-alert-detail">{a.detail}</span>}
-          </>
-        );
-        return (
-          <li key={a.id} className={`head-alert alert-${a.level}`} title={a.detail}>
-            {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>{body}</a> : <Link to={a.href} aria-label={spoken(a, now)}>{body}</Link> : <span>{body}</span>}
-          </li>
-        );
-      })}
-      {list.length > SHOWN && (
+      {list.slice(0, SHOWN).map(row)}
+      {hidden.length > 0 && (
         <li className="head-alert-more">
-          <button type="button" className="text-button" aria-expanded={all} onClick={() => setAll(!all)}>
-            {all ? 'Show fewer' : more}
+          <button ref={opener} type="button" className="text-button" aria-expanded={all} aria-controls="head-alert-rest" onClick={() => setAll(!all)}>
+            {all ? 'Close' : more}
           </button>
+          {all && (
+            <ul ref={pop} id="head-alert-rest" className="head-alert-pop" aria-label="The rest that need you">
+              {hidden.map(row)}
+            </ul>
+          )}
         </li>
       )}
     </ul>
@@ -350,23 +388,33 @@ export function Inbox({ now }: { now: number }) {
   const { state, data } = useSource<FastmailData>('fastmail');
   const { limit = 6 } = useWidget();
   if (!state) return null;
+  // No address (the demo's "#"): the messages are text, not links that go nowhere.
+  const webmail = data?.webUrl && data.webUrl !== '#' ? data.webUrl : undefined;
   return (
     <Section
       title="Inbox"
       className="inbox"
       count={data ? (data.unread ? `${count(data.unread)} unread` : 'Nothing unread') : undefined}
-      action={data ? { label: 'Open Fastmail', href: data.webUrl } : undefined}
+      action={data && webmail ? { label: 'Open Fastmail', href: webmail } : undefined}
       source={state}
     >
       {data?.messages.length ? (
         <ul className="mail">
           {data.messages.slice(0, limit).map((m) => (
             <li key={m.id} className={m.unread ? 'is-unread' : undefined}>
-              <a href={data.webUrl} target="_blank" rel="noreferrer" title={m.preview}>
-                <span className="mail-from">{m.from}</span>
-                <span className="mail-subject">{m.subject}</span>
-                <time className="mail-time">{ago(m.receivedAt, now)}</time>
-              </a>
+              {webmail ? (
+                <a href={webmail} target="_blank" rel="noreferrer" title={m.preview}>
+                  <span className="mail-from">{m.from}</span>
+                  <span className="mail-subject">{m.subject}</span>
+                  <time className="mail-time">{ago(m.receivedAt, now)}</time>
+                </a>
+              ) : (
+                <div title={m.preview}>
+                  <span className="mail-from">{m.from}</span>
+                  <span className="mail-subject">{m.subject}</span>
+                  <time className="mail-time">{ago(m.receivedAt, now)}</time>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -422,6 +470,12 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
   const { limit = 6 } = useWidget();
   /** Fit took every row: each service is its heading and one line of titles. */
   const compact = limit === 0;
+  const { snap: nowSnap } = useStore();
+  /** Audiobookshelf and Navidrome open in their app, as Plex and Jellyfin do, when it has an address. */
+  const listenHref = (id: string) => {
+    const h = nowSnap?.catalog.groups.flatMap((g) => g.services).find((x) => x.container === id || x.name.toLowerCase() === id)?.href;
+    return h && isExternal(h) ? h : undefined;
+  };
   const { servers, configured } = useMediaServers();
   const all = useDownloadClients();
   const clients = downloads ? all.clients : [];
@@ -465,7 +519,17 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
             <Led state="ok" />
             <AppLink container={m.container}>{`${plural(m.data.streams.length, 'stream')} on ${m.label}`}</AppLink>
           </h3>
-          {compact && <p className="now-foot now-compact">{m.data.streams.map((s) => s.title).join(', ')}</p>}
+          {/* Folded: the titles in a line, each still opening its details. */}
+          {compact && (
+            <p className="now-foot now-compact">
+              {m.data.streams.map((s, i) => (
+                <Fragment key={`${s.user}:${s.title}:${i}`}>
+                  {i > 0 && ', '}
+                  <StreamRow compact stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
+                </Fragment>
+              ))}
+            </p>
+          )}
           {m.data.streams.slice(0, limit).map((s, i) => (
             <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={m.id === 'tautulli' ? 'plex' : m.id === 'emby' ? 'emby' : 'jellyfin'} label={m.label} href={s.itemId ? itemHref(m, s.itemId) : m.href} />
           ))}
@@ -484,9 +548,18 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
             <Led state="ok" />
             <AppLink container={l.id}>{l.data!.streams.length === 1 ? '1 person' : `${l.data!.streams.length} people`} listening on {l.label}</AppLink>
           </h3>
-          {compact && <p className="now-foot now-compact">{l.data!.streams.map((s) => s.title).join(', ')}</p>}
+          {compact && (
+            <p className="now-foot now-compact">
+              {l.data!.streams.map((s, i) => (
+                <Fragment key={`${s.user}:${s.title}:${i}`}>
+                  {i > 0 && ', '}
+                  <StreamRow compact stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} href={listenHref(l.id)} />
+                </Fragment>
+              ))}
+            </p>
+          )}
           {l.data!.streams.slice(0, limit).map((s, i) => (
-            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} />
+            <StreamRow key={`${s.user}:${s.title}:${i}`} stream={s} service={l.id === 'audiobookshelf' ? 'audiobookshelf' : 'navidrome'} label={l.label} href={listenHref(l.id)} />
           ))}
         </div>
       ))}
@@ -605,7 +678,7 @@ export function UpcomingBrief({ now }: { now: number }) {
     byDay.set(label, [...(byDay.get(label) ?? []), it]);
   }
   return (
-    <Section title={days > 7 ? 'Next two weeks' : 'This week'} className="upcoming-brief" count={week.length ? plural(groupDrops(week).length, 'release') : undefined} action={{ label: 'Two weeks', to: '/upcoming' }}>
+    <Section title={days > 7 ? 'Next two weeks' : 'This week'} className="upcoming-brief" count={week.length ? plural(groupDrops(week).length, 'release') : undefined} action={{ label: 'All upcoming', to: '/upcoming' }}>
       {byDay.size ? (
         <div className="agenda agenda-compact">
           {[...byDay].map(([day, list]) => (
@@ -660,11 +733,17 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
       ) : (
         <div>{content}</div>
       )}
-      {missing && !snap?.readOnly && (
+      {/* Sent: a plain, settled note in the same spot, said once to a screen reader. */}
+      {missing && !snap?.readOnly && search === 'sent' && (
+        <span className="rel-search rel-sent" role="status">
+          Search sent
+        </span>
+      )}
+      {missing && !snap?.readOnly && search !== 'sent' && (
         <button
           type="button"
           className="text-button rel-search"
-          disabled={search === 'busy' || search === 'sent'}
+          disabled={search === 'busy'}
           title={`Ask ${sourceName[it.source]} to search for it now`}
           aria-label={`Search for ${it.title}${it.subtitle ? ` ${it.subtitle}` : ''}`}
           onClick={async () => {
@@ -673,7 +752,7 @@ export function ReleaseRow({ it, art = false }: { it: ReleaseItem; art?: boolean
             setSearch(res?.ok ? 'sent' : 'failed');
           }}
         >
-          {search === 'sent' ? 'Searching' : search === 'failed' ? 'Try again' : 'Search'}
+          {search === 'busy' ? 'Searching' : search === 'failed' ? 'Try again' : 'Search'}
         </button>
       )}
     </li>
@@ -788,19 +867,18 @@ export function NextUp() {
 }
 
 function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now?: number; showServer: boolean; fit?: boolean }) {
+  const { snap } = useStore();
+  // The demo's apps have no address: its posters open the title on TMDB, as its release rows do.
+  const hrefOf = (r: MergedItem) => itemHref(r.server, r.id) ?? (snap?.demo ? `https://www.themoviedb.org/search?query=${encodeURIComponent(r.title)}` : undefined);
+  // A poster with nowhere to go is a picture, not a dead link; the shelf says once how to make them open.
+  const nowhere = [...new Set(items.filter((r) => !hrefOf(r)).map((r) => r.server.label))];
   return (
-    <ul className={`posters ${fit ? 'is-fit' : ''}`}>
-      {items.map((r) => {
-        const href = itemHref(r.server, r.id);
-        return (
-          <li key={`${r.server.id}:${r.id}:${r.subtitle ?? ''}`}>
-            <a
-              className="poster-link"
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              title={href ? `Open in ${r.server.label}` : `Give ${r.server.label} an address in Edit apps and its posters open there`}
-            >
+    <>
+      <ul className={`posters ${fit ? 'is-fit' : ''}`}>
+        {items.map((r) => {
+          const href = hrefOf(r);
+          const inner = (
+            <>
               <Poster title={r.title} thumb={r.thumb} />
               <span className="poster-title">{r.title}</span>
               <span className="poster-sub">
@@ -808,11 +886,27 @@ function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now
                 {now !== undefined && <time>{ago(r.addedAt, now)}</time>}
                 {showServer && <span className="poster-src">{(r.servers ?? [r.server]).map((s) => s.label).join(' + ')}</span>}
               </span>
-            </a>
-          </li>
-        );
-      })}
-    </ul>
+            </>
+          );
+          return (
+            <li key={`${r.server.id}:${r.id}:${r.subtitle ?? ''}`}>
+              {href ? (
+                <a className="poster-link" href={href} target="_blank" rel="noreferrer" title={`Open in ${r.server.label}`}>
+                  {inner}
+                </a>
+              ) : (
+                <div className="poster-link is-plain">{inner}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {nowhere.length > 0 && (
+        <p className="settings-note poster-hint">
+          Give {nowhere.join(' and ')} an address in <Link to="/apps">Edit apps</Link> and these open there.
+        </p>
+      )}
+    </>
   );
 }
 

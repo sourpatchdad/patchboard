@@ -334,7 +334,8 @@ export function seedDemoHistory(): void {
   recordEvent('container.recovered', 'frigate', undefined, t - 6 * D + 20 * 60_000);
   kvSet('tracking-since', t - 24 * D);
   kvSet('image-updates', {
-    sonarr: { image: 'lscr.io/linuxserver/sonarr:latest', at: t - 5 * H, link: '#' },
+    // Found after the update it already had (1.5 hours ago), so the two agree.
+    sonarr: { image: 'lscr.io/linuxserver/sonarr:latest', at: t - 40 * 60_000, link: '#' },
     'immich-server': { image: 'ghcr.io/immich-app/immich-server:release', at: t - 29 * H, link: '#' },
     caddy: { image: 'caddy:2', at: t - 3 * D, link: '#' },
   });

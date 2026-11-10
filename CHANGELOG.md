@@ -2,6 +2,61 @@
 
 ## Unreleased
 
+- Stopping a container from Patchboard no longer hides a crash in a
+  container that depends on it.
+- Container page: the state line says Updating or Rolling back while one
+  runs, the button says which, Dismiss waits until it's done, and a
+  dismissed update panel stays dismissed.
+- Stacks: counts say how many actually run; the image updates filter keeps
+  your sort, counts downloaded-but-not-running images, and is never a dead
+  end; hidden stacks leave the totals and are named as hidden. A link to a
+  hidden stack or Server section says it's hidden.
+- One wording for a container everywhere ("Scheduled job, finished",
+  "Stopped, exit code 1"); a finished scheduled job is quiet in Logs and its
+  history, and its Start isn't the main button.
+- App lights follow Needs attention: an app with an alert shows amber or
+  red on Home and Apps alike.
+- Edit apps asks before you leave with unsaved changes; names that differ
+  only in case count as the same; a hidden app follows its group's rename;
+  an empty "Followed by" no longer breaks Save.
+- Jump to: "Tap again" on a phone; "All N that need you" opens the full
+  list. Tab titles use the app's name. The More sheet closes on Back. In
+  Reading, `g k` and `g u` reach their pages.
+- Settings: setup forms fit a phone, Cancel returns focus to the row and
+  clears the old message, errors are announced and inline, Pushover's
+  fields carry their own names, and Email's certificate check shows its
+  real default. Search finds integrations by variable name; an open form
+  stays visible whatever the filter.
+- Right now: folded titles still open their details; Tab leaves a preview
+  to the next thing on the page; Audiobookshelf and Navidrome open in their
+  app. Reading's category counts drop as you read, and the page picks up new
+  articles every two minutes.
+- Upcoming's Search settles to "Search sent"; Try another release says what
+  it did; posters with nowhere to go are pictures with one hint, not dead
+  links; the Inbox drops links that lead nowhere; an event already under
+  way shows under today.
+- Arrange board: Fit waits for a drop and keeps your counts while you
+  arrange; the too-tall note no longer moves the controls under your finger.
+  Add widget finds Drives for "disks". Media night fills its first row.
+- Phones: real 44-pixel touch areas for Right now headings, download
+  clients, request titles, the weather alert, board tabs, runbook Copy,
+  wiring links and the Logs toggles. Fields share the 36-pixel control
+  height.
+- Right now moves: a playing bar and its time run on every second between
+  updates, and Plex, Jellyfin, Emby, Audiobookshelf and Navidrome are
+  asked every 5 seconds while something plays (15 or 20 when nothing
+  does). New arrivals and next up are fetched once a minute.
+- Cameras: each frame refreshes every 3 seconds while it's on screen and
+  the tab is in front, and not at all otherwise. Frames pass through
+  without being held, so it costs bandwidth, not memory.
+- The header's "N more" opens the rest in a panel under the link, so the
+  board no longer moves; Escape or a click elsewhere closes it.
+- Arrange board: one row of everyday moves (name, Add widget, Tools,
+  Cancel, Save). Columns, Fit, layouts and Reset open from Tools, with
+  Reset at the far end, away from Save.
+- The default board pins its columns, so Fit's cuts stay with the card
+  they were made for: Reading keeps its rows when Right now folds. Fit
+  settles faster.
 - One trouble count: the header, the tab title, Needs attention and Jump
   to read the same list. Jump to shows the first three and a row for all
   of them when more need you.

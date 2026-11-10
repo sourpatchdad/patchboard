@@ -541,7 +541,10 @@ export function CalendarWidget({ now }: { now: number }) {
   const upcoming = data.events.filter((e) => (e.end ?? e.start + (e.allDay ? 86_400_000 : 0)) > now || e.start > now).slice(0, limit);
   const calendars = new Set(data.events.map((e) => e.calendar).filter(Boolean));
   const dayKey = (t: number) => new Date(t).toDateString();
-  const days = [...new Set(upcoming.map((e) => dayKey(Math.max(e.start, now - (e.allDay ? 0 : 0)))))];
+  // An event already under way (a trip, a conference) files under today, the
+  // day it's showing in; the grouping below uses the same day, so it can't vanish.
+  const shownDay = (e: (typeof upcoming)[number]) => dayKey(Math.max(e.start, now));
+  const days = [...new Set(upcoming.map(shownDay))];
   const time = (t: number) => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: !clock24 }).replace(':00', '');
   const label = (k: string) => {
     const d = new Date(k);
@@ -561,7 +564,7 @@ export function CalendarWidget({ now }: { now: number }) {
             <h3>{label(k)}</h3>
             <ul>
               {upcoming
-                .filter((e) => dayKey(e.start) === k)
+                .filter((e) => shownDay(e) === k)
                 .sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start - b.start)
                 .map((e) => (
                   <li key={e.id}>

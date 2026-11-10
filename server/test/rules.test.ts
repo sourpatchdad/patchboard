@@ -57,6 +57,16 @@ test('a stop from Patchboard is a note at once, not after the grace for unexplai
   }
 });
 
+test('a dependency stopped from Patchboard never hides a dependent that crashed', () => {
+  kvSet('parked', ['radarr']);
+  try {
+    const alerts = computeAlerts(sources({ docker: { containers: [down('radarr', { status: 'Exited (0) 1 minute ago' }), down('unpackerr', { dependsOn: ['radarr'] })] } }), catalog());
+    assert.deepEqual(alerts.map((a) => a.id).sort(), ['ctr-down-unpackerr', 'ctr-parked-radarr']);
+  } finally {
+    kvSet('parked', null);
+  }
+});
+
 test('root-cause folding: dependents fold under the container they depend on', () => {
   const containers = [
     down('immich-postgres'),

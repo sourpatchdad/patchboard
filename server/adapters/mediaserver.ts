@@ -3,7 +3,7 @@
 // /api/img/{jellyfin,emby} so the API key never reaches the browser.
 
 import type { MediaServerData, RecentItem, Stream, LibraryCounts, Play } from '../../shared/types.ts';
-import { every } from './every.ts';
+import { cached, every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson, HttpError, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -155,22 +155,31 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
     return toPlays(kind, r.Items, userName);
   });
   const counts = every(5 * 60_000, async () => toCounts(await get(kind, '/Items/Counts')));
+  // New arrivals and next up change slowly; only sessions follow the fast poll.
+  const fresh = cached(60_000, async () => {
+    const uid = await user();
+    const [added, next] = await Promise.all([
+      latest(uid),
+      get<{ Items: Item[] }>(kind, `/Shows/NextUp?UserId=${uid}&Limit=12&Fields=DateCreated`).catch(() => ({ Items: [] as Item[] })),
+    ]);
+    return { added, next };
+  });
+  let watching = false;
 
   return {
     id: kind,
     label: kind === 'jellyfin' ? 'Jellyfin' : 'Emby',
-    intervalMs: 15 * SECOND,
+    // While someone watches, every 5 seconds so Right now keeps up; otherwise 15.
+    get intervalMs() {
+      return watching ? 5 * SECOND : 15 * SECOND;
+    },
     async fetch() {
-      const uid = await user();
-      const [sessions, added, next, watched, library] = await Promise.all([
-        get<Session[]>(kind, '/Sessions?ActiveWithinSeconds=120'),
-        latest(uid),
-        get<{ Items: Item[] }>(kind, `/Shows/NextUp?UserId=${uid}&Limit=12&Fields=DateCreated`).catch(() => ({ Items: [] as Item[] })),
-        played(),
-        counts(),
-      ]);
+      const [sessions, slow, watched, library] = await Promise.all([get<Session[]>(kind, '/Sessions?ActiveWithinSeconds=120'), fresh(), played(), counts()]);
+      const { added, next } = slow;
+      const streams = sessions.map((s) => toStream(kind, s)).filter((s): s is Stream => s !== null);
+      watching = streams.length > 0;
       return {
-        streams: sessions.map((s) => toStream(kind, s)).filter((s): s is Stream => s !== null),
+        streams,
         recent: added.map((it) => toRecent(kind, it)).sort((a, b) => b.addedAt - a.addedAt),
         nextUp: next.Items.map((it) => ({ ...toRecent(kind, it), id: it.Id })),
         itemPath: ITEM_PATH[kind],

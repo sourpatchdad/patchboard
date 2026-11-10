@@ -8,7 +8,8 @@
 import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
 import { type CSSProperties, Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useBlocker, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useLeaveGuard } from '../lib/leave.ts';
 import {
   type Board as BoardData,
   cleanBoardName,
@@ -43,7 +44,7 @@ import { useHistory, useJson } from '../lib/api.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { useLanding } from '../lib/landing.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
-import { checkFor, containerMap, serviceFor, shortStatus } from '../lib/services.ts';
+import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.ts';
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
@@ -106,7 +107,7 @@ function useBoard(id: string) {
  * scrolls anyway, so every list gets its full length back. Starts over when
  * the window's size changes or the board is saved.
  */
-function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
+function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[], arranging = false): { trim: Record<string, number>; posters: Record<string, number>; over: number } {
   const [trim, setTrim] = useState<Record<string, number>>({});
   const [posters, setPosters] = useState<Record<string, number>>({});
   /** Pixels still past the window once nothing more can be trimmed. */
@@ -162,6 +163,8 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
     if (!on || !el || gaveUp) return;
     let timer = 0;
     const check = () => {
+      // Mid-drag or mid-resize the layout is in flux: wait for the drop.
+      if (el.querySelector('.is-dragging, .is-resizing')) return;
       // Page coordinates, so a scrolled page measures the same as one at the top.
       // The foot (Customize, New board) stays on screen too.
       const foot = el.parentElement?.querySelector<HTMLElement>('.board-foot');
@@ -232,11 +235,14 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
         }
       }
       setOver(over.length ? Math.round(over[0].r.bottom - floor) : 0);
-      if (over.length) setGaveUp(true);
+      // Arranging keeps the counts you see and only reports the overflow; the
+      // lists get their full length back once you're viewing again.
+      if (over.length && !arranging) setGaveUp(true);
     };
     const queue = () => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(check, 90);
+      // Mid-sequence (a cut just made), measure again sooner: Fit settles in a blink, not a crawl.
+      timer = window.setTimeout(check, lastCut.current ? 30 : 90);
     };
     const ro = new ResizeObserver(queue);
     ro.observe(el);
@@ -245,7 +251,7 @@ function useFit(on: boolean, el: HTMLDivElement | null, widgets: Widget[]): { tr
       ro.disconnect();
       window.clearTimeout(timer);
     };
-  }, [on, el, widgets, trim, posters, gaveUp]);
+  }, [on, el, widgets, trim, posters, gaveUp, arranging]);
   if (!on) return { trim: {}, posters: {}, over: 0 };
   return gaveUp ? { trim: {}, posters: {}, over } : { trim, posters, over };
 }
@@ -330,18 +336,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   // Unsaved arranging asks before it's thrown away: leaving the page, the
   // tab, or switching boards.
   const dirty = editing && !quick && JSON.stringify(draft) !== JSON.stringify(board);
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
-  useEffect(() => {
-    if (blocker.state !== 'blocked') return;
-    if (window.confirm('Leave without saving your changes to this board?')) blocker.proceed();
-    else blocker.reset();
-  }, [blocker.state]);
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
+  useLeaveGuard(dirty, 'Leave without saving your changes to this board?');
   const shown = draft ?? board;
   // Columns: the board's choice, fewer when the window can't fit them.
   const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
@@ -370,7 +365,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   }, [boardEl]);
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
-  const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE);
+  const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE, editing);
   const alignedHeights = useListCardAlignment(boardEl, shown?.widgets.map((w) => `${w.id}:${w.column ?? ''}:${w.span ?? ''}`).join(',') ?? '');
   const short = over;
   const sort = useDragSort('cell', () => {}, { onPoint: (drag, x, y) => {
@@ -428,6 +423,13 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
           at the foot of the board and the widgets start right under the masthead. */}
       {editing && (
         <div className="board-bar">
+          {/* Too tall stays in sight. It's the bar's top line: the bar grows
+              upward from the bottom, so nothing under your finger moves. */}
+          {draft.fit && short > 4 && (
+            <p className="drawer-note board-short">
+              {short < 120 ? 'A little too tall to fit, even with lists at their shortest,' : 'Too tall to fit, even with lists at their shortest,'} so lists stay full length and the page scrolls. {tiles ? 'Apps as icons, or moving a widget to another board, would make room.' : 'Moving a widget to another board would make room.'}
+            </p>
+          )}
           <div className="board-bar-row">
             <input
               className="field board-name"
@@ -445,8 +447,13 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <span className="board-bar-hint">Drag into a column, then above or below another card. Hover or focus for controls.</span>
             {error && <span className="crit-text" role="alert">{error}</span>}
             {notice && !error && <span className="drawer-note">{notice}</span>}
-            <button type="button" className="text-button board-tools-toggle" aria-expanded={tools} onClick={() => setTools(!tools)}>
-              {tools ? 'Fewer tools' : 'Tools'}
+            {/* The everyday moves stay in this row; columns, fit, layouts and reset wait under Tools. */}
+            <button type="button" className="button button-quiet board-add" onClick={() => setAdding(true)}>
+              Add widget
+            </button>
+            <button type="button" className="text-button board-tools-toggle" aria-expanded={tools} aria-controls="board-tools" onClick={() => setTools(!tools)}>
+              {/* One label; aria-expanded and the pressed look say whether it's open. */}
+              Tools
             </button>
             {dirty ? (
               <HoldButton className="text-button" danger hint="Hold to throw these changes away" onConfirm={() => (setDraft(null), setNotice(''), backToArrange())}>
@@ -473,8 +480,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               Save
             </button>
           </div>
-          <div className={`board-bar-row board-bar-tools ${tools ? 'is-open' : ''}`}>
-            <button type="button" className="button button-quiet" onClick={() => setAdding(true)}>
+          <div id="board-tools" className={`board-bar-row board-bar-tools ${tools ? 'is-open' : ''}`}>
+            <button type="button" className="button button-quiet board-add-phone" onClick={() => setAdding(true)}>
               Add widget
             </button>
             {draft.widgets.filter((w) => w.type === 'attention' && w.config?.style !== 'card' && homeStatusSize !== 'hidden').map((w) => (
@@ -504,11 +511,6 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
             </label>
-            {draft.fit && short > 4 && (
-              <span className="drawer-note">
-                {short < 120 ? 'A little too tall to fit, even with lists at their shortest,' : 'Too tall to fit, even with lists at their shortest,'} so lists stay full length and the page scrolls. {tiles ? 'Apps as icons, or moving a widget to another board, would make room.' : 'Moving a widget to another board would make room.'}
-              </span>
-            )}
             <select
               className="field starter-pick"
               aria-label="Start over from a layout"
@@ -940,6 +942,15 @@ function backToArrange(): void {
   }, 50);
 }
 
+/** Words people search Add widget with that a widget's own description doesn't use. */
+const ALSO: Partial<Record<WidgetType, string>> = {
+  drives: 'disks hard drives smart health',
+  storage: 'disks pool space',
+  hosts: 'disks machines computers',
+  now: 'playing streams watching',
+  cameras: 'frigate nvr security',
+};
+
 export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
@@ -1006,7 +1017,7 @@ function ContainerWidget({ name }: { name: string }) {
       <Link to={`/c/${name}`} className="cw-head">
         {svc?.icon && <Icon name={svc.name} icon={svc.icon} size={22} />}
         <span className="cw-name">{svc?.name ?? name}</span>
-        <span className="cw-state">{!c ? 'Not found' : running ? `Up ${shortStatus(c)}` : c.status}</span>
+        <span className="cw-state">{!c ? 'Not found' : statusLine(c, svc)}</span>
       </Link>
       {!running ? (
         <p className="cw-nums">{c ? 'Not running, so no CPU or memory to show.' : 'No container by this name. Remove this widget or pick another.'}</p>
@@ -1118,7 +1129,7 @@ function AddDrawer({ board, onClose, onAdd }: { board: BoardData; onClose: () =>
   // Search by name or by what it shows: "plex", "disk", "camera".
   const matches = (t: WidgetType) => {
     const f = find.trim().toLowerCase();
-    return !f || `${WIDGET_INFO[t].name} ${WIDGET_INFO[t].about} ${NEEDS[t]?.label ?? ''}`.toLowerCase().includes(f);
+    return !f || `${WIDGET_INFO[t].name} ${WIDGET_INFO[t].about} ${NEEDS[t]?.label ?? ''} ${ALSO[t] ?? ''}`.toLowerCase().includes(f);
   };
   // Integration widgets appear once their integration is on, so nothing lands empty.
   const ready = widgetReady(snap);

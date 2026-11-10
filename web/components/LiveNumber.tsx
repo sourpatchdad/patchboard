@@ -57,7 +57,7 @@ export function liveConfig(appName: string, d: LiveDraft): JsonWidgetConfig | nu
     const headers: Record<string, string> = {};
     const i = d.header.indexOf(':');
     if (i > 0) headers[d.header.slice(0, i).trim()] = d.header.slice(i + 1).trim().replace('{key}', ref);
-    return { title: 'custom', url: d.url.trim().replace('{key}', ref), headers, interval: 60, fields: [{ label: d.label.trim(), path: d.path.trim(), format: d.format }] };
+    return { title: 'custom', url: d.url.trim().replace('{key}', ref), headers, interval: 60, fields: [{ label: d.label.trim() || d.path.trim().split('.').pop() || 'value', path: d.path.trim(), format: d.format }] };
   }
   const p = PRESETS.find((x) => x.id === d.mode);
   if (!p) return null;
@@ -124,8 +124,8 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
 
   return (
     <div className="ws-row live-number">
-      <span>Live number on its tile</span>
-      <select className="field" value={d.mode} onChange={(e) => (setTest(null), onChange({ ...d, mode: e.target.value, valueIdx: 0 }))}>
+      <span id="live-number-label">Live number on its tile</span>
+      <select className="field" aria-labelledby="live-number-label" value={d.mode} onChange={(e) => (setTest(null), onChange({ ...d, mode: e.target.value, valueIdx: 0 }))}>
         <option value="">None: show status and response time</option>
         {suggested && <option value={suggested.id}>{suggested.name} (suggested)</option>}
         {PRESETS.filter((p) => p.id !== suggested?.id).map((p) => (
@@ -181,7 +181,7 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
               </select>
             </label>
             <label>
-              <span>Followed by</span>
+              <span>Followed by <em>optional</em></span>
               <input className="field" value={d.label} placeholder="users" maxLength={40} onChange={(e) => onChange({ ...d, label: e.target.value })} />
             </label>
           </div>

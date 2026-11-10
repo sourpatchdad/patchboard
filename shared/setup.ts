@@ -94,6 +94,9 @@ export function fieldKind(name: string): FieldKind {
 }
 
 const LABELS: [RegExp, string][] = [
+  // Specific names before the general rules below, which match them too.
+  [/^PUSHOVER_TOKEN$/, 'Application token'],
+  [/^PUSHOVER_USER_KEY$/, 'User key'],
   [/^NTFY_URL$/, 'Topic address'],
   [/^DISCORD_WEBHOOK$/, 'Webhook address'],
   [/^PATCHBOARD_URL$/, 'Patchboard address'],
@@ -108,8 +111,6 @@ const LABELS: [RegExp, string][] = [
   [/CLIENT_ID$/, 'Client ID'],
   [/_TOKEN$/, 'Token'],
   [/_TOKEN_ID$/, 'API token ID'],
-  [/^PUSHOVER_TOKEN$/, 'Application token'],
-  [/^PUSHOVER_USER_KEY$/, 'User key'],
   [/^SMTP_HOST$/, 'Mail server'],
   [/^SMTP_FROM$/, 'From address'],
   [/^SMTP_TO$/, 'Send to'],
@@ -128,6 +129,9 @@ const LABELS: [RegExp, string][] = [
   [/_BROADCAST$/, 'Broadcast address'],
   [/VERIFY_TLS$/, 'Check the certificate'],
 ];
+
+/** Yes/No settings the server treats as Yes when nothing is set; the form shows them that way. */
+export const DEFAULT_ON = new Set(['SMTP_VERIFY_TLS']);
 
 export function fieldLabel(name: string): string {
   return LABELS.find(([re]) => re.test(name))?.[1] ?? name.replace(/_/g, ' ').toLowerCase();

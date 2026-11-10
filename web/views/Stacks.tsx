@@ -9,7 +9,7 @@ import { HealthStrip } from '../components/Squares.tsx';
 import { Icon } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
 import { pct, plural, size } from '../lib/format.ts';
-import { containerMap, ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
+import { containerMap, ctrState, type JackState, serviceFor, statusLine } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
@@ -39,9 +39,11 @@ export function Stacks() {
 
   if (!snap) return null;
   const all = [...containerMap(snap).values()];
+  // An update waiting, or a newer copy already pulled and not yet running: both are Update's job.
+  const hasUpdate = (c: Container) => !!snap.updates[c.name] || !!c.staleImage;
   const match = (c: Container) => {
     const t = q.trim().toLowerCase();
-    if (onlyUpdates && !snap.updates[c.name]) return false;
+    if (onlyUpdates && !hasUpdate(c)) return false;
     return !t || c.name.includes(t) || (c.project ?? '').includes(t) || c.image.toLowerCase().includes(t);
   };
 
@@ -74,9 +76,20 @@ export function Stacks() {
     });
   }
 
-  const totalCpu = Object.values(s).reduce((n, x) => n + x.cpu, 0);
-  const totalMem = Object.values(s).reduce((n, x) => n + x.memBytes, 0);
-  const running = all.filter((c) => c.state === 'running').length;
+  // Totals cover the stacks this page shows; hidden ones are named as hidden.
+  const shownCtrs = all.filter((c) => !hiddenStacks.has(c.project ?? LOOSE));
+  const hiddenCount = [...hiddenStacks].filter((h) => all.some((c) => (c.project ?? LOOSE) === h)).length;
+  const totalCpu = shownCtrs.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
+  const totalMem = shownCtrs.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
+  const running = shownCtrs.filter((c) => c.state === 'running').length;
+  const updateCount = shownCtrs.filter(hasUpdate).length;
+  // The chip keeps the sort; only the filter changes.
+  const toggleUpdates = () => {
+    const next = new URLSearchParams(params);
+    if (onlyUpdates) next.delete('updates');
+    else next.set('updates', '1');
+    setParams(next);
+  };
 
   return (
     <div className="page stacks">
@@ -104,15 +117,21 @@ export function Stacks() {
             </button>
           ))}
         </div>
-        {Object.keys(snap.updates).length > 0 && (
-          <button type="button" className="chip" aria-pressed={onlyUpdates} onClick={() => setParams(onlyUpdates ? {} : { updates: '1' })}>
-            {onlyUpdates ? 'Showing' : 'Show'} {plural(Object.keys(snap.updates).length, 'image update')}
+        {/* Stays while the filter is on, even with nothing left, so there's always a way out. */}
+        {(updateCount > 0 || onlyUpdates) && (
+          <button type="button" className="chip" aria-pressed={onlyUpdates} onClick={toggleUpdates}>
+            {onlyUpdates ? (updateCount ? `Showing ${plural(updateCount, 'image update')}` : 'Show every container') : `Show ${plural(updateCount, 'image update')}`}
           </button>
         )}
       </div>
+      {/* A breadcrumb to a stack you've hidden says so, instead of landing nowhere. */}
+      {hash && hiddenStacks.has(decodeURIComponent(hash.slice(1))) && (
+        <p className="update-notice">The {decodeURIComponent(hash.slice(1))} stack is hidden on this page. Customize shows it again.</p>
+      )}
       <p className="page-lede">
-        {plural(groups.size, 'stack')}, {running} of {all.length} containers running
+        {plural(groups.size, 'stack')}, {running} of {shownCtrs.length} containers running
         {stats ? `, using ${pct(totalCpu)} of the CPU and ${size(totalMem)} of memory.` : '.'}
+        {hiddenCount > 0 && ` ${plural(hiddenCount, 'stack')} hidden; Customize shows ${hiddenCount === 1 ? 'it' : 'them'}.`}
       </p>
 
       <div className="stack-cols" aria-hidden>
@@ -126,9 +145,10 @@ export function Stacks() {
       {ordered.map(([project, list]) => {
         const cpu = list.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
         const mem = list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
-        const quiet = list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some((c) => snap.updates[c.name]);
+        const quiet = list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some(hasUpdate);
         const isOpen = opened.has(project);
-        const running = list.filter((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))).length;
+        // Says what runs: a stopped or finished container isn't counted as running.
+        const running = list.filter((c) => c.state === 'running').length;
         return (
           <section className={`stack ${quiet ? 'is-quiet' : ''} ${isOpen ? 'is-open' : ''}`} key={project} id={`stack-${project}`}>
             <header className="stack-head">
@@ -157,7 +177,7 @@ export function Stacks() {
                 const st = ctrState(c, svc);
                 const load = s[c.name];
                 // Updating from the row, where the update is the reason the row is here.
-                const act = onlyUpdates && !!snap.updates[c.name] && !snap.readOnly && !!snap.features?.includes('updates');
+                const act = onlyUpdates && hasUpdate(c) && !snap.readOnly && !!snap.features?.includes('updates');
                 return (
                   <li key={c.name} className={act ? 'has-act' : undefined}>
                     <Link to={`/c/${c.name}`} className="srow" data-state={st}>
@@ -165,10 +185,10 @@ export function Stacks() {
                         <span className="srow-icon">{svc?.icon ? <Icon name={svc.name} icon={svc.icon} size={18} /> : <span className="dot" />}</span>
                         <span className="srow-name">{c.name}</span>
                         {svc && svc.name.toLowerCase() !== c.name && <span className="srow-app">{svc.name}</span>}
-                        {snap.updates[c.name] && !act && <span className="tag tag-update" title="A newer image is out">update</span>}
+                        {hasUpdate(c) && !act && <span className="tag tag-update" title={c.staleImage ? 'A newer copy is downloaded; Update switches to it' : 'A newer image is out'}>update</span>}
                       </span>
                       <HealthStrip states={uptime?.containers[c.name]} days={uptime?.days ?? []} label={`${c.name}, last 14 days`} />
-                      <span className="srow-status">{st === 'idle' && svc?.expectStopped ? 'Scheduled job, finished' : c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
+                      <span className="srow-status">{statusLine(c, svc)}</span>
                       <span className="srow-num">{load ? pct(load.cpu) : ''}</span>
                       <span className="srow-num">{load ? size(load.memBytes) : ''}</span>
                     </Link>
@@ -185,6 +205,9 @@ export function Stacks() {
         );
       })}
       {!all.length && <p className="empty">{snap.sources.docker?.ok ? 'No containers.' : "Can't see Docker right now."}</p>}
+      {all.length > 0 && ordered.length === 0 && (
+        <p className="empty">{onlyUpdates && !updateCount ? 'No image updates left. Every container runs its newest image.' : 'Nothing matches that filter.'}</p>
+      )}
     </div>
   );
 }

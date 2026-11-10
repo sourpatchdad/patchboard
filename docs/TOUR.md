@@ -40,8 +40,9 @@ tab title counts what needs you, as in "(2) Patchboard". When nothing does,
 it sits beside "All quiet" and keeps watch. Settings, Look hides it.
 
 **Needs attention** sits in Home's header, with problem links wrapping under the
-status line, worst first, with three showing and the rest a click away. To
-keep it as a card on the board instead, open Arrange board, then its settings,
+status line, worst first, with three showing and the rest in a panel a
+click away, so the board never moves. To keep it as a card on the board
+instead, open Arrange board, then Tools, then Needs attention settings,
 and pick A card on the board. Hiding header status also shows this widget
 as a card on this device, without changing its saved setting.
 
@@ -152,7 +153,9 @@ columns, or start over from a layout. Drag into a column, above or below
 its neighbors; the layout updates while you drag. Hover or focus a card for
 its controls, or choose a Column in its settings. Editing keeps the full
 card preview and the same fitted counts; the arrange bar floats at the
-bottom instead of pushing the board down. Fit the window trims lists until the
+bottom instead of pushing the board down. Its row holds the everyday moves,
+Add widget, Cancel and Save; columns, Fit, layouts and Reset sit under
+Tools. Fit the window trims lists until the
 board ends at the bottom of the screen. Recently added keeps every selected
 poster in one horizontal row, rather than losing titles to fit. Right now
 folds to one line per service before the other lists lose much. If lists

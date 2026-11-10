@@ -38,7 +38,7 @@ one click.
   color. Paused and buffering states keep explicit text. Previews show
   artwork, never imply live video, and omit progress the service does not
   report. Hover, Enter (or Down) and a tap reach the same details; Tab
-  always moves on.
+  always moves on. A playing bar moves every second; a paused one holds.
 - **Everything goes somewhere.** A row, a number or a poster that leads
   nowhere doesn't earn its space.
 - **Compact header.** Status, server graphs, and time above weather form
@@ -74,7 +74,8 @@ one click.
 - **One pattern per job.** Every page customizes through the same panel;
   every list sorts through the same control; sorts live in the URL. Arrange board
   keeps the viewed card sizes and fitted item counts, with floating controls
-  and a bottom arrange bar. Hidden header widgets stay out of the grid.
+  and a bottom arrange bar: everyday moves in one row, the rest under
+  Tools with Reset apart from Save. Hidden header widgets stay out of the grid.
   Dragging assigns a starting column and relative vertical position, so
   neighboring columns stay stable; narrower screens clamp the column.
   Dotted editing outlines surround card content and leave the gutters clear.
@@ -99,7 +100,15 @@ one click.
   environment, and never travel to the browser.
 - **One adapter per integration,** each polling on its own schedule, each
   with a demo fixture of the same shape. One failing integration marks its
-  data stale; nothing else stops.
+  data stale; nothing else stops. A schedule can follow what's happening:
+  media servers and music poll every 5 seconds while someone plays
+  something and fall back to 15 or 20 when nobody does, and the slow parts
+  (new arrivals, next up) ride along at most once a minute.
+- **Live without weight.** Between polls the browser runs a playing
+  stream's position on at real speed, at most 30 seconds past the last
+  answer. A camera's frame refreshes every few seconds only while it's on
+  screen and the tab is in front; the server passes frames through without
+  holding them, so a camera costs bandwidth, not memory.
 - **Server-sent events** push changes to every open tab.
 - **SQLite** (`node:sqlite`) holds what integrations can't supply: container
   history, minute samples, the boards, the app layout, page settings, keys and
@@ -131,8 +140,9 @@ Every board widget wears one before its name: its integration's health, or
 for a widget built from several, whether Patchboard itself is live, so a
 dropped connection turns the whole board amber at once. Right now, Changes,
 Logs, a container's state line and every alert (Needs attention, weather,
-TrueNAS) use the same light at list size, in place of a colored stripe. A
-stop stays red only while it's unexplained: a container that runs again, a
+TrueNAS) use the same light at list size, in place of a colored stripe. An
+app's light follows the alerts that name it, so Home, Apps and Needs
+attention never disagree. A stop stays red only while it's unexplained: a container that runs again, a
 scheduled job, or one you stopped from Patchboard goes quiet. Color still
 means trouble; only the top bar's Live light is green.
 

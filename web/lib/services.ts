@@ -113,14 +113,21 @@ export function tidyDuration(s: string): string {
     .replace(/\bUp\b/, 'Up')
     // Docker's "Exited (1)" in plain words: a clean exit is just stopped.
     .replace(/^Exited \(0\)/, 'Stopped')
-    .replace(/^Exited \((\d+)\)/, 'Stopped (error $1)')
-    .trim();
+    .replace(/^Exited \((\d+)\)/, 'Stopped, exit code $1,')
+    .trim()
+    .replace(/,$/, '');
 }
 
 /** "Up 6 days (healthy)" -> "6 days"; problems keep Docker's wording, tidied. */
 export function shortStatus(c: Container): string {
   if (c.state === 'running' && c.health !== 'unhealthy') return tidyDuration(c.status.replace(/^Up\s+/, ''));
   return tidyDuration(c.status);
+}
+
+/** One wording for a container's state in every list: Stacks, Logs, a board card. */
+export function statusLine(c: Container, svc?: Service): string {
+  if (c.state !== 'running' && svc?.expectStopped) return 'Scheduled job, finished';
+  return c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c);
 }
 
 export function isExternal(href?: string): boolean {

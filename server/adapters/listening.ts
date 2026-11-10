@@ -62,13 +62,19 @@ export function audiobookshelfAdapter(): Adapter<ListeningData> {
     const [me, items] = await Promise.all([getJson<{ mediaProgress?: AbsProgress[] }>(`${url}/api/me`, { headers }), getJson<{ libraryItems?: AbsItem[] }>(`${url}/api/me/items-in-progress`, { headers })]);
     return absInProgress(me, items);
   });
+  let listening = false;
   return {
     id: 'audiobookshelf',
     label: 'Audiobookshelf',
-    intervalMs: 20 * SECOND,
+    // While someone listens, every 5 seconds; otherwise 20.
+    get intervalMs() {
+      return listening ? 5 * SECOND : 20 * SECOND;
+    },
     async fetch() {
       const [online, inProgress] = await Promise.all([getJson<Parameters<typeof fromAudiobookshelf>[0]>(`${url}/api/users/online`, { headers }), progress()]);
-      return { streams: fromAudiobookshelf(online), ...(inProgress ? { inProgress } : {}) };
+      const streams = fromAudiobookshelf(online);
+      listening = streams.length > 0;
+      return { streams, ...(inProgress ? { inProgress } : {}) };
     },
   };
 }
@@ -87,13 +93,19 @@ export function navidromeAdapter(): Adapter<ListeningData> {
     return new URLSearchParams({ u: username, t, s, v: '1.16.1', c: 'patchboard', f: 'json' });
   };
   const recent = every(2 * 60_000, async () => fromAlbumList(await getJson(`${url}/rest/getAlbumList2.view?${auth()}&type=recent&size=8`)));
+  let listening = false;
   return {
     id: 'navidrome',
     label: 'Navidrome',
-    intervalMs: 20 * SECOND,
+    // While someone listens, every 5 seconds; otherwise 20.
+    get intervalMs() {
+      return listening ? 5 * SECOND : 20 * SECOND;
+    },
     async fetch() {
       const [now, albums] = await Promise.all([getJson<Parameters<typeof fromSubsonic>[0]>(`${url}/rest/getNowPlaying.view?${auth()}`), recent()]);
-      return { streams: fromSubsonic(now), ...(albums ? { albums } : {}) };
+      const streams = fromSubsonic(now);
+      listening = streams.length > 0;
+      return { streams, ...(albums ? { albums } : {}) };
     },
   };
 }

@@ -2,7 +2,7 @@
 // served through /api/img/tautulli so the API key never reaches the browser.
 
 import type { LibraryCounts, Play, RecentItem, Stream, TautulliData } from '../../shared/types.ts';
-import { every } from './every.ts';
+import { cached, every } from './every.ts';
 import { config } from '../config.ts';
 import { getJson, request } from '../http.ts';
 import { type Adapter, SECOND } from './adapter.ts';
@@ -143,19 +143,27 @@ export function libraryCounts(libs: { section_type?: string; count?: string | nu
 export function tautulliAdapter(): Adapter<TautulliData> {
   const history = every(5 * 60_000, async () => fromHistory((await call<{ data: HistoryRow[] }>('get_history', '&length=15')).data ?? []));
   const library = every(5 * 60_000, async () => libraryCounts(await call<{ section_type?: string; count?: string; child_count?: string }[]>('get_libraries')));
+  // New arrivals change slowly; only "who is watching" follows the fast poll.
+  const fresh = cached(60_000, () => call<{ recently_added: Added[] }>('get_recently_added', '&count=30'));
+  let watching = false;
   return {
     id: 'tautulli',
     label: 'Plex',
-    intervalMs: 15 * SECOND,
+    // While someone watches, every 5 seconds so Right now keeps up; otherwise 15.
+    get intervalMs() {
+      return watching ? 5 * SECOND : 15 * SECOND;
+    },
     async fetch() {
-      const [activity, added, id, watched, lib] = await Promise.all([
+      const [activity, addedNow, id, watched, lib] = await Promise.all([
         call<{ sessions: Session[] }>('get_activity'),
-        call<{ recently_added: Added[] }>('get_recently_added', '&count=30'),
+        fresh(),
         serverId(),
         history(),
         library(),
       ]);
       const streams = activity.sessions.map(toTautulliStream);
+      watching = streams.length > 0;
+      const added = addedNow;
       const recent: RecentItem[] = added.recently_added.map((a) => {
         const ep = a.media_type === 'episode';
         const season = a.media_type === 'season';

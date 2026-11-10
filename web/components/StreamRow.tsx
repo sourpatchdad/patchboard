@@ -1,7 +1,7 @@
 // Playback stays compact on the board. Hover, focus or tap opens the details
 // in a portal, so a small widget never clips the preview.
 
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Stream } from '../../shared/types.ts';
 import type { MediaService } from '../lib/themes.ts';
@@ -19,7 +19,35 @@ function elapsed(seconds: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-export function StreamRow({ stream: s, service, label, href }: { stream: Stream; service: MediaService; label: string; href?: string }) {
+/**
+ * Between polls, a playing stream runs on at real speed, so its bar and time
+ * move every second instead of jumping when the next answer arrives. Paused
+ * and buffering streams hold still. It never runs more than 30 seconds past
+ * the last answer, so a service that stops reporting can't carry it far.
+ */
+export function useLivePosition(s: Stream): Stream {
+  const base = useRef({ key: '', at: 0 });
+  const key = `${s.positionSec}:${s.progress}:${s.state}`;
+  if (base.current.key !== key) base.current = { key, at: Date.now() };
+  const runs = s.state !== 'paused' && s.state !== 'buffering' && s.positionSec != null && !!s.durationSec;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!runs) return;
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible') setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(t);
+  }, [runs]);
+  if (!runs) return s;
+  const ahead = Math.min(30, Math.max(0, (now - base.current.at) / 1000));
+  const positionSec = Math.min(s.durationSec!, s.positionSec! + ahead);
+  return { ...s, positionSec, progress: (positionSec / s.durationSec!) * 100 };
+}
+
+/** `compact`: just the title, inline, for Right now folded by Fit; it opens the same details. */
+export function StreamRow({ stream: reported, service, label, href, compact = false }: { stream: Stream; service: MediaService; label: string; href?: string; compact?: boolean }) {
+  const s = useLivePosition(reported);
+  const Wrap = compact ? 'span' : 'div';
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const card = useRef<HTMLDivElement>(null);
@@ -96,7 +124,7 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
   }, [open]);
 
   return (
-    <div className="stream playback" data-service={service}>
+    <Wrap className={`stream playback ${compact ? 'is-compact' : ''}`} data-service={service}>
       <button
         ref={trigger}
         type="button"
@@ -140,11 +168,17 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
           }
         }}
       >
-        <span className="stream-line">
-          <span className="stream-title">{s.title}{s.subtitle && <span className="stream-sub"> <Episode text={s.subtitle} /></span>}</span>
-          <span className="stream-user">{s.user}{s.state !== 'playing' && `, ${s.state}`}{s.transcode && ', transcoding'}</span>
-        </span>
-        {progress !== null && <Meter label={`${s.title} playback progress`} value={progress} />}
+        {compact ? (
+          <span className="stream-title">{s.title}</span>
+        ) : (
+          <>
+            <span className="stream-line">
+              <span className="stream-title">{s.title}{s.subtitle && <span className="stream-sub"> <Episode text={s.subtitle} /></span>}</span>
+              <span className="stream-user">{s.user}{s.state !== 'playing' && `, ${s.state}`}{s.transcode && ', transcoding'}</span>
+            </span>
+            {progress !== null && <Meter label={`${s.title} playback progress`} value={progress} />}
+          </>
+        )}
       </button>
       {open && createPortal(
         <div
@@ -156,9 +190,22 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
           data-service={service}
           style={place}
           onKeyDown={(e) => {
-            if (e.key === 'Tab' && e.shiftKey && e.target === card.current?.querySelector('button')) {
+            if (e.key !== 'Tab' || !card.current) return;
+            // The preview sits at the end of the page, so Tab would fall off it.
+            // Shift+Tab from its first control goes back to the row; Tab from its
+            // last goes on to whatever follows the row, as if it sat in place.
+            const inside = [...card.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)')];
+            if (e.shiftKey && e.target === inside[0]) {
               e.preventDefault();
               close(true);
+            } else if (!e.shiftKey && e.target === inside[inside.length - 1]) {
+              e.preventDefault();
+              const all = [...document.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), select, textarea, [tabindex]:not([tabindex="-1"])')].filter(
+                (el) => el.tabIndex >= 0 && !card.current!.contains(el) && el.getClientRects().length > 0 && !el.closest("[inert]"),
+              );
+              const after = all.find((el) => trigger.current && trigger.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING && !trigger.current.contains(el));
+              close();
+              (after ?? trigger.current)?.focus();
             }
           }}
           onPointerMove={rememberPointer}
@@ -191,6 +238,6 @@ export function StreamRow({ stream: s, service, label, href }: { stream: Stream;
           {href && <a className="section-action playback-open" href={href} target="_blank" rel="noreferrer">Open {label}</a>}
         </div>, document.body,
       )}
-    </div>
+    </Wrap>
   );
 }

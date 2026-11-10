@@ -12,6 +12,7 @@ import { numberText, useAppNumbers } from '../lib/appstats.ts';
 import { containerMap, isExternal } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { Icon } from './ui.tsx';
+import { alertLevelFor } from '../lib/attention.ts';
 
 export type TileSort = 'catalog' | 'name' | 'status';
 export const TILE_SORTS = ['catalog', 'status', 'name'] as const;
@@ -91,6 +92,8 @@ export function TileLegend() {
 }
 
 function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
+  const { snap } = useStore();
+  const raised = alertLevelFor(snap?.alerts, s);
   const body = (
     <>
       <span className="tile-icon">
@@ -122,7 +125,7 @@ function Tile({ s, stat }: { s: Service; stat: ReturnType<typeof appStat> }) {
       </span>
     );
   return (
-    <li className="tile" data-tone={stat.tone}>
+    <li className="tile" data-tone={(stat.tone === 'ok' || stat.tone === 'none') && raised ? raised : stat.tone}>
       {main}
       {s.container && s.href && (
         <Link className="tile-more" to={`/c/${s.container}`} aria-label={`${s.name} details`} title="Container details">

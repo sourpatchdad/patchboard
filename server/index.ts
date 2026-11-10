@@ -779,7 +779,8 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
 
 /** "Fill in the address and API key first.": the fields' own names, not environment variables. */
 function fillIn(gaps: string[]): string {
-  const names = [...new Set(gaps.map((g) => fieldLabel(g).replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())))];
+  // "Address" reads "the address"; a name (Goodreads, Patchboard) keeps its capital.
+  const names = [...new Set(gaps.map((g) => fieldLabel(g)).map((l) => (/^(Goodreads|Patchboard|Tailnet)/.test(l) ? l : l.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase()))))];
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
   return `Fill in the ${list} first.`;
 }
@@ -954,7 +955,7 @@ app.post('/api/containers/:name/update', async (c) => {
     hub.refreshChanges();
   };
   // An update recreates the container and starts it, stopped or not, as compose does.
-  if (config.demo) return c.json(startDemoUpdate(name, () => (demoContainerAction(name, 'start'), done())));
+  if (config.demo) return c.json(startDemoUpdate(name, () => (demoContainerAction(name, 'start', 0), done())));
   // "Answering" is checked live during the wait, not from the last minute's result.
   const svc = getCatalog().groups.flatMap((g) => g.services).find((s) => s.container === name);
   const url = svc ? checkUrl(svc) : null;
@@ -982,6 +983,11 @@ app.post('/api/jobs/:id/rollback', async (c) => {
   try {
     return c.json(
       await (config.demo ? startDemoRollback : startRollback)(c.req.param('id'), () => {
+        // The demo's container comes back recreated, as a real one does.
+        if (config.demo) {
+          const ctr = getJob(c.req.param('id'))?.container;
+          if (ctr) demoContainerAction(ctr, 'start', 0);
+        }
         void hub.pollNow('docker');
         hub.refreshChanges();
       }),
@@ -1437,7 +1443,7 @@ app.get('/api/img/:kind{jellyfin|emby}', async (c) => {
 });
 
 // Frigate pictures: a camera's newest frame (?camera=) or an event's
-// thumbnail (?event=). Frames change, so they're cached for seconds.
+// thumbnail (?event=). Frames stream straight through, never held in memory.
 app.get('/api/img/frigate', async (c) => {
   const q = { camera: c.req.query('camera'), event: c.req.query('event') };
   if (config.demo) {
@@ -1450,7 +1456,8 @@ app.get('/api/img/frigate', async (c) => {
     return new Response(res.body, {
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
-        'Cache-Control': q.camera ? 'private, max-age=10' : 'private, max-age=86400',
+        // A camera's frame is new every few seconds; an event's thumbnail never changes.
+        'Cache-Control': q.camera ? 'no-store' : 'private, max-age=86400',
       },
     });
   } catch {

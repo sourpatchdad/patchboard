@@ -60,8 +60,10 @@ export function ContainerPage() {
   const now = useNow(30_000);
   const ctr = containerMap(snap).get(name);
   const svc = serviceFor(snap, name);
-  // Refetched when Docker reports a new state, so start and stop times stay true.
-  const detail = useJson<ContainerDetail>(`/api/containers/${encodeURIComponent(name)}?s=${encodeURIComponent(ctr?.status ?? '')}`, 30_000);
+  const upd = useUpdateJob(name);
+  // Refetched when Docker reports a new state or a job ends, so start and stop times stay true.
+  const jobEnd = upd.last && upd.last.status !== 'running' ? upd.last.id : '';
+  const detail = useJson<ContainerDetail>(`/api/containers/${encodeURIComponent(name)}?s=${encodeURIComponent(ctr?.status ?? '')}&j=${jobEnd}`, 30_000);
   // Start, stop or restart sent: the state line says so until Docker reports it done.
   const [pending, setPending] = useState<{ action: Action; status: string; stuck: boolean } | null>(null);
   // Sent from Jump to: pick it up here and follow it the same way.
@@ -84,7 +86,6 @@ export function ContainerPage() {
   const runbook = useJson<{ available: boolean; sections: RunbookSection[] }>(`/api/runbook/${encodeURIComponent(name)}`);
   const { data: stats } = useSource<StatsData>('stats');
   const uptime = useJson<UptimeData>('/api/uptime?days=30', 5 * 60_000).data;
-  const upd = useUpdateJob(name);
   const nums = useAppNumbers();
 
   if (!snap) return null;
@@ -101,6 +102,7 @@ export function ContainerPage() {
   }
 
   const state = ctrState(ctr, svc);
+  const jobRunning = upd.job?.status === 'running';
   const problem = state === 'down' || state === 'warn';
   const d = detail.data;
   const live = stats?.containers[name];
@@ -214,10 +216,14 @@ export function ContainerPage() {
       </header>
 
       <div className="detail-state-row">
-        <p className={`detail-state tone-${pending ? 'busy' : problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`} aria-live="polite" tabIndex={-1} id="ctr-state">
+        <p className={`detail-state tone-${pending || jobRunning ? 'busy' : problem ? (state === 'down' ? 'crit' : 'warn') : 'ok'}`} aria-live="polite" tabIndex={-1} id="ctr-state">
           <span className="status-led" aria-hidden />
           <span>
-            {pending
+            {jobRunning
+              ? upd.job!.kind === 'rollback'
+                ? `Rolling back to ${upd.job!.to ?? 'the previous image'}...`
+                : 'Updating...'
+              : pending
               ? pending.stuck
                 ? `${VERB[pending.action][0]} sent, and Docker still reports it ${ctr.state === 'running' ? 'running' : 'stopped'} after 30 seconds.`
                 : `${VERB[pending.action][1]}...`
@@ -226,10 +232,11 @@ export function ContainerPage() {
           {number && <span className={`detail-number tone-${number.tone}`}>{number.text}</span>}
         </p>
         {/* Stopped: Start comes first, before Update. */}
-        <div className={`ctr-actions-wrap ${ctr.state === 'running' || ctr.state === 'restarting' ? '' : 'is-stopped'}`}>
+        {/* Stopped: Start leads as the main action, except for a job that runs on a schedule. */}
+        <div className={`ctr-actions-wrap ${ctr.state === 'running' || ctr.state === 'restarting' || svc?.expectStopped ? '' : 'is-stopped'}`}>
           {(() => {
             const update = !snap.readOnly && detail.data?.update?.ok && (
-              <UpdateButton key="update" name={name} busy={upd.job?.status === 'running'} locked={!!pending && !pending.stuck} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
+              <UpdateButton key="update" name={name} busy={jobRunning} busyLabel={upd.job?.kind === 'rollback' ? 'Rolling back...' : undefined} locked={!!pending && !pending.stuck} waiting={!!snap.updates[name] || !!ctr.staleImage} onStart={() => void upd.start()} />
             );
             const running = ctr.state === 'running' || ctr.state === 'restarting';
             const actions = !snap.readOnly && <ContainerActions key="actions" name={name} running={running} self={name === (snap.self?.container ?? 'patchboard')} onSent={(action) => {
@@ -243,7 +250,7 @@ export function ContainerPage() {
         </div>
       </div>
 
-      <UpdateNotice name={name} stale={ctr.staleImage} />
+      <UpdateNotice name={name} stale={ctr.staleImage} busy={jobRunning} />
       {!upd.job && <UpdateUndo job={upd.last} onRollback={(id) => void upd.rollback(id)} />}
 
       <div className="health-row">
@@ -548,11 +555,14 @@ function CtrLinks({ names }: { names: string[] }) {
 function History({ name, now }: { name: string; now: number }) {
   const { snap } = useStore();
   const events = snap?.changes.filter((c) => c.subject === name) ?? [];
+  // As on Home: a stop is red only while it's unexplained (not a scheduled job, not over).
+  const ctr = containerMap(snap).get(name);
+  const over = !ctr || ctrState(ctr, serviceFor(snap, name)) !== 'down';
   if (!events.length) return <Empty>No state changes in the last 48 hours.</Empty>;
   return (
     <ul className="changes">
       {events.map((c) => (
-        <li key={c.id} className={`change change-${c.kind.split('.')[1]}`}>
+        <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && over ? 'is-over' : ''}`}>
           <div>
             <span className="change-text">{c.kind === 'container.action' ? (actionWord[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'Updated' : changeText[c.kind]}</span>
             <time>{ago(c.at, now)}</time>

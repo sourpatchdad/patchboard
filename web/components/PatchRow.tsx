@@ -8,6 +8,7 @@ import { useStore } from '../lib/store.tsx';
 import { checkFor, checkText, containerMap, isExternal, jackState, isParked, jackStateText, tapeLabel } from '../lib/services.ts';
 import { Roving } from './Roving.tsx';
 import { Icon } from './ui.tsx';
+import { alertLevelFor } from '../lib/attention.ts';
 
 export function PatchRow({ names = false }: { names?: boolean }) {
   const { snap } = useStore();
@@ -23,9 +24,13 @@ export function PatchRow({ names = false }: { names?: boolean }) {
           <Roving className="bay-jacks">
             {g.services.map((s) => {
               const ck = checkFor(snap, s.name);
-              const state = jackState(s, containers, ck);
+              // A running app with a problem named on it reads amber or red, as Needs attention has it.
+              const raised = alertLevelFor(snap.alerts, s);
+              const base = jackState(s, containers, ck);
+              const state = base === 'up' && raised ? (raised === 'crit' ? 'down' : 'warn') : base;
               const words = state === 'idle' && isParked(s.container) ? 'stopped from Patchboard' : jackStateText[state];
-              const label = `${s.name}, ${ck && !ck.ok ? checkText(ck) : words}${ck?.ok ? `, ${checkText(ck)}` : ''}`;
+              const live = numberText(nums[s.name])?.text;
+              const label = `${s.name}${live ? `: ${live}` : ''}, ${ck && !ck.ok ? checkText(ck) : words}${ck?.ok ? `, ${checkText(ck)}` : ''}`;
               const inner = (
                 <>
                   <span className="jack-socket">

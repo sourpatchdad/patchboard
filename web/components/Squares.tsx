@@ -81,7 +81,8 @@ export function HourHeatmap({ series, max = 100, label, unit = '%' }: { series: 
             <i
               key={h}
               className={`hq hq-${level(v)}`}
-              title={v == null ? `${dayName(row.day)}, ${h}:00: no data` : `${dayName(row.day)}, ${h}:00: ${v.toFixed(1)}${unit}`}
+              // The same clock as the axis above it.
+              title={`${dayName(row.day)}, ${new Date(2000, 0, 1, h).toLocaleTimeString(undefined, { hour: 'numeric' })}: ${v == null ? 'no data' : `${v.toFixed(1)}${unit}`}`}
             />
           ))}
         </div>

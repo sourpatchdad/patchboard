@@ -11,6 +11,7 @@ import { Palette } from './Palette.tsx';
 import { SignIn } from '../views/SignIn.tsx';
 import { HELP } from '../lib/docs.ts';
 import { needsYou } from '../lib/attention.ts';
+import { serviceFor } from '../lib/services.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -58,6 +59,8 @@ export function Shell() {
   const [help, setHelp] = useState(false);
   // Every board counts as Home in the nav.
   const location = useLocation();
+  // Any change of page (a link in it, Back) closes the More sheet.
+  useEffect(() => setMoreOpen(false), [location.pathname]);
   const navType = useNavigationType();
   // Back and Forward return to where you were. Pages load in pieces, so the
   // position is retried until the page is tall enough to hold it.
@@ -162,9 +165,11 @@ export function Shell() {
   // Each page names itself in the tab, so history and tabs tell them apart.
   useEffect(() => {
     const p = location.pathname;
-    const page = p === '/' || p.startsWith('/b/') ? '' : p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : p.startsWith('/logs') ? 'Logs' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p];
+    // A container page uses its app's name, as its heading does.
+    const ctr = p.startsWith('/c/') ? decodeURIComponent(p.slice(3)) : '';
+    const page = p === '/' || p.startsWith('/b/') ? '' : ctr ? (serviceFor(snap, ctr)?.name ?? ctr) : p.startsWith('/logs') ? 'Logs' : ({ '/server': 'Server', '/stacks': 'Stacks', '/reading': 'Reading', '/upcoming': 'Upcoming', '/weather': 'Weather', '/apps': 'Apps', '/settings': 'Settings' } as Record<string, string>)[p];
     if (page !== undefined) setPageName(page);
-  }, [location.pathname]);
+  }, [location.pathname, !!snap]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

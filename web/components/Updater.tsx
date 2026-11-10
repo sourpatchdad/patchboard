@@ -15,6 +15,23 @@ import { Section } from './ui.tsx';
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 
 /** The newest job for this container, followed live while it runs. */
+/** Jobs whose panel was dismissed, on this device: coming back shows the one line, not the panel again. */
+const DISMISSED = 'pb-jobs-dismissed';
+const dismissedJobs = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(DISMISSED) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+};
+const rememberDismissed = (id: string) => {
+  try {
+    localStorage.setItem(DISMISSED, JSON.stringify([id, ...dismissedJobs().filter((x) => x !== id)].slice(0, 20)));
+  } catch {
+    // Private mode: it's dismissed for this visit.
+  }
+};
+
 export function useUpdateJob(name: string) {
   const [job, setJob] = useState<UpdateJob | null>(null);
   const [error, setError] = useState('');
@@ -41,6 +58,7 @@ export function useUpdateJob(name: string) {
       if (!j) return;
       setJob(j);
       if (j.status === 'running') stop = follow(j.id);
+      else if (dismissedJobs().includes(j.id)) setHidden(true);
     })();
     return () => stop?.();
   }, [name, follow]);
@@ -65,7 +83,10 @@ export function useUpdateJob(name: string) {
     error,
     start: () => post(`/api/containers/${encodeURIComponent(name)}/update`),
     rollback: (id: string) => post(`/api/jobs/${id}/rollback`),
-    dismiss: () => setHidden(true),
+    dismiss: () => {
+      if (job) rememberDismissed(job.id);
+      setHidden(true);
+    },
   };
 }
 
@@ -90,16 +111,16 @@ export function UpdateUndo({ job, onRollback }: { job: UpdateJob | null; onRollb
 
 /** Update, as a press and hold: recreating takes the container down for a moment. It stands out when an update waits. */
 /** `busy`: this update is running. `locked`: something else is (a start, a stop), so it waits without claiming to update. */
-export function UpdateButton({ busy, locked = false, onStart, waiting = false }: { name: string; busy: boolean; locked?: boolean; onStart: () => void; waiting?: boolean }) {
+export function UpdateButton({ busy, busyLabel = 'Updating...', locked = false, onStart, waiting = false }: { name: string; busy: boolean; busyLabel?: string; locked?: boolean; onStart: () => void; waiting?: boolean }) {
   return (
     <HoldButton className={waiting ? 'button board-save' : 'button button-quiet'} disabled={busy || locked} hint="Hold to update" onConfirm={onStart}>
-      {busy ? 'Updating...' : 'Update'}
+      {busy ? busyLabel : 'Update'}
     </HoldButton>
   );
 }
 
 /** One line under a container's state when it has an update waiting, or a newer copy already pulled. */
-export function UpdateNotice({ name, stale }: { name: string; stale?: boolean }) {
+export function UpdateNotice({ name, stale, busy = false }: { name: string; stale?: boolean; busy?: boolean }) {
   const { snap } = useStore();
   const now = useNow(60_000);
   const u = snap?.updates[name];
@@ -114,7 +135,8 @@ export function UpdateNotice({ name, stale }: { name: string; stale?: boolean })
           What changed
         </a>
       )}
-      {!ro && (
+      {/* Not while an update runs: it would clear the mark mid-way. */}
+      {!ro && !busy && (
         <button
           type="button"
           className="text-button"

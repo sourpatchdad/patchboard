@@ -16,3 +16,19 @@ export function every<T>(ms: number, load: () => Promise<T>): () => Promise<T | 
     return last;
   };
 }
+
+/**
+ * A good answer is kept for `ms`; a failure is the poll's failure. For data
+ * the integration can't work without, where a wrong route must show rather
+ * than hide behind an old answer.
+ */
+export function cached<T>(ms: number, load: () => Promise<T>): () => Promise<T> {
+  let at = 0;
+  let last: { value: T } | undefined;
+  return async () => {
+    if (last && Date.now() - at < ms) return last.value;
+    last = { value: await load() };
+    at = Date.now();
+    return last.value;
+  };
+}

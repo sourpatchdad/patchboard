@@ -101,6 +101,15 @@ export function Feeds() {
     }
   }, [feedId, since, query]);
 
+  // New articles arrive on their own: every two minutes while the tab is in
+  // front, never while an article is open, so nothing moves under you.
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible' && !selectedId) void load(catId);
+    }, 120_000);
+    return () => clearInterval(t);
+  }, [load, catId, selectedId]);
+
   // Search as you type, after a pause.
   useEffect(() => {
     if (typed === query) return;
@@ -196,10 +205,20 @@ export function Feeds() {
   }, [selectedId, data, read, kept, markRead]);
 
   useEffect(() => {
+    let gAt = 0;
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       if (document.querySelector('.palette')) return;
+      // "g k" and "g u" go to pages: the key after g belongs to the shortcut, not to Reading.
+      if (e.key === 'g') {
+        gAt = Date.now();
+        return;
+      }
+      if (Date.now() - gAt < 1200) {
+        gAt = 0;
+        return;
+      }
       const idx = visible.findIndex((x) => x.id === selectedId);
       if (e.key === 'j' || e.key === 'k') {
         select(visible[e.key === 'j' ? Math.min(idx + 1, visible.length - 1) : Math.max(idx - 1, 0)]?.id ?? null);
@@ -235,6 +254,9 @@ export function Feeds() {
 
   // Miniflux's own count, less what you've opened here since loading.
   const total = data ? Math.max(0, data.total - [...read].filter((id) => data.entries.some((e) => e.id === id)).length) : null;
+  // Each category's count drops as you read, the same way the total does.
+  const unreadIn = (c: { title: string; unread: number }) =>
+    Math.max(0, c.unread - (data?.entries.filter((e) => e.category === c.title && read.has(e.id)).length ?? 0));
   const unreadShown = visible.filter((e) => !read.has(e.id));
   const allFeeds = [...new Set([...(data?.entries ?? []).map((e) => e.feed), ...(fp?.hideFeeds ?? [])])].sort();
   const allCats = [...new Set([...(data?.categories ?? []).map((c) => c.title), ...(fp?.hideCategories ?? [])])].sort();
@@ -261,8 +283,8 @@ export function Feeds() {
               All
             </button>
             {cats.map((c) => (
-              <button key={c.id} type="button" role="tab" aria-selected={c.title === category} className="chip" onClick={() => setCategory(c.title)} disabled={!c.unread && c.title !== category}>
-                {c.title} <span className="chip-count">{count(c.unread)}</span>
+              <button key={c.id} type="button" role="tab" aria-selected={c.title === category} className="chip" onClick={() => setCategory(c.title)} disabled={!unreadIn(c) && c.title !== category}>
+                {c.title} <span className="chip-count">{count(unreadIn(c))}</span>
               </button>
             ))}
           </div>

@@ -86,7 +86,7 @@ export function DownloadsWidget() {
           {rowsFor(c.id).map(({ item, canAct }) => (
             <li key={`${c.id}:${item.id}`} className={`dl-row is-${item.state}`}>
               <span className="dl-name" title={item.name}>
-                {item.name}
+                {breakable(item.name)}
               </span>
               <span className="dl-status">{STATUS[item.state] || eta(item.etaSec) || speed(item.speed)}</span>
               {!ro && canAct && (
@@ -100,7 +100,7 @@ export function DownloadsWidget() {
                       Pause
                     </button>
                   )}
-                  <HoldButton className="text-button" danger label={`Remove ${item.name}`} hint="Hold to remove. The files stay." onConfirm={() => void act(item.id, `/api/downloads/${c.id}/items/${encodeURIComponent(item.id)}/remove`, `Removed ${item.name} from ${c.label}. The files stay.`)}>
+                  <HoldButton className="text-button req-quiet" danger label={`Remove ${item.name}`} hint="Hold to remove. The files stay." onConfirm={() => void act(item.id, `/api/downloads/${c.id}/items/${encodeURIComponent(item.id)}/remove`, `Removed ${item.name} from ${c.label}. The files stay.`)}>
                     Remove
                   </HoldButton>
                 </span>
@@ -119,12 +119,12 @@ export function DownloadsWidget() {
           {stuck.map((q: ArrQueueItem & { app: 'sonarr' | 'radarr' }) => (
             <li key={`${q.app}:${q.id}`} className={`dl-row is-${q.state}`}>
               <span className="dl-name" title={q.title}>
-                {q.title}
+                {breakable(q.title)}
               </span>
               <span className="dl-status">{q.app === 'sonarr' ? 'Sonarr' : 'Radarr'}</span>
               {!ro && (
                 <span className="dl-actions">
-                  <HoldButton className="text-button" label={`Try another release of ${q.title}`} hint="Hold to blocklist this release and search for another" onConfirm={() => void act(`${q.app}-${q.id}`, `/api/arr/${q.app}/retry/${q.id}`)}>
+                  <HoldButton className="text-button" label={`Try another release of ${q.title}`} hint="Hold to blocklist this release and search for another" onConfirm={() => void act(`${q.app}-${q.id}`, `/api/arr/${q.app}/retry/${q.id}`, `Asked ${q.app === 'sonarr' ? 'Sonarr' : 'Radarr'} for another release of ${q.title}.`)}>
                     Try another release
                   </HoldButton>
                 </span>
@@ -142,4 +142,9 @@ export function DownloadsWidget() {
       {error && <p className="crit-text">{error}</p>}
     </Section>
   );
+}
+
+/** Release names break at their dots (The.Bear.S04E04), not mid-word. */
+function breakable(name: string): string {
+  return name.replace(/([._-])/g, '$1​');
 }

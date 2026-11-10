@@ -13,6 +13,7 @@ import { useJson } from '../lib/api.ts';
 import { containerMap } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { useLeaveGuard } from '../lib/leave.ts';
 
 export function Apps() {
   const { snap } = useStore();
@@ -20,6 +21,9 @@ export function Apps() {
   const [sort, setSort] = useUrlChoice<TileSort>('sort', TILE_SORTS, 'catalog');
   /** The working layout while editing; null otherwise. */
   const [draft, setDraft] = useState<Draft | null>(null);
+  /** The draft as editing began, to tell whether anything changed. */
+  const [began, setBegan] = useState('');
+  useLeaveGuard(!!draft && JSON.stringify(draft) !== began, 'Leave without saving your changes to the apps?');
   const [params, setParams] = useSearchParams();
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -36,7 +40,9 @@ export function Apps() {
     } catch {
       /* none yet */
     }
-    setDraft(draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]));
+    const start = draftFrom(snap.catalog, stats as Parameters<typeof draftFrom>[1]);
+    setBegan(JSON.stringify(start));
+    setDraft(start);
     // The Edit apps button just went away: hand focus to the editing toolbar.
     // Only when focus was lost with that button; never take it from somewhere you've moved on to.
     setTimeout(() => {
@@ -152,7 +158,12 @@ export function Apps() {
           initialForm={openForm}
         />
       ) : (
-        <AppTiles filter={q} size="large" sort={sort} legend />
+        <>
+          <AppTiles filter={q} size="large" sort={sort} legend />
+          {q.trim() && !snap.catalog.groups.some((g) => g.services.some((s) => match(s.name))) && !dock.length && !extra.length && (
+            <p className="empty">No apps match “{q.trim()}”.</p>
+          )}
+        </>
       )}
 
       {!draft && extra.length > 0 && (

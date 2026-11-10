@@ -7,6 +7,7 @@ import { HoldButton } from './Hold.tsx';
 import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
 import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
+import { DEFAULT_ON } from '../../shared/setup.ts';
 
 async function call(url: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const res = await fetch(url, {
@@ -123,7 +124,7 @@ export function IntegrationForm({
               {f.savedToo ? `Saved here too. You can remove ${f.name} from your .env.` : `Set in the environment (${f.name})`}
             </span>
           ) : f.kind === 'flag' ? (
-            <select className="field" value={values[f.name] || '0'} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
+            <select className="field" value={values[f.name] || (DEFAULT_ON.has(f.name) ? '1' : '0')} disabled={readOnly} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}>
               <option value="0">No</option>
               <option value="1">Yes</option>
             </select>

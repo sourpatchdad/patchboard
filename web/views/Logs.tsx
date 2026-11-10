@@ -8,7 +8,7 @@ import { Empty } from '../components/ui.tsx';
 import { containerMap } from '../lib/services.ts';
 import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
 import { useStore } from '../lib/store.tsx';
-import { ctrState, type JackState, serviceFor, shortStatus } from '../lib/services.ts';
+import { ctrState, type JackState, serviceFor, statusLine } from '../lib/services.ts';
 import { useUrlChoice } from '../lib/url.ts';
 
 type ListSort = 'problems' | 'name' | 'recent';
@@ -130,7 +130,7 @@ export function Logs() {
               })()}>
                 <span className="ctr-led" aria-hidden />
                 <span className="ctr-name">{c.name}</span>
-                <span className="ctr-status" title={c.status}>{c.state === 'running' && reason(c) ? reason(c) : c.state === 'running' && c.health !== 'unhealthy' ? `Up ${shortStatus(c)}` : shortStatus(c)}</span>
+                <span className="ctr-status" title={c.status}>{c.state === 'running' && reason(c) ? reason(c) : statusLine(c, serviceFor(snap, c.name))}</span>
               </Link>
             </li>
           ))}
@@ -176,6 +176,7 @@ export function Logs() {
                 if (atBottom !== follow) setFollow(atBottom);
               }}
             >
+              {filter.trim() && lines.length > 0 && shown.length === 0 && <p className="logs-note">No lines match “{filter.trim()}”.</p>}
               {shown.map((l) => (
                 <div key={l.n} className={lineClass(l)}>
                   {l.at && <time className="ll-time" dateTime={new Date(l.at).toISOString()} title={l.own}>{logTime(l.at, clock24)}</time>}
@@ -183,8 +184,13 @@ export function Logs() {
                 </div>
               ))}
               {status === 'failed' && <p className="logs-note">Couldn't read logs: {failure}</p>}
-              {status === 'ended' && <p className="logs-note">{lines.length ? 'It stopped here. These are its last lines. ' : 'It has written nothing yet. '}
-                  {name && <Link to={`/c/${encodeURIComponent(name)}`}>Start it from its page</Link>}</p>}
+              {status === 'ended' &&
+                (name && serviceFor(snap, name)?.expectStopped ? (
+                  <p className="logs-note">{lines.length ? 'It finished here. It runs on a schedule, so this is expected.' : 'It has written nothing yet. It runs on a schedule.'}</p>
+                ) : (
+                  <p className="logs-note">{lines.length ? 'It stopped here. These are its last lines. ' : 'It has written nothing yet. '}
+                    {name && <Link to={`/c/${encodeURIComponent(name)}`}>Start it from its page</Link>}</p>
+                ))}
               {status === 'streaming' && lines.length === 0 && <p className="logs-note">Waiting for output.</p>}
             </div>
           </>

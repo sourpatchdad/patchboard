@@ -1598,7 +1598,9 @@ a.jack:focus-visible {
   background: var(--raised);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 8px 12px;
+  /* The regular control height, so a field sits level with the buttons beside it. */
+  min-height: var(--ctl-h);
+  padding: 6px 12px;
   color: var(--ink);
   font: 400 15px/1.3 var(--f-body);
   min-width: 0;
@@ -3160,7 +3162,7 @@ a.vitals:hover .vital-label {
   .page.detail > .detail-head { display: contents; }
   .detail-id { order: 1; gap: 14px; }
   .page.detail > .detail-state-row { order: 2; }
-  .detail-actions { order: 3; margin: 4px 0 16px; }
+  .detail-actions { order: 3; margin: 4px 0 16px; position: relative; z-index: 1; }
 
   /* Runbook commands wrap rather than run off the side; Copy still copies them whole. */
   .rb-body pre {
@@ -8236,6 +8238,10 @@ button.ha-act:hover {
 
 .integration.is-open {
   background: color-mix(in srgb, var(--raised) 60%, transparent);
+  /* The panel reaches out past the column instead of pushing in, so its
+     name, status and link stay on the same edges as every other row. */
+  margin-left: -12px;
+  margin-right: -12px;
   padding-left: 12px;
   padding-right: 12px;
   border-radius: var(--radius-lg);
@@ -9506,7 +9512,7 @@ button.ha-act:hover {
   background: var(--raised);
   box-shadow: 0 8px 32px color-mix(in srgb, var(--bg) 75%, transparent);
 }
-.playback-preview-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.playback-preview-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .playback-service { color: var(--playback-accent); font-size: 13px; font-weight: 600; }
 .playback-preview-body { display: flex; align-items: start; gap: 14px; margin-bottom: 14px; }
 .playback-preview .poster { flex: none; width: 68px; height: 102px; border-radius: var(--radius); object-fit: cover; }
@@ -9756,7 +9762,7 @@ button.ha-act:hover {
 
 .dl-name {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -10100,7 +10106,8 @@ a.play:hover .play-title {
   /* Fit: six cameras share the row instead of leaving an empty seventh slot. */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 8px;
-  margin: 0;
+  /* The same space under the header rule as every other card. */
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -10501,18 +10508,36 @@ a.req-come:hover .req-title {
 
 /* Arranging on a phone: one short bar (name, Tools, Cancel, Save); the
    rest of the tools open from Tools, so the board stays in view. */
-.board-tools-toggle {
+/* Arranging: one row of everyday moves (name, Add widget, Tools, Cancel,
+   Save); columns, fit, layouts and reset open from Tools, with Reset at
+   the far end, away from Save. */
+.board-bar-tools:not(.is-open) {
+  display: none;
+}
+
+.board-bar-tools > :is(.hold, .text-button):last-child {
+  margin-left: auto;
+}
+
+.board-add-phone {
   display: none;
 }
 
 @media (max-width: 760px) {
   .board-tools-toggle {
-    display: inline-flex;
     margin-left: auto;
   }
 
-  .is-editing .board-bar-hint,
-  .board-bar-tools:not(.is-open) {
+  /* The phone's bar is one short row: Add widget moves under Tools. */
+  .board-add {
+    display: none;
+  }
+
+  .board-add-phone {
+    display: inline-flex;
+  }
+
+  .is-editing .board-bar-hint {
     display: none;
   }
 
@@ -10963,4 +10988,158 @@ a.req-title:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The header's "N more": the rest float in a panel under the link, so the
+   board below stays where it is. */
+.head-alert-more {
+  position: relative;
+}
+
+.head-alert-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: max-content;
+  min-width: 280px;
+  max-width: min(460px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--raised);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 70%, transparent);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* Narrow screens: the panel spans the status card instead of hanging off
+   the link, and still opens right under it. */
+@media (max-width: 760px) {
+  .home-header .masthead-status {
+    position: relative;
+  }
+
+  .head-alert-more {
+    position: static;
+  }
+
+  .head-alert-pop {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-top: 8px;
+  }
+}
+
+/* Playback bars glide between the per-second steps instead of ticking. */
+@media (prefers-reduced-motion: no-preference) {
+  .stream .meter > span,
+  .playback .meter > span {
+    transition: width 1s linear;
+  }
+}
+
+/* Touch: the small links and controls the audit found under 44 pixels get
+   the same invisible hit area as the rest, or grow for real where they're
+   controls in a row. */
+@media (pointer: coarse) {
+  .now-block h3 a,
+  .dl-client > a,
+  a.req-title,
+  .ww-alert,
+  .board-tab,
+  .ledger dd a,
+  .rb-body .copy,
+  .poster-link .poster-title {
+    position: relative;
+  }
+
+  .now-block h3 a::after,
+  .dl-client > a::after,
+  a.req-title::after,
+  .ww-alert::after,
+  .board-tab::after,
+  .ledger dd a::after,
+  .rb-body .copy::after {
+    content: '';
+    position: absolute;
+    inset: -12px -10px;
+  }
+
+  .logs-tools .toggle,
+  .feeds-mark.button,
+  .feeds-filter-toggle.button {
+    min-height: 44px;
+  }
+
+  .dns-actions button,
+  .dns button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.board-short {
+  margin: 0 0 10px;
+}
+
+.board-tools-toggle[aria-expanded='true'] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* A fitted board ends at the window's bottom: no stray scroll below it. */
+.home:has(.board[data-fit]) {
+  padding-bottom: 20px;
+}
+
+/* Setup forms fit a phone: long help lines and variable names wrap. */
+.setup-form,
+.setup-field {
+  min-width: 0;
+}
+
+.setup-form .settings-note,
+.setup-form code {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Right now folded: a title is a quiet inline button that opens its details. */
+.stream.is-compact {
+  display: inline;
+}
+
+.stream.is-compact .playback-trigger {
+  display: inline;
+  width: auto;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+.now-compact {
+  white-space: normal;
+}
+
+.rel-sent {
+  color: var(--ink-3);
+  font-size: var(--act-fs);
+}
+
+/* A heading that takes focus on arrival (for screen readers) doesn't wear a ring for it. */
+[tabindex='-1']:focus:not(:focus-visible),
+.page-title:focus:not(:focus-visible) {
+  outline: none;
 }

@@ -74,7 +74,7 @@ export function Settings() {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
   }, [hash]);
   useLanding(!!useStore().snap && (tab === 'connections' || tab === 'home'));
-  const groupLabels: Partial<Record<keyof Appearance, string>> = { homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
+  const groupLabels: Partial<Record<keyof Appearance, string>> = { otter: 'The otter', homeStatusSize: 'Status size', homeClockSize: 'Clock size', homeWeather: 'Weather view', homeApps: 'App appearance', clock24: 'Time format', temp: 'Temperature units', scheme: 'Color mode', icons: 'Service icons', appIcon: 'App icon', font: 'Typeface', density: 'Density' };
   const seg = <K extends keyof Appearance>(key: K, options: [Appearance[K], string][], disabled = false) => (
     <div className="seg" role="group" aria-label={groupLabels[key]}>
       {options.map(([v, label]) => (
@@ -356,7 +356,7 @@ function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }) {
   return (
     <>
       <UpdateButton name={name} busy={false} waiting={waiting} onStart={() => void u.start()} />
-      {u.error && <span className="crit-text">{u.error}</span>}
+      {u.error && <span className="crit-text" role="alert">{u.error}</span>}
     </>
   );
 }
@@ -555,18 +555,21 @@ function CatalogCheck() {
   const [copied, setCopied] = useState(false);
   const readOnly = !!useStore().snap?.readOnly;
   const [adoptState, setAdoptState] = useState<'idle' | 'busy' | 'done'>('idle');
+  const [adoptErr, setAdoptErr] = useState('');
   // First run links here with ?import=homepage to open the import straight away.
   const { search } = useLocation();
   const [importing, setImporting] = useState(() => new URLSearchParams(search).get('import') === 'homepage');
   const adoptYaml = async () => {
     setAdoptState('busy');
+    setAdoptErr('');
     try {
       const res = await fetch('/api/catalog/adopt', { method: 'POST', headers: { 'x-patchboard': 'action' } });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
       setAdoptState('done');
     } catch (e) {
-      alert((e as Error).message);
+      // Inline, as every other refusal is.
+      setAdoptErr((e as Error).message);
       setAdoptState('idle');
     }
   };
@@ -599,6 +602,7 @@ function CatalogCheck() {
           <button type="button" className="button" disabled={adoptState === 'busy'} onClick={() => void adoptYaml()}>
             {adoptState === 'busy' ? 'Copying…' : adoptState === 'done' ? 'Copied. Safe to delete services.yaml' : 'Copy into Patchboard'}
           </button>
+          {adoptErr && <p className="crit-text" role="alert">{adoptErr}</p>}
         </div>
       )}
       {!readOnly && (
@@ -810,7 +814,7 @@ function Keys() {
           <button type="button" className="button button-quiet" disabled={!name.trim() || !value.trim()} onClick={() => void add()}>
             Save key
           </button>
-          {err && <span className="crit-text">{err}</span>}
+          {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
       )}
     </Section>
@@ -826,6 +830,8 @@ function Integrations() {
   const { snap } = useStore();
   const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
   const [adopting, setAdopting] = useState(false);
+  // Every hook before the early return below: React needs the same hooks on every render.
+  const [moveErr, setMoveErr] = useState('');
   const [find, setFind] = useState('');
   const [show, setShow] = useState<'all' | 'on' | 'off'>('all');
   // A link from elsewhere (an empty page, a storage note) opens one integration.
@@ -871,6 +877,7 @@ function Integrations() {
           if (e.key === 'Escape' && open === i.id) {
             e.stopPropagation();
             setOpen(null);
+            setResults((prev) => ({ ...prev, [i.id]: null }));
             document.querySelector<HTMLButtonElement>(`#int-${i.id} .integration-end .text-button`)?.focus();
           }
         }}
@@ -910,7 +917,12 @@ function Integrations() {
               demo={setup.demo}
               readOnly={!!snap.readOnly}
               onSaved={(all) => setSetup({ ...setup, integrations: all })}
-              onClose={() => setOpen(null)}
+              // Closing clears its message with its typed values, and focus goes back to the row's link, as Escape does.
+              onClose={() => {
+                setOpen(null);
+                setResults((prev) => ({ ...prev, [i.id]: null }));
+                requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`#int-${i.id} .integration-end .text-button`)?.focus());
+              }}
               result={results[i.id] ?? null}
               setResult={(r) => setResults((prev) => ({ ...prev, [i.id]: r }))}
             />
@@ -924,13 +936,14 @@ function Integrations() {
   const movedIn = setup?.integrations.flatMap((x) => x.fields.filter((f) => f.savedToo).map((f) => f.name)) ?? [];
   const adopt = async () => {
     setAdopting(true);
+    setMoveErr('');
     try {
       const res = await fetch('/api/setup/adopt-env', { method: 'POST', headers: { 'x-patchboard': 'action' } });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
       setSetup({ ...setup!, integrations: body.integrations });
     } catch (e) {
-      alert((e as Error).message);
+      setMoveErr((e as Error).message);
     } finally {
       setAdopting(false);
     }
@@ -950,6 +963,7 @@ function Integrations() {
           <button type="button" className="button" disabled={adopting} onClick={() => void adopt()}>
             {adopting ? 'Saving…' : 'Save them in Patchboard'}
           </button>
+          {moveErr && <p className="crit-text" role="alert">{moveErr}</p>}
         </div>
       )}
       {movedIn.length > 0 && (
@@ -982,8 +996,9 @@ function Integrations() {
           cat,
           list: rows
             .filter((r) => ids.includes(r.i.id))
-            .filter((r) => (show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true))
-            .filter((r) => !q || `${r.i.name} ${r.i.adds}`.toLowerCase().includes(q) || open === r.i.id)
+            // An open form stays put whatever the filter; search also knows the variable names (SONARR_KEY).
+            .filter((r) => (show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true) || open === r.i.id)
+            .filter((r) => !q || `${r.i.name} ${r.i.adds} ${[...r.i.env, ...(r.i.optional ?? [])].join(' ')}`.toLowerCase().includes(q) || open === r.i.id)
             .sort((a, b) => a.i.name.localeCompare(b.i.name)),
         })).filter((c) => c.list.length);
         // Balance by rows: each category goes to the shorter column, in order.
@@ -1085,7 +1100,7 @@ function SetupFile() {
         </div>
       )}
       {msg && <p className="settings-note">{msg}</p>}
-      {err && <p className="crit-text">{err}</p>}
+      {err && <p className="crit-text" role="alert">{err}</p>}
     </Section>
   );
 }
@@ -1163,7 +1178,7 @@ function Alerts() {
                   </span>
                   <small className="threshold-hint">
                     {t.hint}
-                    {t.kind === 'number' && !st.locked && ` Default ${t.default}${t.unit === '°C' ? '°C' : t.unit?.startsWith('%') ? '%' : ''}.`}
+                    {t.kind === 'number' && !st.locked && ` Default ${t.default}${t.unit === '°C' ? '°C' : t.unit?.startsWith('%') ? '%' : t.unit ? ` ${t.unit}` : ''}.`}
                   </small>
                 </label>
               );
@@ -1181,7 +1196,8 @@ function Alerts() {
               Undo changes
             </button>
           )}
-          {msg && <span className={msg.ok ? 'settings-note' : 'warn-text'}>{msg.text}</span>}
+          {/* A problem is announced and reads as one; a confirmation is a quiet note. */}
+          {msg && <span className={msg.ok ? 'settings-note' : 'crit-text'} role={msg.ok ? 'status' : 'alert'}>{msg.text}</span>}
         </div>
       )}
     </>

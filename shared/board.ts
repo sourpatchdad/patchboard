@@ -252,12 +252,14 @@ export const DEFAULT_BOARD: Board = {
   columns: 3,
   fit: true,
   widgets: [
-    { id: 'apps', type: 'apps', size: 'w', span: 2, config: { style: 'patchbay' } },
-    { id: 'now', type: 'now', size: 'm', span: 1 },
-    { id: 'attention', type: 'attention', size: 'm', span: 1 },
-    { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
-    { id: 'feeds', type: 'feeds', size: 'm', span: 1 },
-    { id: 'changes', type: 'changes', size: 'm', span: 1 },
+    // Pinned columns: Fit's cuts then stay with the card they were made for,
+    // instead of cards reflowing to another column after the first cut.
+    { id: 'apps', type: 'apps', size: 'w', span: 2, column: 1, config: { style: 'patchbay' } },
+    { id: 'now', type: 'now', size: 'm', span: 1, column: 3 },
+    { id: 'attention', type: 'attention', size: 'm', span: 1, column: 1 },
+    { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, column: 1 },
+    { id: 'feeds', type: 'feeds', size: 'm', span: 1, column: 2 },
+    { id: 'changes', type: 'changes', size: 'm', span: 1, column: 3 },
   ],
 };
 
@@ -370,10 +372,11 @@ export const STARTERS: { id: string; name: string; about: string; board: Board }
       widgets: [
         { id: 'apps', type: 'apps', size: 'xl', span: 3, config: { style: 'patchbay' } },
         { id: 'now', type: 'now', size: 'm', span: 1 },
-        { id: 'upcoming', type: 'upcoming', size: 'm', span: 1, config: { days: '14', limit: '14' } },
-        { id: 'attention', type: 'attention', size: 'm', span: 1 },
+        // Two wide: the row stays full while Needs attention lives in the header.
+        { id: 'upcoming', type: 'upcoming', size: 'm', span: 2, config: { days: '14', limit: '14' } },
         { id: 'recent', type: 'recent', size: 'xl', span: 3 },
         { id: 'nextup', type: 'nextup', size: 'xl', span: 3 },
+        { id: 'attention', type: 'attention', size: 'm', span: 1 },
       ],
     },
   },

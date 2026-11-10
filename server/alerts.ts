@@ -77,9 +77,11 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   const docker = data<DockerData>(sources, 'docker');
   const containers = docker?.containers ?? [];
+  // Stopped on purpose (scheduled, or from Patchboard) is not down: it never
+  // absorbs a dependent's alert, so a real crash beside it still shows.
   const isDown = (name: string) => {
     const c = containers.find((x) => x.name === name);
-    return !!c && c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name);
+    return !!c && c.state !== 'running' && c.state !== 'created' && !expectStopped.has(c.name) && !parked.has(c.name);
   };
   // Root-cause folding: a container whose dependency is also down isn't its
   // own alert; it's listed under the dependency, which is what to fix first.

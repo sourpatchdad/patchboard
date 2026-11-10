@@ -6,7 +6,7 @@ import { Roll } from '../components/Roll.tsx';
 import { Fragment } from 'react';
 import { arrange } from '../../shared/pages.ts';
 import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanding } from '../lib/landing.ts';
 import type { BackupRun, BackupsData, Pool, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -29,8 +29,8 @@ const SERVER_SECTIONS: SectionDef[] = [
   { id: 'cpu', label: 'CPU by hour', group: 'The machine' },
   { id: 'busiest', label: 'Busiest containers', group: 'The machine' },
   { id: 'disks', label: 'Disks', group: 'The machine' },
-  { id: 'alerts', label: 'TrueNAS alerts', group: 'The machine' },
-  { id: 'cloudsync', label: 'Cloud sync', group: 'The machine' },
+  { id: 'alerts', label: 'TrueNAS alerts', group: 'Storage and backups' },
+  { id: 'cloudsync', label: 'Cloud sync', group: 'Storage and backups' },
 ];
 
 export function Server() {
@@ -40,7 +40,11 @@ export function Server() {
   const { data: sys } = useSource<SystemData>('system');
   const page = usePage('server');
   useLanding(!!snap);
+  const { hash } = useLocation();
   if (!snap) return null;
+  // Arriving at a section you've hidden (the header's CPU graph, say): say so, instead of landing nowhere.
+  const wanted = decodeURIComponent(hash.slice(1)).replace(/^storage-.*/, 'storage');
+  const hiddenHere = (page.hidden ?? []).includes(wanted) ? SERVER_SECTIONS.find((x) => x.id === wanted)?.label : undefined;
 
   const part = (id: string) => {
     switch (id) {
@@ -88,6 +92,7 @@ export function Server() {
         <CustomizePage page="server" title="Server" sections={SERVER_SECTIONS} />
       </header>
 
+      {hiddenHere && <p className="update-notice">{hiddenHere} is hidden on this page. Customize shows it again.</p>}
       <div className="detail-grid">
         <div className="detail-main">{arrange(MAIN, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</div>
         <aside className="detail-side">{arrange(SIDE, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</aside>

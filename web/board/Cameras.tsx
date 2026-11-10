@@ -2,10 +2,11 @@
 // that detect objects saw today. Pictures come through the Patchboard
 // server, so Frigate's address never has to reach the browser.
 
+import { useEffect, useRef, useState } from 'react';
 import type { FrigateData, FrigateEvent } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { agoLong } from '../lib/format.ts';
-import { useNow, useSource } from '../lib/store.tsx';
+import { useSource } from '../lib/store.tsx';
 import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
 
@@ -14,6 +15,57 @@ export const cameraName = (n: string) => {
   const s = n.replace(/[_-]+/g, ' ').trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
+
+/** Seconds between frames while a camera is on screen. */
+const FRAME_MS = 3_000;
+
+/**
+ * A camera's newest frame, close to live while you can see it: every few
+ * seconds while it's on screen and the tab is in front, and not at all
+ * otherwise, so a board left open in a background tab costs nothing. The
+ * next frame loads off screen and swaps in, so the picture never blanks.
+ * Patchboard passes each frame straight through without holding it, so
+ * this costs bandwidth (a small JPEG every few seconds), not memory.
+ */
+function LiveFrame({ name }: { name: string }) {
+  const img = useRef<HTMLImageElement>(null);
+  const [src, setSrc] = useState(() => `/api/img/frigate?camera=${encodeURIComponent(name)}&t=${Date.now()}`);
+  useEffect(() => {
+    const el = img.current;
+    if (!el) return;
+    let seen = false;
+    let timer = 0;
+    let loading = false;
+    const next = () => {
+      if (loading || !seen || document.visibilityState !== 'visible') return;
+      loading = true;
+      const url = `/api/img/frigate?camera=${encodeURIComponent(name)}&t=${Date.now()}`;
+      const pre = new Image();
+      pre.onload = () => {
+        loading = false;
+        setSrc(url);
+      };
+      pre.onerror = () => {
+        loading = false;
+      };
+      pre.src = url;
+    };
+    const io = new IntersectionObserver(([e]) => {
+      seen = e.isIntersecting;
+      if (seen) next();
+    });
+    io.observe(el);
+    const onShow = () => next();
+    document.addEventListener('visibilitychange', onShow);
+    timer = window.setInterval(next, FRAME_MS);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onShow);
+      clearInterval(timer);
+    };
+  }, [name]);
+  return <img ref={img} src={src} alt="" decoding="async" />;
+}
 
 /** What a camera saw, as a short phrase: "Sam at the porch", "Car". */
 const seen = (e: FrigateEvent) => {
@@ -24,8 +76,6 @@ const seen = (e: FrigateEvent) => {
 export function CamerasWidget({ config, now }: { config?: Record<string, string>; now: number }) {
   const { state, data } = useSource<FrigateData>('frigate');
   const { limit = 6 } = useWidget();
-  // A new frame every 20 seconds, every camera at once.
-  const tick = Math.floor(useNow(20_000) / 20_000);
   if (!state || !data) return null;
   const pick = (config?.cameras ?? '').split('\n').filter(Boolean);
   const cams = pick.length ? pick.map((n) => data.cameras.find((c) => c.name === n)).filter((c) => !!c) : data.cameras;
@@ -44,7 +94,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
           {cams.map((c) => {
             const body = (
               <>
-                {c.online ? <img src={`/api/img/frigate?camera=${encodeURIComponent(c.name)}&t=${tick}`} alt="" loading="lazy" decoding="async" /> : <span className="cam-off">Offline</span>}
+                {c.online ? <LiveFrame name={c.name} /> : <span className="cam-off">Offline</span>}
                 <span className="cam-name">{cameraName(c.name)}</span>
               </>
             );

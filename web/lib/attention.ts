@@ -15,3 +15,20 @@ export function needsYou(alerts: Alert[] | undefined): Alert[] {
 export function byUrgency(alerts: Alert[] | undefined): Alert[] {
   return [...(alerts ?? [])].sort((a, b) => ORDER[a.level] - ORDER[b.level]);
 }
+
+/**
+ * The worst problem that names an app, for its light: an alert about the app
+ * itself keeps its level; one that only comes from it (a Frigate camera
+ * offline) is amber, since the app runs and something in it needs a look.
+ */
+export function alertLevelFor(alerts: Alert[] | undefined, app: { name: string; container?: string }): 'warn' | 'crit' | null {
+  const keys = [app.name, app.container].filter(Boolean).map((k) => k!.toLowerCase());
+  let level: 'warn' | 'crit' | null = null;
+  for (const a of needsYou(alerts)) {
+    const direct = !!a.subject && keys.includes(a.subject.toLowerCase());
+    const from = !!a.source && a.source !== 'docker' && keys.includes(a.source.toLowerCase());
+    if (direct && a.level === 'critical') return 'crit';
+    if (direct || from) level = 'warn';
+  }
+  return level;
+}
