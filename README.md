@@ -65,51 +65,35 @@ is work in progress.
 
 ## What you get
 
-**It answers before you ask.** The top of Home says "All quiet" or "6
-things need you", with each problem on its own line under it, linked to its
-fix. A container that crashed at 3 AM still shows under Changes at
-breakfast. Turn on ntfy, Gotify, Pushover,
-Discord, email or a webhook and a problem that lasts two minutes reaches
-you, then again when it clears.
+**Alerts.** The top of Home says "All quiet" or "6 things need you", with
+each problem on its own line, linked to its fix. The browser tab counts
+them too. A container that crashed overnight still shows under Changes in
+the morning. Turn on ntfy, Gotify, Pushover, Discord, email or a webhook,
+and a problem that lasts two minutes reaches you, then again when it clears.
 
-**Everything leads somewhere.** Each container has a page with its alerts, its
-runbook section, live logs, a 30-day health strip, and buttons to restart,
-update or roll back.
+**Container pages.** Each container has a page with its alerts, its runbook
+section, live logs, a 30-day health strip, and buttons to restart, update or
+roll back.
 
 ![A container page: the alert, the runbook section with the fix, logs, update and start buttons](docs/screenshots/container.webp)
 
-**It's yours without config files.** Drag apps between groups, rename groups,
+**Apps without config files.** Drag apps between groups, rename groups,
 hide what you don't use, upload icons. Paste an API key and a tile shows
 "42,506 photos" or "3 queued". Sixteen apps have presets; any JSON API works.
 
 ![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.webp)
 
-Home is a board of widgets on 2 to 6 columns. Start from a layout, drag to
-move, drag an edge to resize, rename any widget, choose how many items it
-shows, or turn on Fit the window to trim lists to one screen. Recently
-added keeps its whole poster row; if the board still runs over, Arrange
-board says by how much. Add more boards and name them: one for the TV, one
-for the rack. Every other page has a Customize button too. Five themes, each dark and
-light, or a Custom one built from three colors. Call it whatever your household
-calls it.
+**Boards.** Home is a board of widgets on 2 to 6 columns. Start from a
+layout, drag to move, drag an edge to resize, and turn on Fit the window to
+trim lists to one screen. Add more boards: one for the TV, one for the rack.
+Five themes come in dark and light, or build a Custom one from three colors.
 
-**See what is playing.** Hover, focus or tap a playback row for its artwork,
-playback details and a link to its app. Time and remaining time
-appear when the service reports them.
+**Playback.** Hover, focus or tap a playback row for its artwork, details and
+a link to its app, with time left when the service reports it.
 
-**A compact header by default.** Status sits beside the server graphs, and
-the time and date sit above the weather in one column. Header settings on
-Home opens the on/off switches in Settings, Home. You can also change sizes
-and forecast detail. Arrange board changes the widget layout every device
-shares; header controls change this device and leave saved boards intact.
-
-**Status at a glance.** The header names what needs attention and links to the
-problem. The browser tab counts alerts and adds an amber or red severity dot;
-installed apps show the count where the platform supports badges.
-
-**It's safe to run.** Keys stay on the server. Read-only mode, a Docker
-socket proxy, forward auth and an activity log let you decide how much it
-can do and see who did what.
+**Security.** Keys stay on the server. Read-only mode, a Docker socket
+proxy, forward auth and an activity log let you decide how much it can do
+and see who did what.
 
 ## Pages
 

@@ -115,7 +115,7 @@ function WhatsNew({ version, releases, newer, newImage, onClose }: { version: st
               <div className="prose" dangerouslySetInnerHTML={{ __html: html(r.notes) }} />
             </section>
           ))}
-          {!shown.length && <p className="settings-note">{newImage ? 'This build has no release notes yet; it is the newest image for your tag.' : 'Release notes appear here once GitHub can be reached.'}</p>}
+          {!shown.length && <p className="settings-note">{newImage ? "No release notes for this build yet. It's the newest image on your tag." : 'Patchboard shows release notes once it can reach GitHub.'}</p>}
         </div>
         <footer className="whats-new-foot">
           {(newer.length > 0 || newImage) &&

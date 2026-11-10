@@ -13,7 +13,7 @@
   still; Live and running updates still pulse while they move.
 - Widget titles step up a size, long text no longer leaves one word alone
   on its last line, and quiet text on a selected row keeps its contrast.
-- Logs' container rows are a full finger tall on a phone.
+- Logs' container rows are 44px tall on a phone, a comfortable tap.
 - Jump to: typing an app's name and pressing Enter opens its page, with
   the runbook and logs, instead of starting or restarting it. An action
   leads once you type its verb ("start unpack").
@@ -23,6 +23,8 @@
   Paperless-ngx and SABnzbd properly.
 - A widget waiting on an integration you haven't connected draws nothing,
   instead of an empty card, on a fresh install.
+- The README leads with what Patchboard does, a demo you can open from
+  another machine, and plain section names.
 - On Home's icon rack, an app with a problem shows its name under the icon
   in its warning or down color; healthy apps stay icons.
 
@@ -30,27 +32,27 @@
 
 The first public release.
 
-- **Home answers before you ask.** What needs you, the server, your apps,
+- **Home:** what needs you, the server, your apps,
   what's playing, the week's releases, your reading and what changed, fitted
   to one screen. Add boards for the TV, the rack or the house, on 2 to 6
   columns, each widget sized and placed by dragging.
-- **Live without weight.** Jellyfin, Emby and Audiobookshelf push playback as
+- **Live playback and cameras:** Jellyfin, Emby and Audiobookshelf push playback as
   it happens; Plex (through Tautulli) and Navidrome poll every 5 seconds while
   something plays. Camera frames refresh while on screen, and a tap opens
   one live.
-- **Everything leads somewhere.** Each container has a page with its alerts,
+- **Container pages:** each container has a page with its alerts,
   runbook section, live logs, a 30-day health strip, and restart, update and
   roll back. Jump to (Ctrl K) reaches any app, page or action.
-- **Set up in the browser.** Add every running container in one click,
+- **Setup in the browser:** add every running container in one click,
   connect any of 68 integrations from Settings with keys encrypted on the
   server, or import Homepage's `services.yaml`. Environment variables and
   `services.yaml` keep working underneath.
-- **Alerts reach you** through ntfy, Gotify, Pushover, Discord, email or a
+- **Alerts** through ntfy, Gotify, Pushover, Discord, email or a
   webhook when a problem lasts two minutes, and again when it clears.
-- **Yours to style:** five themes in dark and light plus a custom one, accent
+- **Themes:** five themes in dark and light plus a custom one, accent
   colors, three densities, a phone layout with a tab bar, and an installable
   app with its own icon.
-- **Safe to run:** sign in with a password, OIDC or your reverse proxy; a
+- **Security:** sign in with a password, OIDC or your reverse proxy; a
   read-only mode; an activity log of every change; a strict Content Security
   Policy. Your browser talks only to Patchboard: icons, posters and article
   pictures all come through it.

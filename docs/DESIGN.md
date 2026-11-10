@@ -86,7 +86,7 @@ one click.
   shapes nest: 14px cards and sheets, 10px tiles and icon wells, 8px
   controls and rows, 6px chips. Selection is a soft accent wash; trouble
   is a tinted outline plus its colored status line, never a side bar.
-- **Motion answers you.** Hover and press take 120ms, things that appear
+- **Motion.** Hover and press take 120ms, things that appear
   200ms, sheets 280ms, all easing out. Buttons, tiles and app icons give
   a little when pressed. A playing bar glides between its once-a-second
   updates. Reduced motion turns all of it off.
@@ -170,9 +170,8 @@ means trouble; only the top bar's Live light is green.
 
 ## Purposeful identity
 
-The interface is lightweight, clean and professional. Every element helps
-someone understand the server or act on it. Decorative mascots and mood
-illustrations do not appear in status, welcome, empty or error states.
+Every element helps you understand the server or act on it. Status,
+welcome, empty and error states carry no mascots or mood illustrations.
 Status uses explicit text, counts and consistent severity indicators. Healthy
 states stay quiet; recovery actions stay visible.
 
