@@ -1,65 +1,31 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2026-11-10)
 
-- Home shows Patchboard's version beside Header settings. When a newer
-  release is out it reads "Update to v1.2.0" and opens what each release
-  changed, with Update right there; after you update, it shows what's new
-  once. A compose file that pins an exact version is told which tag to use.
-- Lists in Reading articles, runbooks and release notes show their bullets
-  and numbers again.
-- GitHub Releases are titled by their tag (v1.0.0).
-- An app in trouble pulses three times when it goes down, then holds
-  still; Live and running updates still pulse while they move.
-- Widget titles step up a size, long text no longer leaves one word alone
-  on its last line, and quiet text on a selected row keeps its contrast.
-- Logs' container rows are 44px tall on a phone, a comfortable tap.
-- Jump to: typing an app's name and pressing Enter opens its page, with
-  the runbook and logs, instead of starting or restarting it. An action
-  leads once you type its verb ("start unpack").
-- Arrange board's controls are the regular small control size, and
-  Connections' parts read as tabs under the Settings tabs.
-- Add all leaves Patchboard itself out, and names AdGuard Home, Portainer,
-  Paperless-ngx and SABnzbd properly.
-- A widget waiting on an integration you haven't connected draws nothing,
-  instead of an empty card, on a fresh install.
-- The README leads with what Patchboard does, a demo you can open from
-  another machine, and plain section names.
-- Screenshots show the current look: no mascot, colored icons, named trouble.
-- Accessibility: hold-to-confirm buttons work with screen readers, voice
-  control and switches (press twice); single-key shortcuts can be turned
-  off in Settings, Look; focus stays put after moving or removing a widget,
-  opening an article, or pressing a busy button; failed backup nights are
-  named in words; form fields have edges you can see; the update result
-  is announced, and an open article or a container's log tail no longer
-  reads itself out.
-- Security: pictures in Reading are fetched only from public addresses,
-  checked as each connection opens, including addresses written as IPv6;
-  the API widget refuses metadata addresses however they're written; feed
-  downloads stop at 1 MB as they stream; marking articles read needs the
-  action header like every other change.
-- Paper's accent is slate blue, apart from its amber warnings, and the
-  accent presets drop green, rose and sand, which read as ok, down and
-  warning.
-- One shadow for everything that floats, a pill radius for counts and
-  chips, shared motion timings, and bold text at the design's weight. The
-  playback preview's service-colored edge shows again.
-- The first page load is about 30 KB smaller: the update notes load when
+- **Version and updates on Home:** Patchboard's version sits beside Header
+  settings. When a newer release is out it reads "Update to v1.2.0" and
+  opens what each release changed, with Update right there. After you
+  update, it shows what's new once.
+- **Accessibility:** hold-to-confirm buttons work with screen readers,
+  voice control and switches (press twice). Single-key shortcuts can be
+  turned off in Settings, Look. Focus stays put after you move or remove a
+  widget, open an article or press a busy button. Failed backup nights are
+  named in words, and form fields have edges you can see.
+- **Security:** Reading fetches pictures only from public addresses,
+  checked as each connection opens, including addresses written as IPv6.
+  The API widget refuses metadata addresses however they're written, and
+  feed downloads stop at 1 MB.
+- **Look:** app icons show their own colors by default, and an app with a
+  problem shows its name on Home's icon rack. Paper's accent is slate blue,
+  apart from its amber warnings, and the accent presets drop green, rose
+  and sand, which read as ok, down and warning. Floating panels share one
+  shadow, and a chosen sort or filter is edged in the accent.
+- **Fixes:** Reading's Mark all read no longer covers the sort buttons.
+  Lists in articles, runbooks and release notes show their bullets again.
+  Jump to opens an app's page on Enter instead of restarting it. A fresh
+  install draws no empty cards, and Add all leaves Patchboard itself out.
+- **Faster first load:** about 30 KB smaller; the update notes load when
   you open them.
-- Docs: the sign-in path is Settings, Connections, Sign-in and keys; the
-  demo's outside requests are listed in full; the example files run as
-  written.
-- App icons show their own colors by default; Settings, Look still turns
-  them gray.
-- Reading's Mark all read sits on its own row instead of over the sort
-  buttons. Hold buttons show their track only when you point at or tab to
-  them.
-- A chosen sort or filter is edged in the accent instead of a ring that
-  looked like keyboard focus. Stacks gives icon-less containers a letter.
-- Sizes keep their unit on the same line ("64.0 GB"), times drop a zero
-  part ("14 h"), and disk models stay on one line.
-- On Home's icon rack, an app with a problem shows its name under the icon
-  in its warning or down color; healthy apps stay icons.
 
 ## 1.0.0 (2026-11-10)
 

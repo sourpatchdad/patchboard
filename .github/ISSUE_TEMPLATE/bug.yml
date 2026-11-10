@@ -22,7 +22,7 @@ body:
     attributes:
       label: Version
       description: Settings, bottom of the page, or the image tag you pulled.
-      placeholder: 1.0.0
+      placeholder: 1.1.0
     validations:
       required: true
   - type: dropdown
