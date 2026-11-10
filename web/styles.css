@@ -6417,7 +6417,7 @@ a.vw:hover {
 
 .ww-hour {
   display: grid;
-  grid-template-rows: auto 30px auto;
+  grid-template-rows: auto auto;
   justify-items: center;
   align-items: end;
   gap: 4px;
@@ -6426,6 +6426,10 @@ a.vw:hover {
 .ww-hour b {
   font: 400 12px/1 var(--f-mono);
   color: var(--head);
+}
+
+.ww-hours.is-wet .ww-hour {
+  grid-template-rows: auto 30px auto;
 }
 
 .ww-hour i {

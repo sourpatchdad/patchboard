@@ -816,16 +816,14 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
 }
 
 /**
- * Newest first, one copy of each. On a wide screen the shelf shows exactly
- * the posters that fit one row, so it never scrolls or ends half empty; the
- * widget's limit caps it. On a phone it's a shelf to swipe, up to the limit.
+ * On a wide screen a shelf shows exactly the posters that fit one row, so it
+ * never scrolls or cuts the last one in half; the widget's limit caps it. A
+ * shelf with fewer than a row keeps its posters at their own size. On a phone
+ * it's a shelf to swipe, up to the limit.
  */
-export function RecentlyAdded({ now }: { now: number }) {
-  const { servers } = useMediaServers();
-  const { limit = 24 } = useWidget();
+function useShelf(items: MergedItem[], limit: number) {
   const [fit, setFit] = useState<number | null>(null);
   const shelf = useRef<HTMLDivElement>(null);
-  const items = mergeRecent(servers);
   const hasItems = items.length > 0;
   useEffect(() => {
     const el = shelf.current;
@@ -841,12 +839,22 @@ export function RecentlyAdded({ now }: { now: number }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, [hasItems]);
+  const shown = items.slice(0, fit ? Math.min(fit, limit) : limit);
+  return { shelf, shown, fit: !!fit && shown.length === fit };
+}
+
+/** Newest first, one copy of each. */
+export function RecentlyAdded({ now }: { now: number }) {
+  const { servers } = useMediaServers();
+  const { limit = 24 } = useWidget();
+  const items = mergeRecent(servers);
+  const { shelf, shown, fit } = useShelf(items, limit);
   if (!items.length) return null;
   const title = servers.length === 1 ? `Recently added to ${servers[0].label}` : 'Recently added';
   return (
     <Section title={title} className="recent">
       <div ref={shelf} className="shelf-measure">
-        <PosterShelf items={items.slice(0, fit ? Math.min(fit, limit) : limit)} now={now} showServer={servers.length > 1} fit={!!fit && fit <= limit} />
+        <PosterShelf items={shown} now={now} showServer={servers.length > 1} fit={fit} />
       </div>
     </Section>
   );
@@ -859,10 +867,13 @@ export function NextUp() {
   const all = servers.flatMap((server) => ('nextUp' in server.data ? server.data.nextUp.map((r) => ({ ...r, server })) : []));
   // Jellyfin and Emby on one library suggest the same episode: show it once.
   const items = all.filter((r, i) => !all.slice(0, i).some((o) => sameRelease(o, r)));
+  const { shelf, shown, fit } = useShelf(items, limit);
   if (!items.length) return null;
   return (
     <Section title="Next up" className="recent">
-      <PosterShelf items={items.slice(0, limit)} showServer={servers.length > 1} />
+      <div ref={shelf} className="shelf-measure">
+        <PosterShelf items={shown} showServer={servers.length > 1} fit={fit} />
+      </div>
     </Section>
   );
 }

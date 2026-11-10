@@ -168,7 +168,7 @@ export function IntegrationForm({
         </p>
       )}
       {integration.where && <p className="settings-note">{integration.where}</p>}
-      {demo && <p className="settings-note">Demo mode: Test works, Save doesn't.</p>}
+      {demo && <p className="settings-note">Demo mode: Test checks the fields are filled in. Nothing connects or saves.</p>}
       <div className="setup-actions">
         <button type="button" className="button button-quiet setup-test" disabled={!!busy || readOnly} onClick={() => void test()}>
           {busy === 'test' ? 'Testing' : 'Test connection'}

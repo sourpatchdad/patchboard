@@ -2,7 +2,7 @@
 // come over as you type; add it beside the apps already in Patchboard.
 
 import { useModal } from '../lib/modal.ts';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { INTEGRATIONS } from '../../shared/integrations.ts';
 
@@ -36,6 +36,11 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<Summary | null>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+  // Adding removes the Add button, which had focus: hand it to Close, under the result.
+  useEffect(() => {
+    if (done) closeButton.current?.focus();
+  }, [done]);
 
   // Preview as you paste, a moment after the typing stops.
   useEffect(() => {
@@ -74,13 +79,13 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
       <div className="palette drawer widget-settings page-panel hp-import" ref={modal} role="dialog" aria-label="Import from Homepage" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <h2>Import from Homepage</h2>
-          <button type="button" className="text-button" onClick={onClose}>
+          <button ref={closeButton} type="button" className="text-button" onClick={onClose}>
             {done ? 'Close' : 'Cancel'}
           </button>
         </header>
 
         {done ? (
-          <p className="settings-note">
+          <p className="settings-note" role="status">
             Added {plural(done.apps, 'app', 'apps')}
             {done.links ? ` and ${plural(done.links, 'link', 'links')}` : ''}. <Link to="/apps">See them on Apps</Link>, where Edit apps moves, renames and
             hides them.

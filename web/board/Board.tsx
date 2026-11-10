@@ -1463,6 +1463,8 @@ function WeatherWidget() {
   const { temp: unit, clock24 } = useAppearance();
   if (!state || !w) return null;
   const hours = (w.hours ?? []).slice(0, 12);
+  // Rain bars only when some hour has a chance worth drawing; a dry day is a row of temperatures.
+  const wet = hours.some((h) => h.precipPct >= 10);
   const today = w.days[0];
   return (
     <Section title="Weather" count={w.label} action={{ label: 'Forecast', to: '/weather' }} className="weather-widget">
@@ -1479,11 +1481,11 @@ function WeatherWidget() {
       </Link>
       {(w.alerts ?? []).length > 0 && <Link to="/weather" className="ww-alert">{w.alerts![0].event}</Link>}
       {hours.length > 0 && (
-        <div className="ww-hours">
+        <div className={`ww-hours ${wet ? 'is-wet' : ''}`}>
           {hours.map((h, i) => (
             <span key={h.time} className="ww-hour" title={`${weatherText(h.code)}, ${h.precipPct}% rain`}>
               <b>{deg(h.temp, unit)}°</b>
-              <i style={{ height: `${Math.max(2, h.precipPct * 0.28)}px` }} data-rain={h.precipPct >= 20 || undefined} />
+              {wet && <i style={{ height: `${Math.max(2, h.precipPct * 0.28)}px` }} data-rain={h.precipPct >= 20 || undefined} />}
               <small>{i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
             </span>
           ))}

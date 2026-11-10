@@ -10,6 +10,14 @@
 - Release names in Right now wrap at their dots, not mid-word.
 - Cameras sit two to a row on a phone instead of one, so five cameras
   take a third of the height; a wide card fits more to a row.
+- Next up shows the posters that fit one row on a wide screen, as Recently
+  added does, instead of cutting the last one in half; a shelf with less
+  than a row keeps its posters at their own size.
+- The Weather widget leaves out the rain bars when no hour ahead has a
+  real chance of rain.
+- A failed sign-in puts the cursor back in the password, selected, and
+  reads the error out; finishing a Homepage import moves focus to Close.
+- In demo mode, the integration note says Test only checks the fields.
 
 - The Apps widget can show only the groups you tick in its settings, so a
   board can leave a group out (Home without work projects) or hold just
