@@ -22,7 +22,14 @@ const KNOWN: Record<string, [string, string]> = {
   jellyfin: ['Jellyfin', 'jellyfin'],
   'home-assistant': ['Home Assistant', 'home-assistant'],
   cloudflared: ['Cloudflared', 'cloudflare'],
+  adguardhome: ['AdGuard Home', 'adguard-home'],
+  'portainer-ce': ['Portainer', 'portainer'],
+  'paperless-ngx': ['Paperless-ngx', 'paperless-ngx'],
+  sabnzbd: ['SABnzbd', 'sabnzbd'],
 };
+
+/** Patchboard itself: already open, so never offered as an app to add. */
+const SELF = /(^|\/)sourpatchdad\/patchboard([:@]|$)/;
 
 const ACRONYMS = new Set(['api', 'ui', 'ai', 'db', 'dns', 'vpn', 'nas', 'ha', 'mqtt', 'rss', 'ssh', 'ftp', 'smb', 'nfs', 'iot']);
 
@@ -61,7 +68,7 @@ export function auditCatalog(
 
   const discovered: DiscoveredService[] = [];
   for (const c of containers) {
-    if (named.has(c.name) || c.state !== 'running' || c.oneoff) continue;
+    if (named.has(c.name) || c.state !== 'running' || c.oneoff || SELF.test(c.image)) continue;
     if (dependedOn.has(c.name) || PLUMBING.test(c.image) || PLUMBING_NAME.test(c.name)) continue;
     const g = guessFromImage(c.image, c.name);
     const p = (ports(c.name) ?? []).find((x) => x.host && /\/tcp$/.test(x.container));

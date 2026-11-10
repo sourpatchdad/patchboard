@@ -19,6 +19,10 @@
   leads once you type its verb ("start unpack").
 - Arrange board's controls are the regular small control size, and
   Connections' parts read as tabs under the Settings tabs.
+- Add all leaves Patchboard itself out, and names AdGuard Home, Portainer,
+  Paperless-ngx and SABnzbd properly.
+- A widget waiting on an integration you haven't connected draws nothing,
+  instead of an empty card, on a fresh install.
 - On Home's icon rack, an app with a problem shows its name under the icon
   in its warning or down color; healthy apps stay icons.
 
@@ -38,7 +42,7 @@ The first public release.
   runbook section, live logs, a 30-day health strip, and restart, update and
   roll back. Jump to (Ctrl K) reaches any app, page or action.
 - **Set up in the browser.** Add every running container in one click,
-  connect any of 84 integrations from Settings with keys encrypted on the
+  connect any of 68 integrations from Settings with keys encrypted on the
   server, or import Homepage's `services.yaml`. Environment variables and
   `services.yaml` keep working underneath.
 - **Alerts reach you** through ntfy, Gotify, Pushover, Discord, email or a

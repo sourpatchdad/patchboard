@@ -4,25 +4,23 @@
 [![Release](https://img.shields.io/github/v/release/sourpatchdad/patchboard)](https://github.com/sourpatchdad/patchboard/releases)
 [![License: AGPL-3.0](https://img.shields.io/github/license/sourpatchdad/patchboard)](LICENSE)
 
-A start page and control center for a home server. Open it and you know in
-five seconds whether anything is broken, what's new, and what's coming. Click
-anything and you land where you can fix it.
+A self-hosted start page that tells you what's broken. It reads the Docker
+socket, finds your apps, and puts a stopped container, a full pool or a stuck
+download at the top, one click from the fix.
 
 ![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the week's releases, reading and what changed](docs/screenshots/home.webp)
 
-Healthy apps stay quiet. The space goes to what needs you: a stopped
-container, a full pool, a stuck import, tonight's episodes.
+## Try the demo
 
-## Try it
-
-Demo data, nothing to configure. The demo's only outside requests load
-posters from TVmaze and Wikipedia:
+Fake data, nothing saved:
 
 ```sh
-docker run --rm -p 127.0.0.1:3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
+docker run --rm -p 3200:3200 -e DEMO=1 ghcr.io/sourpatchdad/patchboard:latest
 ```
 
-Open <http://localhost:3200>.
+Open `http://your-server:3200` (or <http://localhost:3200> on the same
+machine). Ctrl-C stops it. Its only outside requests load posters from
+TVmaze and Wikipedia.
 
 ## Install
 
@@ -33,21 +31,26 @@ curl -fsSL $base/examples/docker-compose.yml -o docker-compose.yml
 docker compose up -d
 ```
 
+Sign-in is off by default, for a home network. Read [SECURITY.md](SECURITY.md)
+before you expose it anywhere: turn on a password in Settings, Sign-in, or
+use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
+
 For a read-only install or a small disk, use the `latest-slim` image. It
 skips the Docker CLI, so it can't update containers, and it is about 90 MB
 smaller. Either image idles at about 50 MB of memory.
 
 Open Patchboard and press **Add all**. It turns every running container into
-an app, grouped by compose stack.
+an app, grouped by compose stack. Coming from Homepage? Settings imports its
+`services.yaml`.
 
 ![First run: Patchboard picks out the 22 of 30 running containers that look like apps and offers to add them all](docs/screenshots/first-run.webp)
 
 Then connect what you run from Settings, Connections: press **Set up**,
 paste the address and key, test, save. It connects at once, and the server
-stores the key encrypted. You can connect Sonarr, Radarr, Plex through
-Tautulli, Jellyfin, Emby, qBittorrent, Transmission, Deluge, SABnzbd,
-NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole, AdGuard Home,
-Speedtest Tracker, Overseerr, TrueNAS, weather and more.
+stores the key encrypted. There are 68 integrations, among them Sonarr,
+Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
+Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,
+AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS and weather.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
 No `.env` and no config files: the compose file sets the time zone, and the
@@ -59,10 +62,6 @@ rest lives in Settings. Prefer config as code? Environment variables and a
 `1.2.0` to stay put. `edge` is the next release before it ships, and `dev`
 is work in progress.
 [docs/RELEASING.md](docs/RELEASING.md) lists every tag.
-
-Before you expose it anywhere, read [SECURITY.md](SECURITY.md). Sign-in is off
-by default, for a home network. Turn on a password in Settings, Sign-in, or
-use `AUTH=forward` behind Authelia, Authentik or Cloudflare Access.
 
 ## What you get
 

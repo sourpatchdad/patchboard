@@ -4628,6 +4628,12 @@ a.vitals:hover .vital-label {
   padding-bottom: 0;
 }
 
+/* Nor an empty card: a widget waiting on an integration you haven't
+   connected draws nothing until it has something to say. */
+.board-wrap:not(.is-editing) .cell-body:empty {
+  display: none;
+}
+
 .cell-inner > .cell-body > .section {
   margin-bottom: 0;
 }

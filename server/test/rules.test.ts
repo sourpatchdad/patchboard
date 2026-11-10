@@ -162,6 +162,7 @@ test('catalog audit: flags dead entries, finds unlisted apps, skips plumbing', (
     ctr('app-redis', { image: 'redis:7-alpine' }),
     ctr('acme-scheduler', { image: 'ghcr.io/x/acme:latest' }),
     ctr('feed-feed-run-5a852e2da326', { image: 'feed-feed', project: 'feed', oneoff: true }),
+    ctr('patchboard', { image: 'ghcr.io/sourpatchdad/patchboard:latest' }),
     down('old-thing'),
   ];
   const cat = catalog([
@@ -182,6 +183,10 @@ test('catalog audit: flags dead entries, finds unlisted apps, skips plumbing', (
 });
 
 test('guessFromImage: product names from images, container names for local builds', () => {
+  assert.deepEqual(guessFromImage('adguard/adguardhome:latest', 'adguard'), { name: 'AdGuard Home', icon: 'adguard-home.png' });
+  assert.deepEqual(guessFromImage('portainer/portainer-ce:2.21', 'portainer'), { name: 'Portainer', icon: 'portainer.png' });
+  assert.deepEqual(guessFromImage('ghcr.io/paperless-ngx/paperless-ngx:latest', 'paperless'), { name: 'Paperless-ngx', icon: 'paperless-ngx.png' });
+  assert.deepEqual(guessFromImage('lscr.io/linuxserver/sabnzbd:latest', 'sabnzbd'), { name: 'SABnzbd', icon: 'sabnzbd.png' });
   assert.deepEqual(guessFromImage('plexinc/pms-docker:latest', 'plex'), { name: 'Plex', icon: 'plex.png' });
   assert.deepEqual(guessFromImage('lscr.io/linuxserver/sonarr:latest', 'sonarr'), { name: 'Sonarr', icon: 'sonarr.png' });
   assert.equal(guessFromImage('trivia-night-web', 'trivia-night-web').name, 'Trivia Night');

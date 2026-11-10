@@ -16,10 +16,13 @@ export function PatchRow({ names = false, groups }: { names?: boolean; groups?: 
   const nums = useAppNumbers();
   if (!snap) return <div className="patchrow patchrow-loading" aria-hidden />;
   const containers = containerMap(snap);
+  const shown = snap.catalog.groups.filter((g) => g.services.length && (!groups || groups.includes(g.name)));
+  // No apps yet: nothing to draw. The welcome panel says how to add them.
+  if (!shown.length) return null;
 
   return (
     <nav className={`patchrow ${names ? '' : 'icons-only'}`} aria-label="Services">
-      {snap.catalog.groups.filter((g) => !groups || groups.includes(g.name)).map((g) => (
+      {shown.map((g) => (
         <div className="bay" key={g.name}>
           <span className="bay-name">{g.name}</span>
           <Roving className="bay-jacks">
