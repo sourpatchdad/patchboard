@@ -108,6 +108,7 @@ export async function listContainers(): Promise<Container[]> {
         project,
         service: c.Labels?.[SERVICE],
         workingDir: c.Labels?.['com.docker.compose.project.working_dir'],
+        ...(c.Labels?.['com.docker.compose.oneoff'] === 'True' ? { oneoff: true } : {}),
         dependsOn: deps.length ? deps : undefined,
         labels: pickLabels(c.Labels),
       };

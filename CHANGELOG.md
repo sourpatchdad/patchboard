@@ -18,6 +18,13 @@
 - A failed sign-in puts the cursor back in the password, selected, and
   reads the error out; finishing a Homepage import moves focus to Close.
 - In demo mode, the integration note says Test only checks the fields.
+- No text is smaller than 11px: times, episode codes, counts and the
+  weather's lows were down to 10px in places.
+- A bare link in a Reading summary wraps instead of being cut off at the
+  card's edge.
+- Apps no longer suggests a one-off `docker compose run` job as an app
+  that isn't listed yet.
+- On a phone, addresses under Elsewhere wrap at their dots, not mid-word.
 
 - The Apps widget can show only the groups you tick in its settings, so a
   board can leave a group out (Home without work projects) or hold just

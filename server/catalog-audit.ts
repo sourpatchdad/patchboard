@@ -2,8 +2,8 @@
 //
 // - Problems: entries naming a container that doesn't exist.
 // - Discovered: running containers no entry covers, minus the plumbing
-//   (anything another container depends on, and well-known database and
-//   cache images). For each, a drafted entry: a name and icon guessed from
+//   (anything another container depends on, well-known database and cache
+//   images, and one-off `docker compose run` jobs). For each, a drafted entry: a name and icon guessed from
 //   the image, and a link from its published port.
 
 import type { Catalog, CatalogAudit, Container, ContainerDetail, DiscoveredService } from '../shared/types.ts';
@@ -61,7 +61,7 @@ export function auditCatalog(
 
   const discovered: DiscoveredService[] = [];
   for (const c of containers) {
-    if (named.has(c.name) || c.state !== 'running') continue;
+    if (named.has(c.name) || c.state !== 'running' || c.oneoff) continue;
     if (dependedOn.has(c.name) || PLUMBING.test(c.image) || PLUMBING_NAME.test(c.name)) continue;
     const g = guessFromImage(c.image, c.name);
     const p = (ports(c.name) ?? []).find((x) => x.host && /\/tcp$/.test(x.container));

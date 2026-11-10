@@ -272,9 +272,14 @@ kbd {
 time,
 .mono {
   font-family: var(--f-mono);
-  font-size: 0.88em;
+  /* Labels shrink with their line, never below 11px. */
+  font-size: max(11px, 0.88em);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+small {
+  font-size: max(11px, 0.83em);
 }
 
 .ident {
@@ -5384,6 +5389,8 @@ a.jw-title:hover {
 .feed-card-text {
   font-size: 14px;
   line-height: 1.5;
+  /* A bare link in a summary wraps instead of running out of the card. */
+  overflow-wrap: anywhere;
   color: var(--ink-2);
   display: -webkit-box;
   -webkit-line-clamp: 4;

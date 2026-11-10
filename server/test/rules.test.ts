@@ -161,6 +161,7 @@ test('catalog audit: flags dead entries, finds unlisted apps, skips plumbing', (
     ctr('immich-postgres', { image: 'ghcr.io/immich-app/postgres:15' }),
     ctr('app-redis', { image: 'redis:7-alpine' }),
     ctr('acme-scheduler', { image: 'ghcr.io/x/acme:latest' }),
+    ctr('feed-feed-run-5a852e2da326', { image: 'feed-feed', project: 'feed', oneoff: true }),
     down('old-thing'),
   ];
   const cat = catalog([

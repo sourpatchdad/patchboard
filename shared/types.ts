@@ -92,6 +92,8 @@ export interface Container {
    * someone pulled, but this container still runs the old copy.
    */
   staleImage?: boolean;
+  /** Started by `docker compose run`: a one-off job, not a service. */
+  oneoff?: boolean;
   /** Container names this one depends on, resolved from compose's depends_on label. */
   dependsOn?: string[];
   /** patchboard.* and homepage.* catalog labels (name, group, href, icon...), prefix dropped. */

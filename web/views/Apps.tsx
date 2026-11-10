@@ -14,6 +14,7 @@ import { containerMap } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { useLeaveGuard } from '../lib/leave.ts';
+import { breakable } from '../lib/format.ts';
 
 export function Apps() {
   const { snap } = useStore();
@@ -202,7 +203,7 @@ export function Apps() {
                     <Icon name={b.name} icon={b.icon} size={24} />
                   </span>
                   <span className="tile-name">{b.name}</span>
-                  <span className="tile-stat mono">{new URL(b.href, location.href).hostname.replace(/^www\./, '')}</span>
+                  <span className="tile-stat mono">{breakable(new URL(b.href, location.href).hostname.replace(/^www\./, ''))}</span>
                 </a>
               </li>
             ))}
