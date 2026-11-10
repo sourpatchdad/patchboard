@@ -19,15 +19,15 @@ export const cameraName = (n: string) => {
 };
 
 /** Seconds between frames while a camera is on screen. */
-const FRAME_MS = 3_000;
+const FRAME_MS = 5_000;
 
 /**
  * A camera's newest frame, close to live while you can see it: every few
  * seconds while it's on screen and the tab is in front, and not at all
- * otherwise, so a board left open in a background tab costs nothing. The
- * next frame loads off screen and swaps in, so the picture never blanks.
- * Patchboard passes each frame straight through without holding it, so
- * this costs bandwidth (a small JPEG every few seconds), not memory.
+ * otherwise, so a board left open in a background tab costs nothing. Each
+ * frame is fetched once, decoded off screen, then swapped in whole, so the
+ * picture never blanks or flickers between frames. Patchboard passes each
+ * frame straight through without holding it: bandwidth, not memory.
  */
 function LiveFrame({ name }: { name: string }) {
   const img = useRef<HTMLImageElement>(null);
@@ -36,34 +36,44 @@ function LiveFrame({ name }: { name: string }) {
     const el = img.current;
     if (!el) return;
     let seen = false;
-    let timer = 0;
     let loading = false;
-    const next = () => {
+    let gone = false;
+    let shown = '';
+    const next = async () => {
       if (loading || !seen || document.visibilityState !== 'visible') return;
       loading = true;
-      const url = `/api/img/frigate?camera=${encodeURIComponent(name)}&t=${Date.now()}`;
-      const pre = new Image();
-      pre.onload = () => {
-        loading = false;
+      try {
+        const res = await fetch(`/api/img/frigate?camera=${encodeURIComponent(name)}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const url = URL.createObjectURL(await res.blob());
+        // Ready to paint before it goes in: no blank frame while it loads.
+        const pre = new Image();
+        pre.src = url;
+        await pre.decode().catch(() => {});
+        if (gone) return URL.revokeObjectURL(url);
+        if (shown) URL.revokeObjectURL(shown);
+        shown = url;
         setSrc(url);
-      };
-      pre.onerror = () => {
+      } catch {
+        // Missed a frame: the last one stays up, and the next try comes on schedule.
+      } finally {
         loading = false;
-      };
-      pre.src = url;
+      }
     };
     const io = new IntersectionObserver(([e]) => {
       seen = e.isIntersecting;
-      if (seen) next();
+      if (seen) void next();
     });
     io.observe(el);
-    const onShow = () => next();
+    const onShow = () => void next();
     document.addEventListener('visibilitychange', onShow);
-    timer = window.setInterval(next, FRAME_MS);
+    const timer = window.setInterval(() => void next(), FRAME_MS);
     return () => {
+      gone = true;
       io.disconnect();
       document.removeEventListener('visibilitychange', onShow);
       clearInterval(timer);
+      if (shown) URL.revokeObjectURL(shown);
     };
   }, [name]);
   return <img ref={img} src={src} alt="" decoding="async" />;

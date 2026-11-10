@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Camera frames no longer flicker: each is fetched once, decoded, then
+  swapped in whole, every 5 seconds while on screen (half the requests).
+- On a touch screen, app names under icons stay on one line, ending in an
+  ellipsis instead of breaking mid-word, and a big app group wraps onto
+  another row instead of running out of its card. Phones still swipe each
+  group sideways.
+
 - Playback as it happens: Jellyfin, Emby and Audiobookshelf push to
   Patchboard over one light connection each, so starts, stops, pauses and
   seeks show at once; while that line works, they're polled once a minute

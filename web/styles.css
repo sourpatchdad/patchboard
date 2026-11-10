@@ -5701,6 +5701,10 @@ body.is-sorting * {
 
 .patchrow.icons-only .bay-jacks {
   gap: 4px;
+  /* Wider than phone: a big group wraps onto another row instead of running
+     out of its card. (A phone swipes each group sideways instead, below.) */
+  flex-wrap: wrap;
+  row-gap: 10px;
 }
 
 .patchrow.icons-only .jack::after {
@@ -5734,6 +5738,7 @@ body.is-sorting * {
   .bay-jacks,
   .patchrow.icons-only .bay-jacks {
     display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     margin: 0 -16px;
     padding: 0 16px 2px;
@@ -10425,15 +10430,18 @@ a.req-come:hover .req-title {
 /* Icons only means names on hover; a touch screen has no hover, so the
    names show under the icons there. */
 @media (hover: none) {
+  /* One line, never broken mid-word ("Audiobooks/helf"): a long name ends
+     in an ellipsis; the link's label still says it in full. */
   .patchrow.icons-only .jack-label {
     display: block;
-    max-width: 76px;
+    max-width: 72px;
     height: auto;
     padding: 2px 4px;
     line-height: 1.25;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-align: center;
-    overflow-wrap: anywhere;
   }
 
   .patchrow.icons-only .jack::after {

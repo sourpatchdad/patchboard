@@ -111,8 +111,8 @@ one click.
   runs a playing stream's position on at real speed, at most 30 seconds
   past the last answer. Plex (through Tautulli) and Navidrome can't push,
   so they poll every 5 seconds while something plays. A camera's frame
-  refreshes every few seconds only while it's on screen and the tab is in
-  front. Tapping a camera opens it live: Frigate's motion-JPEG feed passed
+  refreshes every 5 seconds only while it's on screen and the tab is in
+  front, swapped in whole so it never flickers. Tapping a camera opens it live: Frigate's motion-JPEG feed passed
   straight through, one chunk at a time, at most three at once, ending when
   the view closes, the tab goes to the back, or ten minutes pass. Patchboard
   never decodes a frame, so a camera costs bandwidth, not memory.
