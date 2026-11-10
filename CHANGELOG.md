@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.2 (2026-11-10)
 
 - **Fixes:** the board tabs on a phone scroll only sideways, so a swipe
   down the page no longer catches on them. Browsers fetch the icons and
