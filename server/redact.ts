@@ -39,8 +39,21 @@ const RULES: [RegExp, string][] = [
   [/(\b[a-z][a-z0-9+.-]*:\/\/[^\s/:@]+:)[^\s/@]+(@)/gi, `$1${MASK}$2`],
 ];
 
+// Terminal colors and cursor codes (Immich and other Node apps color their
+// logs). A browser would print them as text, and one inside a key name would
+// slip past the rules above, so they go first. Tabs stay; other control
+// characters go too.
+const TERMINAL: RegExp[] = [
+  /\x1b\[[0-?]*[ -/]*[@-~]/g, // CSI: colors, cursor moves, erase
+  /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, // OSC: titles, links
+  /\x1b[@-Z\\-_]/g, // two-byte escapes
+  /[\x00-\x08\x0b-\x1f\x7f]/g, // anything else a terminal would act on
+];
+
+/** Log text as plain characters, with secrets masked. */
 export function redact(text: string): string {
   let out = text;
+  for (const re of TERMINAL) out = out.replace(re, '');
   for (const [re, to] of RULES) out = out.replace(re, to);
   return out;
 }

@@ -18,10 +18,17 @@ import { useUrlChoice } from '../lib/url.ts';
 
 type FeedSort = 'newest' | 'oldest' | 'quick';
 
+// Feed boilerplate that says nothing about the article: Hacker News feeds'
+// link lines and counts, and affiliate notices that lead some articles.
+const BOILERPLATE = [/\b(?:Article|Comments) URL:\s*\S+/gi, /\bPoints:\s*\d+/gi, /#\s*Comments:\s*\d+/gi, /^We may earn a commission from links on this page\.?/i];
+
 /** Plain text from article HTML, for a card excerpt. DOMParser never runs scripts. */
 function excerpt(html: string | undefined, max = 220): string {
   if (!html) return '';
-  const text = (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '').replace(/\s+/g, ' ').trim();
+  // A space at each block's end, so paragraphs don't run together as text.
+  const spaced = html.replace(/<\/(?:p|div|li|h[1-6]|blockquote)>|<br\s*\/?>/gi, '$& ');
+  let text = (new DOMParser().parseFromString(spaced, 'text/html').body.textContent ?? '').replace(/\s+/g, ' ').trim();
+  for (const re of BOILERPLATE) text = text.replace(re, ' ').replace(/\s+/g, ' ').trim();
   return text.length > max ? `${text.slice(0, max).replace(/\s\S*$/, '')}...` : text;
 }
 

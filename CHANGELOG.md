@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Fixes:** logs from apps that color their output, such as Immich, read
+  as plain text instead of showing terminal codes. Jump to matches an
+  action on its container's name, so "son" finds Sonarr's actions and not
+  "Stop nextcloud". Reading's cards skip feed boilerplate (Hacker News link
+  lines, affiliate notices) and no longer run paragraphs together.
+
 ## 1.1.2 (2026-11-10)
 
 - **Fixes:** the board tabs on a phone scroll only sideways, so a swipe

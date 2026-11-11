@@ -236,16 +236,26 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       .map((it) => {
         // Articles and mail match where the words appear, never by scattered letters.
         const loose = it.id.startsWith('f-') || it.id.startsWith('m-');
-        const s = loose
-          ? it.label.toLowerCase().includes(q.trim().toLowerCase())
-            ? score(q, it.label)
-            : -1
-          : Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50, it.terms ? score(q, `${it.label} ${it.terms}`) - 60 : -1);
-        // The boost ranks a match; it never makes one.
         const words = q.trim().toLowerCase().split(/\s+/);
+        const saysVerb = !!it.verb && words.some((w) => w.length >= 3 && it.verb!.startsWith(w));
+        // An action matches on its container's name; its verb counts only
+        // when typed, so "son" finds Sonarr's actions and not "Stop nextcloud".
+        const rest = it.verb ? words.filter((w) => !(w.length >= 3 && it.verb!.startsWith(w))).join(' ') : '';
+        const s = it.verb
+          ? rest
+            ? score(rest, it.label.slice(it.verb.length + 1))
+            : saysVerb
+              ? 500
+              : -1
+          : loose
+            ? it.label.toLowerCase().includes(q.trim().toLowerCase())
+              ? score(q, it.label)
+              : -1
+            : Math.max(score(q, it.label), score(q, `${it.hint} ${it.label}`) - 50, it.terms ? score(q, `${it.label} ${it.terms}`) - 60 : -1);
+        // The boost ranks a match; it never makes one.
         // Typing a name and pressing Enter opens its page, where the runbook
         // and logs are. An action leads only once you type its verb.
-        const tier = it.verb && !words.some((w) => w.length >= 3 && it.verb!.startsWith(w)) ? 1 : 0;
+        const tier = it.verb && !saysVerb ? 1 : 0;
         return { it, tier, s: s > 0 && q.trim() ? s + (it.boost ?? 0) : s };
       })
       .filter((r) => r.s > 0)

@@ -28,3 +28,13 @@ test('ordinary lines are left alone', () => {
     'https://github.com/sourpatchdad/patchboard',
   ]) assert.equal(redact(line), line);
 });
+
+test('terminal color codes come out, so colored logs read as plain text', () => {
+  // An Immich line as Docker hands it over.
+  const immich = '\x1b[32m[Nest] 7  - \x1b[39m11/11/2026, 2:04:00 PM \x1b[32m    LOG\x1b[39m \x1b[33m[Microservices:VersionService]\x1b[39m \x1b[32mFound v3.4.1\x1b[39m';
+  assert.equal(redact(immich), '[Nest] 7  - 11/11/2026, 2:04:00 PM     LOG [Microservices:VersionService] Found v3.4.1');
+  assert.equal(redact('\x1b[1;31mERROR\x1b[0m\tdisk full'), 'ERROR\tdisk full', 'tabs stay');
+  assert.equal(redact('\x1b]0;title\x07done\r'), 'done', 'window titles and stray carriage returns go');
+  // A color code inside a key name no longer hides the key.
+  assert.equal(redact('apikey\x1b[0m=abc123'), 'apikey=••••');
+});
