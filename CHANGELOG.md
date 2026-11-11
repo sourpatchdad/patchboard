@@ -7,6 +7,8 @@
   action on its container's name, so "son" finds Sonarr's actions and not
   "Stop nextcloud". Reading's cards skip feed boilerplate (Hacker News link
   lines, affiliate notices) and no longer run paragraphs together.
+- **Under the hood:** TypeScript 7, cross-env 10, and patch updates to Hono,
+  Vite, Playwright and concurrently.
 
 ## 1.1.2 (2026-11-10)
 
