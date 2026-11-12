@@ -67,7 +67,10 @@ to finds it, or open `/monitor`. For a wall tablet, make it a household
 device and set it to open the Monitor in Settings, Connections, Sign-in and
 keys: change that, the color, or the night hours it dims through, from your
 desk and the tablet follows within a second. A tap brightens a dimmed
-screen for two minutes.
+screen for two minutes. Give it more pages, the Monitor, wall boards,
+Server or Weather, and a swipe moves between them, with dots at the bottom
+to show where it is; it can also turn them by itself every half minute to
+ten minutes, waiting three minutes after anyone touches it.
 
 ![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
 
@@ -142,9 +145,13 @@ progress and albums played lately on Audiobookshelf and Navidrome.
 ![Calendar, Notes, Books, Watched, Listening and This week on the board](screenshots/household.webp)
 
 **No setup needed:** Bookmarks puts your links on the board, Search sends
-words to the engine you pick, Clocks shows the time where your people are,
-Feeds reads any RSS or Atom feed without a reader app, and Releases follows
-the newest version of the GitHub projects you name.
+words to the engine you pick, Clocks shows the time where your people are
+(or one big clock and the date), Feeds reads any RSS or Atom feed without a
+reader app, and Releases follows the newest version of the GitHub projects
+you name. Markets follows coins, stocks, funds, indexes and currencies with
+the day's line, no key needed: write `BTC`, `AAPL`, `^GSPC` or `EUR/USD`.
+Sun and moon shows sunrise, sunset, the day getting longer or shorter, and
+tonight's moon. Countdown counts the days to the dates you name.
 
 ![Bookmarks, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
 
@@ -184,7 +191,9 @@ keep their full length, the page scrolls, and Arrange board reports how far
 it runs over. Fit recalculates when the window width or header height
 changes. New board, at the foot of any board, adds another with its own
 name, starting empty or from a layout; tabs over the board switch between
-them.
+them. Five layouts are made for a screen on the wall: clock and weather,
+markets, house, cameras, and media. A board set For a wall screen shows one
+status line instead of the header, and no tabs.
 
 ![Arrange board with clear card gutters](screenshots/customize.webp)
 

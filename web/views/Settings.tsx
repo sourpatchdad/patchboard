@@ -9,8 +9,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
-import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
-import { DIM_HOURS, dimLabel } from '../../shared/night.ts';
+import type { CatalogAudit, DeviceView, SelfCheck } from '../../shared/types.ts';
+import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { setShowcase, useShowcase } from '../lib/showcase.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
@@ -33,6 +33,9 @@ import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
+
+/** A household device as Settings lists it. */
+type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
 
 type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
 
@@ -831,17 +834,21 @@ function Household() {
     ['/weather', 'Weather'],
   ];
   // Saved at once; the device follows within a second.
-  const setView = async (id: string, view: { opens?: string; tint?: string; dim?: string }) => {
-    setList((l) => l && l.map((d) => (d.id === id ? { ...d, ...view, opens: view.opens === undefined ? d.opens : view.opens || undefined, tint: (view.tint ?? d.tint) as 'gray' | 'blue' | 'color' | undefined, dim: view.dim === undefined ? d.dim : view.dim || undefined } : d)));
-    await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
+  const setView = async (id: string, view: { opens?: string; pages?: string[]; rotate?: number; tint?: string; dim?: string }) => {
+    const res = await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
+    if (!res.ok) return;
+    // The server's answer is the whole view: a field it leaves out is unset.
+    const saved = (await res.json()) as DeviceView;
+    setList((l) => l && l.map((d) => (d.id === id ? { id: d.id, name: d.name, created: d.created, seen: d.seen, ...saved } : d)));
   };
-  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string }[] | null>(null);
+  const placeName = (path: string) => places.find(([v]) => v === path)?.[1] ?? path;
+  const [list, setList] = useState<Listed[] | null>(null);
   const [auth, setAuth] = useState<string>('none');
   const [name, setName] = useState('');
   const [made, setMade] = useState<{ name: string; url: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
-  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string }[]);
+  const load = async () => setList((await (await fetch('/api/household')).json()) as Listed[]);
   useEffect(() => {
     void load();
     void fetch('/api/session')
@@ -877,7 +884,8 @@ function Household() {
     <Section title="Household devices" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
         A link for a family phone or a wall tablet. Open it once on that device: it sees the boards, cameras, Server and Monitor, reading and calendar, and switches the lights
-        and scenes pinned to a board. It can't update, restart or stop anything, or open Settings, logs or container pages.
+        and scenes pinned to a board. It can't update, restart or stop anything, or open Settings, logs or container pages. Give a wall tablet more pages and a swipe moves
+        between them, or let it turn them by itself.
       </p>
       {made && (
         <div className="household-made" role="status">
@@ -915,6 +923,46 @@ function Household() {
                       ))}
                     </select>
                   </label>
+                  {d.opens && (
+                    <div className="household-pages">
+                      <span>Swipes to</span>
+                      {(d.pages ?? []).map((pg) => (
+                        <button
+                          key={pg}
+                          type="button"
+                          className="chip"
+                          aria-label={`Remove ${placeName(pg)}`}
+                          onClick={() => void setView(d.id, { pages: (d.pages ?? []).filter((x) => x !== pg) })}
+                        >
+                          {placeName(pg)} <span aria-hidden="true">×</span>
+                        </button>
+                      ))}
+                      {(d.pages?.length ?? 0) < MAX_PAGES - 1 && (
+                        <select className="field" aria-label="Add a page" value="" onChange={(e) => e.target.value && void setView(d.id, { pages: [...(d.pages ?? []), e.target.value] })}>
+                          <option value="">{d.pages?.length ? 'Add another' : 'Add a page'}</option>
+                          {places
+                            .filter(([v]) => v && v !== d.opens && !d.pages?.includes(v))
+                            .map(([v, label]) => (
+                              <option key={v} value={v}>
+                                {label}
+                              </option>
+                            ))}
+                        </select>
+                      )}
+                    </div>
+                  )}
+                  {!!d.pages?.length && (
+                    <label>
+                      <span>Turns pages</span>
+                      <select className="field" value={d.rotate ?? 0} onChange={(e) => void setView(d.id, { rotate: Number(e.target.value) })}>
+                        {ROTATE_SECONDS.map((s) => (
+                          <option key={s} value={s}>
+                            {s === 0 ? 'When swiped' : s < 60 ? `Every ${s} seconds` : s === 60 ? 'Every minute' : `Every ${s / 60} minutes`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <label>
                     <span>Monitor</span>
                     <select className="field" value={d.tint ?? 'gray'} onChange={(e) => void setView(d.id, { tint: e.target.value })}>

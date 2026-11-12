@@ -38,11 +38,23 @@ export interface Appearance {
   hidden: HomeSection[];
   /** Single-key shortcuts (/, ?, g then a letter, j and k). Off for speech input, which can trigger them. */
   keys: boolean;
+  /** How dates and numbers are written, as a language tag; empty follows the browser. */
+  locale: string;
+  /** Prices in this currency; empty follows the region. */
+  currency: string;
 }
 
 const KEY = 'pb-appearance';
 const VARS_KEY = 'pb-vars';
 const usesFahrenheit = typeof navigator !== 'undefined' && /^en-(US|LR|MM)$|^en$/.test(navigator.language || 'en-US');
+// Most of the world writes 14:30; the United States and a few others write 2:30 PM.
+const uses24h = (() => {
+  try {
+    return new Intl.DateTimeFormat(typeof navigator !== 'undefined' ? navigator.language : 'en-US', { hour: 'numeric' }).resolvedOptions().hourCycle?.startsWith('h2') ?? false;
+  } catch {
+    return false;
+  }
+})();
 
 export const DEFAULTS: Appearance = {
   theme: 'graphite',
@@ -59,10 +71,12 @@ export const DEFAULTS: Appearance = {
   homeStatusSize: 'medium',
   homeWeather: 'current',
   homeServer: 'card',
-  clock24: false,
+  clock24: uses24h,
   temp: usesFahrenheit ? 'f' : 'c',
   hidden: [],
   keys: true,
+  locale: '',
+  currency: '',
 };
 
 export const ACCENTS: { id: string; name: string; dark: string; light: string }[] = [

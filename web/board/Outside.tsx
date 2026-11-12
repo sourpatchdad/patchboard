@@ -12,6 +12,10 @@ import { agoLong } from '../lib/format.ts';
 import { useStore } from '../lib/store.tsx';
 import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
+import { useWidgetData } from './widget-data.ts';
+import { BigClock } from './Kiosk.tsx';
+import { useAppearance } from '../lib/appearance.ts';
+import { locale } from '../lib/region.ts';
 
 export function BookmarksWidget() {
   const { snap } = useStore();
@@ -63,51 +67,47 @@ const place = (line: string) => {
 };
 
 export function ClocksWidget({ config, now }: { config?: Record<string, string>; now: number }) {
-  const places = (config?.zones ?? '').split('\n').filter(Boolean).map(place);
-  const here = new Date(now).toLocaleDateString('en-CA');
+  const { style } = useWidget();
+  const zones = config?.zones ?? '';
+  if (style === 'big') {
+    return (
+      <Section title="Clocks" className="clocks clocks-big">
+        <BigClock now={now}>{zones && <ClockPlaces zones={zones} now={now} />}</BigClock>
+      </Section>
+    );
+  }
   return (
     <Section title="Clocks" className="clocks">
-      {places.length === 0 ? (
+      {zones ? (
+        <ClockPlaces zones={zones} now={now} />
+      ) : (
         <Empty>
           No places yet. <SetupLink>Add places</SetupLink>
         </Empty>
-      ) : (
-        <ul className="clock-list">
-          {places.map((p) => {
-            const day = new Date(now).toLocaleDateString('en-CA', { timeZone: p.zone });
-            return (
-              <li key={p.label + p.zone}>
-                <span className="clock-place">{p.label}</span>
-                <span className="clock-time">{new Date(now).toLocaleTimeString(undefined, { timeZone: p.zone, hour: 'numeric', minute: '2-digit' })}</span>
-                <span className="clock-day">{day === here ? '' : new Date(now).toLocaleDateString(undefined, { timeZone: p.zone, weekday: 'short' })}</span>
-              </li>
-            );
-          })}
-        </ul>
       )}
     </Section>
   );
 }
 
-/** A widget's server-side data, refetched every few minutes. */
-function useWidgetData<T>(path: string, ms: number): { data: T | null; failed: boolean } {
-  const [data, setData] = useState<T | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let gone = false;
-    const load = () =>
-      fetch(path)
-        .then((r) => (r.ok ? (r.json() as Promise<T>) : Promise.reject()))
-        .then((d) => !gone && (setData(d), setFailed(false)))
-        .catch(() => !gone && setFailed(true));
-    void load();
-    const t = setInterval(load, ms);
-    return () => {
-      gone = true;
-      clearInterval(t);
-    };
-  }, [path, ms]);
-  return { data, failed };
+/** The time in each place, with the day when it isn't today here. */
+function ClockPlaces({ zones, now }: { zones: string; now: number }) {
+  const { clock24 } = useAppearance();
+  const places = zones.split('\n').filter(Boolean).map(place);
+  const here = new Date(now).toLocaleDateString('en-CA');
+  return (
+    <ul className="clock-list">
+      {places.map((p) => {
+        const day = new Date(now).toLocaleDateString('en-CA', { timeZone: p.zone });
+        return (
+          <li key={p.label + p.zone}>
+            <span className="clock-place">{p.label}</span>
+            <span className="clock-time">{new Date(now).toLocaleTimeString(locale(), { timeZone: p.zone, hour: 'numeric', minute: '2-digit', hour12: !clock24 })}</span>
+            <span className="clock-day">{day === here ? '' : new Date(now).toLocaleDateString(locale(), { timeZone: p.zone, weekday: 'short' })}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function RssWidget({ board, id, config, now }: { board: string; id: string; config?: Record<string, string>; now: number }) {

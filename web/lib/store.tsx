@@ -34,7 +34,7 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
       return { ...prev, boards: e.boards, boardSaved: e.changed ? { id: e.changed, at: Date.now() } : prev.boardSaved };
     case 'household':
       // Sent only to this device: what it should show now.
-      return prev.household?.id === e.id ? { ...prev, household: { ...prev.household, opens: e.opens, tint: e.tint, dim: e.dim, rev: e.rev } } : prev;
+      return prev.household?.id === e.id ? { ...prev, household: { id: prev.household.id, name: prev.household.name, lights: prev.household.lights, opens: e.opens, pages: e.pages, rotate: e.rotate, tint: e.tint, dim: e.dim, rev: e.rev } } : prev;
   }
 }
 

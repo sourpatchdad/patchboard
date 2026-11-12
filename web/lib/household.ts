@@ -6,7 +6,7 @@
 
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { isNight } from '../../shared/night.ts';
+import { isNight } from '../../shared/wall.ts';
 import { useStore } from './store.tsx';
 
 // Shared across both mounts, so a page change isn't applied twice.

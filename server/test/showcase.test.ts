@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { dimLabel, isNight } from '../../shared/night.ts';
+import { dimLabel, isNight } from '../../shared/wall.ts';
 import { makeSwapper } from '../../web/lib/showcase.ts';
 
 test('showcase swaps addresses, domains and listed words, one stand-in per real value', () => {

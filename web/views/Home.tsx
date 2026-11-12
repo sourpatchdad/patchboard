@@ -57,6 +57,13 @@ export function Home() {
   const { board = HOME_ID } = useParams();
   const now = useNow(15_000);
   const [widgets, setWidgets] = useState<string[]>([]);
+  // A wall board: one status line instead of the header, no tabs, and on a
+  // household device no navigation either; swiping moves between pages.
+  const wall = widgets.includes('@wall');
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-wall', wall);
+    return () => document.documentElement.removeAttribute('data-wall');
+  }, [wall]);
   if (!snap) return <HomeSkeleton />;
   return (
     <div className="home">
@@ -64,9 +71,9 @@ export function Home() {
       <h1 className="sr-only">
         {snap.brand?.name || 'Patchboard'}, {board === HOME_ID ? 'Home' : (snap.boards?.find((b) => b.id === board)?.name ?? 'board')}
       </h1>
-      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} />
+      <Masthead now={now} weatherOnBoard={widgets.includes('weather')} attentionCard={widgets.includes('attention-card')} slim={wall} />
       {board === HOME_ID && <Welcome />}
-      <BoardTabs />
+      {!wall && <BoardTabs />}
       <Board key={board} id={board} now={now} onWidgets={setWidgets} />
     </div>
   );
@@ -97,7 +104,7 @@ function HomeSkeleton() {
   );
 }
 
-function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weatherOnBoard: boolean; attentionCard: boolean }) {
+function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; weatherOnBoard: boolean; attentionCard: boolean; slim?: boolean }) {
   const { snap } = useStore();
   const { data: weather } = useSource<WeatherData>('weather');
   const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather, homeServer } = useAppearance();
@@ -123,6 +130,14 @@ function Masthead({ now, weatherOnBoard, attentionCard }: { now: number; weather
   // A quiet line leads to what's running, or to the integrations it can't reach.
   const quietTo = blind ? '/settings?tab=connections' : '/stacks';
 
+  if (slim) {
+    return (
+      <header className={`wall-status tone-${status.tone}`}>
+        <span className="status-line">{status.text}</span>
+        {!attentionCard && <HeaderAlerts alerts={snap!.alerts} now={now} />}
+      </header>
+    );
+  }
   if (homeStatusSize === 'hidden' && homeServer === 'hidden' && homeClockSize === 'hidden' && (!weather || weatherOnBoard || homeWeather === 'hidden')) return null;
 
   return (
@@ -1061,7 +1076,7 @@ function Welcome() {
         </li>
         <li>
           <strong>Home.</strong> Start from a layout:{' '}
-          {STARTERS.map((st, i) => (
+          {STARTERS.filter((st) => !st.wall).map((st, i) => (
             <span key={st.id}>
               {i > 0 && ', '}
               <button

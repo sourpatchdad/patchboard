@@ -1,6 +1,14 @@
-// Night hours for a household device, set in Settings: the screen dims
-// through them. Whole hours, start-end, and they may run past midnight.
+// A wall device's settings, set in Settings for each household device: the
+// pages it swipes through, how often it turns to the next one by itself, and
+// the night hours it dims through.
 
+/** The most pages one device swipes through. */
+export const MAX_PAGES = 8;
+
+/** Seconds between pages when a device turns them by itself; 0 never does. */
+export const ROTATE_SECONDS = [0, 30, 60, 120, 300, 600] as const;
+
+/** Night hours, start-end in whole hours; they may run past midnight. */
 export const DIM_HOURS = ['21-6', '22-6', '22-7', '23-7'] as const;
 
 /** "22-7" as "10 PM to 7 AM". */

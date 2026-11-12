@@ -1171,7 +1171,7 @@ export interface Snapshot {
   /** READ_ONLY=1, or a household device: the UI hides every control that changes something. */
   readOnly: boolean;
   /** This browser is a household device: it views, and may switch pinned lights and scenes when `lights` is true. */
-  household?: { id: string; name: string; lights: boolean; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string; rev?: number };
+  household?: { id: string; name: string; lights: boolean } & DeviceView;
   /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
   limits?: Limits;
   /** What each page shows (its Customize button). */
@@ -1201,7 +1201,39 @@ export type ServerEvent =
   | { type: 'brand'; brand: Brand }
   | { type: 'boards'; boards: import('./board.ts').BoardRef[]; changed?: string }
   // To one household device only: what it should show, changed from Settings.
-  | { type: 'household'; id: string; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string; rev?: number };
+  | ({ type: 'household'; id: string } & DeviceView);
+
+/** One line of a Markets widget. A line that couldn't be priced has `failed`. */
+export interface MarketQuote {
+  /** The name you gave it, if any. */
+  label?: string;
+  symbol: string;
+  /** The source's own name for it: Bitcoin, Apple Inc. */
+  name?: string;
+  price?: number;
+  /** Percent, over `span`. */
+  change?: number;
+  currency?: string;
+  /** Prices over `span`, oldest first, for a sparkline. */
+  line?: number[];
+  span?: '24h' | 'today' | '30d';
+  failed?: string;
+}
+
+/** What a household device shows, set from Settings. A field left out is unset. */
+export interface DeviceView {
+  /** Where it opens, and the first page it swipes through: /, /b/<board>, /server, /monitor, /upcoming, /reading or /weather. */
+  opens?: string;
+  /** More pages, in order, that a swipe moves to. */
+  pages?: string[];
+  /** Seconds between pages when it turns them by itself. */
+  rotate?: number;
+  tint?: 'gray' | 'blue' | 'color';
+  /** Night hours to dim for, like '22-7'. */
+  dim?: string;
+  /** Changes with every save, so the device knows to follow. */
+  rev?: number;
+}
 
 /** One published Patchboard release and its notes (Markdown), from GitHub Releases. */
 export interface SelfRelease {

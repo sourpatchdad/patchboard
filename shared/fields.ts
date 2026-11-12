@@ -133,3 +133,60 @@ export function searchUrl(cfg: Record<string, string> | undefined, words: string
   const template = cfg?.engine === 'custom' && cfg.url ? cfg.url : (ENGINES[cfg?.engine ?? ''] ?? ENGINES.duckduckgo).url;
   return template.replace('%s', encodeURIComponent(words));
 }
+
+/**
+ * Markets: one per line, with an optional label. Coins (BTC, bitcoin) come
+ * from CoinGecko, a pair of currencies (EUR/USD) from the European Central
+ * Bank, and anything else (AAPL, ^GSPC, VTI) from Yahoo Finance.
+ */
+export const symbolsField: WidgetField = {
+  key: 'symbols',
+  label: 'What to follow',
+  hint: 'One per line: a coin (BTC), a stock or fund (AAPL, VTI), an index (^GSPC) or two currencies (EUR/USD). Write S&P 500=^GSPC to name it.',
+  placeholder: 'Bitcoin=BTC',
+  multiline: true,
+  check: (raw) => {
+    const ok = raw
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .slice(0, 12)
+      .map((l) => {
+        const at = l.lastIndexOf('=');
+        // "EURUSD=X" is a Yahoo symbol, not a label: only split where a label could be.
+        const label = at > 0 && !/^[A-Z]{6}=X$/i.test(l) ? l.slice(0, at).trim().slice(0, 24) : '';
+        const sym = (label ? l.slice(at + 1) : l).trim().toUpperCase();
+        return /^[\^A-Z0-9.=/-]{1,20}$/.test(sym) ? (label ? `${label}=${sym}` : sym) : null;
+      })
+      .filter((l): l is string => !!l);
+    return ok.length ? [...new Set(ok)].join('\n') : null;
+  },
+};
+
+/** Countdowns: Name=2026-12-25 for a day, or Name=12-25 for the same day every year. */
+export const eventsField: WidgetField = {
+  key: 'events',
+  label: 'Days to count to',
+  hint: 'One per line: Name=2026-12-25, or Name=12-25 for the same day every year.',
+  placeholder: 'Vacation=2027-03-14',
+  multiline: true,
+  check: (raw) => {
+    const ok = raw
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .slice(0, 8)
+      .map((l) => {
+        const at = l.lastIndexOf('=');
+        if (at < 1) return null;
+        const name = l.slice(0, at).trim().slice(0, 32);
+        const day = l.slice(at + 1).trim();
+        const m = /^(?:(\d{4})-)?(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.exec(day);
+        // A day that exists: no February 30th. A yearly one may be the 29th.
+        const real = m && new Date(Number(m[1] ?? 2024), Number(m[2]) - 1, Number(m[3])).getDate() === Number(m[3]);
+        return name && real ? `${name}=${day}` : null;
+      })
+      .filter((l): l is string => !!l);
+    return ok.length ? ok.join('\n') : null;
+  },
+};

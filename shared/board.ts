@@ -5,7 +5,7 @@
 // Runtime code is fine here: no Node or DOM use.
 
 import { parseEntities } from './ha.ts';
-import { camerasField, engineField, feedsField, groupsField, reposField, searchUrlField, type WidgetField, zonesField } from './fields.ts';
+import { camerasField, engineField, eventsField, feedsField, groupsField, reposField, searchUrlField, symbolsField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -49,7 +49,10 @@ export type WidgetType =
   | 'releases'
   | 'container'
   | 'json'
-  | 'weather';
+  | 'weather'
+  | 'markets'
+  | 'sky'
+  | 'countdown';
 
 /** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
@@ -81,6 +84,8 @@ export interface Board {
   columns?: number;
   /** Lists show fewer items so the whole board fits the window, on screens wide enough for two columns. */
   fit?: boolean;
+  /** Made for a wall screen: one status line instead of the header, no tabs. */
+  wall?: boolean;
   widgets: Widget[];
 }
 
@@ -231,7 +236,38 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   photos: { name: 'Photos', about: 'Immich: photos, videos and library size, and what Immich is working on.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   bookmarks: { name: 'Bookmarks', about: 'The links in Edit apps, Bookmarks, or brought over from Homepage, grouped as you keep them.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   search: { name: 'Search', about: 'A search box for DuckDuckGo, Google, Bing, Kagi, Startpage or any site you name. Opens the results in a new tab.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { title: false, fields: [engineField, searchUrlField] } },
-  clocks: { name: 'Clocks', about: 'The time where your people are, with the day when it differs from yours.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [zonesField] } },
+  clocks: {
+    name: 'Clocks',
+    about: 'The time where your people are, with the day when it differs from yours. Big clock shows your own time and date across a wall tablet.',
+    size: 's',
+    sizes: ANY,
+    removable: true,
+    multiple: true,
+    options: {
+      styles: [
+        ['', 'List'],
+        ['big', 'Big clock'],
+      ],
+      fields: [zonesField],
+    },
+  },
+  markets: {
+    name: 'Markets',
+    about: "Coins, stocks, funds, indexes and currencies: the price, the day's change and a line of the day. No key needed. Prices can run 15 minutes behind.",
+    size: 'm',
+    sizes: ANY,
+    removable: true,
+    multiple: true,
+    options: {
+      styles: [
+        ['', 'List'],
+        ['big', 'Big numbers'],
+      ],
+      fields: [symbolsField],
+    },
+  },
+  sky: { name: 'Sun and moon', about: "Sunrise, sunset, how long the day is and how it's changing, and the moon tonight. Uses the weather's place.", size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
   cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 5 seconds while on screen (tap one to watch it live), and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], fields: [camerasField] } },
@@ -334,7 +370,8 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
   const columns = Number.isInteger(raw.columns) && (raw.columns as number) >= 2 && (raw.columns as number) <= 6 ? (raw.columns as number) : undefined;
   const name = cleanBoardName((raw as { name?: unknown }).name);
   const fit = (raw as { fit?: unknown }).fit === true;
-  return { board: { version: 1, ...(name ? { name } : {}), ...(columns ? { columns } : {}), ...(fit ? { fit } : {}), widgets } };
+  const wall = (raw as { wall?: unknown }).wall === true;
+  return { board: { version: 1, ...(name ? { name } : {}), ...(columns ? { columns } : {}), ...(fit ? { fit } : {}), ...(wall ? { wall } : {}), widgets } };
 }
 
 /** The shared settings, kept only when they make sense for this widget. */
@@ -359,8 +396,8 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
   return out;
 }
 
-/** Starting layouts, offered in Customize and on the first run. */
-export const STARTERS: { id: string; name: string; about: string; board: Board }[] = [
+/** Starting layouts, offered in Customize and on the first run. `wall` ones are made for a tablet or screen on the wall, and start new boards. */
+export const STARTERS: { id: string; name: string; about: string; board: Board; wall?: boolean }[] = [
   { id: 'home', name: 'One screen', about: 'The server, Right now, apps as icons, the week, reading and changes, fit to the window.', board: DEFAULT_BOARD },
   { id: 'everything', name: 'Everything', about: 'The everyday widgets with apps as tiles and posters, three columns. Scrolls.', board: EVERYTHING },
   {
@@ -411,6 +448,94 @@ export const STARTERS: { id: string; name: string; about: string; board: Board }
         { id: 'upcoming', type: 'upcoming', size: 'm', span: 1 },
         { id: 'feeds', type: 'feeds', size: 'm', span: 1, config: { limit: '4' } },
         { id: 'apps', type: 'apps', size: 'xl', span: 2, config: { style: 'patchbay' } },
+      ],
+    },
+  },
+  {
+    id: 'wall-clock',
+    name: 'Wall: clock and weather',
+    about: 'A big clock and the date, the weather, the sun and moon, and your countdowns. For a tablet in the kitchen or hall.',
+    wall: true,
+    board: {
+      version: 1,
+      columns: 2,
+      fit: true,
+      wall: true,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm' },
+        { id: 'clocks', type: 'clocks', size: 'l', span: 1, config: { style: 'big' } },
+        { id: 'weather', type: 'weather', size: 'l', span: 1 },
+        { id: 'sky', type: 'sky', size: 'l', span: 1 },
+        { id: 'countdown', type: 'countdown', size: 'l', span: 1, config: { events: 'New Year=01-01' } },
+      ],
+    },
+  },
+  {
+    id: 'wall-markets',
+    name: 'Wall: markets',
+    about: "Bitcoin, the big indexes and a currency as large tiles with the day's line. Change what it follows in the widget.",
+    wall: true,
+    board: {
+      version: 1,
+      columns: 2,
+      fit: true,
+      wall: true,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm' },
+        { id: 'markets', type: 'markets', size: 'w', span: 2, config: { style: 'big', symbols: 'Bitcoin=BTC\nEthereum=ETH\nS&P 500=^GSPC\nNasdaq=^IXIC\nEUR/USD' } },
+      ],
+    },
+  },
+  {
+    id: 'wall-house',
+    name: 'Wall: house',
+    about: 'Lights, scenes and the thermostat from Home Assistant beside the weather, and the cameras. Pin what you want in the Home Assistant widget.',
+    wall: true,
+    board: {
+      version: 1,
+      columns: 2,
+      fit: true,
+      wall: true,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm' },
+        { id: 'homeassistant', type: 'homeassistant', size: 'l', span: 1 },
+        { id: 'weather', type: 'weather', size: 'l', span: 1 },
+        { id: 'cameras', type: 'cameras', size: 'xl', span: 2 },
+      ],
+    },
+  },
+  {
+    id: 'wall-cameras',
+    name: 'Wall: cameras',
+    about: 'Every camera, large, refreshed every few seconds. Tap one to watch it live.',
+    wall: true,
+    board: {
+      version: 1,
+      columns: 2,
+      fit: true,
+      wall: true,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm' },
+        { id: 'cameras', type: 'cameras', size: 'xl', span: 2 },
+      ],
+    },
+  },
+  {
+    id: 'wall-media',
+    name: 'Wall: media',
+    about: "What's playing, downloading and coming up this week, and what was added.",
+    wall: true,
+    board: {
+      version: 1,
+      columns: 2,
+      fit: true,
+      wall: true,
+      widgets: [
+        { id: 'attention', type: 'attention', size: 'm' },
+        { id: 'now', type: 'now', size: 'l', span: 1 },
+        { id: 'upcoming', type: 'upcoming', size: 'l', span: 1, config: { days: '7' } },
+        { id: 'downloads', type: 'downloads', size: 'l', span: 1 },
+        { id: 'recent', type: 'recent', size: 'l', span: 1 },
       ],
     },
   },

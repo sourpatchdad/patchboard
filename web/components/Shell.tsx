@@ -11,6 +11,7 @@ import { HELP } from '../lib/docs.ts';
 import { needsYou } from '../lib/attention.ts';
 import { serviceFor } from '../lib/services.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
+import { WallPages } from './WallPages.tsx';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -241,6 +242,7 @@ export function Shell() {
     <div className="shell">
       <a className="skip-link" href="#main-content">Skip to content</a>
       <PullRefresh />
+      <WallPages />
       <header className="topbar">
         <NavLink to="/" className="wordmark" aria-label={`${name}, home`}>
           <span title={name}>{name}</span>

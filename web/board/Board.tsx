@@ -32,6 +32,7 @@ import { DownloadsWidget } from './Downloads.tsx';
 import { ListeningWidget, WatchedWidget } from './Media.tsx';
 import { CamerasWidget } from './Cameras.tsx';
 import { BookmarksWidget, ClocksWidget, ReleasesWidget, RssWidget, SearchWidget } from './Outside.tsx';
+import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { FrigateData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -310,8 +311,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   useLanding(!!board);
   const types = board?.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)).join(',') ?? '';
   useEffect(() => {
-    if (board) onWidgets?.(types.split(','));
-  }, [types]);
+    if (board) onWidgets?.([...types.split(','), ...(board.wall ? ['@wall'] : [])]);
+  }, [types, board?.wall]);
   const [draft, setDraft] = useState<BoardData | null>(null);
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -513,6 +514,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
             <label className="check board-fit" title="Lists show fewer items so the board ends at the bottom of the window. Phones still scroll.">
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
+            </label>
+            <label className="check board-fit" title="For a tablet or screen on the wall: one status line instead of the header, and no tabs. A household device also drops the navigation and swipes between its pages.">
+              <input type="checkbox" checked={!!draft.wall} onChange={(e) => setDraft((d) => (d ? { ...d, wall: e.target.checked || undefined } : d))} />
+              For a wall screen
             </label>
             <select
               className="field starter-pick"
@@ -951,6 +956,12 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <JsonWidgetView board={board} id={w.id} json={w.config?.json} saved={saved} />;
     case 'weather':
       return <WeatherWidget />;
+    case 'markets':
+      return <MarketsWidget board={board} id={w.id} config={w.config} />;
+    case 'sky':
+      return <SkyWidget now={now} />;
+    case 'countdown':
+      return <CountdownWidget config={w.config} now={now} />;
   }
 }
 
@@ -1174,7 +1185,7 @@ function NewBoard({ onClose }: { onClose: () => void }) {
 
 /** Add widget sorts its list into a few kinds, so 40 widgets read as four short lists. */
 const KINDS: [string, WidgetType[]][] = [
-  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'bookmarks', 'search', 'clocks', 'weather']],
+  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'bookmarks', 'search', 'clocks', 'weather', 'sky', 'countdown', 'markets']],
   ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'books', 'photos']],
   ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
   ['House and network', ['homeassistant', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],

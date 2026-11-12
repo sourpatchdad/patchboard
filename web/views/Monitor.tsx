@@ -12,6 +12,7 @@ import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
 import { needsYou } from '../lib/attention.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
+import { WallPages } from '../components/WallPages.tsx';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 
@@ -104,6 +105,7 @@ export function Monitor() {
 
   return (
     <div className={`monitor tint-${tint}`}>
+      <WallPages />
       <header className="mon-status">
         <Link to="/" className="mon-host" title="Back to Home">
           {host.toLowerCase()}

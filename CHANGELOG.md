@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- **Wall tablets swipe between pages:** give a household device more pages
+  in Settings, next to Opens: the Monitor, any board, Server, Weather. A
+  swipe or an arrow key moves between them, dots show where it is, and it
+  can turn them by itself every 30 seconds to 10 minutes, waiting three
+  minutes after anyone touches it.
+- **Boards for the wall:** New board offers five layouts made for a screen
+  on the wall: clock and weather, markets, house, cameras, and media. A
+  board set For a wall screen trades the header for one status line and
+  drops the tabs; on a household device the navigation goes too.
+- **Markets:** coins, stocks, funds, indexes and currencies, each with its
+  price, the day's change and a line of the day. Write `BTC`, `AAPL`,
+  `^GSPC` or `EUR/USD`; no key needed. Big numbers draws a tile for each.
+- **Sun and moon:** sunrise, sunset, how long the day is and how it changes
+  tomorrow, and tonight's moon, from the weather's place.
+- **Countdown:** days until the dates you name; a date without a year comes
+  round every year.
+- **Big clock:** Clocks can show your own time and date large, for across
+  the room, with other places underneath.
+
 ## 1.6.1 (2026-11-12)
 
 - **Wall tablets pick up updates:** after you update Patchboard, a household

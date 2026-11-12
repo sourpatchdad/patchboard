@@ -79,6 +79,8 @@ import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { ProblemFeed } from './problems.ts';
+import { MAX_PAGES } from '../shared/wall.ts';
+import { demoQuotes, quotes } from './markets.ts';
 import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice, setHouseholdView } from './household.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
@@ -373,22 +375,31 @@ app.post('/api/household', async (c) => {
   recordAudit(who(c), 'household.add', made.id, typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '');
   return c.json({ id: made.id, path: `/join/${made.token}` });
 });
-// Where a device opens, the Monitor's color and its night hours, from Settings; the device follows at once.
+// Where a device opens, the pages it swipes through, the Monitor's color and
+// its night hours, from Settings; the device follows at once.
 const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/weather']);
+const isPlace = (v: unknown): v is string => typeof v === 'string' && (OPENS.has(v) || (/^\/b\/[\w-]+$/.test(v) && !!getBoard(v.slice(3))));
 app.put('/api/household/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; tint?: unknown; dim?: unknown };
+  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown };
   let opens: string | null | undefined;
   if (body.opens !== undefined) {
     if (body.opens === null || body.opens === '') opens = null;
-    else if (typeof body.opens === 'string' && (OPENS.has(body.opens) || (/^\/b\/[\w-]+$/.test(body.opens) && getBoard(body.opens.slice(3))))) opens = body.opens;
+    else if (isPlace(body.opens)) opens = body.opens;
     else return c.json({ error: 'Pick a page or a board that exists' }, 400);
   }
   const tint = body.tint === undefined ? undefined : body.tint === 'blue' || body.tint === 'color' ? body.tint : null;
+  let pages: string[] | null | undefined;
+  if (body.pages !== undefined) {
+    if (body.pages === null) pages = null;
+    else if (Array.isArray(body.pages) && body.pages.length <= MAX_PAGES && body.pages.every(isPlace)) pages = body.pages;
+    else return c.json({ error: 'Pick pages and boards that exist' }, 400);
+  }
+  const rotate = body.rotate === undefined ? undefined : typeof body.rotate === 'number' ? body.rotate : null;
   const dim = body.dim === undefined ? undefined : typeof body.dim === 'string' ? body.dim : null;
-  const view = setHouseholdView(c.req.param('id'), { opens, tint, dim });
+  const view = setHouseholdView(c.req.param('id'), { opens, pages, rotate, tint, dim });
   if (!view) return c.json({ error: 'No such device' }, 404);
-  recordAudit(who(c), 'household.view', c.req.param('id'), [view.opens ?? 'wherever', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims'].join(', '));
+  recordAudit(who(c), 'household.view', c.req.param('id'), [[view.opens ?? 'wherever', ...(view.pages ?? [])].join(' > '), view.rotate ? `turns every ${view.rotate}s` : '', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims'].filter(Boolean).join(', '));
   hub.emitHousehold(c.req.param('id'), view);
   return c.json(view);
 });
@@ -417,6 +428,18 @@ app.get('/api/releases/:board/:id', async (c) => {
   if (!repos.length) return c.json({ releases: [] });
   if (config.demo) return c.json({ releases: demoReleases(repos) });
   return c.json({ releases: await latestReleases(repos) });
+});
+
+// Markets widgets: prices for the lines saved in the board, never for a
+// symbol the browser names. Coins are priced in the currency asked for.
+app.get('/api/markets/:board/:id', async (c) => {
+  const found = getBoard(c.req.param('board'));
+  const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'markets') : undefined;
+  const lines = w?.config?.symbols?.split('\n').filter(Boolean) ?? [];
+  const asked = (c.req.query('currency') ?? '').toUpperCase();
+  const currency = /^[A-Z]{3}$/.test(asked) ? asked : 'USD';
+  if (!lines.length) return c.json({ quotes: [] });
+  return c.json({ quotes: config.demo ? demoQuotes(lines, currency) : await quotes(lines, currency) });
 });
 
 // API numbers widgets. The server only ever fetches URLs saved in a board:
@@ -448,7 +471,7 @@ app.get('/api/snapshot', (c) => {
   const device = householdOf(c);
   const snap = hub.snapshot();
   return c.json(
-    device ? { ...snap, readOnly: true, household: { id: device.id, name: device.name, lights: !config.readOnly, opens: device.opens, tint: device.tint, dim: device.dim, rev: device.rev } } : snap,
+    device ? { ...snap, readOnly: true, household: { ...device, lights: !config.readOnly } } : snap,
   );
 });
 

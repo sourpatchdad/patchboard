@@ -28,7 +28,7 @@ test('a household device reads boards, cameras and pictures, switches pinned lig
   assert.match(cookie, /^pb_household=/);
   const as = (path: string, method = 'GET') => app.request(path, { method, headers: { cookie } });
 
-  for (const path of ['/api/snapshot', '/api/events', '/api/boards/house', '/api/img/frigate?camera=front', '/api/live/frigate?camera=front', '/api/feeds', '/api/icon/png/sonarr.png']) {
+  for (const path of ['/api/snapshot', '/api/events', '/api/boards/house', '/api/img/frigate?camera=front', '/api/live/frigate?camera=front', '/api/feeds', '/api/icon/png/sonarr.png', '/api/markets/wall/markets']) {
     assert.equal((await as(path)).status, 200, path);
   }
   assert.equal((await as('/api/ha/light.kitchen/toggle', 'POST')).status, 200, 'pinned lights');
@@ -81,6 +81,11 @@ test('a device remembers where it opens and its Monitor color; each change bumps
   assert.equal(h.setHouseholdView(made.id, { opens: null })?.opens, undefined, 'cleared: wherever it is');
   assert.equal(h.setHouseholdView(made.id, { dim: '22-7' })?.dim, '22-7', 'night hours');
   assert.equal(h.setHouseholdView(made.id, { dim: '3-4' })?.dim, undefined, 'only the offered hours');
+  const paged = h.setHouseholdView(made.id, { opens: '/monitor', pages: ['/server', '/b/house'], rotate: 60 });
+  assert.deepEqual([paged?.opens, paged?.pages, paged?.rotate], ['/monitor', ['/server', '/b/house'], 60], 'pages to swipe through, turned every minute');
+  assert.equal(h.setHouseholdView(made.id, { rotate: 7 })?.rotate, undefined, 'only the offered timings');
+  assert.equal(h.setHouseholdView(made.id, { pages: [] })?.pages, undefined, 'no pages: no swiping');
+  assert.equal(h.setHouseholdView(made.id, { tint: 'color' })?.opens, '/monitor', 'every save keeps the rest of the view');
   assert.equal(h.setHouseholdView('nope', { opens: '/' }), null);
   const listed = h.householdDevices().find((d) => d.id === made.id);
   assert.ok(listed && !('hash' in listed));

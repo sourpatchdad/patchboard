@@ -14,24 +14,16 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { kvGet, kvSet, recordAudit } from './db.ts';
-import { DIM_HOURS } from '../shared/night.ts';
+import type { DeviceView } from '../shared/types.ts';
+import { DIM_HOURS, MAX_PAGES, ROTATE_SECONDS } from '../shared/wall.ts';
+
+export type { DeviceView };
 
 const COOKIE = 'pb_household';
 // Browsers cap cookie lifetimes at 400 days; a family phone shouldn't have to come back for a new link.
 const COOKIE_DAYS = 400;
 // Last seen is written at most this often, so a board left open doesn't write the database all day.
 const SEEN_EVERY = 10 * 60_000;
-
-/** What a device shows, set from Settings: where it opens, the Monitor's color, and its night hours. */
-export interface DeviceView {
-  /** A path: /, /b/<board>, /server, /monitor, /upcoming, /reading or /weather. */
-  opens?: string;
-  tint?: 'gray' | 'blue' | 'color';
-  /** Night hours to dim for, like '22-7'; unset never dims. */
-  dim?: string;
-  /** Changes with every save, so the device knows to follow. */
-  rev?: number;
-}
 
 interface Device extends DeviceView {
   name: string;
@@ -47,13 +39,16 @@ export interface HouseholdDevice extends DeviceView {
   seen?: number;
 }
 
+/** A device's view, field by field, so nothing else stored on it leaks out. */
+const viewOf = (d: DeviceView): DeviceView => ({ opens: d.opens, pages: d.pages, rotate: d.rotate, tint: d.tint, dim: d.dim, rev: d.rev });
+
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const devices = (): Record<string, Device> => kvGet<Record<string, Device>>('household') ?? {};
 
 /** The devices, newest first, without their hashes. */
 export function householdDevices(): HouseholdDevice[] {
   return Object.entries(devices())
-    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev }))
+    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, ...viewOf(d) }))
     .sort((a, b) => b.created - a.created);
 }
 
@@ -71,17 +66,19 @@ export function addHouseholdDevice(name: string): { id: string; token: string } 
   return { id, token };
 }
 
-/** Set what a device shows. `opens` is checked by the caller, which knows the boards. */
-export function setHouseholdView(id: string, view: { opens?: string | null; tint?: string | null; dim?: string | null }): DeviceView | null {
+/** Set what a device shows. `opens` and `pages` are checked by the caller, which knows the boards. */
+export function setHouseholdView(id: string, view: { opens?: string | null; pages?: string[] | null; rotate?: number | null; tint?: string | null; dim?: string | null }): DeviceView | null {
   const all = devices();
   const d = all[id];
   if (!d) return null;
   if (view.opens !== undefined) d.opens = view.opens || undefined;
+  if (view.pages !== undefined) d.pages = view.pages?.length ? view.pages.slice(0, MAX_PAGES - 1) : undefined;
+  if (view.rotate !== undefined) d.rotate = (ROTATE_SECONDS as readonly number[]).includes(view.rotate ?? 0) && view.rotate ? view.rotate : undefined;
   if (view.tint !== undefined) d.tint = view.tint === 'blue' || view.tint === 'color' ? view.tint : undefined;
   if (view.dim !== undefined) d.dim = (DIM_HOURS as readonly string[]).includes(view.dim ?? '') ? view.dim! : undefined;
   d.rev = Date.now();
   kvSet('household', all);
-  return { opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev };
+  return viewOf(d);
 }
 
 export function removeHouseholdDevice(id: string): boolean {
@@ -106,7 +103,7 @@ export function householdOf(c: Context): ({ id: string; name: string } & DeviceV
     const entry = Object.entries(all).find(([, d]) => d.hash === hash);
     if (entry) {
       const [id, d] = entry;
-      hit = { id, name: d.name, opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev };
+      hit = { id, name: d.name, ...viewOf(d) };
       if (!d.seen || Date.now() - d.seen > SEEN_EVERY) {
         d.seen = Date.now();
         kvSet('household', all);
@@ -154,7 +151,7 @@ const READS = new Set([
   // Warning and error lines only, masked: the Monitor page's feed.
   '/api/monitor/feed',
 ]);
-const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/img/', '/api/live/'];
+const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/markets/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/img/', '/api/live/'];
 // The one change: switching a light, switch or scene pinned to a board.
 const HA_ACTION = /^\/api\/ha\/[^/]+\/(?:toggle|run)$/;
 
