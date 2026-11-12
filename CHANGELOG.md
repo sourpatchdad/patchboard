@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 (2026-11-12)
 
 - **Showcase mode:** before you share a screenshot, turn it on in Settings,
   Look. Addresses, domain names, email and MAC addresses become made-up ones
