@@ -55,9 +55,9 @@ test('the moon: new, full, and the next full moon ahead', () => {
 test('a key typed into an app live number moves to the key store, like a board widget', async () => {
   const { sealOrder } = await import('../sealwidgets.ts');
   const saved: Record<string, string> = {};
-  const order = { stats: { Immich: { url: 'http://immich:2283/api/server/statistics', headers: { 'X-Api-Key': 'plain-key-123' }, fields: [{ label: 'Photos', path: 'photos' }], interval: 60 } } } as never;
+  const order = { stats: { Immich: { url: 'http://immich:2283/api/server/statistics', headers: { 'X-Api-Key': 'xxxxxxxxxx' }, fields: [{ label: 'Photos', path: 'photos' }], interval: 60 } } } as never;
   const sealed = sealOrder(order, (n, v) => (saved[n] = v)) as { stats: Record<string, { headers: Record<string, string> }> };
-  assert.equal(Object.values(saved)[0], 'plain-key-123');
+  assert.equal(Object.values(saved)[0], 'xxxxxxxxxx');
   assert.match(sealed.stats.Immich.headers['X-Api-Key'], /^\$\{secret:W_APPS_IMMICH_/);
   assert.equal(sealOrder(sealed as never, () => assert.fail('nothing left to move')), sealed, 'a sealed order stays as it is');
 });

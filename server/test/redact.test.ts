@@ -42,7 +42,7 @@ test('terminal color codes come out, so colored logs read as plain text', () => 
 test('passwords, keys, cookies and tokens in their other spellings are masked; ordinary words are not', () => {
   const cases: [string, string][] = [
     ['password: hunter2', 'password: ••••'],
-    ['api_key: sk-live-abc123', 'api_key: ••••'],
+    ['api_key: xxxxxxxxxx', 'api_key: ••••'],
     ['DB_PASSWORD=supersecret', 'DB_PASSWORD=••••'],
     ['SECRET_KEY=abc def', 'SECRET_KEY=•••• def'],
     ['{"Authorization": "Bearer abcdefghijkl"}', '{"Authorization": "••••"}'],

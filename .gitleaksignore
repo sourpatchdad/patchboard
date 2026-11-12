@@ -1,0 +1,4 @@
+# Made-up keys in tests, from before they were written as xxxxxxxxxx. Each
+# line is one finding's fingerprint: commit, file, rule and line.
+f4df3dfaa7a46914624f98738cef3ded83b86c6f:server/test/redact.test.ts:generic-api-key:45
+f4df3dfaa7a46914624f98738cef3ded83b86c6f:server/test/kiosk.test.ts:generic-api-key:58
