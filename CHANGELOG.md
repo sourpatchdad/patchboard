@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.11.0 (2026-11-12)
 
 - **Show as, on every widget that has more than one way:** Detailed is the
   whole widget. Compact keeps the top three items and drops the small print.

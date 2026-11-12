@@ -1086,6 +1086,6 @@ export function demoFeedItems(): { items: import('../shared/types.ts').FeedItem[
 /** Demo Releases: plausible versions for whatever projects the widget lists. */
 export function demoReleases(repos: string[]): import('../shared/types.ts').ReleaseInfo[] {
   const now = Date.now();
-  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.10.1' };
+  const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.11.0' };
   return repos.map((repo, i) => ({ repo, version: known[repo] ?? `v1.${(i * 7) % 12}.${i % 5}`, at: now - (i * 2 + 1) * 86_400_000, url: `https://github.com/${repo}/releases` }));
 }
