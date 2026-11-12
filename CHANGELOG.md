@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Monitor:** the network tile shows the latest recorded reading while
+  TrueNAS's live feed reconnects, instead of a blank.
+
 ## 1.3.3 (2026-11-11)
 
 - **Monitor feed:** lines from before today show their day ("tue 22:13"),

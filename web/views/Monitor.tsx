@@ -92,6 +92,9 @@ export function Monitor() {
   const pool = nas?.pools[0];
   const poolLevel = pool ? (pool.usedPct >= limits.poolCritPct ? 'is-crit' : pool.usedPct >= limits.poolWarnPct ? 'is-warn' : '') : '';
   const netMax = Math.max(1, ...rxLine.map((p) => p[1]), ...txLine.map((p) => p[1]));
+  // While TrueNAS's live feed reconnects (after a restart), the last recorded reading stands in.
+  const netIn = net ? net.rx : (rxLine[rxLine.length - 1]?.[1] ?? null);
+  const netOut = net ? net.tx : (txLine[txLine.length - 1]?.[1] ?? null);
 
   return (
     <div className="monitor">
@@ -115,7 +118,7 @@ export function Monitor() {
         <Tile label="memory" value={mem ? size(memUsed) : '--'} note={mem ? `of ${size(mem.total)}, ${size(mem.arc)} zfs cache` : undefined}>
           <LiveChart lines={[{ points: memLine }]} max={mem?.total} label="Memory in use, live" />
         </Tile>
-        <Tile label="network" value={net ? speed(net.rx) : '--'} note={net ? `in, ${speed(net.tx)} out` : undefined}>
+        <Tile label="network" value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? `in, ${speed(netOut)} out` : undefined}>
           <LiveChart lines={[{ points: rxLine }, { points: txLine, quiet: true }]} max={netMax} label="Network in and out, live" />
         </Tile>
         <Tile label={pool ? `pool ${pool.name.toLowerCase()}` : 'pool'} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? `${size(pool.freeBytes)} free of ${size(pool.sizeBytes)}` : undefined}>
