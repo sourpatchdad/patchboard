@@ -257,7 +257,7 @@ export function Monitor() {
         <ol className="mon-lines">
           {feed.map((l) => (
             <li key={l.key} className={`lvl-${l.level}`}>
-              <time>{new Date(l.at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</time>
+              <time>{feedTime(l.at, now)}</time>
               <span className="mon-who">{l.who}</span>
               <span className="mon-text">
                 <span className="mon-lvl">{l.level === 'error' ? 'err ' : l.level === 'warn' ? 'warn ' : ''}</span>
@@ -431,10 +431,33 @@ const NGINX = /^\d+#\d+:\s*(?:\*\d+\s*)?/;
 // NestJS (Immich): "[Nest] 32  - 11/11/2026, 9:10:00 PM "
 const NEST = /^\[Nest\]\s+\d+\s+-\s+[\d/.-]+,?\s+[\d:]+(?:\s*[AP]M)?\s*/i;
 
+/** A JSON log line (autobrr, Go and Node apps): its message, plus the error when there is one. */
+function fromJson(text: string): string {
+  const t = text.trim();
+  if (!t.startsWith('{')) return text;
+  try {
+    const o = JSON.parse(t) as Record<string, unknown>;
+    const msg = [o.message, o.msg, o.Message].find((v): v is string => typeof v === 'string');
+    const err = [o.error, o.err].find((v): v is string => typeof v === 'string');
+    if (!msg && !err) return text;
+    return [msg, err].filter(Boolean).join(': ');
+  } catch {
+    return text;
+  }
+}
+
+/** Today's lines by time; older ones say the day too ("tue 22:13"), so the order reads right. */
+function feedTime(at: number, now: number): string {
+  const d = new Date(at);
+  const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  if (d.toDateString() === new Date(now).toDateString()) return time;
+  return `${d.toLocaleDateString(undefined, { weekday: 'short' }).toLowerCase()} ${time.slice(0, 5)}`;
+}
+
 /** Apps open their lines with their own time, name, level and process numbers; the feed has columns for those. */
 function plainLine(text: string, container: string): string {
   const name = new RegExp(`^\\[?${container.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]?:?\\s*`, 'i');
-  let t = text;
+  let t = fromJson(text);
   // Prefixes come in any order and some apps stack them, so peel until nothing changes.
   for (let pass = 0; pass < 5; pass++) {
     const before = t;

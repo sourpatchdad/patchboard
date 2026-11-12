@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Monitor feed:** lines from before today show their day ("tue 22:13"),
+  and apps that log JSON, such as autobrr, show their message instead of
+  the raw line.
+
 ## 1.3.2 (2026-11-11)
 
 - **Monitor feed:** Unpackerr's status line ("0 failed") no longer counts as
