@@ -35,6 +35,7 @@ import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
 import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
 import { LANGUAGES } from '../lib/i18n.ts';
+import { Qr } from '../components/Qr.tsx';
 
 /** A household device as Settings lists it. */
 type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
@@ -956,8 +957,9 @@ function Household() {
       {made && (
         <div className="household-made" role="status">
           <p>
-            Open this link on <strong>{made.name}</strong>. Patchboard shows it only now, and anyone with it gets the same view.
+            Open this link on <strong>{made.name}</strong>, or point its camera at the code. Patchboard shows them only now, and anyone with them gets the same view.
           </p>
+          <Qr text={made.url} label={`QR code of the household link for ${made.name}`} />
           <div className="key-add household-add">
             <input className="field mono household-url" readOnly value={made.url} aria-label={`Household link for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
             <button type="button" className="button button-quiet" onClick={() => void copy()}>

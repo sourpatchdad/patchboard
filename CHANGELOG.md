@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Scan to join:** a new household link comes with a QR code, so a tablet
+  or phone opens it with its camera instead of someone typing it.
+
 ## 1.8.1 (2026-11-12)
 
 - **Sign-in never falls open:** `AUTH=Password` or a password set without
