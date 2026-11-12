@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 (2026-11-11)
 
 - **Remote control for household devices:** in Settings, Connections,
   Sign-in and keys, set where each device opens (Home, any board, Monitor,
