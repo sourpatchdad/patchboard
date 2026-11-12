@@ -5,6 +5,9 @@
 - **Signing out:** Settings, Connections, Sign-in and keys has Sign out of
   this browser. Opening a household link signs that browser out too, so a
   wall tablet never keeps full access underneath.
+- **Server at a glance:** long container names in Busiest containers give
+  way instead of pushing the numbers off the edge, and TrueNAS alerts match
+  the rest of the page. A household device no longer shows All stacks.
 
 ## 1.2.1 (2026-11-11)
 

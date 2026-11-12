@@ -5619,13 +5619,13 @@ body.is-sorting * {
 
 /* A household device: links into the admin pages read as plain text, and a
    section's own link there (Details) goes away. */
-:root[data-household] :is(a[href^='/c/'], a[href^='/logs'], a[href^='/apps'], a[href^='/settings']) {
+:root[data-household] :is(a[href^='/c/'], a[href^='/stacks'], a[href^='/logs'], a[href^='/apps'], a[href^='/settings']) {
   color: inherit;
   text-decoration: none;
   cursor: default;
 }
 
-:root[data-household] .section-action:is([href^='/c/'], [href^='/logs'], [href^='/apps'], [href^='/settings']) {
+:root[data-household] .section-action:is([href^='/c/'], [href^='/stacks'], [href^='/logs'], [href^='/apps'], [href^='/settings']) {
   display: none;
 }
 
@@ -6907,6 +6907,26 @@ a.date:hover {
 
   .server #nas-alerts li {
     padding: 3px 0;
+  }
+
+  .server .nas-text {
+    font-size: 12px;
+  }
+
+  /* Long container names give way so the numbers stay inside the column. */
+  .server .busiest {
+    gap: 14px;
+  }
+
+  .server .busiest li .ident {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .server .busiest li .mono {
+    flex: none;
   }
 
   .server .backup-label {
