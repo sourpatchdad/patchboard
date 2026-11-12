@@ -105,6 +105,21 @@ export function SignIn() {
         </div>
       )}
 
+      {(s.mode === 'password' || s.mode === 'oidc') && !editing && (
+        <div className="signin-actions">
+          <button
+            type="button"
+            className="text-button"
+            onClick={async () => {
+              await fetch('/api/logout', { method: 'POST', headers: { 'X-Patchboard': 'action' } });
+              location.assign('/');
+            }}
+          >
+            Sign out of this browser
+          </button>
+        </div>
+      )}
+
       {editing && (
         <form
           className="signin-form"

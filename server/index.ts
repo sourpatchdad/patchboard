@@ -1558,6 +1558,9 @@ app.get('/join/:token', (c) => {
   if (!joinHousehold(c, c.req.param('token'))) {
     return c.html('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Patchboard</title><body style="font:16px system-ui;margin:2rem;max-width:32rem"><h1 style="font-size:1.4rem">This link no longer works</h1><p>Whoever runs Patchboard removed it or made a new one. Ask them for a fresh link.</p></body>', 404);
   }
+  // A household device keeps no password session: removing it later can't
+  // leave the browser signed in with full access.
+  logout(c);
   return c.redirect('/', 302);
 });
 

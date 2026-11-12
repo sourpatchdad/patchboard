@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Signing out:** Settings, Connections, Sign-in and keys has Sign out of
+  this browser. Opening a household link signs that browser out too, so a
+  wall tablet never keeps full access underneath.
+
 ## 1.2.1 (2026-11-11)
 
 - **Server at a glance:** on a short landscape screen, such as a wall tablet,
