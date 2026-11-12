@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.0 (2026-11-12)
 
 - **Français:** Settings, Look, Language switches the boards, the wall
   screens, the Monitor, the navigation and the Home header to French, with
