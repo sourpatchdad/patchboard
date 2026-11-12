@@ -1,14 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.1.3 (2026-11-11)
 
-- **Fixes:** logs from apps that color their output, such as Immich, read
-  as plain text instead of showing terminal codes. Jump to matches an
-  action on its container's name, so "son" finds Sonarr's actions and not
-  "Stop nextcloud". Reading's cards skip feed boilerplate (Hacker News link
-  lines, affiliate notices) and no longer run paragraphs together.
+- **Logs:** apps that color their output, such as Immich, read as plain
+  text instead of showing terminal codes.
+- **Jump to:** an action matches on its container's name, so "son" finds
+  Sonarr's actions and not "Stop nextcloud".
+- **Reading:** cards skip feed boilerplate, such as Hacker News link lines
+  and affiliate notices, and keep paragraphs apart.
 - **Under the hood:** TypeScript 7, cross-env 10, and patch updates to Hono,
-  Vite, Playwright and concurrently.
+  Vite, Playwright, concurrently and ws.
 
 ## 1.1.2 (2026-11-10)
 
