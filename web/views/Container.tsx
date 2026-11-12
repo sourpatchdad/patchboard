@@ -36,6 +36,7 @@ import { ago, agoLong, pct, plural, shortDate, size, speed } from '../lib/format
 import { lineClass, logTime, useLogStream } from '../lib/logs.ts';
 import { checkFor, containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
+import { locale } from '../lib/region.ts';
 
 const changeText = {
   'container.stopped': 'Stopped',
@@ -682,9 +683,9 @@ function AppPanel({ name }: { name: string }) {
       <Section title="In Immich" action={{ label: 'Open Immich', href: immich.webUrl }}>
         <dl className="ledger">
           <Row k="Library">
-            {immich.photos.toLocaleString()} photos, {immich.videos.toLocaleString()} videos <span className="ledger-aside">{size(immich.usage)}</span>
+            {immich.photos.toLocaleString(locale())} photos, {immich.videos.toLocaleString(locale())} videos <span className="ledger-aside">{size(immich.usage)}</span>
           </Row>
-          <Row k="Working on">{busy.length ? busy.map((q) => `${QUEUE_NAMES[q.name] ?? q.name} ${(q.active + q.waiting).toLocaleString()}`).join(', ') : 'Nothing'}</Row>
+          <Row k="Working on">{busy.length ? busy.map((q) => `${QUEUE_NAMES[q.name] ?? q.name} ${(q.active + q.waiting).toLocaleString(locale())}`).join(', ') : 'Nothing'}</Row>
           {failed > 0 && <Row k="Failed jobs"><span className="warn-text">{failed}</span></Row>}
           {immich.version && <Row k="Version">{immich.version}</Row>}
         </dl>
@@ -695,7 +696,7 @@ function AppPanel({ name }: { name: string }) {
     return (
       <Section title="In Nextcloud" action={{ label: 'Open Nextcloud', href: nextcloud.webUrl }}>
         <dl className="ledger">
-          <Row k="Files">{nextcloud.files.toLocaleString()}</Row>
+          <Row k="Files">{nextcloud.files.toLocaleString(locale())}</Row>
           <Row k="Users">
             {nextcloud.users} {nextcloud.activeToday != null && <span className="ledger-aside">{nextcloud.activeToday} active today</span>}
           </Row>
@@ -711,7 +712,7 @@ function AppPanel({ name }: { name: string }) {
     return (
       <Section title={name === 'bazarr' ? 'In Bazarr' : 'In Prowlarr'}>
         <dl className="ledger">
-          {name === 'bazarr' && <Row k="Missing subtitles">{other.queueTotal ? other.queueTotal.toLocaleString() : 'None'}</Row>}
+          {name === 'bazarr' && <Row k="Missing subtitles">{other.queueTotal ? other.queueTotal.toLocaleString(locale()) : 'None'}</Row>}
           <Row k="Health">{other.health.length ? other.health.map((h) => h.message).join(' ') : 'No warnings'}</Row>
         </dl>
       </Section>

@@ -33,6 +33,7 @@ import { contrast, FONTS, type FontSet } from '../lib/themes.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
+import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
 
 /** A household device as Settings lists it. */
 type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
@@ -186,6 +187,36 @@ export function Settings() {
             ['large', 'Large'],
           ])}
         </div>
+      </Section>
+
+      <Section title="Region">
+        <div className="region-picks">
+          <label>
+            <span>Dates and numbers</span>
+            <select className="field" value={a.locale} onChange={(e) => setAppearance({ locale: e.target.value })}>
+              <option value="">Match this browser</option>
+              {REGIONS.map(([tag, name]) => (
+                <option key={tag} value={tag}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Prices in</span>
+            <select className="field" value={a.currency} onChange={(e) => setAppearance({ currency: e.target.value })}>
+              <option value="">The region's own ({currency()})</option>
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <p className="settings-note">
+          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. The time format and temperature units are under Home.
+        </p>
       </Section>
 
       <Section title="Keyboard">
@@ -514,7 +545,7 @@ function Connections() {
             ) : s.connected ? (
               <>
                 <span>Connected{s.user ? <> as <span className="mono">{s.user}</span></> : ''}</span>
-                {s.expiresAt && <span className="ledger-aside">renews on its own, next by {new Date(s.expiresAt).toLocaleDateString()}</span>}
+                {s.expiresAt && <span className="ledger-aside">renews on its own, next by {new Date(s.expiresAt).toLocaleDateString(locale())}</span>}
                 {s.canConnect && !readOnly && (
                   <button type="button" className="text-button" onClick={() => void disconnect()}>
                     Disconnect

@@ -20,6 +20,10 @@
   round every year.
 - **Big clock:** Clocks can show your own time and date large, for across
   the room, with other places underneath.
+- **Region:** Settings, Look sets how dates, times, numbers and prices are
+  written, from 28 regions, and the currency for prices. It follows the
+  browser until you pick, and 24-hour time now starts on where the browser
+  uses it. On the hour, a 24-hour clock reads 21:00 instead of 21.
 
 ## 1.6.1 (2026-11-12)
 

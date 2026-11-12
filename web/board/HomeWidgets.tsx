@@ -14,6 +14,7 @@ import { ago, agoLong, deg, pct, size, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
+import { locale } from '../lib/region.ts';
 
 async function post(url: string): Promise<void> {
   const res = await fetch(url, { method: 'POST', headers: { 'X-Patchboard': 'action' } });
@@ -217,7 +218,7 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
               </li>
             ))}
           </ul>
-          {matches.length > 80 && <p className="settings-note">Showing 80 of {matches.length.toLocaleString()}. Search or pick a kind to narrow it.</p>}
+          {matches.length > 80 && <p className="settings-note">Showing 80 of {matches.length.toLocaleString(locale())}. Search or pick a kind to narrow it.</p>}
           <p className="settings-note">Lights, switches, fans and automations toggle; scenes and scripts run. Locks, garage doors and alarms show their state only.</p>
         </>
       )}
@@ -279,7 +280,7 @@ export function CarWidget() {
               )}
               <div>
                 <dt>Odometer</dt>
-                <dd>{c.odometerMi.toLocaleString()} mi</dd>
+                <dd>{c.odometerMi.toLocaleString(locale())} mi</dd>
               </div>
               {c.sentry && (
                 <div>
@@ -439,12 +440,12 @@ function Blocker({ id, label, showName, now }: { id: 'pihole' | 'adguard'; label
         <span className="dns-pct">{data.pct}%</span> blocked
       </p>
       <p className="dns-sub">
-        {data.blocked.toLocaleString()} of {data.queries.toLocaleString()} queries today
+        {data.blocked.toLocaleString(locale())} of {data.queries.toLocaleString(locale())} queries today
       </p>
       <p className={`dns-state ${data.protecting ? '' : 'warn-text'}`}>
         {data.protecting
           ? data.listSize
-            ? `On, ${data.listSize.toLocaleString()} domains on the lists.`
+            ? `On, ${data.listSize.toLocaleString(locale())} domains on the lists.`
             : 'On.'
           : data.resumesAt
             ? `Paused, back on in ${left >= 60 ? `${Math.round(left / 60)} h` : `${left} min`}.`
@@ -546,13 +547,13 @@ export function CalendarWidget({ now }: { now: number }) {
   // day it's showing in; the grouping below uses the same day, so it can't vanish.
   const shownDay = (e: (typeof upcoming)[number]) => dayKey(Math.max(e.start, now));
   const days = [...new Set(upcoming.map(shownDay))];
-  const time = (t: number) => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: !clock24 }).replace(':00', '');
+  const time = (t: number) => new Date(t).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !clock24 }).replace(':00', '');
   const label = (k: string) => {
     const d = new Date(k);
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
-    return diff <= 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    return diff <= 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(locale(), { weekday: 'long', month: 'short', day: 'numeric' });
   };
   return (
     <Section title="Calendar" source={state} className="cal-widget" count={data.failed ? `${data.failed} calendar${data.failed === 1 ? '' : 's'} unreachable` : undefined}>
@@ -1166,11 +1167,11 @@ export function PhotosWidget() {
     <Section title="Photos" source={state} className="photos" action={{ label: 'Open Immich', href: data.webUrl }}>
       <div className="speed-nums">
         <p>
-          <span className="speed-big">{data.photos.toLocaleString()}</span>
+          <span className="speed-big">{data.photos.toLocaleString(locale())}</span>
           <span className="speed-unit">photos</span>
         </p>
         <p>
-          <span className="speed-mid">{data.videos.toLocaleString()}</span>
+          <span className="speed-mid">{data.videos.toLocaleString(locale())}</span>
           <span className="speed-unit">videos</span>
         </p>
         <p>
@@ -1182,7 +1183,7 @@ export function PhotosWidget() {
           {busy.slice(0, 3).map((q) => (
             <li key={q.name}>
               <span>{QUEUE_NAMES[q.name] ?? q.name}</span>
-              <span className="photo-queue-n">{(q.active + q.waiting).toLocaleString()} to go</span>
+              <span className="photo-queue-n">{(q.active + q.waiting).toLocaleString(locale())} to go</span>
             </li>
           ))}
         </ul>
@@ -1193,7 +1194,7 @@ export function PhotosWidget() {
         <p className="speed-seen">
           {failed > 0 && (
             <a className="warn-text" href={`${data.webUrl}/admin/jobs-status`} target="_blank" rel="noreferrer">
-              {failed.toLocaleString()} failed {failed === 1 ? 'job' : 'jobs'}
+              {failed.toLocaleString(locale())} failed {failed === 1 ? 'job' : 'jobs'}
             </a>
           )}
           {failed > 0 && paused.length > 0 ? '. ' : ''}

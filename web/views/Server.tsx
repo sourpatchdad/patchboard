@@ -16,6 +16,7 @@ import { useHistory } from '../lib/api.ts';
 import { ago, agoLong, duration, pct, plural, shortDate, size, speed, temp, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { useAppearance } from '../lib/appearance.ts';
+import { locale } from '../lib/region.ts';
 
 const DAY = 86_400_000;
 
@@ -218,7 +219,7 @@ function forecast(series: Series | undefined, pool: Pool, now: number): string {
   if (!target) return `${rate} The pool is past 95%.`;
   const days = ((target / 100) * pool.sizeBytes - pool.usedBytes) / perDay;
   if (days > 3650) return `${rate} At this rate it won't reach ${target}% for over ten years.`;
-  const when = new Date(now + days * DAY).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const when = new Date(now + days * DAY).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
   return `${rate} At this rate it reaches ${target}% around ${when}.`;
 }
 
@@ -291,7 +292,7 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
   const recent = runs.slice(-14);
   const labels = [...new Set(runs.flatMap((r) => r.items.map((i) => i.label)))];
   const failed = last.items.filter((i) => !i.ok).length;
-  const when = new Date(last.startedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  const when = new Date(last.startedAt).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit' });
   return (
     <div className="backup-set">
       <p className="backup-summary">
@@ -307,7 +308,7 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
         {labels.map((label) => {
           // Failures said in words too, not only as red squares.
           const fails = recent.filter((r) => r.items.find((i) => i.label === label && !i.ok));
-          const dates = fails.map((r) => new Date(r.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })).join(', ');
+          const dates = fails.map((r) => new Date(r.startedAt).toLocaleDateString(locale(), { month: 'short', day: 'numeric' })).join(', ');
           return (
           <li key={label}>
             <span className="backup-label">
@@ -318,7 +319,7 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
               {recent.map((r) => {
                 const it = r.items.find((i) => i.label === label);
                 const cls = !it ? 'sq-none' : it.ok ? 'sq-up' : 'sq-down';
-                const day = new Date(r.startedAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                const day = new Date(r.startedAt).toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' });
                 return <i key={r.startedAt} className={`sq ${cls}`} title={`${day}: ${!it ? 'not in this run' : it.ok ? 'complete' : 'failed'}`} />;
               })}
             </span>

@@ -51,6 +51,7 @@ import {
 import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.ts';
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 import { byUrgency, needsYou } from '../lib/attention.ts';
+import { locale } from '../lib/region.ts';
 
 export function Home() {
   const { snap } = useStore();
@@ -109,11 +110,15 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
   const { data: weather } = useSource<WeatherData>('weather');
   const { clock24, temp: unit, homeClockSize, homeStatusSize, homeWeather, homeServer } = useAppearance();
   const d = new Date(now);
-  const time = d
-    .toLocaleTimeString(undefined, { hour: clock24 ? '2-digit' : 'numeric', minute: '2-digit', hour12: !clock24 })
-    .replace(/\s?[AP]M$/i, '');
-  const meridiem = clock24 ? undefined : d.toLocaleTimeString(undefined, { hour: 'numeric', hour12: true }).match(/[AP]M/i)?.[0];
-  const date = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  // The time and its AM or PM apart, in whatever words the region uses for them.
+  const parts = new Intl.DateTimeFormat(locale(), { hour: clock24 ? '2-digit' : 'numeric', minute: '2-digit', hour12: !clock24 }).formatToParts(d);
+  const time = parts
+    .filter((p) => p.type !== 'dayPeriod')
+    .map((p) => p.value)
+    .join('')
+    .trim();
+  const meridiem = parts.find((p) => p.type === 'dayPeriod')?.value;
+  const date = d.toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' });
 
   const alerts = snap!.alerts.filter((a) => a.level !== 'info');
   const running = [...containerMap(snap).values()].filter((c) => c.state === 'running').length;
@@ -185,7 +190,7 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
               <ol className="header-forecast" aria-label="Next three days">
                 {weather.days.slice(1, 4).map((w) => (
                   <li key={w.date}>
-                    <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                    <span>{new Date(`${w.date}T12:00:00`).toLocaleDateString(locale(), { weekday: 'short' })}</span>
                     <strong>{deg(w.high, unit)}°</strong>
                     <span>{weatherText(w.code)}</span>
                   </li>
@@ -217,7 +222,7 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
       </svg>
       <span className="header-hour-labels">
         {hours.filter((_, i) => i === 0 || i === Math.floor(hours.length / 2) || i === hours.length - 1).map((h, i) => (
-          <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 })}</span>
+          <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 })}</span>
         ))}
       </span>
     </span>

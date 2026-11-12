@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { locale } from './region.ts';
 
 export interface LogLine {
   n: number;
@@ -15,7 +16,7 @@ export interface LogLine {
 const OWN_STAMP = /^\[?\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?: ?(?:Z|UTC|[+-]\d{2}:?\d{2}))?\]?\s+/;
 
 /** Local time for a log line, with seconds: the zone the reader is in. */
-export const logTime = (at: number, clock24 = true) => new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
+export const logTime = (at: number, clock24 = true) => new Date(at).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
 
 export type LogStatus = 'idle' | 'streaming' | 'ended' | 'failed';
 

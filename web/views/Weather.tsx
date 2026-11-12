@@ -8,9 +8,10 @@ import { Empty, Led, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { deg, weatherText } from '../lib/format.ts';
 import { useNow, useSource } from '../lib/store.tsx';
+import { locale } from '../lib/region.ts';
 
 const clockOf = (iso: string | undefined, h24: boolean) =>
-  iso ? new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: !h24 }) : '';
+  iso ? new Date(iso).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !h24 }) : '';
 
 export function Weather() {
   const { state, data: w } = useSource<WeatherData>('weather');
@@ -51,7 +52,7 @@ export function Weather() {
           <strong>{a.event}</strong>
           {/* Services often start the headline with the event's own name: say it once. */}
           <span>{withoutEvent(a.headline ?? '', a.event)}</span>
-          {a.until && !/\buntil\b/i.test(a.headline ?? '') && <time>until {new Date(a.until).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</time>}
+          {a.until && !/\buntil\b/i.test(a.headline ?? '') && <time>until {new Date(a.until).toLocaleString(locale(), { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</time>}
         </div>
       ))}
 
@@ -134,7 +135,7 @@ export function Weather() {
                   </span>
                   <span className="hour-pct">{h.precipPct >= 20 ? `${h.precipPct}%` : ''}</span>
                   <time className={t.getHours() === 0 ? 'is-midnight' : ''}>
-                    {i === 0 ? 'Now' : t.toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}
+                    {i === 0 ? 'Now' : t.toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}
                   </time>
                 </div>
               );
@@ -147,7 +148,7 @@ export function Weather() {
         <ul className="week">
           {w.days.map((d, i) => (
             <li key={d.date}>
-              <span className="week-day">{i === 0 ? 'Today' : new Date(`${d.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long' })}</span>
+              <span className="week-day">{i === 0 ? 'Today' : new Date(`${d.date}T12:00:00`).toLocaleDateString(locale(), { weekday: 'long' })}</span>
               <span className="week-cond">{weatherText(d.code)}</span>
               <span className="week-rain">{d.precipPct >= 20 ? `${d.precipPct}%` : ''}</span>
               <span className="week-lo">{deg(d.low, unit)}°</span>

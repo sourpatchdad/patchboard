@@ -51,6 +51,7 @@ import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { locale } from '../lib/region.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
@@ -1064,7 +1065,7 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
           </Link>
         )}
         {/* Uptime has nowhere more to say, so it isn't a link. */}
-        <div className="vw" title={`Up since ${new Date(Date.now() - sys.uptimeSec * 1000).toLocaleString()}`}>
+        <div className="vw" title={`Up since ${new Date(Date.now() - sys.uptimeSec * 1000).toLocaleString(locale())}`}>
           <Roll className="vw-num" value={uptime(sys.uptimeSec)} />
           <span className="vw-label">Uptime</span>
         </div>
@@ -1523,7 +1524,7 @@ function WeatherWidget() {
             <span key={h.time} className="ww-hour" title={`${weatherText(h.code)}, ${h.precipPct}% rain`}>
               <b>{deg(h.temp, unit)}°</b>
               {wet && <i style={{ height: `${Math.max(2, h.precipPct * 0.28)}px` }} data-rain={h.precipPct >= 20 || undefined} />}
-              <small>{i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(undefined, { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
+              <small>{i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
             </span>
           ))}
         </div>
@@ -1531,7 +1532,7 @@ function WeatherWidget() {
       <ol className="ww-days">
         {w.days.slice(1, 4).map((d) => (
           <li key={d.date}>
-            <span>{new Date(`${d.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+            <span>{new Date(`${d.date}T12:00:00`).toLocaleDateString(locale(), { weekday: 'short' })}</span>
             <span className="ww-cond">{weatherText(d.code)}</span>
             <span className="mono">
               {deg(d.high, unit)}° <small>{deg(d.low, unit)}°</small>

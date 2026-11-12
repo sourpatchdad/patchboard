@@ -7,6 +7,7 @@
 //   busy" questions like CPU by hour of the week.
 
 import type { DayState, Series } from '../../shared/types.ts';
+import { locale } from '../lib/region.ts';
 
 const STATE_TEXT: Record<DayState, string> = {
   up: 'no problems',
@@ -15,7 +16,7 @@ const STATE_TEXT: Record<DayState, string> = {
   none: 'not watched yet',
 };
 
-const dayName = (t: number) => new Date(t).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const dayName = (t: number) => new Date(t).toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' });
 
 export function HealthStrip({ states, days, label, large = false }: { states: DayState[] | undefined; days: number[]; label: string; large?: boolean }) {
   if (!states) return <span className={`squares ${large ? 'squares-lg' : ''}`} aria-hidden />;
@@ -70,19 +71,19 @@ export function HourHeatmap({ series, max = 100, label, unit = '%' }: { series: 
         <span />
         {[0, 6, 12, 18].map((h) => (
           <span key={h} style={{ gridColumn: h + 2 }}>
-            {new Date(2000, 0, 1, h).toLocaleTimeString(undefined, { hour: 'numeric' })}
+            {new Date(2000, 0, 1, h).toLocaleTimeString(locale(), { hour: 'numeric' })}
           </span>
         ))}
       </div>
       {rows.map((row) => (
         <div className="heat-row" key={row.day}>
-          <span className="heat-day">{new Date(row.day).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+          <span className="heat-day">{new Date(row.day).toLocaleDateString(locale(), { weekday: 'short' })}</span>
           {row.cells.map((v, h) => (
             <i
               key={h}
               className={`hq hq-${level(v)}`}
               // The same clock as the axis above it.
-              title={`${dayName(row.day)}, ${new Date(2000, 0, 1, h).toLocaleTimeString(undefined, { hour: 'numeric' })}: ${v == null ? 'no data' : `${v.toFixed(1)}${unit}`}`}
+              title={`${dayName(row.day)}, ${new Date(2000, 0, 1, h).toLocaleTimeString(locale(), { hour: 'numeric' })}: ${v == null ? 'no data' : `${v.toFixed(1)}${unit}`}`}
             />
           ))}
         </div>

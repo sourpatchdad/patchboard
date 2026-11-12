@@ -15,6 +15,7 @@ import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from '../components/WallPages.tsx';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
+import { locale } from '../lib/region.ts';
 
 interface FeedLine {
   key: string;
@@ -95,7 +96,7 @@ export function Monitor() {
     .slice(0, 12);
   const updating = Object.keys(snap.updates).sort();
   const host = nas?.hostname ?? snap.brand?.name ?? 'patchboard';
-  const time = new Date(now).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
+  const time = new Date(now).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
   const pool = nas?.pools[0];
   const poolLevel = pool ? (pool.usedPct >= limits.poolCritPct ? 'is-crit' : pool.usedPct >= limits.poolWarnPct ? 'is-warn' : '') : '';
   const netMax = Math.max(1, ...rxLine.map((p) => p[1]), ...txLine.map((p) => p[1]));
@@ -486,9 +487,9 @@ function fromJson(text: string): string {
 /** Today's lines by time; older ones say the day too ("tue 22:13"), so the order reads right. */
 function feedTime(at: number, now: number): string {
   const d = new Date(at);
-  const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const time = d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   if (d.toDateString() === new Date(now).toDateString()) return time;
-  return `${d.toLocaleDateString(undefined, { weekday: 'short' }).toLowerCase()} ${time.slice(0, 5)}`;
+  return `${d.toLocaleDateString(locale(), { weekday: 'short' }).toLowerCase()} ${time.slice(0, 5)}`;
 }
 
 /** Apps open their lines with their own time, name, level and process numbers; the feed has columns for those. */

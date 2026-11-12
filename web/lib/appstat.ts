@@ -32,6 +32,7 @@ import type {
 } from '../../shared/types.ts';
 import { plural, speed } from './format.ts';
 import { shortStatus } from './services.ts';
+import { locale } from './region.ts';
 
 export type Tone = 'ok' | 'warn' | 'crit' | 'idle' | 'none';
 
@@ -71,11 +72,11 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   }
   if (c === 'bazarr') {
     const a = data<ArrData>(snap, 'bazarr');
-    return a ? (a.queueTotal ? `${a.queueTotal.toLocaleString()} missing subs` : 'Subtitles complete') : null;
+    return a ? (a.queueTotal ? `${a.queueTotal.toLocaleString(locale())} missing subs` : 'Subtitles complete') : null;
   }
   if (c === 'paperless' || c === 'paperless-ngx' || c === 'paperless-webserver') {
     const p = data<PaperlessData>(snap, 'paperless');
-    return p ? (p.inbox ? `${p.inbox} in inbox` : `${p.total.toLocaleString()} documents`) : null;
+    return p ? (p.inbox ? `${p.inbox} in inbox` : `${p.total.toLocaleString(locale())} documents`) : null;
   }
   if (c === 'gitea' || c === 'forgejo') {
     const g = data<GiteaData>(snap, 'gitea');
@@ -83,7 +84,7 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   }
   if (c === 'nextcloud' || c === 'nextcloud-app') {
     const n = data<NextcloudData>(snap, 'nextcloud');
-    return n ? (n.appUpdates ? `${n.appUpdates} app ${n.appUpdates === 1 ? 'update' : 'updates'}` : `${n.files.toLocaleString()} files`) : null;
+    return n ? (n.appUpdates ? `${n.appUpdates} app ${n.appUpdates === 1 ? 'update' : 'updates'}` : `${n.files.toLocaleString(locale())} files`) : null;
   }
   const dl = { qbittorrent: 'qbit', transmission: 'transmission', deluge: 'deluge', sabnzbd: 'sabnzbd', nzbget: 'nzbget' }[c] as SourceId | undefined;
   if (dl) {
@@ -97,7 +98,7 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
     const im = data<ImmichData>(snap, 'immich');
     if (!im) return null;
     const busy = im.queues.reduce((n, q) => n + q.active + q.waiting, 0);
-    return busy ? `Processing ${busy.toLocaleString()}` : `${im.photos.toLocaleString()} photos`;
+    return busy ? `Processing ${busy.toLocaleString(locale())}` : `${im.photos.toLocaleString(locale())} photos`;
   }
   if (c === 'miniflux') {
     const m = data<MinifluxData>(snap, 'miniflux');
@@ -113,7 +114,7 @@ function integrationLine(snap: Snapshot, s: Service): string | null {
   }
   if (c === 'homeassistant' || c === 'home-assistant') {
     const h = data<HomeAssistantData>(snap, 'homeassistant');
-    return h ? `${h.total.toLocaleString()} entities` : null;
+    return h ? `${h.total.toLocaleString(locale())} entities` : null;
   }
   if (c === 'tracearr') {
     const t = data<TracearrData>(snap, 'tracearr');

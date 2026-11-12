@@ -12520,3 +12520,24 @@ html[data-household][data-wall] .fab {
 html[data-household][data-wall] main {
   padding-top: 14px;
 }
+
+.region-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.region-picks label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.region-picks label > span {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.region-picks select {
+  max-width: 100%;
+}

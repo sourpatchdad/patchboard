@@ -9,6 +9,7 @@ import { useUrlChoice } from '../lib/url.ts';
 import { CustomizePage } from '../components/PageCustomize.tsx';
 import { useNow, useStore } from '../lib/store.tsx';
 import { groupDrops, ReleaseRow, useReleases } from './Home.tsx';
+import { locale } from '../lib/region.ts';
 
 type Kind = 'all' | 'episode' | 'movie';
 
@@ -118,7 +119,7 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
     <div className="cal-grid" aria-label="Calendar">
       {days.slice(0, 7).map((d) => (
         <span key={`h${d.getDay()}`} className="cal-head" aria-hidden>
-          {d.toLocaleDateString(undefined, { weekday: 'short' })}
+          {d.toLocaleDateString(locale(), { weekday: 'short' })}
         </span>
       ))}
       {days.map((d) => {
@@ -127,13 +128,13 @@ function WeekGrid({ items, now }: { items: ReleaseItem[]; now: number }) {
         return (
           <section
             key={d.toDateString()}
-            aria-label={d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            aria-label={d.toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}
             className={`cal-day ${off === 0 ? 'is-today' : ''} ${list.length ? '' : 'is-empty'}`}
           >
             <h2 className="agenda-day-head">
               {/* Heard as the full date; seen as the short one. */}
-              <span className="sr-only">{d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}{off === 0 ? ', today' : ''}</span>
-              <span aria-hidden>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : d.getDate()}</span>
+              <span className="sr-only">{d.toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}{off === 0 ? ', today' : ''}</span>
+              <span aria-hidden>{off === 0 ? 'Today' : d.getDate() === 1 || d.getTime() === days[0].getTime() ? d.toLocaleDateString(locale(), { month: 'short', day: 'numeric' }) : d.getDate()}</span>
               {list.length > 1 && (
                 <>
                   <small aria-hidden>{list.length}</small>

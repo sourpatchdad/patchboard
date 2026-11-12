@@ -9,13 +9,14 @@ import { useModal } from '../lib/modal.ts';
 import { containerMap } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { SelfUpdate } from './Updater.tsx';
+import { locale } from '../lib/region.ts';
 
 const RELEASES = 'https://github.com/sourpatchdad/patchboard/releases';
 
 const html = (md: string) => DOMPurify.sanitize(marked.parse(md, { async: false, gfm: true }) as string);
 const day = (at: number) =>
   at
-    ? new Date(at).toLocaleDateString(undefined, {
+    ? new Date(at).toLocaleDateString(locale(), {
         month: 'short',
         day: 'numeric',
         year: 'numeric',

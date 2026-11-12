@@ -6,6 +6,7 @@ import { useModal } from '../lib/modal.ts';
 import { useEffect, useState } from 'react';
 import { FORMATS, type FieldFormat, type JsonField, type JsonWidgetConfig, toneFor } from '../../shared/jsonwidget.ts';
 import { ago, duration, size } from '../lib/format.ts';
+import { locale } from '../lib/region.ts';
 
 interface Result {
   values: { label: string; value: unknown }[];
@@ -28,7 +29,7 @@ export function formatValue(v: unknown, f: JsonField): string {
     case 'relative':
       return ago(n < 1e12 ? n * 1000 : n);
     default:
-      return `${Math.abs(n) >= 1000 ? Math.round(n).toLocaleString() : Number.isInteger(n) ? n : n.toFixed(2)}${f.suffix ?? ''}`;
+      return `${Math.abs(n) >= 1000 ? Math.round(n).toLocaleString(locale()) : Number.isInteger(n) ? n : n.toFixed(2)}${f.suffix ?? ''}`;
   }
 }
 

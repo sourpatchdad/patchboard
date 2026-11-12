@@ -15,6 +15,7 @@ import { Empty } from '../components/ui.tsx';
 import { ago, count } from '../lib/format.ts';
 import { useNow, useStore } from '../lib/store.tsx';
 import { useUrlChoice } from '../lib/url.ts';
+import { locale } from '../lib/region.ts';
 
 type FeedSort = 'newest' | 'oldest' | 'quick';
 
@@ -401,7 +402,7 @@ export function Feeds() {
             </button>
             <header className="reader-head">
               <p className="reader-feed">
-                {selected.feed}, {new Date(selected.publishedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                {selected.feed}, {new Date(selected.publishedAt).toLocaleDateString(locale(), { month: 'long', day: 'numeric' })}
                 {selected.readingTime > 0 && `, ${selected.readingTime} min read`}
               </p>
               <h1 id="reader-title" tabIndex={-1}>{selected.title}</h1>
@@ -486,7 +487,7 @@ function Edition(props: {
   return (
     <div className="edition">
       <p className="edition-date">
-        {new Date(now).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+        {new Date(now).toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}
         {total != null && <span>, {count(total)} unread</span>}.<span className="keys-only"> Press <kbd>j</kbd> to read from the top.</span>
       </p>
       <button type="button" className="edition-lead" data-entry={lead.id} onClick={() => onPick(lead.id)}>

@@ -9,7 +9,7 @@ You configure almost everything in the UI:
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
 | Settings, Connections, Sign-in and keys | A password, other names you open Patchboard by, and household devices | Every device |
 | Settings, Look, Name | The name in the header and tab | Every device |
-| Settings, Look and Home | Theme, colors, type, density, keyboard shortcuts, units and Home header | This device only |
+| Settings, Look and Home | Theme, colors, type, density, region (how dates, numbers and prices are written), keyboard shortcuts, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
 
 Settings, Home controls the header on this device. By default it shows
