@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 (2026-11-12)
 
 - **Wall tablets swipe between pages:** give a household device more pages
   in Settings, next to Opens: the Monitor, any board, Server, Weather. A
