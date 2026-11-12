@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Monitor in color:** a third Monitor color in Settings, Household
+  devices. Each part of the server gets one cool hue (blue CPU, violet
+  memory, cyan network, ice storage) on a near-black that suits a tablet
+  screen. Amber and red stay the only warm colors, so trouble still stands
+  out from across the room, colorblind or not.
+
 ## 1.4.0 (2026-11-11)
 
 - **Remote control for household devices:** in Settings, Connections,

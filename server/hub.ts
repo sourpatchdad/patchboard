@@ -286,7 +286,7 @@ export class Hub {
   }
 
   /** A household device's view changed: the events route passes it to that device only. */
-  emitHousehold(id: string, view: { opens?: string; tint?: 'gray' | 'blue'; rev?: number }): void {
+  emitHousehold(id: string, view: { opens?: string; tint?: 'gray' | 'blue' | 'color'; rev?: number }): void {
     this.emit({ type: 'household', id, ...view });
   }
 

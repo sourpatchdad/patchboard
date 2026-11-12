@@ -11465,6 +11465,62 @@ a.jack .jack-socket {
   font-variant-numeric: tabular-nums;
 }
 
+/* Color slots: each part of the Monitor takes its accent from its own slot.
+   Gray and blue point every slot at one accent; a colored palette gives each
+   part its hue: cool hues name the parts, warm ones are kept for trouble. */
+.monitor {
+  --c-cpu: var(--accent);
+  --c-mem: var(--accent);
+  --c-net: var(--accent);
+  --c-pool: var(--accent);
+  --c-disk: var(--accent);
+}
+
+.monitor .k-cpu {
+  --accent: var(--c-cpu);
+}
+
+.monitor .k-mem {
+  --accent: var(--c-mem);
+}
+
+.monitor .k-net {
+  --accent: var(--c-net);
+}
+
+.monitor .k-pool {
+  --accent: var(--c-pool);
+}
+
+.monitor .k-disk {
+  --accent: var(--c-disk);
+}
+
+/* Color, set per device in Settings. Near-black with a cool cast (an LCD
+   can't show true black anyway); each part keeps one cool hue: blue CPU,
+   violet memory, cyan network, ice storage. Amber and red stay the only warm
+   colors, so trouble still stands out, colorblind or not. Mid-high lightness
+   holds up on a cheap tablet panel. */
+.monitor.tint-color {
+  --bg: #090b10;
+  --line: #1c2232;
+  --line-soft: #131826;
+  --ink: #cfd7e6;
+  --ink-2: #9ba7bd;
+  --ink-3: #7b87a0;
+  --head: #f1f5fb;
+  --accent: #8b9dff;
+  --c-cpu: #6ea8ff;
+  --c-mem: #b493ff;
+  --c-net: #4fd2e8;
+  --c-pool: #c9d3f5;
+  --c-disk: #c9d3f5;
+  --warn: #f5a524;
+  --crit: #ff6b6b;
+  --mon-up: #2f3b58;
+  --mon-off: #161b28;
+}
+
 /* Blue, set per device in Settings: a muted steel blue on the live lines,
    waffles, running containers and good backups. Text stays gray; amber and
    red still mean trouble. */
@@ -11665,7 +11721,7 @@ a.jack .jack-socket {
 }
 
 .mon-waffle100 i.is-up {
-  background: var(--mon-up);
+  background: color-mix(in srgb, var(--accent) 34%, var(--mon-off));
 }
 
 .mon-waffle100 i.is-hot {
@@ -11723,7 +11779,8 @@ a.jack .jack-socket {
 .mon-meter i {
   display: block;
   height: 100%;
-  background: var(--mon-up);
+  /* The part's own hue, dimmed: gray and blue stay as they were. */
+  background: color-mix(in srgb, var(--accent) 45%, var(--mon-off));
 }
 
 .mon-temps .is-warn .mon-meter i,

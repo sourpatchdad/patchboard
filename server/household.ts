@@ -25,7 +25,7 @@ const SEEN_EVERY = 10 * 60_000;
 export interface DeviceView {
   /** A path: /, /b/<board>, /server, /monitor, /upcoming, /reading or /weather. */
   opens?: string;
-  tint?: 'gray' | 'blue';
+  tint?: 'gray' | 'blue' | 'color';
   /** Changes with every save, so the device knows to follow. */
   rev?: number;
 }
@@ -74,7 +74,7 @@ export function setHouseholdView(id: string, view: { opens?: string | null; tint
   const d = all[id];
   if (!d) return null;
   if (view.opens !== undefined) d.opens = view.opens || undefined;
-  if (view.tint !== undefined) d.tint = view.tint === 'blue' ? 'blue' : undefined;
+  if (view.tint !== undefined) d.tint = view.tint === 'blue' || view.tint === 'color' ? view.tint : undefined;
   d.rev = Date.now();
   kvSet('household', all);
   return { opens: d.opens, tint: d.tint, rev: d.rev };

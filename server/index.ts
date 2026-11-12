@@ -384,7 +384,7 @@ app.put('/api/household/:id', async (c) => {
     else if (typeof body.opens === 'string' && (OPENS.has(body.opens) || (/^\/b\/[\w-]+$/.test(body.opens) && getBoard(body.opens.slice(3))))) opens = body.opens;
     else return c.json({ error: 'Pick a page or a board that exists' }, 400);
   }
-  const tint = body.tint === undefined ? undefined : body.tint === 'blue' ? 'blue' : null;
+  const tint = body.tint === undefined ? undefined : body.tint === 'blue' || body.tint === 'color' ? body.tint : null;
   const view = setHouseholdView(c.req.param('id'), { opens, tint });
   if (!view) return c.json({ error: 'No such device' }, 404);
   recordAudit(who(c), 'household.view', c.req.param('id'), [view.opens ?? 'wherever', view.tint ?? 'gray'].join(', '));

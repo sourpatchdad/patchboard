@@ -54,7 +54,8 @@ export function Monitor() {
   useEffect(() => setPageName('Monitor'), []);
   useFollowOpens();
   // The Monitor's color: set per household device in Settings, or ?tint= in the address.
-  const tint = snap?.household?.tint ?? (new URLSearchParams(location.search).get('tint') === 'blue' ? 'blue' : 'gray');
+  const asked = new URLSearchParams(location.search).get('tint') ?? '';
+  const tint = snap?.household?.tint ?? (['blue', 'color'].includes(asked) ? asked : 'gray');
 
   // Live lines: the last two hours from history, then every new reading on the end.
   const mem = sys?.mem;
@@ -116,16 +117,16 @@ export function Monitor() {
       </header>
 
       <section className="mon-charts" aria-label="Live">
-        <Tile label="cpu" value={sys ? pct(sys.cpuPct) : '--'}>
+        <Tile k="cpu" label="cpu" value={sys ? pct(sys.cpuPct) : '--'}>
           <LiveChart lines={[{ points: cpuLine }]} max={100} label="CPU, live" />
         </Tile>
-        <Tile label="memory" value={mem ? size(memUsed) : '--'} note={mem ? `of ${size(mem.total)}, ${size(mem.arc)} zfs cache` : undefined}>
+        <Tile k="mem" label="memory" value={mem ? size(memUsed) : '--'} note={mem ? `of ${size(mem.total)}, ${size(mem.arc)} zfs cache` : undefined}>
           <LiveChart lines={[{ points: memLine }]} max={mem?.total} label="Memory in use, live" />
         </Tile>
-        <Tile label="network" value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? `in, ${speed(netOut)} out` : undefined}>
+        <Tile k="net" label="network" value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? `in, ${speed(netOut)} out` : undefined}>
           <LiveChart lines={[{ points: rxLine }, { points: txLine, quiet: true }]} max={netMax} label="Network in and out, live" />
         </Tile>
-        <Tile label={pool ? `pool ${pool.name.toLowerCase()}` : 'pool'} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? `${size(pool.freeBytes)} free of ${size(pool.sizeBytes)}` : undefined}>
+        <Tile k="pool" label={pool ? `pool ${pool.name.toLowerCase()}` : 'pool'} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? `${size(pool.freeBytes)} free of ${size(pool.sizeBytes)}` : undefined}>
           {pool && (
             <div className={`mon-gauge ${poolLevel}`} role="img" aria-label={`${Math.round(pool.usedPct)}% used`}>
               <i style={{ width: `${Math.min(100, pool.usedPct)}%` }} />
@@ -140,12 +141,12 @@ export function Monitor() {
       <section className="mon-col" aria-label="Load, the week and disks">
         {sys && (
           <div className="mon-waffles">
-            <div>
+            <div className="k-cpu">
               <p className="mon-label">cpu now</p>
               <Waffle parts={[{ pct: sys.cpuPct, tone: 'is-hot' }]} label={`CPU ${pct(sys.cpuPct)}`} />
             </div>
             {mem && (
-              <div>
+              <div className="k-mem">
                 <p className="mon-label">memory</p>
                 <Waffle
                   parts={[
@@ -158,14 +159,14 @@ export function Monitor() {
             )}
           </div>
         )}
-        <div className="mon-block mon-week">
+        <div className="mon-block mon-week k-cpu">
           <p className="mon-label">cpu by hour, 7 days</p>
           <HourHeatmap series={week.cpu} label="CPU by hour over the last seven days" />
         </div>
         {nas && nas.disks.length > 0 && (
           <div className="mon-block">
             <p className="mon-label">disks</p>
-            <ul className="mon-temps">
+            <ul className="mon-temps k-disk">
               {nas.disks.map((d) => {
                 const level = d.tempC != null && d.tempC >= limits.diskCritC ? 'is-crit' : d.tempC != null && d.tempC >= limits.diskWarnC ? 'is-warn' : '';
                 return (
@@ -184,7 +185,7 @@ export function Monitor() {
         {busiest.length > 0 && (
           <Fill>
             <p className="mon-label">busiest now</p>
-            <ul className="mon-busy">
+            <ul className="mon-busy k-cpu">
               {busiest.map(([name, s]) => (
                 <li key={name}>
                   <span className="mon-clip">{name}</span>
@@ -334,9 +335,10 @@ function ticking(sec: number): string {
   return `${d ? `${d}d ` : ''}${pad(Math.floor((s % 86_400) / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 }
 
-function Tile({ label, value, note, tone = '', children }: { label: string; value: string; note?: string; tone?: string; children?: React.ReactNode }) {
+/** `k` names what the tile shows, so a colored Monitor can give each its own hue. */
+function Tile({ k, label, value, note, tone = '', children }: { k: string; label: string; value: string; note?: string; tone?: string; children?: React.ReactNode }) {
   return (
-    <div className="mon-tile">
+    <div className={`mon-tile k-${k}`}>
       <p className="mon-label">{label}</p>
       <p className={`mon-big ${tone}`}>{value}</p>
       {children}

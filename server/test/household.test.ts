@@ -73,6 +73,7 @@ test('a device remembers where it opens and its Monitor color; each change bumps
   assert.ok('token' in made);
   const first = h.setHouseholdView(made.id, { opens: '/monitor', tint: 'blue' });
   assert.deepEqual({ opens: first?.opens, tint: first?.tint }, { opens: '/monitor', tint: 'blue' });
+  assert.equal(h.setHouseholdView(made.id, { tint: 'color' })?.tint, 'color', 'full color');
   const second = h.setHouseholdView(made.id, { tint: 'pink' });
   assert.equal(second?.opens, '/monitor', 'a change to the color keeps the page');
   assert.equal(second?.tint, undefined, 'an unknown color goes back to gray');
