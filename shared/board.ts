@@ -270,7 +270,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
-  cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 5 seconds while on screen (tap one to watch it live), and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], fields: [camerasField] } },
+  cameras: { name: 'Cameras', about: "Frigate: each camera's newest frame, refreshed every 5 seconds while on screen (tap one to watch it live), and what the cameras that detect saw today. Anyone who can open this board sees the pictures.", size: 'w', sizes: ANY, removable: true, multiple: true, options: { limit: [6, 1, 20], styles: [['', 'Frames and today'], ['big', 'Large frames']], fields: [camerasField] } },
   watched: { name: 'Watched', about: 'What was played lately on Plex, Jellyfin and Emby, newest first, with who watched and when. Each opens in its app.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 15] } },
   listening: { name: 'Listening', about: 'Audiobookshelf books in progress, with how far along, and albums played lately on Navidrome.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 8] } },
   downloads: { name: 'Downloads', about: 'Every unfinished download across your clients, with pause, resume and remove, and what Sonarr and Radarr are stuck on, with Try another release. With this on the board, Right now leaves downloads to it.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [8, 2, 30] } },
@@ -516,7 +516,7 @@ export const STARTERS: { id: string; name: string; about: string; board: Board; 
       wall: true,
       widgets: [
         { id: 'attention', type: 'attention', size: 'm' },
-        { id: 'cameras', type: 'cameras', size: 'xl', span: 2 },
+        { id: 'cameras', type: 'cameras', size: 'xl', span: 2, config: { style: 'big' } },
       ],
     },
   },

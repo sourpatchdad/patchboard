@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Smoother swiping on wall tablets:** the page leans with your finger as it
+  moves, boards you've seen draw at once, and a tablet fetches all its pages
+  ahead, so the first swipe is as quick as the rest. The touch that ends a
+  swipe no longer opens a preview or link underneath, and long-press menus
+  stay out of the way.
+- **Large camera frames:** the Cameras widget can show its frames as big as
+  the card allows, without today's detections. The wall cameras board starts
+  that way.
+
 ## 1.9.0 (2026-11-12)
 
 - **Scan to join:** a new household link comes with a QR code, so a tablet

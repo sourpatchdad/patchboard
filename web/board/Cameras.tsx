@@ -160,7 +160,9 @@ const seen = (e: FrigateEvent) => {
 
 export function CamerasWidget({ config, now }: { config?: Record<string, string>; now: number }) {
   const { state, data } = useSource<FrigateData>('frigate');
-  const { limit = 6 } = useWidget();
+  const { limit = 6, style } = useWidget();
+  // Large frames: the pictures as big as the card allows, without today's list.
+  const big = style === 'big';
   const [watching, setWatching] = useState<string | null>(null);
   if (!state || !data) return null;
   const pick = (config?.cameras ?? '').split('\n').filter(Boolean);
@@ -170,7 +172,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
   const detecting = cams.some((c) => c.detect);
   const web = data.webUrl && data.webUrl !== '#' ? data.webUrl : undefined;
   return (
-    <Section title="Cameras" source={state} className="cameras" action={web ? { label: 'Open Frigate', href: web } : undefined}>
+    <Section title="Cameras" source={state} className={`cameras${big ? ' cameras-big' : ''}`} action={web ? { label: 'Open Frigate', href: web } : undefined}>
       {cams.length === 0 ? (
         <Empty>
           Frigate has none of the cameras this widget names. <SetupLink>Change cameras</SetupLink>
@@ -199,7 +201,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
           })}
         </ul>
       )}
-      {detecting && (
+      {detecting && !big && (
         <>
           <h3 className="cam-head">Today</h3>
           {events.length === 0 ? (

@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store.tsx';
+import { warmBoard } from '../board/Board.tsx';
 import { t } from '../lib/i18n.ts';
 
 // A touch counts as a swipe past this far sideways, and mostly sideways.
@@ -46,14 +47,33 @@ export function WallPages() {
 
   // Swipes and arrow keys. A sideways drag is the page's to read, so the
   // browser doesn't take it as a pan or a swipe back; something inside that
-  // scrolls sideways still scrolls.
+  // scrolls sideways still scrolls. The page follows the finger a little
+  // while it moves, and the touch that ends a swipe isn't a tap: it opens no
+  // preview, link or menu underneath.
   useEffect(() => {
     if (list.length < 2) return;
-    document.documentElement.classList.add('wall-swipe');
+    const root = document.documentElement;
+    root.classList.add('wall-swipe');
     let start: { x: number; y: number; t: number } | null = null;
+    let swallowUntil = 0;
+    let frame = 0;
+    const drag = (px: number) => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        root.style.setProperty('--wall-drag', `${px}px`);
+        root.classList.toggle('wall-dragging', px !== 0);
+      });
+    };
     const down = (e: PointerEvent) => {
       touchedAt = Date.now();
       start = e.pointerType !== 'mouse' && e.clientX > EDGE_PX && e.clientX < innerWidth - EDGE_PX && !scrollsSideways(e.target as Element) ? { x: e.clientX, y: e.clientY, t: Date.now() } : null;
+    };
+    const move = (e: PointerEvent) => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      // Clearly sideways: follow it, at a third of the distance.
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) drag(Math.round(dx / 3));
     };
     const up = (e: PointerEvent) => {
       if (!start) return;
@@ -61,27 +81,67 @@ export function WallPages() {
       const dy = e.clientY - start.y;
       const quick = Date.now() - start.t < 800;
       start = null;
+      drag(0);
+      if (Math.abs(dx) > 12) swallowUntil = Date.now() + 450;
       if (quick && Math.abs(dx) > SWIPE_PX && Math.abs(dy) < Math.abs(dx) * 0.6) goRef.current(dx < 0 ? 1 : -1);
     };
+    // The click a browser sends after a drag, and the long-press menu.
+    const click = (e: Event) => {
+      if (Date.now() < swallowUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    const menu = (e: Event) => e.preventDefault();
     const key = (e: KeyboardEvent) => {
       touchedAt = Date.now();
       if (e.altKey || e.ctrlKey || e.metaKey || (e.target as Element)?.matches?.('input, textarea, select')) return;
       if (e.key === 'ArrowRight') goRef.current(1);
       if (e.key === 'ArrowLeft') goRef.current(-1);
     };
+    const cancel = () => {
+      start = null;
+      drag(0);
+    };
     addEventListener('pointerdown', down, { passive: true });
+    addEventListener('pointermove', move, { passive: true });
     addEventListener('pointerup', up, { passive: true });
-    const cancel = () => (start = null);
     addEventListener('pointercancel', cancel);
+    addEventListener('click', click, true);
+    addEventListener('contextmenu', menu);
     addEventListener('keydown', key);
     return () => {
-      document.documentElement.classList.remove('wall-swipe');
+      root.classList.remove('wall-swipe', 'wall-dragging');
+      root.style.removeProperty('--wall-drag');
+      cancelAnimationFrame(frame);
       removeEventListener('pointerdown', down);
+      removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
       removeEventListener('pointercancel', cancel);
+      removeEventListener('click', click, true);
+      removeEventListener('contextmenu', menu);
       removeEventListener('keydown', key);
     };
   }, [list.length]);
+
+  // Every page this device turns to, fetched ahead: the code for each page
+  // and each board's layout, so the first swipe is as quick as the tenth.
+  const pagesKey = list.join(' ');
+  useEffect(() => {
+    if (list.length < 2) return;
+    const t = setTimeout(() => {
+      for (const p of list) {
+        if (p.startsWith('/b/')) void warmBoard(p.slice(3));
+        else if (p === '/') void warmBoard('home');
+        else if (p === '/monitor') void import('../views/Monitor.tsx');
+        else if (p === '/server') void import('../views/Server.tsx');
+        else if (p === '/weather') void import('../views/Weather.tsx');
+        else if (p === '/upcoming') void import('../views/Upcoming.tsx');
+        else if (p === '/reading') void import('../views/Feeds.tsx');
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [pagesKey]);
 
   // Turning by itself, held off for a while after a touch.
   useEffect(() => {

@@ -59,9 +59,25 @@ const GAP_PX = 24;
 const spanLabel = (n: number, cols: number) => (n >= cols ? 'Full' : String(n));
 const NONE: Widget[] = [];
 
+// Boards seen on this device, so going back to one draws it at once and the
+// fetch only refreshes it. A wall tablet swiping between boards never shows
+// a blank frame.
+const boardCache = new Map<string, { board: BoardData; custom: boolean }>();
+
+/** Fetch a board ahead of time, so the first visit is as quick as the next. */
+export async function warmBoard(id: string): Promise<void> {
+  if (boardCache.has(id)) return;
+  try {
+    const res = await fetch(`/api/boards/${encodeURIComponent(id)}`);
+    if (res.ok) boardCache.set(id, (await res.json()) as { board: BoardData; custom: boolean });
+  } catch {
+    // It loads when opened instead.
+  }
+}
+
 function useBoard(id: string) {
-  const [board, setBoard] = useState<BoardData | null>(null);
-  const [custom, setCustom] = useState(false);
+  const [board, setBoard] = useState<BoardData | null>(() => boardCache.get(id)?.board ?? null);
+  const [custom, setCustom] = useState(() => boardCache.get(id)?.custom ?? false);
   const [missing, setMissing] = useState(false);
   // Saved from another device or tab: load it again, without a blank frame.
   const saved = useStore().snap?.boardSaved;
@@ -71,7 +87,8 @@ function useBoard(id: string) {
     let gone = false;
     if (shownId.current !== id) {
       shownId.current = id;
-      setBoard(null);
+      setBoard(boardCache.get(id)?.board ?? null);
+      setCustom(boardCache.get(id)?.custom ?? false);
     }
     setMissing(false);
     void (async () => {
@@ -80,6 +97,7 @@ function useBoard(id: string) {
         if (gone) return;
         if (res.status === 404) return setMissing(true);
         const body = (await res.json()) as { board: BoardData; custom: boolean };
+        boardCache.set(id, body);
         setBoard(body.board);
         setCustom(body.custom);
       } catch {
@@ -96,9 +114,10 @@ function useBoard(id: string) {
     const body = (await res.json()) as { board?: BoardData; custom?: boolean; error?: string; deleted?: boolean };
     if (!res.ok) return body.error ?? `HTTP ${res.status}`;
     if (body.board) {
+      boardCache.set(id, { board: body.board, custom: !!body.custom });
       setBoard(body.board);
       setCustom(!!body.custom);
-    }
+    } else boardCache.delete(id);
     return null;
   };
   return { board, custom, missing, save };

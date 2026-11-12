@@ -12657,3 +12657,37 @@ html[data-eink] .moon-lit {
   margin: 4px 0 12px;
   border-radius: 6px;
 }
+
+/* A wall device: nothing to select or long-press, and while a finger drags
+   sideways the page leans with it (a transform, cheap for a slow tablet). */
+html.wall-swipe body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.wall-dragging .shell > main,
+html.wall-dragging .monitor {
+  transform: translateX(var(--wall-drag, 0));
+}
+
+html.wall-swipe .shell > main,
+html.wall-swipe .monitor {
+  transition: transform 0.12s ease-out;
+}
+
+html.wall-dragging .shell > main,
+html.wall-dragging .monitor {
+  transition: none;
+}
+
+/* Cameras, large frames: three to a row on a tablet, two on a phone. */
+.cameras-big .cam-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 10px;
+}
+
+.cameras-big .cam-name {
+  font-size: 15px;
+}
