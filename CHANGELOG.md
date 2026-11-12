@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.11.1 (2026-11-12)
 
 - **One number, level in a row:** every number gets the room of the largest
   and keeps space for its line, so the labels under a row of them sit on one
