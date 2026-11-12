@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 (2026-11-12)
 
 - **Monitor in color:** a third Monitor color in Settings, Household
   devices. Each part of the server gets one cool hue (blue CPU, violet
