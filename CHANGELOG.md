@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Server at a glance:** on a short landscape screen, such as a wall tablet,
+  the Server page packs into three tight columns and fits without
+  scrolling: storage, datasets, backups, cloud sync, resources, the busiest
+  containers, disks and the CPU week.
+
 ## 1.2.0 (2026-11-11)
 
 - **Household devices:** a link for a family phone or a wall tablet, made in

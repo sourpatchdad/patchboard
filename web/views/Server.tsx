@@ -3,7 +3,7 @@
 // from the host; history from Patchboard's own samples.
 
 import { Roll } from '../components/Roll.tsx';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { arrange } from '../../shared/pages.ts';
 import { CustomizePage, type SectionDef, usePage } from '../components/PageCustomize.tsx';
 import { Link, useLocation } from 'react-router-dom';
@@ -33,12 +33,29 @@ const SERVER_SECTIONS: SectionDef[] = [
   { id: 'cloudsync', label: 'Cloud sync', group: 'Storage and backups' },
 ];
 
+// A short landscape screen, such as a wall tablet: the page packs into tight
+// columns (styles.css, "Server at a glance") and the CPU week goes last, so
+// everything else fits the first screen. Kept in step with that media query.
+const GLANCE = '(min-width: 900px) and (max-height: 720px) and (orientation: landscape)';
+
+function useGlance(): boolean {
+  const [on, setOn] = useState(() => matchMedia(GLANCE).matches);
+  useEffect(() => {
+    const m = matchMedia(GLANCE);
+    const change = () => setOn(m.matches);
+    m.addEventListener('change', change);
+    return () => m.removeEventListener('change', change);
+  }, []);
+  return on;
+}
+
 export function Server() {
   const { snap } = useStore();
   const now = useNow(30_000);
   const { state: nasState, data: nas } = useSource<TruenasData>('truenas');
   const { data: sys } = useSource<SystemData>('system');
   const page = usePage('server');
+  const glance = useGlance();
   useLanding(!!snap);
   const { hash } = useLocation();
   if (!snap) return null;
@@ -95,7 +112,13 @@ export function Server() {
       {hiddenHere && <p className="update-notice">{hiddenHere} is hidden on this page. Customize shows it again.</p>}
       <div className="detail-grid">
         <div className="detail-main">{arrange(MAIN, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</div>
-        <aside className="detail-side">{arrange(SIDE, page).map((id) => <Fragment key={id}>{part(id)}</Fragment>)}</aside>
+        <aside className="detail-side">
+          {arrange(SIDE, page)
+            .sort((a, b) => (glance ? Number(a === 'cpu') - Number(b === 'cpu') : 0))
+            .map((id) => (
+              <Fragment key={id}>{part(id)}</Fragment>
+            ))}
+        </aside>
       </div>
     </div>
   );

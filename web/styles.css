@@ -6697,6 +6697,238 @@ a.date:hover {
   }
 }
 
+/* Server at a glance: a short landscape screen, such as a wall tablet,
+   packs the page into three tight columns so it fits without scrolling.
+   Server.tsx moves the CPU week last under the same query (GLANCE). Nothing
+   is hidden except each disk's model name, which stays in its tooltip. */
+@media (min-width: 900px) and (max-height: 720px) and (orientation: landscape) {
+  .server.page {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* The nav already says Server; the title row gives its height to the columns. */
+  .server .detail-head {
+    display: none;
+  }
+
+  .server .detail-titles {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .server .detail-head .page-title {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .server .detail-ident {
+    margin: 0;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .server .detail-head .button {
+    min-height: 26px;
+    padding: 2px 10px;
+    font-size: 12px;
+  }
+
+  .server .detail-grid {
+    display: block;
+    column-count: 3;
+    column-gap: 22px;
+    margin-top: 0;
+  }
+
+  .server .detail-main,
+  .server .detail-side {
+    display: contents;
+  }
+
+  .server .detail-grid .section {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 8px;
+    break-inside: avoid;
+    font-size: 12.5px;
+  }
+
+  .server .section-head {
+    padding-bottom: 3px;
+    gap: 8px;
+  }
+
+  .server .section-head h2 {
+    font-size: 15px;
+  }
+
+  .server .section-count {
+    font-size: 11px;
+  }
+
+  .server .pool-figure {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .server .pool-figure .big-num {
+    font-size: 28px;
+  }
+
+  .server :is(.pool-words, .forecast-line, .detail-note) {
+    font-size: 11.5px;
+    margin-block: 3px;
+  }
+
+  /* History lines keep their shape at a sliver of their height. */
+  .server :is(.spark-wrap, .spark, .spark-empty) {
+    height: 16px !important;
+  }
+
+  .server .metric .spark-wrap {
+    margin-top: 2px;
+  }
+
+  .server .ledger-row {
+    grid-template-columns: 5.6em minmax(0, 1fr);
+    column-gap: 8px;
+    padding: 0;
+  }
+
+  .server .ledger-row dt {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .server .ledger-row dd {
+    line-height: 17px;
+  }
+
+  .server .ledger-row dd {
+    font-size: 12px;
+    gap: 0 8px;
+  }
+
+  .server .ledger-aside {
+    font-size: 11px;
+  }
+
+  .server .metric {
+    gap: 2px;
+    padding: 6px 0 2px;
+  }
+
+  .server .metric-num {
+    font-size: 19px;
+  }
+
+  .server .metric-label {
+    font-size: 11px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .server .backup-set {
+    padding-top: 4px;
+  }
+
+  .server .backup-summary {
+    margin-bottom: 2px;
+    font-size: 11.5px;
+  }
+
+  .server .backup-grid li {
+    padding: 0;
+    gap: 8px;
+    border-bottom: 0;
+  }
+
+  .server .backup-label {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .server .backup-grid .squares {
+    grid-auto-columns: 7px;
+    gap: 2px;
+  }
+
+  /* Disks on one line: name, pool, size, temperature. */
+  .server .disks li {
+    display: flex;
+    gap: 10px;
+    padding: 1px 0;
+    font-size: 12px;
+  }
+
+  .server .disk-model {
+    display: none;
+  }
+
+  .server .disk-pool {
+    flex: 1;
+    order: 1;
+    min-width: 0;
+  }
+
+  .server .disk-size {
+    order: 2;
+  }
+
+  .server .disk-temp {
+    order: 3;
+  }
+
+  .server .busiest h3 {
+    margin: 4px 0 2px;
+    font-size: 11px;
+  }
+
+  .server .busiest li,
+  .server .task-list li {
+    padding: 1px 0;
+    font-size: 12px;
+  }
+
+  .server .task-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .server #nas-alerts li {
+    padding: 3px 0;
+  }
+
+  .server .backup-label {
+    line-height: 16px;
+  }
+
+  .server .metric {
+    padding: 4px 0 0;
+  }
+
+  /* CPU and memory side by side; the network lines run underneath. */
+  .server .detail-grid #resources {
+    display: inline-grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 14px;
+  }
+
+  .server #resources > :not(.metric) {
+    grid-column: 1 / -1;
+  }
+}
+
 /* A wide Disks section puts the model on the same line. */
 .disks {
   container-type: inline-size;

@@ -52,7 +52,9 @@ as a card on this device, without changing its saved setting.
 ## Pages
 
 **Server:** pools, datasets, backups, disks, CPU by hour, and when the pool
-fills at this rate.
+fills at this rate. On a short landscape screen, such as a tablet on the
+wall, the page packs into three columns and fits without scrolling. Open it
+from a household link and the tablet can look but not change anything.
 
 ![Server](screenshots/server.webp)
 
