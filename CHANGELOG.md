@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.10.0 (2026-11-12)
 
 - **Settings, Devices:** every wall tablet, e-ink panel and family phone in
   one place. Pick a device to set the page it opens on and the pages it
