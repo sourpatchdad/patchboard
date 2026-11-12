@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.2 (2026-11-12)
 
 - **Cameras full screen:** tapping a camera fills the screen with it, black
   around the picture and nothing cut off, on a wall tablet as on a desktop.
