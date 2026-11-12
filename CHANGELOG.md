@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.10.1 (2026-11-12)
 
 - **New widget settings load at once:** Markets, Feeds and Releases fetch
   again as soon as you save the board. Before, a coin you just added showed
