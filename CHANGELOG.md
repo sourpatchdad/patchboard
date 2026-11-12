@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.12.0 (2026-11-12)
 
 - **Five new widgets** for apps that had only a number on their tile:
   - **Media managers:** Lidarr, Readarr, Prowlarr and Bazarr, a line each,
