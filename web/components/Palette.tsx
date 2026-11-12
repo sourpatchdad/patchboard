@@ -115,6 +115,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'v-feeds', label: 'Reading', hint: 'View', run: go('/reading') },
       { id: 'v-up', label: 'Upcoming', hint: 'View', run: go('/upcoming') },
       { id: 'v-weather', label: 'Weather', hint: 'View', run: go('/weather') },
+      { id: 'v-monitor', label: 'Monitor', hint: 'View, full screen', terms: 'wall tablet terminal kiosk', run: go('/monitor') },
       { id: 'v-logs', label: 'Logs', hint: 'View', run: go('/logs') },
       { id: 'v-apps', label: 'Apps', hint: 'View', run: go('/apps') },
       { id: 'v-settings', label: 'Settings', hint: 'Appearance', run: go('/settings') },

@@ -130,6 +130,16 @@ try {
   await page.mouse.move(0, 0);
   await go('/server');
   await shoot(page, 'server', { fullPage: true });
+  // Monitor, at a Fire HD 8's size: the wall tablet it's built for. Long
+  // enough for the feed and the live lines to fill in.
+  {
+    const wall = await context(browser, { viewport: { width: 960, height: 600 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+    const wp = await wall.newPage();
+    await wp.goto(demo.base + '/monitor');
+    await settle(wp, 9000);
+    await shoot(wp, 'monitor');
+    await wall.close();
+  }
   await go('/stacks');
   await shoot(page, 'stacks');
   await go('/c/unpackerr');

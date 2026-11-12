@@ -41,6 +41,8 @@ const router = createBrowserRouter([
       { path: '*', element: <NotFound /> },
     ],
   },
+  // Full screen, without the nav: the server on one screen for a wall tablet.
+  { path: '/monitor', HydrateFallback: () => null, lazy: page(() => import('./views/Monitor.tsx'), 'Monitor') },
 ]);
 
 initAppearance();

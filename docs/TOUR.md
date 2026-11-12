@@ -56,6 +56,16 @@ fills at this rate. On a short landscape screen, such as a tablet on the
 wall, the page packs into three columns and fits without scrolling. Open it
 from a household link and the tablet can look but not change anything.
 
+**Monitor:** the server on one full screen, built for a tablet on the wall.
+Live lines for CPU, memory and network; CPU and memory as a hundred squares
+each; the pool against its alert lines; a square per container; every
+backup across 14 nights; the CPU week; disk temperatures; and a feed of
+container events and the warning and error lines from every container's log.
+It keeps its own terminal look whatever the theme. Jump to finds it, or open
+`/monitor`.
+
+![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
+
 ![Server](screenshots/server.webp)
 
 **A container:** what's wrong and the runbook's fix on the left, the live

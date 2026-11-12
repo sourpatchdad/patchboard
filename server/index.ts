@@ -78,6 +78,7 @@ import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
+import { ProblemFeed } from './problems.ts';
 import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice } from './household.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
@@ -525,6 +526,22 @@ app.get('/api/logs/:name', (c) => {
 });
 
 const NAME = /^[\w.-]+$/;
+
+// The Monitor page's feed: warning and error lines from every running
+// container, one shared set of followers for every screen watching.
+const problems = new ProblemFeed(
+  () => hub.containers().filter((c) => c.state === 'running').map((c) => c.name),
+  config.demo ? demoLogs : followLogs,
+);
+app.get('/api/monitor/feed', (c) =>
+  streamSSE(c, async (stream) => {
+    const queue: Promise<void>[] = [];
+    const { backlog, unsubscribe } = problems.subscribe((l) => void queue.push(stream.writeSSE({ data: JSON.stringify(l) })));
+    for (const l of backlog) await stream.writeSSE({ data: JSON.stringify(l) });
+    await new Promise<void>((resolve) => stream.onAbort(() => resolve()));
+    unsubscribe();
+  }),
+);
 
 // One container's detail: inspect (without env), plus who depends on it.
 app.get('/api/containers/:name', async (c) => {

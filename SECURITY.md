@@ -44,8 +44,10 @@ Marking articles read still works.
 For one device instead of everyone, make it a household device: Settings,
 Connections, Sign-in and keys, Household devices, Make a link, then open the
 link once on that phone or tablet. It sees the boards, cameras, the Server
-page, reading and calendar, and can switch the Home Assistant lights and
-scenes pinned to a board. The server refuses every other change from it, and
+and Monitor pages, reading and calendar, and can switch the Home Assistant
+lights and scenes pinned to a board. From the logs it gets only the Monitor
+feed: warning and error lines, masked like every log line, at most twelve a
+minute from each container. The server refuses every other change from it, and
 refuses the reads meant for you: logs, container pages, settings, keys and
 the activity log. A route added later stays closed to it until it's allowed
 by name.

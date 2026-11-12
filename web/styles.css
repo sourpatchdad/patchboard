@@ -11428,3 +11428,482 @@ a.jack .jack-socket {
     transform: none;
   }
 }
+
+/* ---------- Monitor: the server on one screen, for a tablet on the wall ----------
+   A terminal on near-black whatever the theme: one monospace family, hairline
+   rules instead of cards, square corners. Quiet things are gray, live lines
+   and running containers cyan; only trouble takes amber or red, as everywhere
+   else. Its own tokens set here reach shared parts (the CPU week) too. */
+
+.monitor {
+  --bg: #050708;
+  --raised: #0b1013;
+  --surface: #111a1e;
+  --line: #1b2328;
+  --line-soft: #12181b;
+  --ink: #c8d2d8;
+  --ink-2: #9aa7af;
+  --ink-3: #74828b;
+  --head: #eef4f7;
+  --accent: #4fd1e0;
+  --warn: #e3a253;
+  --crit: #ef6b5e;
+  --mon-up: #1f6670;
+  --mon-off: #26323a;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0 18px;
+  padding: 10px 18px 12px;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 12px/1.45 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.monitor p,
+.monitor ul,
+.monitor ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.monitor-wait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.mon-status {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mon-host {
+  color: var(--head);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mon-state {
+  margin-left: auto;
+  color: var(--accent);
+}
+
+.mon-clock {
+  color: var(--head);
+}
+
+/* Live charts: four across, each moving with its source. */
+.mon-charts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  padding: 8px 0 9px;
+  margin-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mon-tile {
+  min-width: 0;
+}
+
+.mon-big {
+  color: var(--head);
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.mon-chart {
+  display: block;
+  width: 100%;
+  height: 40px;
+  margin-top: 5px;
+  overflow: visible;
+}
+
+.mon-area {
+  fill: var(--accent);
+  opacity: 0.12;
+}
+
+.mon-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.is-quiet .mon-line {
+  stroke: var(--ink-3);
+  stroke-dasharray: 3 2;
+}
+
+.mon-note {
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mon-gauge {
+  position: relative;
+  height: 12px;
+  margin: 14px 0 11px;
+  background: var(--line);
+}
+
+.mon-gauge i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.mon-gauge.is-warn i {
+  background: var(--warn);
+}
+
+.mon-gauge.is-crit i {
+  background: var(--crit);
+}
+
+/* The warning and alarm thresholds, as ticks. */
+.mon-gauge b {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--ink-3);
+}
+
+.mon-col {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 0;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.mon-label {
+  margin-bottom: 3px;
+  color: var(--ink-3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.mon-dim {
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.mon-num {
+  color: var(--head);
+}
+
+.monitor .is-warn {
+  color: var(--warn);
+}
+
+.monitor .is-crit {
+  color: var(--crit);
+}
+
+/* CPU and memory as a hundred squares each; they fade as the load moves. */
+.mon-waffles {
+  display: flex;
+  gap: 22px;
+}
+
+.mon-waffle100 {
+  display: grid;
+  grid-template-columns: repeat(10, 9px);
+  gap: 2px;
+}
+
+.mon-waffle100 i {
+  width: 9px;
+  height: 9px;
+  background: var(--mon-off);
+  transition: background-color 600ms var(--ease-out, ease-out);
+}
+
+.mon-waffle100 i.is-up {
+  background: var(--mon-up);
+}
+
+.mon-waffle100 i.is-hot {
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mon-waffle100 i {
+    transition: none;
+  }
+}
+
+/* The fleet: a square per container, grouped by stack. */
+.mon-fleet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 11px);
+  gap: 3px;
+}
+
+.mon-fleet i {
+  width: 11px;
+  height: 11px;
+  background: var(--mon-off);
+}
+
+.mon-fleet i.is-up {
+  background: var(--mon-up);
+}
+
+.mon-fleet i.is-crit {
+  background: var(--crit);
+}
+
+.mon-fleet i.has-update {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.mon-temps li {
+  display: grid;
+  grid-template-columns: 4.6em minmax(0, 1fr) 4em;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.mon-temps li > .mon-num {
+  text-align: right;
+}
+
+.mon-meter {
+  height: 4px;
+  background: var(--line);
+}
+
+.mon-meter i {
+  display: block;
+  height: 100%;
+  background: var(--mon-up);
+}
+
+.mon-temps .is-warn .mon-meter i,
+.mon-temps li.is-warn .mon-meter i {
+  background: var(--warn);
+}
+
+.mon-temps li.is-crit .mon-meter i {
+  background: var(--crit);
+}
+
+.mon-rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mon-clip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Backups: every item across 14 nights. */
+.mon-waffle {
+  margin-bottom: 5px;
+}
+
+.mon-waffle li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.mon-squares {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.mon-squares i {
+  width: 6px;
+  height: 6px;
+  background: var(--mon-up);
+}
+
+.mon-squares i.is-none {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mon-squares i.is-crit {
+  background: var(--crit);
+}
+
+.mon-list li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mon-week .heatmap,
+.mon-week {
+  font-size: 10px;
+}
+
+.mon-feed {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Newest at the bottom; the oldest slip off the top. */
+.mon-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mon-lines li {
+  display: grid;
+  grid-template-columns: 5.4em minmax(0, 7.5em) minmax(0, 1fr);
+  gap: 8px;
+  padding: 1px 0;
+  white-space: nowrap;
+}
+
+.mon-lines li > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mon-lines time {
+  color: var(--ink-3);
+}
+
+.mon-who {
+  color: var(--accent);
+}
+
+.lvl-warn .mon-lvl {
+  color: var(--warn);
+}
+
+.lvl-error .mon-lvl {
+  color: var(--crit);
+}
+
+.mon-cursor {
+  color: var(--accent);
+  animation: mon-blink 1.1s steps(1) infinite;
+}
+
+@keyframes mon-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mon-cursor {
+    animation: none;
+  }
+}
+
+/* A big screen: bigger numbers and taller lines. */
+@media (min-width: 1500px) and (min-height: 900px) {
+  .monitor {
+    font-size: 14px;
+  }
+
+  .mon-big {
+    font-size: 32px;
+  }
+
+  .mon-chart {
+    height: 72px;
+  }
+
+  .mon-fleet {
+    grid-template-columns: repeat(auto-fill, 15px);
+  }
+
+  .mon-waffle100 {
+    grid-template-columns: repeat(10, 15px);
+    gap: 3px;
+  }
+
+  .mon-waffle100 i {
+    width: 15px;
+    height: 15px;
+  }
+
+  .mon-fleet i {
+    width: 15px;
+    height: 15px;
+  }
+
+  .mon-squares i {
+    width: 9px;
+    height: 9px;
+  }
+
+  .mon-waffle li {
+    font-size: 12.5px;
+    line-height: 16px;
+  }
+}
+
+/* A phone or a narrow window: one column that scrolls. */
+@media (max-width: 760px) {
+  .monitor {
+    position: static;
+    min-height: 100vh;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 14px;
+    overflow: visible;
+  }
+
+  .mon-status {
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .mon-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mon-col {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .mon-lines {
+    max-height: 60vh;
+  }
+}

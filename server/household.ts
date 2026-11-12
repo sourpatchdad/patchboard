@@ -1,9 +1,9 @@
 // Household devices. A link opened once on a family phone or a kitchen
 // tablet turns that browser into a viewer: it sees the boards, cameras, the
-// Server page, reading and calendar, can switch the lights and scenes pinned
-// to a board, and nothing else. The server refuses every other change from it
-// and every read meant for whoever runs the server (logs, settings, keys,
-// activity).
+// Server and Monitor pages (with the Monitor's masked problem lines), reading
+// and calendar, can switch the lights and scenes pinned to a board, and
+// nothing else. The server refuses every other change from it and every read
+// meant for whoever runs the server (logs, settings, keys, activity).
 //
 // The link is the credential. Patchboard keeps only its hash, and removing a
 // device ends it on the next request. A removed device is then treated like
@@ -126,6 +126,8 @@ const READS = new Set([
   '/api/appstats',
   '/api/uptime',
   '/api/history',
+  // Warning and error lines only, masked: the Monitor page's feed.
+  '/api/monitor/feed',
 ]);
 const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/img/', '/api/live/'];
 // The one change: switching a light, switch or scene pinned to a board.

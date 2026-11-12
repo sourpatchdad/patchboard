@@ -854,7 +854,7 @@ function Household() {
   return (
     <Section title="Household devices" count={list.length ? String(list.length) : undefined}>
       <p className="settings-note">
-        A link for a family phone or a wall tablet. Open it once on that device: it sees the boards, cameras, server, reading and calendar, and switches the lights
+        A link for a family phone or a wall tablet. Open it once on that device: it sees the boards, cameras, Server and Monitor, reading and calendar, and switches the lights
         and scenes pinned to a board. It can't update, restart or stop anything, or open Settings, logs or container pages.
       </p>
       {made && (

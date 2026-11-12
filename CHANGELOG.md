@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Monitor:** the server on one full screen for a tablet on the wall, at
+  `/monitor`. Live lines for CPU, memory and network, CPU and memory as a
+  hundred squares each, a square per container, every backup across 14
+  nights, the CPU week, disk temperatures, and a feed of container events
+  and the warning and error lines from every container's log. Household
+  devices see it too, and get only those masked problem lines from the logs.
 - **Signing out:** Settings, Connections, Sign-in and keys has Sign out of
   this browser. Opening a household link signs that browser out too, so a
   wall tablet never keeps full access underneath.
