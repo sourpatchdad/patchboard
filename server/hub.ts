@@ -49,12 +49,17 @@ export const APP_VERSION: string = (() => {
 let selfContainer: string | null = null;
 void whoAmI().then((n) => (selfContainer = n));
 
+/** The longest an unchanged source goes without being sent again. */
+const QUIET_MS = 60_000;
+
 export class Hub {
   private sources: Partial<Record<SourceId, SourceState>> = {};
   private alerts: Alert[] = [];
   private changes: ChangeEvent[] = [];
   private listeners = new Set<Listener>();
   private lastCatalog = '';
+  /** What each source last sent, and when: an unchanged poll isn't sent again for a minute. */
+  private sent = new Map<SourceId, { body: string; at: number }>();
   private adapters: Adapter[];
 
   constructor(adapters: Adapter[]) {
@@ -229,7 +234,16 @@ export class Hub {
       next = { ...prev, ok: false, error, failingSince: prev.ok || !prev.failingSince ? Date.now() : prev.failingSince };
     }
     this.sources[a.id] = next;
-    this.emit({ type: 'source', state: next });
+    // Every open screen redraws on each update, so a poll that found nothing
+    // new stays quiet. Once a minute it goes out anyway, so "updated" times
+    // on screen never fall more than a minute behind.
+    const body = next.ok ? JSON.stringify(next.data) : `!${next.error ?? ''}`;
+    const last = this.sent.get(a.id);
+    const now = Date.now();
+    if (!last || last.body !== body || now - last.at >= QUIET_MS) {
+      this.sent.set(a.id, { body, at: now });
+      this.emit({ type: 'source', state: next });
+    }
     this.refreshAlerts();
   }
 

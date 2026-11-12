@@ -7,6 +7,9 @@
   Server, Upcoming, Reading or Weather) and the Monitor's color, gray or
   blue. The device follows within a second, with nobody touching it, and
   opens there again after a restart.
+- **Lighter on open screens:** a source whose data didn't change since its
+  last poll isn't sent again for a minute, so a tablet on the wall, or any
+  tab left open, redraws only when something moved.
 - **Monitor:** the network tile shows the latest recorded reading while
   TrueNAS's live feed reconnects, instead of a blank.
 
