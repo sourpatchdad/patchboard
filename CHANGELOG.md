@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.4 (2026-11-12)
 
 - **Wall boards on a swipe:** a household device fetches every board's layout
   before it draws the pages out of sight, so the next page shows as a wall
