@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.1 (2026-11-12)
 
 - **Sign-in never falls open:** `AUTH=Password` or a password set without
   `AUTH` used to leave Patchboard with no sign-in. Now `AUTH` reads in any
