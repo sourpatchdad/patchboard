@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.0 (2026-11-12)
 
 - **Scan to join:** a new household link comes with a QR code, so a tablet
   or phone opens it with its camera instead of someone typing it.
