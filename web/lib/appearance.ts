@@ -44,6 +44,8 @@ export interface Appearance {
   currency: string;
   /** An e-ink screen: black on white, no motion, redrawn once a minute. */
   eink: boolean;
+  /** The language on screen; empty follows the browser. */
+  lang: string;
 }
 
 const KEY = 'pb-appearance';
@@ -80,6 +82,7 @@ export const DEFAULTS: Appearance = {
   locale: '',
   currency: '',
   eink: false,
+  lang: '',
 };
 
 export const ACCENTS: { id: string; name: string; dark: string; light: string }[] = [

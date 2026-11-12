@@ -7,6 +7,7 @@ import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { ago } from '../lib/format.ts';
 import { useStore } from '../lib/store.tsx';
 import { iconUrl } from '../lib/services.ts';
+import { t } from '../lib/i18n.ts';
 
 export function Section(props: {
   title: string;
@@ -21,7 +22,7 @@ export function Section(props: {
   const { count, action, source, className, children, id } = props;
   // Inside a Home widget, the widget's own name (if someone renamed it) wins.
   const widget = useContext(WidgetCtx);
-  const title = widget?.title || props.title;
+  const title = widget?.title || t(props.title);
   const { live, failed } = useStore();
   // On the board every widget wears a light: its integration's health, or,
   // for one built from several, whether Patchboard itself is live.
@@ -42,15 +43,15 @@ export function Section(props: {
         {action &&
           (action.onClick ? (
             <button type="button" className="section-action text-button" onClick={action.onClick}>
-              {action.label}
+              {t(action.label)}
             </button>
           ) : action.to ? (
             <Link className="section-action" to={action.to}>
-              {action.label}
+              {t(action.label)}
             </Link>
           ) : (
             <a className="section-action" href={action.href} target="_blank" rel="noreferrer">
-              {action.label}
+              {t(action.label)}
             </a>
           ))}
       </header>

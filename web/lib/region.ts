@@ -52,8 +52,10 @@ const browser = () => (typeof navigator !== 'undefined' && navigator.language) |
 
 /** The language tag every date and number on this device is written in. */
 export function locale(): string {
-  const chosen = getAppearance().locale;
+  const { locale: chosen, lang } = getAppearance();
   if (chosen) return chosen;
+  // A language picked without a region: write dates in that language too.
+  if (lang && !browser().toLowerCase().startsWith(lang)) return lang;
   try {
     return Intl.getCanonicalLocales(browser())[0] ?? 'en-US';
   } catch {

@@ -142,6 +142,18 @@ one click.
 - **Demo mode is a startup switch** (`DEMO=1`), and the screenshots come from
   it.
 
+## Languages
+
+The English is the key: `t('Today')` shows "Today" until a catalog in
+`web/i18n` says otherwise, so nothing goes blank while a translation is under
+way. `tn(n, one, many)` picks the form by the language's own plural rule.
+Section titles and their links go through `t()` in one place, `Section`.
+
+To add a language, copy `web/i18n/fr.json` to the new code, translate each
+value, keep every `{value}` its English has, and add the code to `LANGUAGES`
+in `web/lib/i18n.ts`. `npm run i18n:check` lists any string the catalog is
+missing, any it no longer needs, and any `{value}` changed; CI runs it.
+
 ## Themes
 
 A theme is data: an entry in `web/lib/themes.ts` with dark and light color

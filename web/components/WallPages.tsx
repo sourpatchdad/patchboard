@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store.tsx';
+import { t } from '../lib/i18n.ts';
 
 // A touch counts as a swipe past this far sideways, and mostly sideways.
 const SWIPE_PX = 70;
@@ -100,9 +101,9 @@ export function WallPages() {
 
   if (list.length < 2) return null;
   return (
-    <nav className={`wall-dots${lit ? ' is-lit' : ''}`} aria-label="Pages">
+    <nav className={`wall-dots${lit ? ' is-lit' : ''}`} aria-label={t('Pages')}>
       {list.map((p, i) => (
-        <button key={p} type="button" aria-label={`Page ${i + 1} of ${list.length}`} aria-current={i === at ? 'page' : undefined} onClick={() => navigate(p)} />
+        <button key={p} type="button" aria-label={t('Page {n} of {all}', { n: i + 1, all: list.length })} aria-current={i === at ? 'page' : undefined} onClick={() => navigate(p)} />
       ))}
     </nav>
   );

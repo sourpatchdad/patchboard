@@ -16,6 +16,7 @@ import { useWidgetData } from './widget-data.ts';
 import { BigClock } from './Kiosk.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
+import { t } from '../lib/i18n.ts';
 
 export function BookmarksWidget() {
   const { snap } = useStore();
@@ -82,7 +83,7 @@ export function ClocksWidget({ config, now }: { config?: Record<string, string>;
         <ClockPlaces zones={zones} now={now} />
       ) : (
         <Empty>
-          No places yet. <SetupLink>Add places</SetupLink>
+          {t('No places yet.')} <SetupLink>{t('Add places')}</SetupLink>
         </Empty>
       )}
     </Section>

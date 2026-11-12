@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Français:** Settings, Look, Language switches the boards, the wall
+  screens, the Monitor, the navigation and the Home header to French, with
+  dates and numbers written the French way to match. Settings and the
+  problem titles the server writes stay in English for now. Another language
+  is one file in `web/i18n`, and a check in CI catches any string it misses.
+
 - **A picture for panels with no browser:** a TRMNL, an Inky or an ESP32
   e-paper screen can show the server as a one-bit PNG or BMP: the status
   and what needs you, the weather, and CPU, memory and the pool. Make a

@@ -25,6 +25,7 @@
     "docs": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts",
     "release:check": "node scripts/release-check.ts",
     "docs:check": "node --disable-warning=ExperimentalWarning scripts/gen-docs.ts --check",
+    "i18n:check": "node scripts/i18n-keys.mjs --check",
     "screenshots": "node scripts/screenshots.mjs",
     "test:zoom": "npm run build && node scripts/check-zoom.mjs",
     "test:a11y": "npm run build && node scripts/check-accessibility.mjs",

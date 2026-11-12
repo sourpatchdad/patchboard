@@ -14,6 +14,7 @@ import { needsYou } from '../lib/attention.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from '../components/WallPages.tsx';
 import { EINK_MS, einkOn, useEink } from '../lib/eink.ts';
+import { t as tr, tn } from '../lib/i18n.ts';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { locale } from '../lib/region.ts';
@@ -115,25 +116,25 @@ export function Monitor() {
           {host.toLowerCase()}
         </Link>
         <span className="mon-dim">{nas?.version ? nas.version.replace(/^TrueNAS-/, 'truenas ').toLowerCase() : ''}</span>
-        {sys && <span className="mon-dim">up {ticking(sys.uptimeSec + Math.max(0, (now - (sysState.state?.updatedAt ?? now)) / 1000))}</span>}
-        {sys && <span className="mon-dim">load {sys.load.map((l) => l.toFixed(2)).join(' ')}</span>}
+        {sys && <span className="mon-dim">{tr('up')} {ticking(sys.uptimeSec + Math.max(0, (now - (sysState.state?.updatedAt ?? now)) / 1000))}</span>}
+        {sys && <span className="mon-dim">{tr('load')} {sys.load.map((l) => l.toFixed(2)).join(' ')}</span>}
         <span className={`mon-state ${trouble.some((a) => a.level === 'critical') ? 'is-crit' : trouble.length ? 'is-warn' : ''}`} role="status">
-          {trouble.length ? `${trouble.length} need${trouble.length === 1 ? 's' : ''} you` : 'all quiet'}
+          {trouble.length ? tn(trouble.length, '{n} needs you', '{n} need you') : tr('all quiet')}
         </span>
         <time className="mon-clock">{time}</time>
       </header>
 
       <section className="mon-charts" aria-label="Live">
-        <Tile k="cpu" label="cpu" value={sys ? pct(sys.cpuPct) : '--'}>
+        <Tile k="cpu" label={tr('cpu')} value={sys ? pct(sys.cpuPct) : '--'}>
           <LiveChart lines={[{ points: cpuLine }]} max={100} label="CPU, live" />
         </Tile>
-        <Tile k="mem" label="memory" value={mem ? size(memUsed) : '--'} note={mem ? `of ${size(mem.total)}, ${size(mem.arc)} zfs cache` : undefined}>
+        <Tile k="mem" label={tr('memory')} value={mem ? size(memUsed) : '--'} note={mem ? tr('of {total}, {arc} zfs cache', { total: size(mem.total), arc: size(mem.arc) }) : undefined}>
           <LiveChart lines={[{ points: memLine }]} max={mem?.total} label="Memory in use, live" />
         </Tile>
-        <Tile k="net" label="network" value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? `in, ${speed(netOut)} out` : undefined}>
+        <Tile k="net" label={tr('network')} value={netIn != null ? speed(netIn) : '--'} note={netOut != null ? tr('in, {out} out', { out: speed(netOut) }) : undefined}>
           <LiveChart lines={[{ points: rxLine }, { points: txLine, quiet: true }]} max={netMax} label="Network in and out, live" />
         </Tile>
-        <Tile k="pool" label={pool ? `pool ${pool.name.toLowerCase()}` : 'pool'} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? `${size(pool.freeBytes)} free of ${size(pool.sizeBytes)}` : undefined}>
+        <Tile k="pool" label={pool ? tr('pool {name}', { name: pool.name.toLowerCase() }) : tr('pool')} value={pool ? `${Math.round(pool.usedPct)}%` : '--'} tone={poolLevel} note={pool ? tr('{free} free of {size}', { free: size(pool.freeBytes), size: size(pool.sizeBytes) }) : undefined}>
           {pool && (
             <div className={`mon-gauge ${poolLevel}`} role="img" aria-label={`${Math.round(pool.usedPct)}% used`}>
               <i style={{ width: `${Math.min(100, pool.usedPct)}%` }} />
@@ -149,12 +150,12 @@ export function Monitor() {
         {sys && (
           <div className="mon-waffles">
             <div className="k-cpu">
-              <p className="mon-label">cpu now</p>
+              <p className="mon-label">{tr('cpu now')}</p>
               <Waffle parts={[{ pct: sys.cpuPct, tone: 'is-hot' }]} label={`CPU ${pct(sys.cpuPct)}`} />
             </div>
             {mem && (
               <div className="k-mem">
-                <p className="mon-label">memory</p>
+                <p className="mon-label">{tr('memory')}</p>
                 <Waffle
                   parts={[
                     { pct: (memUsed / mem.total) * 100, tone: 'is-hot' },
@@ -167,12 +168,12 @@ export function Monitor() {
           </div>
         )}
         <div className="mon-block mon-week k-cpu">
-          <p className="mon-label">cpu by hour, 7 days</p>
+          <p className="mon-label">{tr('cpu by hour, 7 days')}</p>
           <HourHeatmap series={week.cpu} label="CPU by hour over the last seven days" />
         </div>
         {nas && nas.disks.length > 0 && (
           <div className="mon-block">
-            <p className="mon-label">disks</p>
+            <p className="mon-label">{tr('disks')}</p>
             <ul className="mon-temps k-disk">
               {nas.disks.map((d) => {
                 const level = d.tempC != null && d.tempC >= limits.diskCritC ? 'is-crit' : d.tempC != null && d.tempC >= limits.diskWarnC ? 'is-warn' : '';
@@ -191,7 +192,7 @@ export function Monitor() {
         )}
         {busiest.length > 0 && (
           <Fill>
-            <p className="mon-label">busiest now</p>
+            <p className="mon-label">{tr('busiest now')}</p>
             <ul className="mon-busy k-cpu">
               {busiest.map(([name, s]) => (
                 <li key={name}>
@@ -211,14 +212,14 @@ export function Monitor() {
       <section className="mon-col" aria-label="Backups, cloud sync and the fleet">
         {backups && (
           <div className="mon-block">
-            <p className="mon-label">backups, 14 nights</p>
+            <p className="mon-label">{tr('backups, 14 nights')}</p>
             <BackupWaffle runs={backups.db} />
             <BackupWaffle runs={backups.files} />
           </div>
         )}
         {nas && nas.cloudSync.length > 0 && (
           <div className="mon-block">
-            <p className="mon-label">cloud sync</p>
+            <p className="mon-label">{tr('cloud sync')}</p>
             <ul className="mon-rows">
               {nas.cloudSync.map((t) => {
                 const bad = !!t.error || (t.state ?? '').toUpperCase() === 'FAILED';
@@ -234,14 +235,14 @@ export function Monitor() {
         )}
         <div className="mon-block">
           <p className="mon-label">
-            fleet <span className="mon-num">{running}</span>
-            <span className="mon-dim">/{containers.length} running</span>
+            {tr('fleet')} <span className="mon-num">{running}</span>
+            <span className="mon-dim">/{containers.length} {tr('running')}</span>
           </p>
           <Fleet containers={containers} updates={snap.updates} />
         </div>
         {trouble.length > 0 && (
           <Fill grow={false}>
-            <p className="mon-label">needs you {trouble.length}</p>
+            <p className="mon-label">{tr('needs you')} {trouble.length}</p>
             <ul className="mon-list">
               {trouble.map((a) => (
                 <li key={a.id} className={a.level === 'critical' ? 'is-crit' : 'is-warn'}>
@@ -253,7 +254,7 @@ export function Monitor() {
         )}
         {updating.length > 0 && (
           <Fill>
-            <p className="mon-label">updates waiting {updating.length}</p>
+            <p className="mon-label">{tr('updates waiting')} {updating.length}</p>
             <ul className="mon-tags">
               {updating.map((n) => (
                 <li key={n}>{n}</li>
@@ -264,7 +265,7 @@ export function Monitor() {
       </section>
 
       <section className="mon-feed" aria-label="Events and log problems">
-        <p className="mon-label">feed</p>
+        <p className="mon-label">{tr('feed')}</p>
         <ol className="mon-lines">
           {feed.map((l) => (
             <li key={l.key} className={`lvl-${l.level}`}>
@@ -432,7 +433,7 @@ function BackupWaffle({ runs }: { runs: BackupRun[] }) {
         </li>
       ))}
       <li className="mon-dim">
-        {last.items.length - failed} of {last.items.length} last night{failed ? `, ${failed} failed` : ''}
+        {tr('{ok} of {all} last night', { ok: last.items.length - failed, all: last.items.length })}{failed ? tr(', {n} failed', { n: failed }) : ''}
       </li>
     </ul>
   );

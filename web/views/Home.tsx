@@ -52,6 +52,7 @@ import { containerMap, ctrState, isExternal, serviceFor } from '../lib/services.
 import { useNow, useSource, useStore } from '../lib/store.tsx';
 import { byUrgency, needsYou } from '../lib/attention.ts';
 import { locale } from '../lib/region.ts';
+import { t, tn } from '../lib/i18n.ts';
 
 export function Home() {
   const { snap } = useStore();
@@ -127,11 +128,11 @@ function Masthead({ now, weatherOnBoard, attentionCard, slim }: { now: number; w
   const status =
     alerts.length === 0
       ? !dockerOk
-        ? { tone: 'warn', text: "Can't see Docker right now." }
+        ? { tone: 'warn', text: t("Can't see Docker right now.") }
         : blind
           ? { tone: 'warn', text: blind }
-          : { tone: 'ok', text: `All quiet. ${running} containers running.` }
-      : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: `${alerts.length === 1 ? 'One thing needs' : `${alerts.length} things need`} you.` };
+          : { tone: 'ok', text: tn(running, 'All quiet. {n} container running.', 'All quiet. {n} containers running.') }
+      : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: tn(alerts.length, 'One thing needs you.', '{n} things need you.') };
   // A quiet line leads to what's running, or to the integrations it can't reach.
   const quietTo = blind ? '/settings?tab=connections' : '/stacks';
 
@@ -222,7 +223,7 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
       </svg>
       <span className="header-hour-labels">
         {hours.filter((_, i) => i === 0 || i === Math.floor(hours.length / 2) || i === hours.length - 1).map((h, i) => (
-          <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 })}</span>
+          <span key={h.time}><b>{deg(h.temp, unit)}°</b> {i === 0 ? t('Now') : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 })}</span>
         ))}
       </span>
     </span>
@@ -325,13 +326,13 @@ function Overnight({ now }: { now: number }) {
   const part = (r: typeof db | undefined, noun: string) => {
     if (!fresh(r) || !r) return null;
     const bad = r.items.filter((i) => !i.ok).length;
-    return bad ? `${bad} ${noun} backup${bad === 1 ? '' : 's'} failed` : `${r.items.length} ${noun}`;
+    return bad ? tn(bad, '{n} {what} backup failed', '{n} {what} backups failed', { what: noun }) : `${r.items.length} ${noun}`;
   };
-  const parts = [part(db, db && db.items.length === 1 ? 'database' : 'databases'), part(files, 'file sets')].filter(Boolean);
+  const parts = [part(db, db && db.items.length === 1 ? t('database') : t('databases')), part(files, t('file sets'))].filter(Boolean);
   const anyBad = [db, files].some((r) => fresh(r) && r!.items.some((i) => !i.ok));
   return (
     <Link to="/server#backups" className={`overnight ${anyBad ? 'is-bad' : ''}`}>
-      {anyBad ? 'Overnight: ' : 'Backed up overnight: '}
+      {anyBad ? t('Overnight: ') : t('Backed up overnight: ')}
       {parts.join(', ')}.
     </Link>
   );
@@ -344,7 +345,7 @@ function Overnight({ now }: { now: number }) {
 function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): string | null {
   const down = snap.alerts.filter((a) => a.id.startsWith('src-')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
   if (!down.length) return null;
-  return down.length === 1 ? `Can't reach ${down[0]}.` : `Can't reach ${count(down.length)} integrations.`;
+  return down.length === 1 ? t("Can't reach {name}.", { name: down[0] }) : t("Can't reach {n} integrations.", { n: count(down.length) });
 }
 
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {

@@ -1,5 +1,6 @@
 import { getAppearance } from './appearance.ts';
 import { locale } from './region.ts';
+import { lang, t as tr } from './i18n.ts';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -10,18 +11,25 @@ const toMs = (t: number | string) => (typeof t === 'number' ? t : Date.parse(t))
 /** Compact past time: "now", "9m", "2h", "Yesterday", "Tue", "Oct 12". */
 export function ago(t: number | string, now = Date.now()): string {
   const diff = now - toMs(t);
-  if (diff < MIN) return 'now';
+  if (diff < MIN) return tr('now');
   if (diff < HOUR) return `${Math.floor(diff / MIN)}m`;
   if (diff < DAY) return `${Math.floor(diff / HOUR)}h`;
-  if (diff < 2 * DAY) return 'Yesterday';
+  if (diff < 2 * DAY) return tr('Yesterday');
   if (diff < 6 * DAY) return new Date(toMs(t)).toLocaleDateString(locale(), { weekday: 'short' });
   return new Date(toMs(t)).toLocaleDateString(locale(), { month: 'short', day: 'numeric' });
 }
 
 /** Spelled-out past time for sentences: "for 2 hours", "since 9 minutes ago". */
-export function agoLong(t: number | string, now = Date.now()): string {
-  const diff = now - toMs(t);
-  if (diff < MIN) return 'just now';
+export function agoLong(at: number | string, now = Date.now()): string {
+  const diff = now - toMs(at);
+  if (diff < MIN) return tr('just now');
+  // Other languages say it their own way: "il y a 2 heures".
+  if (lang() !== 'en') {
+    const rel = new Intl.RelativeTimeFormat(locale(), { numeric: 'always' });
+    if (diff < HOUR) return rel.format(-Math.floor(diff / MIN), 'minute');
+    if (diff < DAY) return rel.format(-Math.floor(diff / HOUR), 'hour');
+    return rel.format(-Math.floor(diff / DAY), 'day');
+  }
   if (diff < HOUR) return plural(Math.floor(diff / MIN), 'minute') + ' ago';
   if (diff < DAY) return plural(Math.floor(diff / HOUR), 'hour') + ' ago';
   return plural(Math.floor(diff / DAY), 'day') + ' ago';
@@ -49,9 +57,9 @@ export function dayOffset(t: number | string, now = Date.now()): number {
 
 export function dayLabel(t: number | string, now = Date.now()): string {
   const off = dayOffset(t, now);
-  if (off === 0) return 'Today';
-  if (off === 1) return 'Tomorrow';
-  if (off === -1) return 'Yesterday';
+  if (off === 0) return tr('Today');
+  if (off === 1) return tr('Tomorrow');
+  if (off === -1) return tr('Yesterday');
   const d = new Date(toMs(t));
   if (off > 1 && off < 7) return d.toLocaleDateString(locale(), { weekday: 'long' });
   return d.toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' });
@@ -88,9 +96,9 @@ export function speed(bytesPerSec: number): string {
 
 export function eta(sec: number): string {
   if (sec <= 0 || sec >= 8_640_000) return '';
-  if (sec < 60) return 'under a minute';
-  if (sec < 3600) return `${Math.round(sec / 60)} min left`;
-  return `${dec(sec / 3600, 1)} h left`;
+  if (sec < 60) return tr('under a minute');
+  if (sec < 3600) return tr('{n} min left', { n: Math.round(sec / 60) });
+  return tr('{n} h left', { n: dec(sec / 3600, 1) });
 }
 
 export function bytes(n: number): string {
@@ -148,6 +156,10 @@ export function uptime(sec: number): string {
 
 /** WMO weather interpretation codes, as Open-Meteo returns them. */
 export function weatherText(code: number): string {
+  return tr(weatherWord(code));
+}
+
+function weatherWord(code: number): string {
   if (code === 0) return 'Clear';
   if (code === 1) return 'Mostly clear';
   if (code === 2) return 'Partly cloudy';

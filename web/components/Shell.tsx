@@ -12,6 +12,7 @@ import { needsYou } from '../lib/attention.ts';
 import { serviceFor } from '../lib/services.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from './WallPages.tsx';
+import { t } from '../lib/i18n.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -260,7 +261,7 @@ export function Shell() {
                   <path d={ICONS[n.to]} />
                 </svg>
               )}
-              <span>{n.label}</span>
+              <span>{t(n.label)}</span>
               {n.to === '/reading' && unreadFeeds > 0 && <span className="nav-badge">{count(unreadFeeds)}</span>}
             </NavLink>
           ))}
@@ -272,7 +273,7 @@ export function Shell() {
           </button>
         </nav>
         <div className="topbar-end">
-          {snap?.demo && <span className="pill demo-pill">Demo data</span>}
+          {snap?.demo && <span className="pill demo-pill">{t('Demo data')}</span>}
           {household ? (
             <span className="pill" title={`${snap?.household?.name}: this device can look, and switch lights and scenes, but not change the server`}>
               Household
@@ -285,7 +286,7 @@ export function Shell() {
             )
           )}
           <span className={`live ${live ? 'live-on' : ''}`} title={live ? 'Receiving live updates' : 'Reconnecting'}>
-            {live ? 'Live' : failed ? 'Offline' : 'Connecting'}
+            {live ? t('Live') : failed ? t('Offline') : t('Connecting')}
           </span>
           <button type="button" className="topbar-icon topbar-search" aria-label="Jump to" onClick={() => setPalette(true)}>
             <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -300,7 +301,7 @@ export function Shell() {
               <circle cx="16" cy="7" r="2" />
               <circle cx="10" cy="17" r="2" />
             </svg>
-            <span className="topbar-label" aria-hidden>Settings</span>
+            <span className="topbar-label" aria-hidden>{t('Settings')}</span>
           </NavLink>
           )}
           <button type="button" className="topbar-icon topbar-help" aria-label="Help and keyboard shortcuts" onClick={() => setHelp(true)}>
@@ -310,7 +311,7 @@ export function Shell() {
             </svg>
           </button>
           <button type="button" className="jump" onClick={() => setPalette(true)}>
-            <span>Jump to</span>
+            <span>{t('Jump to')}</span>
             <kbd>{mac ? '⌘' : 'Ctrl'} K</kbd>
           </button>
         </div>
@@ -354,7 +355,7 @@ function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; la
         <nav aria-label="More pages">
           {items.map((m) => (
             <NavLink key={m.to} to={m.to} className="more-link" onClick={onClose}>
-              <span>{m.label}</span>
+              <span>{t(m.label)}</span>
               {m.to === '/reading' && unread > 0 && <span className="nav-badge">{count(unread)}</span>}
             </NavLink>
           ))}

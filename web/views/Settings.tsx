@@ -34,6 +34,7 @@ import { useNow, useStore } from '../lib/store.tsx';
 import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
 import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
+import { LANGUAGES } from '../lib/i18n.ts';
 
 /** A household device as Settings lists it. */
 type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
@@ -192,6 +193,25 @@ export function Settings() {
       <Section title="Region">
         <div className="region-picks">
           <label>
+            <span>Language</span>
+            <select
+              className="field"
+              value={a.lang}
+              onChange={(e) => {
+                setAppearance({ lang: e.target.value });
+                // Every word on the page changes: draw it again.
+                location.reload();
+              }}
+            >
+              <option value="">Match this browser</option>
+              {LANGUAGES.map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
             <span>Dates and numbers</span>
             <select className="field" value={a.locale} onChange={(e) => setAppearance({ locale: e.target.value })}>
               <option value="">Match this browser</option>
@@ -215,7 +235,7 @@ export function Settings() {
           </label>
         </div>
         <p className="settings-note">
-          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. The time format and temperature units are under Home.
+          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. The time format and temperature units are under Home. Français covers the boards, the wall screens and the Monitor so far; Settings stays in English.
         </p>
       </Section>
 

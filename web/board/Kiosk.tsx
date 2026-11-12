@@ -7,6 +7,7 @@ import { Empty, Section } from '../components/ui.tsx';
 import { Spark } from '../components/Spark.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { currency, locale, money, pct } from '../lib/region.ts';
+import { t } from '../lib/i18n.ts';
 import { useSource } from '../lib/store.tsx';
 import { daysUntil, moonAt, nextDay } from '../../shared/almanac.ts';
 import { useWidgetData } from './widget-data.ts';
@@ -14,6 +15,7 @@ import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
 
 const SPAN_WORDS = { '24h': 'last 24 hours', today: 'today', '30d': 'last 30 days' } as const;
+const spanWords = (s: keyof typeof SPAN_WORDS) => t(SPAN_WORDS[s]);
 
 /** The short name a line goes by: yours, or the source's without the "Inc.". */
 function nameOf(q: MarketQuote): string {
@@ -30,10 +32,10 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
     <Section title="Markets" className={`markets${big ? ' markets-big' : ''}`}>
       {lines.length === 0 ? (
         <Empty>
-          Nothing to follow yet. <SetupLink>Add coins, stocks or currencies</SetupLink>
+          {t('Nothing to follow yet.')} <SetupLink>{t('Add coins, stocks or currencies')}</SetupLink>
         </Empty>
       ) : !data ? (
-        failed ? <Empty>Prices aren't loading. Patchboard tries again in two minutes.</Empty> : null
+        failed ? <Empty>{t("Prices aren't loading. Patchboard tries again in two minutes.")}</Empty> : null
       ) : (
         <ul className="market-list">
           {data.quotes.map((q) => {
@@ -42,7 +44,7 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
               return (
                 <li key={q.symbol} className="market market-failed">
                   <span className="market-name">{name}</span>
-                  <span className="market-why">{q.failed ?? 'no price'}</span>
+                  <span className="market-why">{q.failed ?? t('no price')}</span>
                 </li>
               );
             }
@@ -57,11 +59,11 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
                   {name}
                 </span>
                 <span className="market-line">
-                  <Spark data={line.map((v, i) => [i, v] as [number, number])} min={lo - pad} max={hi + pad} height={big ? 40 : 22} label={`${name}, ${q.span ? SPAN_WORDS[q.span] : ''}`} />
+                  <Spark data={line.map((v, i) => [i, v] as [number, number])} min={lo - pad} max={hi + pad} height={big ? 40 : 22} label={`${name}, ${q.span ? spanWords(q.span) : ''}`} />
                 </span>
                 <span className="market-price">{q.currency ? money(q.price, q.currency, q.span === '30d' ? 4 : undefined) : q.price}</span>
                 {q.change !== undefined && (
-                  <span className={`market-change ${up ? 'is-up' : 'is-down'}`} title={q.span ? SPAN_WORDS[q.span] : undefined}>
+                  <span className={`market-change ${up ? 'is-up' : 'is-down'}`} title={q.span ? spanWords(q.span) : undefined}>
                     <span aria-hidden="true">{up ? '▲' : '▼'}</span> {pct(q.change)}
                   </span>
                 )}
@@ -97,36 +99,36 @@ export function SkyWidget({ now }: { now: number }) {
     <Section title="Sun and moon" className="sky">
       {!today?.sunrise ? (
         <Empty>
-          The sun needs the weather's place. <SetupLink>Set up weather</SetupLink>
+          {t("The sun needs the weather's place.")} <SetupLink>{t('Set up weather')}</SetupLink>
         </Empty>
       ) : (
         <div className="sky-body">
           <dl className="sky-sun">
             <div>
-              <dt>Sunrise</dt>
+              <dt>{t('Sunrise')}</dt>
               <dd>{time(today.sunrise)}</dd>
             </div>
             <div>
-              <dt>Sunset</dt>
+              <dt>{t('Sunset')}</dt>
               <dd>{time(today.sunset)}</dd>
             </div>
             <div>
-              <dt>Daylight</dt>
+              <dt>{t('Daylight')}</dt>
               <dd>
-                {Math.floor(length / 60)} h {Math.round(length % 60)} min
-                {Number.isFinite(change) && <span className="sky-change">{change === 0 ? 'The same tomorrow' : `${change > 0 ? '+' : '−'}${Math.abs(change)} min tomorrow`}</span>}
+                {t('{h} h {m} min', { h: Math.floor(length / 60), m: Math.round(length % 60) })}
+                {Number.isFinite(change) && <span className="sky-change">{change === 0 ? t('The same tomorrow') : t('{n} min tomorrow', { n: `${change > 0 ? '+' : '−'}${Math.abs(change)}` })}</span>}
               </dd>
             </div>
           </dl>
           <div className="sky-moon">
-            <svg viewBox="-1.1 -1.1 2.2 2.2" role="img" aria-label={`${moon.name}, ${Math.round(moon.lit * 100)}% lit`}>
+            <svg viewBox="-1.1 -1.1 2.2 2.2" role="img" aria-label={`${t(moon.name)}, ${t('{n}% lit', { n: Math.round(moon.lit * 100) })}`}>
               <circle r="1" className="moon-dark" />
               <path d={moonPath(moon.phase)} className="moon-lit" />
             </svg>
-            <span className="sky-moon-name">{moon.name}</span>
+            <span className="sky-moon-name">{t(moon.name)}</span>
             <span className="sky-moon-sub">
-              {Math.round(moon.lit * 100)}% lit
-              {moon.lit < 0.98 && `, full ${new Date(moon.nextFull).toLocaleDateString(locale(), { month: 'short', day: 'numeric' })}`}
+              {t('{n}% lit', { n: Math.round(moon.lit * 100) })}
+              {moon.lit < 0.98 && t(', full {day}', { day: new Date(moon.nextFull).toLocaleDateString(locale(), { month: 'short', day: 'numeric' }) })}
             </span>
           </div>
         </div>
@@ -151,17 +153,17 @@ export function CountdownWidget({ config, now }: { config?: Record<string, strin
     <Section title="Countdown" className="countdown">
       {events.length === 0 ? (
         <Empty>
-          No days to count to. <SetupLink>Add a date</SetupLink>
+          {t('No days to count to.')} <SetupLink>{t('Add a date')}</SetupLink>
         </Empty>
       ) : (
         <ul className="count-list">
           {events.map((e) => (
             <li key={e.name + e.day.getTime()}>
-              <span className="count-days">{e.left === 0 ? 'Today' : Math.abs(e.left)}</span>
+              <span className="count-days">{e.left === 0 ? t('Today') : Math.abs(e.left)}</span>
               <span className="count-what">
                 <span className="count-name">{e.name}</span>
                 <span className="count-sub">
-                  {e.left === 0 ? '' : e.left === 1 ? 'day to go, tomorrow' : e.left > 0 ? `days to go, ${e.day.toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' })}` : e.left === -1 ? 'day ago' : 'days ago'}
+                  {e.left === 0 ? '' : e.left === 1 ? t('day to go, tomorrow') : e.left > 0 ? t('days to go, {day}', { day: e.day.toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' }) }) : e.left === -1 ? t('day ago') : t('days ago')}
                 </span>
               </span>
             </li>

@@ -236,7 +236,9 @@ Cameras picks its cameras the same way.
 
 **Settings** has themes, colors, type and density, saved per device; units
 and the header are under Home. A new browser or home-screen app starts from
-the last look you saved. Region, under Look, writes dates, times, numbers
+the last look you saved. Language, under Look, switches the boards, the wall
+screens and the Monitor to French, with more of the app to follow. Region,
+under Look, writes dates, times, numbers
 and prices the way your part of the world does: "jeudi 12 novembre, 14:30,
 1 234,50 €" in France. Showcase mode, under Look, swaps addresses, domain
 names and the words you list for stand-ins and blurs the cameras, so a

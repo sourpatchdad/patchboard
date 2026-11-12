@@ -21,6 +21,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run docs:check
+      - run: npm run i18n:check
       - run: npm run build
       - run: npx playwright-core install --with-deps chromium
       - run: node scripts/check-home.mjs

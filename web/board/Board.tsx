@@ -33,6 +33,7 @@ import { ListeningWidget, WatchedWidget } from './Media.tsx';
 import { CamerasWidget } from './Cameras.tsx';
 import { BookmarksWidget, ClocksWidget, ReleasesWidget, RssWidget, SearchWidget } from './Outside.tsx';
 import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
+import { t } from '../lib/i18n.ts';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
 import type { FrigateData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
@@ -627,12 +628,12 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
 
       <div className="board-foot" inert={editing || undefined}>
           <VersionLine />
-          {!snap?.readOnly && <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Edit header</Link>}
+          {!snap?.readOnly && <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">{t('Edit header')}</Link>}
           {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
-            Arrange board
+            {t('Arrange board')}
           </button>
           <button type="button" className="text-button board-customize" onClick={() => setCreating(true)}>
-            New board
+            {t('New board')}
           </button></>}
         </div>
 
@@ -1040,13 +1041,13 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
       <div className="vw-grid">
         <Link to="/server#cpu" className="vw" title="CPU by hour, and what's using it" aria-label={`CPU ${pct(sys.cpuPct)}`}>
           <Roll className="vw-num" value={pct(sys.cpuPct)} />
-          <span className="vw-label">CPU</span>
+          <span className="vw-label">{t('CPU')}</span>
           <Spark data={h.cpu} max={100} height={compact ? 16 : 22} label="CPU, last 24 hours" />
         </Link>
         {m && (
           <Link to="/server#resources" className="vw" title="What memory goes to" aria-label={`Memory in use ${size(used)}`}>
             <Roll className="vw-num" value={size(used)} />
-            <span className="vw-label">Memory in use</span>
+            <span className="vw-label">{t('Memory in use')}</span>
             <Split
               label="Memory: in use, ZFS cache, free"
               parts={[
@@ -1060,14 +1061,14 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
         {storage != null && (
           <Link to={pool ? `/server#storage-${encodeURIComponent(pool.name)}` : '/server#storage'} className="vw" title="Space, growth and snapshots" aria-label={`Storage${pool ? ` on ${pool.name}` : ''} ${Math.round(storage)}% full`}>
             <Roll className="vw-num" value={`${Math.round(storage)}%`} />
-            <span className="vw-label" title={pool ? `Storage on ${pool.name}` : 'Storage'}>Storage{pool ? ` on ${pool.name}` : ''}</span>
+            <span className="vw-label" title={pool ? t('Storage on {name}', { name: pool.name }) : t('Storage')}>{pool ? t('Storage on {name}', { name: pool.name }) : t('Storage')}</span>
             <Meter label={pool ? `Storage used on ${pool.name}` : 'Storage used'} value={storage} level={storageLevel(storage, limits)} />
           </Link>
         )}
         {/* Uptime has nowhere more to say, so it isn't a link. */}
         <div className="vw" title={`Up since ${new Date(Date.now() - sys.uptimeSec * 1000).toLocaleString(locale())}`}>
           <Roll className="vw-num" value={uptime(sys.uptimeSec)} />
-          <span className="vw-label">Uptime</span>
+          <span className="vw-label">{t('Uptime')}</span>
         </div>
       </div>
     </Section>
@@ -1512,7 +1513,7 @@ function WeatherWidget() {
           {weatherText(w.codeNow)}
           {today && (
             <small>
-              High {deg(today.high, unit)}°, low {deg(today.low, unit)}°{today.precipPct >= 30 ? `, ${today.precipPct}% rain` : ''}
+              {t('High {high}°, low {low}°', { high: deg(today.high, unit), low: deg(today.low, unit) })}{today.precipPct >= 30 ? t(', {n}% rain', { n: today.precipPct }) : ''}
             </small>
           )}
         </span>
@@ -1524,7 +1525,7 @@ function WeatherWidget() {
             <span key={h.time} className="ww-hour" title={`${weatherText(h.code)}, ${h.precipPct}% rain`}>
               <b>{deg(h.temp, unit)}°</b>
               {wet && <i style={{ height: `${Math.max(2, h.precipPct * 0.28)}px` }} data-rain={h.precipPct >= 20 || undefined} />}
-              <small>{i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
+              <small>{i === 0 ? t('Now') : new Date(h.time).toLocaleTimeString(locale(), { hour: 'numeric', hour12: !clock24 }).replace(/\s?([AP])M/i, (_m, a: string) => a.toLowerCase())}</small>
             </span>
           ))}
         </div>
