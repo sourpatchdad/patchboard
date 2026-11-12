@@ -13,6 +13,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
+import { STARTERS } from '../shared/board.ts';
 
 const OUT = 'docs/screenshots';
 // 1920x1080 is the showcase size; the phone is an iPhone 17 Pro.
@@ -139,6 +140,31 @@ try {
     await settle(wp, 9000);
     await shoot(wp, 'monitor');
     await wall.close();
+  }
+  // Wall boards, as a household tablet sees them: no navigation, one status
+  // line, dots for the pages it swipes between.
+  {
+    const made = {};
+    for (const id of ['wall-clock', 'wall-markets']) {
+      const st = STARTERS.find((s) => s.id === id);
+      made[id] = await page.evaluate(async (body) => (await (await fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(body) })).json()).id, { ...st.board, name: st.name.replace('Wall: ', '').replace(/^./, (c) => c.toUpperCase()) });
+    }
+    const link = await page.evaluate(async () => (await (await fetch('/api/household', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ name: 'Kitchen tablet' }) })).json()).path);
+    const device = await page.evaluate(async () => (await (await fetch('/api/household')).json()).find((d) => d.name === 'Kitchen tablet').id);
+    const pages = { opens: `/b/${made['wall-clock']}`, pages: [`/b/${made['wall-markets']}`, '/monitor'] };
+    await page.evaluate(async ([id, view]) => fetch(`/api/household/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(view) }), [device, pages]);
+    const wall = await context(browser, { viewport: { width: 960, height: 600 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+    const wp = await wall.newPage();
+    await wp.goto(demo.base + link);
+    await settle(wp, 3500);
+    await shoot(wp, 'wall-clock');
+    await wp.locator('.wall-dots button').nth(1).click();
+    await settle(wp, 3000);
+    await shoot(wp, 'wall-markets');
+    await wall.close();
+    // Leave the demo as it was for the shots after this.
+    await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), device);
+    for (const id of Object.values(made)) await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);
   }
   await go('/stacks');
   await shoot(page, 'stacks');

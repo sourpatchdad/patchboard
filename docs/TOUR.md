@@ -78,6 +78,10 @@ Kindle e-reader's built-in browser is too old to run Patchboard.
 
 ![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
 
+![A clock and weather wall board on a household tablet, with page dots](screenshots/wall-clock.webp)
+
+![Markets as big numbers on a wall board](screenshots/wall-markets.webp)
+
 ![Server](screenshots/server.webp)
 
 **A container:** what's wrong and the runbook's fix on the left, the live
