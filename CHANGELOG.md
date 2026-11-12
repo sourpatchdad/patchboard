@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.1 (2026-11-11)
 
 - **Monitor:** quiet grays now carry everything healthy, so only amber and
   red stand out. CPU and memory waffles and the CPU week sit together on the
