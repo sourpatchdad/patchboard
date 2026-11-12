@@ -27,10 +27,50 @@ const COOKIE = 'pb_session';
 const SESSION_DAYS = 30;
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 
+/** A connection from this machine or the home network: where a reverse proxy or tunnel sits. */
+export function privatePeer(ip: string): boolean {
+  const v = ip.replace(/^::ffff:/, '');
+  return /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|169\.254\.)/.test(v) || v === '::1' || /^f[cd][0-9a-f]{2}:/i.test(v);
+}
+
+/**
+ * Who is asking, for counting sign-in attempts. Behind a proxy or tunnel on
+ * the home network (cloudflared, Traefik, nginx), every visitor arrives from
+ * the proxy's address, so one stranger's wrong guesses would lock everyone
+ * out: there the address the proxy passes along counts instead.
+ */
 export function clientIp(c: Context): string {
-  // Behind a proxy the socket address is the proxy's; that's fine for rate limiting per proxy.
   const env = c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined;
-  return env?.incoming?.socket?.remoteAddress ?? 'unknown';
+  const peer = env?.incoming?.socket?.remoteAddress ?? 'unknown';
+  if (!privatePeer(peer)) return peer;
+  const passed = c.req.header('cf-connecting-ip') ?? c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0];
+  return passed?.trim() || peer;
+}
+
+// With sign-in off, a visitor from the internet means Patchboard is open to
+// anyone: a tunnel or a forwarded port nobody meant to leave unguarded.
+let openSince = 0;
+
+/** Note a visitor; with sign-in off, one from a public address raises an alert. */
+export function noteVisitor(c: Context): void {
+  if (config.auth.mode !== 'none' || config.demo) return;
+  // Signed in at the door already: Cloudflare Access, or Authelia and its kind passing the user along.
+  if (c.req.header('cf-access-jwt-assertion') || c.req.header(config.auth.userHeader)) return;
+  if (!privatePeer(clientIp(c))) openSince = Date.now();
+}
+
+/** When someone last reached Patchboard from the internet with sign-in off, or 0. */
+export const openToInternetAt = (): number => openSince;
+
+/** The bucket an address counts in: one per IPv4 address, one per IPv6 network (/64). */
+export function attemptKey(ip: string): string {
+  const v = ip.replace(/^::ffff:/, '');
+  if (!v.includes(':')) return v;
+  const [head, tail = ''] = v.toLowerCase().split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const full = [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right];
+  return `${full.slice(0, 4).map((g) => g.padStart(4, '0')).join(':')}::/64`;
 }
 
 // ---------- Security headers ----------
@@ -118,25 +158,41 @@ export function endAllSessions(): void {
   kvSet('sessions', {});
 }
 
-// Attempts per address: 5 free, then a doubling wait up to 15 minutes.
+// Attempts per address: 5 free, then a doubling wait up to 15 minutes. And
+// across every address, recent failures slow each new try a little, so
+// guessing from many addresses at once stays slow without ever locking the
+// owner out.
 const attempts = new Map<string, { fails: number; until: number }>();
+let recentFails: number[] = [];
+const SLOW_WINDOW = 10 * 60_000;
 
-export function login(c: Context, password: string): { ok: true } | { ok: false; error: string; status: 401 | 429 } {
+/** A password check that counts: refused while this address waits, slowed while many have failed. */
+export async function checkPassword(c: Context, password: string): Promise<{ ok: true } | { ok: false; error: string; status: 401 | 429 }> {
   const ip = clientIp(c);
-  const a = attempts.get(ip) ?? { fails: 0, until: 0 };
+  const key = attemptKey(ip);
+  const a = attempts.get(key) ?? { fails: 0, until: 0 };
   if (Date.now() < a.until) {
     return { ok: false, status: 429, error: `Too many attempts. Try again in ${Math.ceil((a.until - Date.now()) / 1000)} s.` };
   }
+  recentFails = recentFails.filter((t) => Date.now() - t < SLOW_WINDOW);
+  if (recentFails.length) await new Promise((r) => setTimeout(r, Math.min(5000, recentFails.length * 250)));
   if (!passwordMatches(password)) {
     a.fails++;
     if (a.fails >= 5) a.until = Date.now() + Math.min(15 * 60_000, 2 ** (a.fails - 5) * 30_000);
-    attempts.set(ip, a);
+    attempts.set(key, a);
+    recentFails.push(Date.now());
+    if (attempts.size > 10_000) attempts.clear();
     recordAudit('?', 'auth.failed', '', ip);
     return { ok: false, status: 401, error: 'Wrong password.' };
   }
-  attempts.delete(ip);
-  startSession(c, 'admin');
+  attempts.delete(key);
   return { ok: true };
+}
+
+export async function login(c: Context, password: string): Promise<{ ok: true } | { ok: false; error: string; status: 401 | 429 }> {
+  const r = await checkPassword(c, password);
+  if (r.ok) startSession(c, 'admin');
+  return r;
 }
 
 /** Sign someone in: a random token in an HttpOnly cookie, stored hashed. */
@@ -171,6 +227,12 @@ export function logout(c: Context): void {
  * The signed-in user, or null. A household device is signed in by its link,
  * in every mode; otherwise in 'none' mode everyone is "local".
  */
+/** This browser holds a live sign-in session (password or OIDC). */
+export function hasSession(c: Context): boolean {
+  const token = getCookie(c, COOKIE);
+  return !!token && !!sessions()[sha(token)];
+}
+
 export function currentUser(c: Context): string | null {
   const device = householdOf(c);
   if (device) return `household: ${device.name}`;

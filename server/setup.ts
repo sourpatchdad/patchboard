@@ -102,6 +102,18 @@ export function checkValues(i: Integration, input: unknown): { values: Record<st
     if (v && fieldKind(name) === 'choice' && !CHOICES[name]!.some(([c]) => c === v)) return { error: `${fieldLabel(name)} is one of: ${CHOICES[name].map(([c]) => c).join(', ')}` };
     out[name] = v || null;
   }
+  // A saved key goes only to the address it was saved with. Point the
+  // integration somewhere new and its keys must come along again, or anyone
+  // who reached Settings could send them to a server of their own.
+  const saved = read();
+  const place = (n: string) => fieldKind(n) === 'url' || fieldKind(n) === 'urls' || /_(HOST|URL|URLS)$/.test(n);
+  const moved = Object.keys(out).some((n) => place(n) && (out[n] ?? '') !== (saved[n]?.value ?? ''));
+  if (moved) {
+    for (const s of fieldsOf(i).filter((n) => fieldKind(n) === 'secret')) {
+      if (envHas(s)) return { error: `${fieldLabel(s)} comes from the environment, so change the address there too.` };
+      if (!(s in out) && saved[s]) return { error: `Enter the ${fieldLabel(s).toLowerCase()} again: a saved key only goes to the address it was saved with.` };
+    }
+  }
   return { values: out };
 }
 

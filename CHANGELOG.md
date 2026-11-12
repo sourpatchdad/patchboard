@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- **Sign-in never falls open:** `AUTH=Password` or a password set without
+  `AUTH` used to leave Patchboard with no sign-in. Now `AUTH` reads in any
+  case, a password turns sign-in on by itself, and a value Patchboard
+  doesn't know stops it from starting. With sign-in off, a visitor from the
+  internet puts a warning at the top of Needs attention.
+- **Keys stay with their servers:** pointing an integration at a new address
+  asks for its key again, and a key an API widget uses goes only to the
+  server it was first sent to. Keys typed into an app's live number move to
+  the key store, as they already did on boards.
+- **Stricter single sign-on:** `OIDC_ALLOWED` matches an email only once the
+  provider has verified it, and takes typed entries (`email:`, `group:`,
+  `user:`, `sub:`) so a username can't pass for a group. An empty list
+  shows a warning until you fill it or set `OIDC_ALLOW_ANYONE=1`.
+- **Sign-in behind a tunnel:** wrong passwords count per visitor, not per
+  proxy, so a stranger can't lock you out; failures from many addresses
+  slow every try instead. Settings' current-password check counts the same.
+- **Household devices:** a panel picture gets its own address, which can't
+  join as a device; a signed-in browser asks before becoming a household
+  device; and household devices no longer receive the inbox.
+- **Logs:** passwords, keys, cookies and tokens in more spellings are masked.
+
 - **Safer to trust:** release images now carry a signed record of how they
   were built and a list of what's inside them, and GitHub's code scanning
   reads every change. Report a security problem privately from the

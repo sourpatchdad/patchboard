@@ -33,6 +33,30 @@ export const envValue = (key: string): string | undefined => fromEnv(key);
 /** Sign-in comes from the environment, so Settings shows it and can't change it. */
 export const authLocked = (): boolean => fromEnv('AUTH') !== undefined || fromEnv('PATCHBOARD_PASSWORD') !== undefined;
 
+const AUTH_MODES = ['none', 'forward', 'password', 'oidc'] as const;
+type AuthMode = (typeof AUTH_MODES)[number];
+
+/**
+ * The sign-in mode. AUTH in any case; a password set without AUTH means
+ * password sign-in. An AUTH Patchboard doesn't know is refused at startup
+ * (see authProblem), never read as "no sign-in".
+ */
+export function authMode(raw: string | undefined, password: string | undefined, hash: string | undefined): AuthMode {
+  const asked = raw?.trim().toLowerCase();
+  if (asked && (AUTH_MODES as readonly string[]).includes(asked)) return asked as AuthMode;
+  if (asked) return 'password';
+  return password || hash ? 'password' : 'none';
+}
+
+/** Why the sign-in settings can't be trusted, or null. The server won't start with one. */
+export function authProblem(): string | null {
+  const asked = fromEnv('AUTH')?.trim().toLowerCase();
+  if (asked && !(AUTH_MODES as readonly string[]).includes(asked)) {
+    return `AUTH=${fromEnv('AUTH')} isn't a sign-in mode. Use none, forward, password or oidc.`;
+  }
+  return null;
+}
+
 /** True when the environment sets this variable, so the UI can't change it. */
 export const envHas = (key: string): boolean => fromEnv(key) !== undefined;
 
@@ -88,7 +112,7 @@ function build(str: Lookup) {
     readOnly: env.READ_ONLY === '1' || env.READ_ONLY === 'true',
 
     auth: {
-      mode: (['forward', 'password', 'oidc'].includes(str('AUTH') ?? '') ? str('AUTH') : 'none') as 'none' | 'forward' | 'password' | 'oidc',
+      mode: authMode(str('AUTH'), str('PATCHBOARD_PASSWORD'), str('PATCHBOARD_PASSWORD_HASH')),
       userHeader: (str('TRUSTED_USER_HEADER') ?? 'Remote-User').toLowerCase(),
       password: str('PATCHBOARD_PASSWORD'),
       /** A password set in Settings, stored as an scrypt hash, never in the clear. */
@@ -100,6 +124,8 @@ function build(str: Lookup) {
         clientSecret: str('OIDC_CLIENT_SECRET'),
         scopes: str('OIDC_SCOPES') ?? 'openid email profile',
         allowed: (str('OIDC_ALLOWED') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+        /** Without OIDC_ALLOWED, anyone the provider signs in gets in: say so, unless this says it's meant. */
+        allowAnyone: str('OIDC_ALLOW_ANYONE') === '1',
         /** Where the provider sends people back. Set it when Patchboard sits behind a proxy. */
         redirectUrl: str('OIDC_REDIRECT_URL'),
         /** The button says "Sign in with <name>". */

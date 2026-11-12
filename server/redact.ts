@@ -25,6 +25,8 @@ const NAMES = [
   'x-plex-token',
   'x-emby-token',
   'x-api-key',
+  'authorization',
+  'cookie',
 ].join('|');
 
 const RULES: [RegExp, string][] = [
@@ -37,6 +39,15 @@ const RULES: [RegExp, string][] = [
   [new RegExp(`("(?:${NAMES})"\\s*:\\s*")[^"]*(")`, 'gi'), `$1${MASK}$2`],
   // A password inside a URL: scheme://user:pass@host.
   [/(\b[a-z][a-z0-9+.-]*:\/\/[^\s/:@]+:)[^\s/@]+(@)/gi, `$1${MASK}$2`],
+  // "password: hunter2", "DB_PASSWORD=x", "SECRET_KEY: x": a name, with a
+  // prefix or suffix joined by _ or -, then : or =. A scheme word (Bearer)
+  // is left for the header rule, which masks what follows it.
+  [new RegExp(`(\\b(?:\\w*[_-])?(?:${NAMES})(?:[_-]\\w*)?["']?\\s*[:=]\\s*["']?)(?!${MASK}|(?:bearer|basic|token)\\s)[^\\s"',;&<>)]+`, 'gi'), `$1${MASK}`],
+  // Cookies, to the end of the line.
+  [/(\b(?:set-)?cookie\s*:\s*)[^\n]+/gi, `$1${MASK}`],
+  // A bearer token on its own, and anything shaped like a JWT.
+  [/(\bbearer\s+)(?!••••)[A-Za-z0-9._~+/=-]{8,}/gi, `$1${MASK}`],
+  [/\beyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]+/g, MASK],
 ];
 
 // Terminal colors and cursor codes (Immich and other Node apps color their

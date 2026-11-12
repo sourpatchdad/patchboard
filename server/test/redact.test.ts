@@ -38,3 +38,19 @@ test('terminal color codes come out, so colored logs read as plain text', () => 
   // A color code inside a key name no longer hides the key.
   assert.equal(redact('apikey\x1b[0m=abc123'), 'apikey=••••');
 });
+
+test('passwords, keys, cookies and tokens in their other spellings are masked; ordinary words are not', () => {
+  const cases: [string, string][] = [
+    ['password: hunter2', 'password: ••••'],
+    ['api_key: sk-live-abc123', 'api_key: ••••'],
+    ['DB_PASSWORD=supersecret', 'DB_PASSWORD=••••'],
+    ['SECRET_KEY=abc def', 'SECRET_KEY=•••• def'],
+    ['{"Authorization": "Bearer abcdefghijkl"}', '{"Authorization": "••••"}'],
+    ['got Bearer abcdefghijklmnop from client', 'got Bearer •••• from client'],
+    ['Cookie: sid=abc; other=def', 'Cookie: ••••'],
+    ['token eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.sig_part-123', 'token ••••'],
+    ['design: plain words stay', 'design: plain words stay'],
+    ['retrying in 300 s', 'retrying in 300 s'],
+  ];
+  for (const [given, want] of cases) assert.equal(redact(given), want, given);
+});

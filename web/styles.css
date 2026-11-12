@@ -12639,3 +12639,14 @@ html[data-eink] .moon-dark {
 html[data-eink] .moon-lit {
   fill: #000;
 }
+
+/* A panel address made for an existing device: its own line, under it. */
+.household-list .household-panel-url {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.household-list .household-panel {
+  grid-column: 1 / -1;
+  justify-self: start;
+}

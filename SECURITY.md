@@ -26,8 +26,8 @@ it anywhere.
 |---|---|
 | `none` (default) | Only you can reach the address: Tailscale, or a LAN you control. On a shared network, publish the port on a private address only, such as `"100.64.0.5:3200:3200"`. |
 | `forward` | A reverse proxy (Authelia, Authentik, Cloudflare Access, oauth2-proxy) signs people in and passes the user in `TRUSTED_USER_HEADER`. Bind Patchboard to `127.0.0.1` or a network only the proxy shares, or anyone can send that header. |
-| `oidc` | You have an identity provider: Authentik, Authelia, Keycloak, Pocket ID, Zitadel, Google. Patchboard uses the authorization-code flow with PKCE and checks the ID token's signature, issuer, audience, expiry and nonce. Set `OIDC_ALLOWED` to the emails, usernames or groups that may sign in; without it, anyone your provider signs in gets in. |
-| `password` | You have no proxy or provider. Turn it on in Settings, Connections, Sign-in and keys, which stores a salted scrypt hash, or set `PATCHBOARD_PASSWORD`. A new password signs out every other device; changing or removing it needs the current one. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. |
+| `oidc` | You have an identity provider: Authentik, Authelia, Keycloak, Pocket ID, Zitadel, Google. Patchboard uses the authorization-code flow with PKCE and checks the ID token's signature, issuer, audience, expiry and nonce. Set `OIDC_ALLOWED` to who may sign in: `email:you@example.com` (or a bare address) matches an email your provider has verified; `group:admins` (or a bare name) a group or the provider's own user id; `user:name` a username, only where people can't pick their own. Without it, anyone your provider signs in gets in, and Needs attention says so until you list people or set `OIDC_ALLOW_ANYONE=1`. |
+| `password` | You have no proxy or provider. Turn it on in Settings, Connections, Sign-in and keys, which stores a salted scrypt hash, or set `PATCHBOARD_PASSWORD` (which turns password sign-in on by itself). A new password signs out every other device; changing or removing it needs the current one. Sessions use random 256-bit tokens in an HttpOnly, SameSite=Strict cookie, stored hashed, for 30 days. After five wrong tries, Patchboard locks that address out for a doubling wait, up to 15 minutes. Behind a tunnel or proxy on your network it counts each visitor by the address the proxy passes on, so a stranger's guesses never lock you out, and recent failures from anywhere slow every new try. The current password asked for in Settings counts the same way. |
 
 With sign-in on, webhooks send `HOOK_TOKEN` as `Authorization: Bearer <token>`
 or `?token=`. Turning on a password in Settings generates one.
@@ -53,7 +53,13 @@ the activity log. A route added later stays closed to it until it's allowed
 by name.
 
 The link is the credential, and it signs the device in even when sign-in is
-on, so send it only to the device it's for. Patchboard stores its SHA-256
+on, so send it only to the device it's for. A browser that's signed in asks
+before it becomes a household device, so a link someone sends you can't
+switch yours. A household device never receives your inbox.
+
+An e-paper panel with no browser gets its own address, `/panel/<token>.png`,
+from Settings. That token shows the picture and nothing else: it can't join
+as a household device. Make a new one there and the old one stops working. Patchboard stores its SHA-256
 hash and keeps the token in an HttpOnly, SameSite=Lax cookie for 400 days.
 Removing the device in Settings ends it on its next request. Settings also
 sets where each device opens and the Monitor's color; the device follows at
@@ -110,6 +116,15 @@ container creation, which comes close to full access.
   database in `DATA_DIR`; set in the environment, they live there. The
   browser can set a key but never read one back: the API says whether a key
   is set, never what it is.
+- **A key goes only to its own server.** Point an integration at a new
+  address and Settings asks for its key again. A key an API widget names
+  goes only to the server it was first sent to; saving the key again lets it
+  move. A key typed into a widget's or an app's header moves to the key
+  store on save.
+- **Sign-in never falls open.** `AUTH` is read in any case, and a value
+  Patchboard doesn't know stops it from starting rather than running with no
+  sign-in. With sign-in off, a visitor from the internet puts "Patchboard is
+  open to the internet" at the top of Needs attention.
   The setup file export carries no keys and no addresses.
 - **Saved keys are encrypted at rest** with AES-256-GCM. The key that seals
   them sits apart from the database, in `DATA_DIR/secret.key` (owner-only),

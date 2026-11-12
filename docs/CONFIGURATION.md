@@ -79,13 +79,14 @@ services.yaml.
 
 | Variable | Default | |
 |---|---|---|
-| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header), `oidc` or `password`. Settings, Connections, Sign-in and keys turns a password on without it. |
+| `AUTH` | `none` | `none`, `forward` (trust a reverse proxy's user header), `oidc` or `password`, in any case. Anything else stops Patchboard from starting. Settings, Connections, Sign-in and keys turns a password on without it. |
 | `TRUSTED_USER_HEADER` | `Remote-User` | The header your forward-auth proxy sets. |
-| `PATCHBOARD_PASSWORD` | empty | The password for `AUTH=password`, instead of setting one in Settings. Also how you get back in after forgetting one. |
+| `PATCHBOARD_PASSWORD` | empty | The password, instead of setting one in Settings; it turns password sign-in on without `AUTH`. Also how you get back in after forgetting one. |
 | `OIDC_ISSUER` | empty | Your provider's issuer URL, for `AUTH=oidc`. |
 | `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | empty | The client you created at the provider. Leave the secret empty for a public client. |
 | `OIDC_REDIRECT_URL` | from the request | `https://dash.example.com/api/oidc/callback`. Set it behind a reverse proxy, and register the same URL at the provider. |
-| `OIDC_ALLOWED` | empty | Emails, usernames or groups that may sign in, comma-separated. Empty lets in anyone the provider signs in. |
+| `OIDC_ALLOWED` | empty | Who may sign in, comma-separated: `email:` a verified email, `group:` a group, `user:` a username, `sub:` the provider's id. A bare address is an email; a bare name a group or id. Empty lets in anyone the provider signs in. |
+| `OIDC_ALLOW_ANYONE` | empty | `1` when your provider already decides who gets in, to quiet the warning about an empty `OIDC_ALLOWED`. |
 | `OIDC_NAME` | `your identity provider` | The name on the sign-in button. |
 | `OIDC_SCOPES` | `openid email profile` | Add `groups` if your provider needs it to send groups. |
 | `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |

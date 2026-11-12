@@ -58,6 +58,8 @@ const cache = new Map<string, { at: number; value: Promise<Omit<MarketQuote, 'la
 function cached(key: string, ms: number, load: () => Promise<Omit<MarketQuote, 'label' | 'symbol'>>) {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ms) return hit.value;
+  // A ceiling, so asking for many symbols can't grow the cache without end.
+  if (cache.size > 500) cache.clear();
   const entry = { at: Date.now(), value: load() };
   // A failure is asked again after 30 seconds, not after the whole wait.
   entry.value = entry.value.catch((e: unknown) => {

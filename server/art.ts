@@ -12,6 +12,14 @@ import { config } from './config.ts';
 const PUBLIC = /^https:\/\/(image\.tmdb\.org|artworks\.thetvdb\.com|thetvdb\.com|assets\.fanart\.tv|static\.tvmaze\.com|assets\.hardcover\.app|storage\.googleapis\.com\/hardcover|i\.gr-assets\.com|images\.gr-assets\.com|m\.media-amazon\.com)\//;
 const remote = new Map<string, string>();
 
+// TVmaze posters only for shows the calendar named, so nobody can make the
+// server look up any id they like.
+const shows = new Set<string>();
+export function rememberShow(tvdb: string | number): void {
+  if (shows.size > 5000) shows.clear();
+  shows.add(String(tvdb));
+}
+
 /** Adapters tell us each item's public poster URL as they read the calendar. */
 export function rememberArt(key: string, url: string | undefined): void {
   if (url && PUBLIC.test(url)) remote.set(key, url.replace('/t/p/original/', '/t/p/w342/'));
@@ -51,7 +59,7 @@ export async function poster(src: string, id: string): Promise<{ type: string; b
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ('miss' in hit ? 3_600_000 : 86_400_000)) return 'miss' in hit ? null : hit;
   let got: { type: string; body: Uint8Array<ArrayBuffer> } | null = null;
-  if (src === 'tvmaze') got = await tvmaze(id);
+  if (src === 'tvmaze') got = shows.has(id) ? await tvmaze(id) : null;
   else if (src === 'seerr' || src === 'book') {
     const url = remote.get(key);
     if (url) got = await image(url, {}, true);

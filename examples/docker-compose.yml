@@ -4,9 +4,14 @@ services:
     container_name: patchboard
     restart: unless-stopped
     environment:
-      - TZ=America/New_York
+      - TZ=America/New_York # your time zone
     ports:
+      # Anyone who can reach this port can use Patchboard until you turn on
+      # a password (Settings, Connections, Sign-in and keys). Before a tunnel
+      # or a forwarded port, read SECURITY.md.
       - "3200:3200"
     volumes:
+      # Reading Docker. Patchboard runs as root to read it; examples/hardened.yml
+      # runs it as a plain user through a socket proxy instead.
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data:/data

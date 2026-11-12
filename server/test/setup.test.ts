@@ -50,6 +50,16 @@ test('saving turns the integration on; secrets are encrypted at rest and never d
   assert.equal(locked.value, undefined);
 });
 
+test('a saved key never follows the address somewhere new: moving it asks for the key again', () => {
+  // Sonarr is saved above with its key.
+  const moved = setup.checkValues(sonarr, { SONARR_URL: 'http://attacker.example:8989' }) as { error: string };
+  assert.match(moved.error, /again/);
+  assert.deepEqual(setup.checkValues(sonarr, { SONARR_URL: 'http://attacker.example:8989', SONARR_KEY: 'typed-again' }), { values: { SONARR_URL: 'http://attacker.example:8989', SONARR_KEY: 'typed-again' } });
+  // The same address, or no address at all, keeps the saved key as before.
+  assert.deepEqual(setup.checkValues(sonarr, { SONARR_URL: 'http://10.0.0.5:8989/', SONARR_KEY: '' }), { values: { SONARR_URL: 'http://10.0.0.5:8989/' } });
+  assert.deepEqual(setup.checkValues(sonarr, { SONARR_KEY: '' }), { values: {} });
+});
+
 test('a connection test sees candidate values; live settings never do', async () => {
   const seen = await withConfig(setup.candidate({ SONARR_URL: 'http://candidate:8989' }), async () => {
     await new Promise((r) => setTimeout(r, 5));

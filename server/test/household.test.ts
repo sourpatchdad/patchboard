@@ -92,3 +92,17 @@ test('a device remembers where it opens and its Monitor color; each change bumps
   const listed = h.householdDevices().find((d) => d.id === made.id);
   assert.ok(listed && !('hash' in listed));
 });
+
+test('a panel token shows the picture and nothing else; the link token is not a panel token', async () => {
+  for (const d of h.householdDevices()) h.removeHouseholdDevice(d.id);
+  const made = h.addHouseholdDevice('E-paper');
+  assert.ok('token' in made);
+  const panel = h.newPanelToken(made.id)!;
+  assert.equal(h.deviceByPanelToken(panel)?.id, made.id);
+  assert.equal(h.deviceByPanelToken(made.token), null, 'the join link opens no picture');
+  const r = await server().request(`/join/${panel}`);
+  assert.equal(r.status, 404, 'the picture address joins nothing');
+  const again = h.newPanelToken(made.id)!;
+  assert.equal(h.deviceByPanelToken(panel), null, 'a new panel address retires the last');
+  assert.equal(h.deviceByPanelToken(again)?.id, made.id);
+});

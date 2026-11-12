@@ -48,7 +48,7 @@ import { pendingIds, seerrClient } from './adapters/seerr.ts';
 import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './adapters/dns.ts';
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
-import { authLocked, envHas, withConfig } from './config.ts';
+import { authLocked, authProblem, envHas, withConfig } from './config.ts';
 import { haActionFor } from '../shared/ha.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
@@ -72,6 +72,7 @@ import { boardId, validateBoard } from '../shared/board.ts';
 import { type JsonField, validateJsonConfig } from '../shared/jsonwidget.ts';
 import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
 import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts';
+import { sealOrder } from './sealwidgets.ts';
 import { PRESETS } from '../shared/presets.ts';
 import { type Pages, validatePages } from '../shared/pages.ts';
 import { demoAppStat, demoJson } from './demo-ops.ts';
@@ -82,8 +83,8 @@ import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
 import { bmp, drawPanel, png } from './panel.ts';
-import { addHouseholdDevice, deviceByToken, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice, setHouseholdView } from './household.ts';
-import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
+import { addHouseholdDevice, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
+import { checkPassword, noteVisitor, currentUser, endAllSessions, hashPassword, hasSession, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
 import { checkSelfImage, eligibility, getJob, latestJobFor, selfCheckStatus, startDemoRollback, startDemoUpdate, startRollback, startUpdate, watchJob } from './updater.ts';
@@ -214,7 +215,10 @@ const hub = new Hub(adapters);
 {
   const saved = kvGet<AppOrder>('app-order');
   const v = saved ? validateOrder(saved) : null;
-  setCatalogOrder(v && 'order' in v ? v.order : null);
+  // Keys typed into an app's live number before they moved to the key store.
+  const order = v && 'order' in v ? sealOrder(v.order) : null;
+  if (order && v && 'order' in v && order !== v.order) kvSet('app-order', order);
+  setCatalogOrder(order);
 }
 initCatalog(() => hub.refreshAlerts());
 hub.start();
@@ -261,6 +265,10 @@ app.use('/api/*', async (c, next) => {
   await next();
 });
 
+app.use('/api/*', async (c, next) => {
+  noteVisitor(c);
+  await next();
+});
 app.use('/api/*', householdGuard());
 app.use('/api/*', requireAuth());
 app.use('/api/*', readOnlyGuard());
@@ -303,7 +311,7 @@ app.get('/api/oidc/callback', async (c) => {
 app.post('/api/login', async (c) => {
   if (config.auth.mode !== 'password') return c.json({ error: 'Password sign-in is not enabled' }, 400);
   const body = await c.req.json<{ password?: string }>().catch(() => ({ password: undefined }));
-  const r = login(c, typeof body.password === 'string' ? body.password.slice(0, 500) : '');
+  const r = await login(c, typeof body.password === 'string' ? body.password.slice(0, 500) : '');
   return r.ok ? c.json({ ok: true }) : c.json({ error: r.error }, r.status);
 });
 
@@ -342,7 +350,11 @@ app.put('/api/auth/settings', async (c) => {
   const password = typeof body?.password === 'string' ? body.password : '';
   const current = typeof body?.current === 'string' ? body.current.slice(0, 500) : '';
   const was = config.auth.mode;
-  if (was === 'password' && !passwordMatches(current)) return c.json({ error: 'The current password is wrong.' }, 403);
+  // Counted like a sign-in: a stolen session can't guess the password here either.
+  if (was === 'password') {
+    const r = await checkPassword(c, current);
+    if (!r.ok) return c.json({ error: r.status === 429 ? r.error : 'The current password is wrong.' }, r.status === 429 ? 429 : 403);
+  }
   if (body?.mode === 'none') {
     saveValues({ AUTH: null, PATCHBOARD_PASSWORD_HASH: null });
     endAllSessions();
@@ -374,7 +386,16 @@ app.post('/api/household', async (c) => {
   const made = addHouseholdDevice(typeof body.name === 'string' ? body.name : '');
   if ('error' in made) return c.json(made, 400);
   recordAudit(who(c), 'household.add', made.id, typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '');
-  return c.json({ id: made.id, path: `/join/${made.token}` });
+  return c.json({ id: made.id, path: `/join/${made.token}`, panel: `/panel/${newPanelToken(made.id)}.png` });
+});
+
+// A fresh panel address for a device; the old one stops working.
+app.post('/api/household/:id/panel', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const token = newPanelToken(c.req.param('id'));
+  if (!token) return c.json({ error: 'No such device' }, 404);
+  recordAudit(who(c), 'household.panel', c.req.param('id'), '');
+  return c.json({ panel: `/panel/${token}.png` });
 });
 // Where a device opens, the pages it swipes through, the Monitor's color and
 // its night hours, from Settings; the device follows at once.
@@ -432,6 +453,7 @@ app.get('/api/releases/:board/:id', async (c) => {
   return c.json({ releases: await latestReleases(repos) });
 });
 
+const CURRENCY_CODES = new Set(Intl.supportedValuesOf('currency'));
 // Markets widgets: prices for the lines saved in the board, never for a
 // symbol the browser names. Coins are priced in the currency asked for.
 app.get('/api/markets/:board/:id', async (c) => {
@@ -439,7 +461,8 @@ app.get('/api/markets/:board/:id', async (c) => {
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'markets') : undefined;
   const lines = w?.config?.symbols?.split('\n').filter(Boolean) ?? [];
   const asked = (c.req.query('currency') ?? '').toUpperCase();
-  const currency = /^[A-Z]{3}$/.test(asked) ? asked : 'USD';
+  // A real currency only: each one is its own request to CoinGecko.
+  const currency = CURRENCY_CODES.has(asked) ? asked : 'USD';
   if (!lines.length) return c.json({ quotes: [] });
   return c.json({ quotes: config.demo ? demoQuotes(lines, currency) : await quotes(lines, currency) });
 });
@@ -469,11 +492,15 @@ app.post('/api/widgets/preview', async (c) => {
 
 // A household device gets the same picture with every control turned off,
 // except the lights and scenes it may still switch.
+// What a household device never receives: the inbox is yours, not the family's.
+const HOUSEHOLD_HIDDEN = new Set<string>(['fastmail']);
+const withoutHidden = <T extends Record<string, unknown>>(sources: T): T => Object.fromEntries(Object.entries(sources).filter(([id]) => !HOUSEHOLD_HIDDEN.has(id))) as T;
+
 app.get('/api/snapshot', (c) => {
   const device = householdOf(c);
   const snap = hub.snapshot();
   return c.json(
-    device ? { ...snap, readOnly: true, household: { ...device, lights: !config.readOnly } } : snap,
+    device ? { ...snap, sources: withoutHidden(snap.sources), readOnly: true, household: { ...device, lights: !config.readOnly } } : snap,
   );
 });
 
@@ -483,7 +510,9 @@ app.get('/api/events', (c) =>
     const device = householdOf(c);
     const unsubscribe = hub.subscribe((e) => {
       if (e.type === 'household' && e.id !== device?.id) return;
-      void stream.writeSSE({ data: JSON.stringify(e) });
+      if (device && e.type === 'source' && HOUSEHOLD_HIDDEN.has(e.state.id)) return;
+      const sent = device && e.type === 'sources' ? { ...e, sources: withoutHidden(e.sources) } : e;
+      void stream.writeSSE({ data: JSON.stringify(sent) });
     });
     // Comment pings keep proxies from closing an idle connection.
     const ping = setInterval(() => void stream.write(': ping\n\n'), 25_000);
@@ -923,7 +952,7 @@ app.post('/api/catalog/adopt', (c) => {
   if (config.demo) return c.json({ error: "Demo mode doesn't save apps." }, 400);
   const v = validateOrder(adoptYaml(getYamlCatalog(), kvGet<AppOrder>('app-order')));
   if ('error' in v) return c.json({ error: v.error }, 400);
-  kvSet('app-order', v.order);
+  kvSet('app-order', sealOrder(v.order));
   setCatalogOrder(v.order);
   hub.emitCatalog();
   const n = getYamlCatalog().groups.reduce((k, g) => k + g.services.length, 0);
@@ -954,7 +983,7 @@ app.post('/api/catalog/import-homepage', async (c) => {
   if (config.demo) return c.json({ error: "Demo mode doesn't save apps." }, 400);
   const v = validateOrder(next);
   if ('error' in v) return c.json({ error: v.error }, 400);
-  kvSet('app-order', v.order);
+  kvSet('app-order', sealOrder(v.order));
   setCatalogOrder(v.order);
   hub.emitCatalog();
   recordAudit(who(c), 'apps.import-homepage', 'apps', `${apps} apps, ${links} links`);
@@ -1230,7 +1259,7 @@ app.put('/api/app-order', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const v = validateOrder(await c.req.json().catch(() => null));
   if ('error' in v) return c.json({ error: v.error }, 400);
-  kvSet('app-order', v.order);
+  kvSet('app-order', sealOrder(v.order));
   setCatalogOrder(v.order);
   hub.emitCatalog();
   recordAudit(who(c), 'apps.order', 'apps', `${v.order.added?.length ?? 0} added, ${v.order.hidden?.length ?? 0} hidden`);
@@ -1369,7 +1398,7 @@ app.put('/api/setup', async (c) => {
   saveHome(board ? board.board : null);
   saveExtras(boards.boards);
   hub.emitBoards('*');
-  kvSet('app-order', apps ? apps.order : null);
+  kvSet('app-order', apps ? sealOrder(apps.order) : null);
   setCatalogOrder(apps ? apps.order : null);
   kvSet('pages', pages ? pages.pages : {});
   hub.emitCatalog();
@@ -1619,13 +1648,37 @@ app.get('/api/img/tautulli', async (c) => {
 app.get('/healthz', (c) => c.text('ok'));
 
 // Opening a household link: keep it in this browser, then show Home.
+// A signed-in browser that opens a household link asks first: otherwise
+// anyone holding a link could send it to you and turn your browser into a
+// household device, signed out. The answer comes back as a POST from this
+// page only.
+const joinPage = (body: string) =>
+  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Patchboard</title><body style="font:16px system-ui;margin:2rem;max-width:32rem">${body}</body>`;
 app.get('/join/:token', (c) => {
   c.header('Cache-Control', 'no-store');
+  if (hasSession(c)) {
+    const token = c.req.param('token').replace(/[^\w-]/g, '');
+    return c.html(
+      joinPage(
+        `<h1 style="font-size:1.4rem">Make this browser a household device?</h1><p>This browser is signed in to Patchboard. As a household device it sees the boards and can't change anything, and it signs out here. Open the link on the tablet or phone it was made for instead.</p><form method="post" action="/join/${token}"><button type="submit" style="font:inherit;padding:.5rem 1rem">Make it a household device</button></form><p><a href="/">Keep this browser as it is</a></p>`,
+      ),
+    );
+  }
   if (!joinHousehold(c, c.req.param('token'))) {
     return c.html('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Patchboard</title><body style="font:16px system-ui;margin:2rem;max-width:32rem"><h1 style="font-size:1.4rem">This link no longer works</h1><p>Whoever runs Patchboard removed it or made a new one. Ask them for a fresh link.</p></body>', 404);
   }
   // A household device keeps no password session: removing it later can't
   // leave the browser signed in with full access.
+  logout(c);
+  return c.redirect('/', 302);
+});
+
+app.post('/join/:token', (c) => {
+  c.header('Cache-Control', 'no-store');
+  // Only the question page above may answer it.
+  const origin = c.req.header('origin');
+  if (!origin || new URL(origin).host !== c.req.header('host')) return c.text('Open the link again to join', 403);
+  if (!joinHousehold(c, c.req.param('token'))) return c.text('This link no longer works', 404);
   logout(c);
   return c.redirect('/', 302);
 });
@@ -1637,7 +1690,7 @@ app.get('/join/:token', (c) => {
 app.get('/panel/:file', (c) => {
   c.header('Cache-Control', 'no-store');
   const m = /^([\w-]{20,100})\.(png|bmp)$/.exec(c.req.param('file'));
-  const device = m ? deviceByToken(m[1]) : null;
+  const device = m ? deviceByPanelToken(m[1]) : null;
   if (!m || !device) return c.text('No such panel', 404);
   const num = (v: string | undefined, lo: number, hi: number, d: number) => Math.min(hi, Math.max(lo, Math.round(Number(v) || d)));
   const w = num(c.req.query('w'), 200, 2560, 800);
@@ -1675,6 +1728,18 @@ app.onError((err, c) => {
   console.error(err);
   return c.json({ error: err.message }, 500);
 });
+
+// Sign-in settings that can't be trusted stop the server, rather than leave
+// it open: AUTH=Password once meant no sign-in at all.
+const authTrouble = authProblem();
+if (authTrouble) {
+  console.error(`Patchboard won't start: ${authTrouble}`);
+  process.exit(1);
+}
+console.log(`Sign-in: ${config.auth.mode}${config.auth.mode === 'none' ? ' (anyone who can reach this port gets in)' : ''}`);
+if (config.auth.mode === 'oidc' && !config.auth.oidc.allowed.length && !config.auth.oidc.allowAnyone) {
+  console.warn('OIDC_ALLOWED is empty: anyone your provider signs in gets in. List who may, or set OIDC_ALLOW_ANYONE=1 if the provider already decides.');
+}
 
 serve({ fetch: app.fetch, port: config.port, ...(config.listenHost ? { hostname: config.listenHost } : {}) }, (info) => {
   console.log(`patchboard: listening on :${info.port}`);

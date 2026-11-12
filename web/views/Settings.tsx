@@ -904,7 +904,14 @@ function Household() {
   const [list, setList] = useState<Listed[] | null>(null);
   const [auth, setAuth] = useState<string>('none');
   const [name, setName] = useState('');
-  const [made, setMade] = useState<{ name: string; url: string } | null>(null);
+  const [made, setMade] = useState<{ name: string; url: string; panel: string } | null>(null);
+  // A panel address just made for an existing device, shown once.
+  const [panelFor, setPanelFor] = useState<{ id: string; url: string } | null>(null);
+  const newPanel = async (id: string) => {
+    const res = await fetch(`/api/household/${id}/panel`, { method: 'POST', headers: ACTION });
+    const body = (await res.json()) as { panel?: string };
+    if (res.ok && body.panel) setPanelFor({ id, url: `${location.origin}${body.panel}` });
+  };
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   const load = async () => setList((await (await fetch('/api/household')).json()) as Listed[]);
@@ -918,9 +925,9 @@ function Household() {
     setErr('');
     setCopied(false);
     const res = await fetch('/api/household', { method: 'POST', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    const body = (await res.json()) as { path?: string; error?: string };
+    const body = (await res.json()) as { path?: string; panel?: string; error?: string };
     if (!res.ok || !body.path) return setErr(body.error ?? `HTTP ${res.status}`);
-    setMade({ name: name.trim(), url: `${location.origin}${body.path}` });
+    setMade({ name: name.trim(), url: `${location.origin}${body.path}`, panel: `${location.origin}${body.panel}` });
     setName('');
     await load();
   };
@@ -961,7 +968,7 @@ function Household() {
             For an e-paper panel with no browser (TRMNL, Inky, an ESP32), point it at this picture instead. Add <code>?w=</code> and <code>?h=</code> for its size,
             or use <code>.bmp</code> in place of <code>.png</code>:
           </p>
-          <input className="field mono household-url" readOnly value={made.url.replace('/join/', '/panel/') + '.png'} aria-label={`Panel picture for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
+          <input className="field mono household-url" readOnly value={made.panel} aria-label={`Panel picture for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
         </div>
       )}
       {list.length > 0 && (
@@ -974,6 +981,14 @@ function Household() {
                 <HoldButton className="text-button" danger hint="Hold to remove. The device stops working as a household device." onConfirm={() => void remove(d.id)}>
                   Remove
                 </HoldButton>
+              )}
+              {!readOnly && (
+                <button type="button" className="text-button household-panel" title="An address for an e-paper panel with no browser. It shows the picture and nothing else, and a new one retires the last." onClick={() => void newPanel(d.id)}>
+                  New panel address
+                </button>
+              )}
+              {panelFor?.id === d.id && (
+                <input className="field mono household-url household-panel-url" readOnly value={panelFor.url} aria-label={`Panel picture for ${d.name}`} autoFocus onFocus={(e) => e.currentTarget.select()} />
               )}
               {!readOnly && (
                 <div className="household-view">

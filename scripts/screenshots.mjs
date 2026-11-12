@@ -149,7 +149,7 @@ try {
       const st = STARTERS.find((s) => s.id === id);
       made[id] = await page.evaluate(async (body) => (await (await fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(body) })).json()).id, { ...st.board, name: st.name.replace('Wall: ', '').replace(/^./, (c) => c.toUpperCase()) });
     }
-    const link = await page.evaluate(async () => (await (await fetch('/api/household', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ name: 'Kitchen tablet' }) })).json()).path);
+    const { path: link, panel } = await page.evaluate(async () => (await fetch('/api/household', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ name: 'Kitchen tablet' }) })).json());
     const device = await page.evaluate(async () => (await (await fetch('/api/household')).json()).find((d) => d.name === 'Kitchen tablet').id);
     const pages = { opens: `/b/${made['wall-clock']}`, pages: [`/b/${made['wall-markets']}`, '/monitor'] };
     await page.evaluate(async ([id, view]) => fetch(`/api/household/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(view) }), [device, pages]);
@@ -163,7 +163,7 @@ try {
     await shoot(wp, 'wall-markets');
     await wall.close();
     // The same device's picture, as an e-paper panel with no browser fetches it.
-    const pic = await fetch(`${demo.base}${link.replace('/join/', '/panel/')}.png`);
+    const pic = await fetch(`${demo.base}${panel}`);
     writeFileSync(join(OUT, 'panel.png'), Buffer.from(await pic.arrayBuffer()));
     console.log('  panel.png');
     // Leave the demo as it was for the shots after this.

@@ -83,3 +83,16 @@ export function sealBoard(boardId: string, board: Board, save: (name: string, va
   });
   return changed ? { ...board, widgets } : board;
 }
+
+/** App live numbers with typed-in keys moved to the key store, as boards get. */
+export function sealOrder<T extends { stats?: Record<string, JsonWidgetConfig> }>(order: T, save: (name: string, value: string) => void = setSecret): T {
+  if (!order.stats) return order;
+  let changed = false;
+  const stats: Record<string, JsonWidgetConfig> = {};
+  for (const [app, cfg] of Object.entries(order.stats)) {
+    const sealed = sealConfig(cfg, 'apps', app, save);
+    if (sealed) changed = true;
+    stats[app] = sealed ?? cfg;
+  }
+  return changed ? { ...order, stats } : order;
+}

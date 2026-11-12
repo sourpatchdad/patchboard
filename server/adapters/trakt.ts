@@ -8,6 +8,7 @@ import { getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
 import { episodeKey, tvdbKey } from './arr.ts';
 import { traktToken } from '../trakt-auth.ts';
+import { rememberShow } from '../art.ts';
 
 interface ShowEntry {
   first_aired: string;
@@ -51,7 +52,7 @@ export function traktAdapter(): Adapter<TraktData> {
           when: s.first_aired,
           url: `https://trakt.tv/shows/${s.show.ids.slug}`,
           key: tvdbKey(s.show.ids.tvdb, s.episode.season, s.episode.number) ?? episodeKey(s.show.title, s.episode.season, s.episode.number),
-          ...(s.show.ids.tvdb ? { art: `/api/art/tvmaze/${s.show.ids.tvdb}` } : {}),
+          ...(s.show.ids.tvdb ? (rememberShow(s.show.ids.tvdb), { art: `/api/art/tvmaze/${s.show.ids.tvdb}` }) : {}),
           alt: [episodeKey(s.show.title, s.episode.season, s.episode.number)],
         })),
         ...movies.map((m): ReleaseItem => ({

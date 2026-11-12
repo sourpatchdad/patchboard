@@ -16,7 +16,7 @@ export interface OidcSettings {
   clientId: string;
   clientSecret?: string;
   scopes: string;
-  /** Emails, usernames or groups allowed in; empty lets in anyone the provider signs in. */
+  /** Who may sign in: email:, group:, user: or sub: entries (see allowedIn); empty lets in anyone the provider signs in. */
   allowed: string[];
 }
 
@@ -113,13 +113,37 @@ export interface Claims {
   nonce?: string;
   email?: string;
   preferred_username?: string;
+  /** True only when the provider has checked the address belongs to them. */
+  email_verified?: boolean;
   groups?: string[];
 }
 
+/**
+ * Whether OIDC_ALLOWED lets these claims in. Each entry names one kind of
+ * claim, so a username can't stand in for a group: email:me@x.org (or a bare
+ * address) matches a verified email only; group:admins (or a bare name)
+ * matches a group or the provider's own id; user:name matches the username,
+ * which some providers let people pick, so use it only where they can't;
+ * sub:id matches the provider's id.
+ */
 export function allowedIn(o: OidcSettings, c: Claims): boolean {
   if (!o.allowed.length) return true;
-  const mine = [c.email, c.preferred_username, c.sub, ...(Array.isArray(c.groups) ? c.groups : [])].filter(Boolean).map((x) => String(x).toLowerCase());
-  return o.allowed.some((a) => mine.includes(a.toLowerCase()));
+  const low = (x: unknown) => String(x ?? '').toLowerCase();
+  const email = c.email && c.email_verified === true ? low(c.email) : '';
+  const groups = Array.isArray(c.groups) ? c.groups.map(low) : [];
+  const sub = low(c.sub);
+  const user = low(c.preferred_username);
+  return o.allowed.some((raw) => {
+    const entry = raw.trim().toLowerCase();
+    const m = /^(email|group|user|sub):(.+)$/.exec(entry);
+    const [kind, value] = m ? [m[1], m[2].trim()] : [entry.includes('@') ? 'email' : 'name', entry];
+    if (!value) return false;
+    if (kind === 'email') return !!email && email === value;
+    if (kind === 'group') return groups.includes(value);
+    if (kind === 'user') return !!user && user === value;
+    if (kind === 'sub') return sub === value;
+    return groups.includes(value) || sub === value;
+  });
 }
 
 /** Check an ID token's signature and claims. Throws with a plain reason. */

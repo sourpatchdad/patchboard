@@ -32,6 +32,8 @@ export function listSecrets(): { name: string; at: number }[] {
 export function setSecret(name: string, value: string): void {
   const s = read();
   s[name] = { value: seal(value), at: Date.now() };
+  // A new value may be for another server: it binds again on first use.
+  forgetOrigin(`secret:${name}`);
   // Everything else is sealed again with the current key; one no key opens stays as it was.
   for (const k of Object.keys(s)) {
     const r = unsealOr(s[k].value);
@@ -45,5 +47,30 @@ export function deleteSecret(name: string): boolean {
   if (!(name in s)) return false;
   delete s[name];
   kvSet(KEY, s);
+  forgetOrigin(`secret:${name}`);
   return true;
+}
+
+// Each key, and each WIDGET_ environment value a widget names, goes only to
+// the server it was first sent to. Without this, anyone who could edit a
+// board could point a widget at a server of their own with ${secret:NAME}
+// in the address and read the key off the request.
+const ORIGINS = 'key-origins';
+
+/** Where a key may go: its server, bound on first use. Throws for anywhere else. */
+export function checkOrigin(ref: string, origin: string): void {
+  const all = kvGet<Record<string, string>>(ORIGINS) ?? {};
+  if (!all[ref]) {
+    all[ref] = origin;
+    kvSet(ORIGINS, all);
+    return;
+  }
+  if (all[ref] !== origin) throw new Error(`${ref.replace(/^\w+:/, '')} is only sent to ${all[ref]}. Save the key again to use it with another server.`);
+}
+
+function forgetOrigin(ref: string): void {
+  const all = kvGet<Record<string, string>>(ORIGINS) ?? {};
+  if (!(ref in all)) return;
+  delete all[ref];
+  kvSet(ORIGINS, all);
 }

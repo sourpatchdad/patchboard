@@ -13,16 +13,22 @@
 import { isIP } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import { ENV_REF, type JsonWidgetConfig, readPath, SECRET_REF } from '../shared/jsonwidget.ts';
-import { getSecret } from './secrets.ts';
+import { checkOrigin, getSecret } from './secrets.ts';
 import { piholeSid } from './sessions.ts';
 
 const MAX_BYTES = 512 * 1024;
 const TIMEOUT = 8000;
 
-function resolveEnv(s: string): string {
+/** Fill in ${env:WIDGET_X} and ${secret:NAME}, each only for the server it belongs to. */
+function resolveEnv(s: string, origin: string): string {
   return s
-    .replace(ENV_REF, (_m, name: string) => (name.startsWith('WIDGET_') ? (process.env[name] ?? '') : ''))
+    .replace(ENV_REF, (_m, name: string) => {
+      if (!name.startsWith('WIDGET_')) return '';
+      if (process.env[name]) checkOrigin(`env:${name}`, origin);
+      return process.env[name] ?? '';
+    })
     .replace(SECRET_REF, (_m, b64: string | undefined, name: string) => {
+      if (getSecret(name) !== undefined) checkOrigin(`secret:${name}`, origin);
       const v = getSecret(name) ?? '';
       return b64 ? Buffer.from(v).toString('base64') : encodeURIComponentIfQuery(v);
     });
@@ -59,7 +65,13 @@ export interface JsonResult {
 export async function fetchJsonWidget(cfg: JsonWidgetConfig, withSample = false): Promise<JsonResult> {
   const at = Date.now();
   try {
-    const url = new URL(resolveEnv(cfg.url));
+    // Where the request goes, decided before any key is filled in: a key
+    // may ride in the path or the query, never in the host.
+    const target = new URL(cfg.url.replace(ENV_REF, 'x').replace(SECRET_REF, 'x'));
+    const bare = new URL(cfg.url.replace(ENV_REF, '').replace(SECRET_REF, ''));
+    if (target.host !== bare.host) throw new Error("A key can't be part of the address's host");
+    const url = new URL(resolveEnv(cfg.url, target.origin));
+    if (url.origin !== target.origin) throw new Error("A key can't change where the request goes");
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Only http and https');
     const host = url.hostname.replace(/^\[|\]$/g, '');
     if (host === 'metadata.google.internal') throw new Error('That address is blocked');
@@ -67,10 +79,12 @@ export async function fetchJsonWidget(cfg: JsonWidgetConfig, withSample = false)
     if (addrs.some(blockedAddress)) throw new Error('That address is blocked');
 
     const headers: Record<string, string> = { Accept: 'application/json', 'User-Agent': 'Patchboard/1 (json widget)' };
-    for (const [k, v] of Object.entries(cfg.headers)) headers[k] = resolveEnv(v);
+    for (const [k, v] of Object.entries(cfg.headers)) headers[k] = resolveEnv(v, url.origin);
     const get = () => fetch(url, { headers, redirect: 'manual', signal: AbortSignal.timeout(TIMEOUT) });
     let res: Response;
     if (cfg.login?.kind === 'pihole6') {
+      // The Pi-hole password signs in only where it was first used.
+      checkOrigin(`secret:${cfg.login.secret}`, url.origin);
       headers['X-FTL-SID'] = await piholeSid(url.origin, cfg.login.secret);
       res = await get();
       // An expired or dropped session: sign in once more, then give up.

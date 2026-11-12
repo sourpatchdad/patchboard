@@ -28,6 +28,8 @@ const SEEN_EVERY = 10 * 60_000;
 interface Device extends DeviceView {
   name: string;
   hash: string;
+  /** The panel picture's own token, hashed: it opens the picture and nothing else. */
+  panelHash?: string;
   created: number;
   seen?: number;
 }
@@ -50,6 +52,16 @@ export function householdDevices(): HouseholdDevice[] {
   return Object.entries(devices())
     .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, ...viewOf(d) }))
     .sort((a, b) => b.created - a.created);
+}
+
+/** A new panel token for a device, replacing the last one. It comes back once. */
+export function newPanelToken(id: string): string | null {
+  const all = devices();
+  if (!all[id]) return null;
+  const token = randomBytes(32).toString('base64url');
+  all[id].panelHash = sha(token);
+  kvSet('household', all);
+  return token;
 }
 
 /** A new device. The token comes back once, inside the link; only its hash is kept. */
@@ -116,10 +128,14 @@ export function householdOf(c: Context): ({ id: string; name: string } & DeviceV
 }
 
 /** Opening a household link: the browser keeps the token as an HttpOnly cookie. */
-/** The device a link token belongs to, for a screen that sends no cookie (the panel picture). */
-export function deviceByToken(token: string): { id: string; name: string } | null {
+/**
+ * The device a panel token belongs to. A panel's address ends up in other
+ * services and in proxy logs, so it has a token of its own that opens the
+ * picture and can't join as a household device.
+ */
+export function deviceByPanelToken(token: string): { id: string; name: string } | null {
   const hash = sha(token);
-  const entry = Object.entries(devices()).find(([, d]) => d.hash === hash);
+  const entry = Object.entries(devices()).find(([, d]) => d.panelHash === hash);
   if (!entry) return null;
   const [id, d] = entry;
   const all = devices();

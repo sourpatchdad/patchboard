@@ -38,6 +38,7 @@ import { config } from './config.ts';
 import { NAS_SOURCES } from '../shared/types.ts';
 import { kvGet, lastEventAt } from './db.ts';
 import { settling, type Track } from './transitions.ts';
+import { openToInternetAt } from './security.ts';
 
 type Sources = Partial<Record<SourceId, SourceState>>;
 
@@ -479,6 +480,31 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       title: pending.length === 1 ? `An image update is available for ${pending[0]}` : `${pending.length} containers have image updates`,
       detail: pending.length > 1 ? pending.slice(0, 6).join(', ') + (pending.length > 6 ? ', and more' : '') : undefined,
       href: '/stacks?updates=1',
+      source: 'patchboard',
+    });
+  }
+
+  // Sign-in off, and someone reached Patchboard from the internet.
+  const open = openToInternetAt();
+  if (config.auth.mode === 'none' && open && now - open < 24 * 3_600_000) {
+    alerts.push({
+      id: 'open-to-internet',
+      level: 'critical',
+      title: 'Patchboard is open to the internet with no sign-in',
+      detail: 'Someone reached it from a public address. Turn on a password in Settings, Connections, Sign-in and keys, or put it behind your proxy\'s sign-in.',
+      href: '/settings?tab=connections&part=access',
+      source: 'patchboard',
+    });
+  }
+
+  // Single sign-on that lets in anyone the provider knows, without saying so.
+  if (config.auth.mode === 'oidc' && !config.auth.oidc.allowed.length && !config.auth.oidc.allowAnyone) {
+    alerts.push({
+      id: 'oidc-open',
+      level: 'warn',
+      title: 'Anyone your sign-in provider knows can open Patchboard',
+      detail: 'Set OIDC_ALLOWED to the people or groups who may, or OIDC_ALLOW_ANYONE=1 if your provider already decides.',
+      href: '/settings?tab=connections&part=access',
       source: 'patchboard',
     });
   }
