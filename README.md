@@ -97,7 +97,9 @@ between (the Monitor, wall boards for the clock and weather, markets, the
 house, cameras or media), turns them by itself if you like, and dims at
 night. Set its screen to E-ink for black on white with a redraw a minute.
 A TRMNL, Inky or ESP32 with no browser fetches the server as a one-bit
-picture instead.
+picture instead. Status widgets can show as one big number with a faint line of
+its day, and a device can show one widget alone, for a Pi with a small
+screen.
 
 ![A clock and weather wall board on a household tablet](docs/screenshots/wall-clock.webp)
 

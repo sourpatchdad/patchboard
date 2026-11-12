@@ -409,7 +409,13 @@ app.post('/api/household/:id/panel', (c) => {
 // Where a device opens, the pages it swipes through, the Monitor's color and
 // its night hours, from Settings; the device follows at once.
 const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/weather']);
-const isPlace = (v: unknown): v is string => typeof v === 'string' && (OPENS.has(v) || (/^\/b\/[\w-]+$/.test(v) && !!getBoard(v.slice(3))));
+const isPlace = (v: unknown): v is string => {
+  if (typeof v !== 'string') return false;
+  if (OPENS.has(v) || (/^\/b\/[\w-]+$/.test(v) && !!getBoard(v.slice(3)))) return true;
+  // One widget on its own: /w/<board>/<widget>, for a widget that's on that board.
+  const one = /^\/w\/([\w-]+)\/([\w-]+)$/.exec(v);
+  return !!one && !!getBoard(one[1])?.board.widgets.some((w) => w.id === one[2]);
+};
 app.put('/api/household/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const body = (await c.req.json().catch(() => ({}))) as { name?: unknown; opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown; screen?: unknown; look?: unknown };

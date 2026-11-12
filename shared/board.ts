@@ -71,7 +71,8 @@ export interface Widget {
   column?: number;
   /**
    * Settings. Per type (container, json) plus the common ones: title (the
-   * header), limit (items shown), style, days. All strings.
+   * header), limit (items shown), style, days, view (compact or number) and
+   * number (which one). All strings.
    */
   config?: Record<string, string>;
 }
@@ -143,6 +144,74 @@ export function spanOf(w: Widget, cols: number): number {
 }
 
 export const SPAN: Record<WidgetSize, number> = { s: 3, m: 4, l: 6, w: 8, xl: 12 };
+
+/**
+ * How much a widget shows, for any widget that has more than one way: the
+ * whole thing, the top three without the small print, or one big number for
+ * a small screen. Number needs an entry in NUMBERS; compact needs a list.
+ */
+export type WidgetView = '' | 'compact' | 'number';
+
+/** The numbers a widget can show on its own, first the default: key and label. */
+export const NUMBERS: Partial<Record<WidgetType, [string, string][]>> = {
+  attention: [['count', 'Things that need you']],
+  vitals: [
+    ['cpu', 'CPU'],
+    ['memory', 'Memory in use'],
+    ['storage', 'Storage used'],
+    ['uptime', 'Uptime'],
+  ],
+  weather: [
+    ['now', 'Temperature now'],
+    ['high', "Today's high"],
+    ['rain', 'Chance of rain today'],
+  ],
+  markets: [['first', 'The first price on the list']],
+  countdown: [['next', 'Days to the next date']],
+  car: [
+    ['battery', 'Battery'],
+    ['range', 'Range'],
+  ],
+  dns: [
+    ['blocked', 'Blocked today'],
+    ['pct', 'Share blocked'],
+  ],
+  speed: [
+    ['down', 'Download'],
+    ['up', 'Upload'],
+    ['ping', 'Ping'],
+  ],
+  power: [
+    ['charge', 'Battery charge'],
+    ['runtime', 'Runtime on battery'],
+    ['load', 'Load'],
+  ],
+  photos: [
+    ['photos', 'Photos'],
+    ['videos', 'Videos'],
+  ],
+  requests: [['pending', 'Requests waiting']],
+  dockerhosts: [
+    ['running', 'Containers running'],
+    ['unhealthy', 'Unhealthy containers'],
+  ],
+  network: [['clients', 'Clients online']],
+  drives: [
+    ['problems', 'Drives with problems'],
+    ['hottest', 'Hottest drive'],
+  ],
+  sync: [['behind', 'Folders not up to date']],
+  inbox: [['unread', 'Unread mail']],
+  feeds: [['unread', 'Unread articles']],
+};
+
+/** The ways this widget can be shown, for its settings. */
+export function viewsOf(type: WidgetType): [WidgetView, string][] {
+  const out: [WidgetView, string][] = [['', 'Detailed']];
+  if (WIDGET_INFO[type].options.limit) out.push(['compact', 'Compact']);
+  if (NUMBERS[type]) out.push(['number', 'One number']);
+  return out.length > 1 ? out : [];
+}
 
 /** Needs attention sits in Home's header unless the board asks for a card. */
 export const attentionInHeader = (b: Board | null | undefined): boolean => !b?.widgets.some((w) => w.type === 'attention' && w.config?.style === 'card');
@@ -359,7 +428,7 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
       const ids = parseEntities((w.config as Record<string, unknown> | undefined)?.entities as string | undefined);
       if (ids.length) config = { entities: ids.join(',') };
     }
-    const common = commonOptions(info, w.config);
+    const common = commonOptions(info, w.config, w.type as WidgetType);
     if (Object.keys(common).length) config = { ...(config ?? {}), ...common };
     const span = Number.isInteger(w.span) && (w.span as number) >= 1 && (w.span as number) <= 6 ? (w.span as number) : undefined;
     const column = Number.isInteger(w.column) && (w.column as number) >= 1 && (w.column as number) <= 6 ? w.column : undefined;
@@ -375,7 +444,7 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
 }
 
 /** The shared settings, kept only when they make sense for this widget. */
-function commonOptions(info: Info, raw: unknown): Record<string, string> {
+function commonOptions(info: Info, raw: unknown, type: WidgetType): Record<string, string> {
   const c = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const out: Record<string, string> = {};
   if (info.options.title !== false && typeof c.title === 'string' && c.title.trim()) out.title = c.title.trim().slice(0, 40);
@@ -388,6 +457,8 @@ function commonOptions(info: Info, raw: unknown): Record<string, string> {
   if (st && typeof c.style === 'string' && c.style && st.some(([v]) => v === c.style)) out.style = c.style;
   if (info.options.days && (c.days === '7' || c.days === '14')) out.days = c.days;
   if (info.options.names && c.names === 'show') out.names = 'show';
+  if ((c.view === 'compact' || c.view === 'number') && viewsOf(type).some(([v]) => v === c.view)) out.view = c.view;
+  if (out.view === 'number' && typeof c.number === 'string' && NUMBERS[type]?.some(([k]) => k === c.number)) out.number = c.number;
   for (const f of info.options.fields ?? []) {
     if (typeof c[f.key] !== 'string' || !(c[f.key] as string).trim()) continue;
     const v = f.check(c[f.key] as string);

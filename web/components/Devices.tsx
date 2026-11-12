@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { DeviceLook, DeviceView } from '../../shared/types.ts';
+import { type Widget, WIDGET_INFO } from '../../shared/board.ts';
 import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { THEMES } from '../lib/appearance.ts';
 import { agoLong } from '../lib/format.ts';
@@ -26,18 +27,55 @@ const ACTION = { 'X-Patchboard': 'action', 'Content-Type': 'application/json' };
 const ON_MS = 15 * 60_000;
 const KEEP = 'As the device has it';
 
-/** Every page a device can show, by name: Home, the other boards, then the pages a household device may open. */
-function usePlaces(): [string, string][] {
+/** A page a device can show: its address, its name, and whether it's one widget on its own. */
+type Place = [string, string, boolean?];
+
+/**
+ * Every page a device can show, by name: Home, the other boards, the pages a
+ * household device may open, then each widget on each board on its own.
+ */
+function usePlaces(): Place[] {
   const { snap } = useStore();
+  const boards = snap?.boards ?? [];
+  const [widgets, setWidgets] = useState<Place[]>([]);
+  const key = boards.map((b) => b.id).join(' ');
+  useEffect(() => {
+    void Promise.all(
+      boards.map(async (b) => {
+        const r = await fetch(`/api/boards/${encodeURIComponent(b.id)}`).catch(() => null);
+        const body = r?.ok ? ((await r.json()) as { board?: { widgets: Widget[] } }) : null;
+        return (body?.board?.widgets ?? [])
+          .filter((w) => w.type !== 'attention' || w.config?.style === 'card')
+          .map((w) => [`/w/${b.id}/${w.id}`, `${w.config?.title || WIDGET_INFO[w.type]?.name || w.type}, from ${b.name}`, true] as Place);
+      }),
+    ).then((lists) => setWidgets(lists.flat()));
+  }, [key]);
   return [
     ['/', 'Home'],
-    ...(snap?.boards ?? []).filter((b) => b.id !== 'home').map((b) => [`/b/${b.id}`, b.name] as [string, string]),
+    ...boards.filter((b) => b.id !== 'home').map((b) => [`/b/${b.id}`, b.name] as Place),
     ['/monitor', 'Monitor'],
     ['/server', 'Server'],
     ['/upcoming', 'Upcoming'],
     ['/reading', 'Reading'],
     ['/weather', 'Weather'],
+    ...widgets,
   ];
+}
+
+/** Places as options: the pages, then the single widgets in a group of their own. */
+function PlaceOptions({ places }: { places: Place[] }) {
+  const opt = ([v, l]: Place) => (
+    <option key={v} value={v}>
+      {l}
+    </option>
+  );
+  const alone = places.filter((p) => p[2]);
+  return (
+    <>
+      {places.filter((p) => !p[2]).map(opt)}
+      {alone.length > 0 && <optgroup label="One widget, full screen">{alone.map(opt)}</optgroup>}
+    </>
+  );
 }
 
 /** "Monitor, then 2 more pages", for the list. */
@@ -184,7 +222,7 @@ function DeviceEditor({
 }: {
   d: Listed;
   readOnly: boolean;
-  places: [string, string][];
+  places: Place[];
   placeName: (p: string) => string;
   link: { id: string; url: string; panel?: string } | null;
   onLink: (l: { id: string; url: string; panel?: string } | null) => void;
@@ -216,7 +254,8 @@ function DeviceEditor({
       </select>
     </label>
   );
-  const editable = (p: string) => p === '/' || p.startsWith('/b/');
+  // The board to arrange for a page: the board itself, or the board a single widget lives on.
+  const boardOf = (p: string) => (p === '/' || p.startsWith('/b/') ? p : p.startsWith('/w/') ? (p.split('/')[2] === 'home' ? '/' : `/b/${p.split('/')[2]}`) : null);
   const newLink = async () => {
     const res = await fetch(`/api/household/${d.id}/link`, { method: 'POST', headers: ACTION });
     const body = (await res.json()) as { path?: string };
@@ -276,19 +315,16 @@ function DeviceEditor({
 
       <section className="device-part" aria-labelledby={`pages-${d.id}`}>
         <h3 id={`pages-${d.id}`}>Pages</h3>
-        <p className="settings-note">It opens on the first and a swipe moves down the list. Leave it empty and the device stays on whatever page it last showed.</p>
+        <p className="settings-note">
+          It opens on the first and a swipe moves down the list. A page can be one widget on its own, filling the screen: set that widget to One number for a small display. Leave the list
+          empty and the device stays on whatever page it last showed.
+        </p>
         <ol className="device-pages">
           {order.map((p, i) => (
             <li key={p}>
               <span className="device-page-num">{i === 0 ? 'Opens on' : `Page ${i + 1}`}</span>
               <select className="field" value={p} disabled={readOnly} aria-label={i === 0 ? 'Opens on' : `Page ${i + 1}`} onChange={(e) => setOrder(order.map((x, j) => (j === i ? e.target.value : x)))}>
-                {places
-                  .filter(([v]) => v === p || !order.includes(v))
-                  .map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
+                <PlaceOptions places={places.filter(([v]) => v === p || !order.includes(v))} />
               </select>
               {!readOnly && (
                 <span className="device-page-tools">
@@ -303,9 +339,9 @@ function DeviceEditor({
                   </button>
                 </span>
               )}
-              {editable(p) && (
-                <Link className="text-button" to={`${p}?arrange=1`}>
-                  Edit board
+              {boardOf(p) && (
+                <Link className="text-button" to={`${boardOf(p)}?arrange=1`}>
+                  {p.startsWith('/w/') ? 'Edit widget' : 'Edit board'}
                 </Link>
               )}
             </li>
@@ -314,13 +350,7 @@ function DeviceEditor({
         {!readOnly && order.length < MAX_PAGES && (
           <select className="field device-page-add" aria-label="Add a page" value="" onChange={(e) => e.target.value && setOrder([...order, e.target.value])}>
             <option value="">{order.length ? 'Add a page' : 'Pick the page it opens on'}</option>
-            {places
-              .filter(([v]) => !order.includes(v))
-              .map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
+            <PlaceOptions places={places.filter(([v]) => !order.includes(v))} />
           </select>
         )}
         {order.length > 1 && (

@@ -62,7 +62,7 @@ export function WallPages() {
     const drag = (px: number) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        moved ??= [...document.querySelectorAll<HTMLElement>('.shell > main, .monitor')].find((el) => el.getClientRects().length > 0) ?? null;
+        moved ??= [...document.querySelectorAll<HTMLElement>('.shell > main, .monitor, .widget-page')].find((el) => el.getClientRects().length > 0) ?? null;
         if (!moved) return;
         moved.style.transition = px ? 'none' : '';
         moved.style.transform = px ? `translateX(${px}px)` : '';

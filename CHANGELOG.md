@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **Show as, on every widget that has more than one way:** Detailed is the
+  whole widget. Compact keeps the top three items and drops the small print.
+  One number shows the figure that matters, as large as the card allows, with
+  a faint line of its day under it where there is one.
+- **One number for 17 widgets:** Server (CPU, memory, storage or uptime),
+  Needs attention, Weather (now, the high or the chance of rain), Markets
+  (the first price, so one coin is one line), Countdown, Car, Ad blocking,
+  Internet, Power, Photos, Requests, Docker hosts, Network, Drives, Sync,
+  Inbox and Reading. Which number is in the widget's settings.
+- **One widget on a screen:** Settings, Devices offers every widget on every
+  board as a page of its own, filling the screen with nothing around it. For
+  a Pi with a 3.5 inch display, or one page among a wall tablet's others.
+
 ## 1.10.1 (2026-11-12)
 
 - **New widget settings load at once:** Markets, Feeds and Releases fetch

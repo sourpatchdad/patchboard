@@ -76,6 +76,19 @@ marked by shape, and a redraw once a minute rather than with every change.
 E-ink needs a current browser, as on Boox and other Android readers; a
 Kindle e-reader's built-in browser is too old to run Patchboard.
 
+**One number, for a small screen:** a widget's settings have Show as.
+Detailed is the whole widget; Compact keeps the top three and drops the
+small print; One number shows the figure that matters, as large as the card
+allows, with a faint line of its last day where there is one. Server picks
+CPU, memory, storage or uptime; Internet picks download, upload or ping;
+Markets shows the first price on its list, so one coin is one line. For a
+Pi with a 3.5 inch display, give a household device a single widget as its
+page in Settings, Devices: it fills the screen and nothing else shows.
+
+![Widgets as one number: needs attention, CPU, the weather, Bitcoin, the internet, ad blocking, a countdown and the UPS](screenshots/one-number.webp)
+
+![Bitcoin alone on a 480 by 320 screen](screenshots/one-widget.webp)
+
 **A panel with no browser:** a TRMNL, a Pimoroni Inky, or an ESP32 with an
 e-paper screen can show the server as a picture. Make a household device for
 it in Settings, Devices, and New panel address gives you its picture address:

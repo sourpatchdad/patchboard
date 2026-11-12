@@ -13,6 +13,7 @@ import { daysUntil, moonAt, nextDay } from '../../shared/almanac.ts';
 import { useWidgetData } from './widget-data.ts';
 import { SetupLink } from './SetupLink.tsx';
 import { useWidget } from './widget-context.ts';
+import { OneNumber } from './OneNumber.tsx';
 
 const SPAN_WORDS = { '24h': 'last 24 hours', today: 'today', '30d': 'last 30 days' } as const;
 const spanWords = (s: keyof typeof SPAN_WORDS) => t(SPAN_WORDS[s]);
@@ -23,11 +24,17 @@ function nameOf(q: MarketQuote): string {
 }
 
 export function MarketsWidget({ board, id, config }: { board: string; id: string; config?: Record<string, string> }) {
-  const { style } = useWidget();
+  const { style, view } = useWidget();
   const cur = currency();
   const lines = (config?.symbols ?? '').split('\n').filter(Boolean);
   const { data, failed } = useWidgetData<{ quotes: MarketQuote[]; unsaved?: boolean }>(`/api/markets/${encodeURIComponent(board)}/${encodeURIComponent(id)}?currency=${cur}`, 2 * 60_000, config?.symbols);
   const big = style === 'big';
+  // One number: the first line's price, its name and the day's change under it.
+  if (view === 'number') {
+    const q = data?.quotes[0];
+    const reading = !lines.length || data?.unsaved ? null : !q ? undefined : q.failed || q.price === undefined ? { value: '–', sub: `${nameOf(q)}: ${q.failed ?? t('no price')}`, tone: 'warn' as const } : { value: q.currency ? money(q.price, q.currency) : String(q.price), sub: q.change === undefined ? nameOf(q) : `${nameOf(q)} ${q.change >= 0 ? '▲' : '▼'} ${pct(q.change)}`, line: q.line && { data: q.line.map((v, i) => [i, v] as [number, number]), label: `${nameOf(q)}, ${q.span ? spanWords(q.span) : ''}` } };
+    return <OneNumber title="Markets" label={t('The first price on the list')} reading={reading} />;
+  }
   return (
     <Section title="Markets" className={`markets${big ? ' markets-big' : ''}`}>
       {lines.length === 0 ? (

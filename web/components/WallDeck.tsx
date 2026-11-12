@@ -16,6 +16,7 @@ const Server = lazy(async () => ({ default: (await import('../views/Server.tsx')
 const Weather = lazy(async () => ({ default: (await import('../views/Weather.tsx')).Weather }));
 const Upcoming = lazy(async () => ({ default: (await import('../views/Upcoming.tsx')).Upcoming }));
 const Feeds = lazy(async () => ({ default: (await import('../views/Feeds.tsx')).Feeds }));
+const WidgetPage = lazy(async () => ({ default: (await import('../views/WidgetPage.tsx')).WidgetPage }));
 
 /** The pages this device swipes between, when there's more than one. */
 export function useDeck(): string[] {
@@ -30,6 +31,7 @@ function Page({ path }: { path: string }) {
     <Suspense fallback={null}>
       <Routes location={path}>
         <Route path="/monitor" element={<Monitor />} />
+        <Route path="/w/:board/:widget" element={<WidgetPage />} />
         <Route element={<Shell />}>
           <Route path="/" element={<Home />} />
           <Route path="/b/:board" element={<Home />} />
@@ -53,7 +55,7 @@ export function Root() {
   const [warm, setWarm] = useState('');
   useEffect(() => {
     if (!key) return;
-    void Promise.all(key.split(' ').map((p) => (p === '/' ? warmBoard('home') : p.startsWith('/b/') ? warmBoard(p.slice(3)) : null))).then(() => setWarm(key));
+    void Promise.all(key.split(' ').map((p) => (p === '/' ? warmBoard('home') : p.startsWith('/b/') ? warmBoard(p.slice(3)) : p.startsWith('/w/') ? warmBoard(p.split('/')[2]) : null))).then(() => setWarm(key));
   }, [key]);
   if (!deck.includes(pathname)) return <Outlet />;
   return (

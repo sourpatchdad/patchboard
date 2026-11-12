@@ -8,6 +8,10 @@ export interface WidgetSettings {
   title?: string;
   limit?: number;
   style?: string;
+  /** Compact or one number; empty shows the whole widget. */
+  view?: string;
+  /** Which number, for one number. */
+  number?: string;
   days?: number;
   /** Arranging the board: a widget that hides when quiet shows anyway, so it can be moved. */
   editing?: boolean;

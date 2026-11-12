@@ -12645,7 +12645,8 @@ html.wall-swipe body {
 }
 
 html.wall-swipe .shell > main,
-html.wall-swipe .monitor {
+html.wall-swipe .monitor,
+html.wall-swipe .widget-page {
   transition: transform 0.12s ease-out;
 }
 
@@ -12925,4 +12926,94 @@ html.wall-swipe .monitor {
   .device-pages:not(:empty) + .device-page-add.field {
     margin-left: 0;
   }
+}
+
+/* One number: the value as wide as the card allows, its line under it. The
+   card is its own container, so a 3.5 inch screen and a wall tablet both get
+   a number that fills them. */
+.one-number-body {
+  display: grid;
+  gap: 8px;
+  padding: 6px 0 2px;
+}
+
+/* A figure is about 0.62 of its size wide (a % or ° more, a comma less), so
+   the size that fits the line is the width over 0.62 times the characters.
+   On a board it stops at a size that sits with the cards around it. */
+.one-number-value {
+  font: var(--display-weight) clamp(28px, calc(100cqi / (var(--chars, 4) * 0.62)), 104px) / 1 var(--f-display);
+  color: var(--head);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.one-number-label {
+  font-size: clamp(13px, 4.5cqi, 24px);
+  color: var(--ink-2);
+}
+
+/* The line under it stays quiet: a hint of the trend, not a chart to read. */
+.one-number-line {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.55;
+}
+
+.widget-page .one-number-line {
+  justify-self: stretch;
+}
+
+.one-number-body.tone-warn .one-number-value {
+  color: var(--warn);
+}
+
+.one-number-body.tone-crit .one-number-value {
+  color: var(--crit);
+}
+
+/* Compact: three items at most, and none of the small print under them. */
+.cell.is-compact :is(.play-sub, .settings-note, .ledger-aside, .ws-hint) {
+  display: none;
+}
+
+/* One widget filling the screen. The number's size follows the smaller of
+   the page's width and height, so it fills a 480 by 320 Pi screen and a
+   portrait tablet alike. */
+.widget-page {
+  display: grid;
+  min-height: calc(100dvh / var(--zoom));
+  padding: 16px;
+}
+
+.widget-page .widget-alone {
+  min-width: 0;
+}
+
+.widget-page .one-number {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  margin: 0;
+}
+
+.widget-page .one-number-body {
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.widget-page .one-number-value {
+  font-size: min(calc((100vw - 32px) / (var(--chars, 4) * 0.62) / var(--zoom)), calc(42vh / var(--zoom)));
+  max-width: 100%;
+}
+
+.widget-page .one-number-label {
+  font-size: min(calc(5vw / var(--zoom)), calc(7vh / var(--zoom)));
+}
+
+.widget-alone-missing {
+  align-self: center;
+  justify-self: center;
+  color: var(--ink-2);
 }

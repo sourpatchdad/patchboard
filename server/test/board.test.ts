@@ -26,3 +26,25 @@ test('an apps widget can show only some groups, stored one per line', () => {
   const apps = (v as { board: { widgets: { type: string; config?: Record<string, string> }[] } }).board.widgets.find((w) => w.type === 'apps');
   assert.equal(apps?.config?.groups, 'Watch & Listen\nInfrastructure');
 });
+
+test('a widget shows compact or as one number only where it can, and the number must be one it has', async () => {
+  const { NUMBERS, viewsOf } = await import('../../shared/board.ts');
+  const v = validateBoard({
+    widgets: [
+      { id: 'attention', type: 'attention', size: 'm' },
+      { id: 'vitals', type: 'vitals', size: 's', config: { view: 'number', number: 'memory' } },
+      { id: 'speed', type: 'speed', size: 's', config: { view: 'number', number: 'nonsense' } },
+      { id: 'upcoming', type: 'upcoming', size: 'm', config: { view: 'compact', number: 'cpu' } },
+      { id: 'bookmarks', type: 'bookmarks', size: 'm', config: { view: 'number' } },
+      { id: 'notes', type: 'notes', size: 's', config: { view: 'compact' } },
+    ],
+  });
+  assert.ok('board' in v);
+  const cfg = Object.fromEntries(v.board.widgets.map((w) => [w.id, w.config]));
+  assert.deepEqual(cfg.vitals, { view: 'number', number: 'memory' });
+  assert.deepEqual(cfg.speed, { view: 'number' }, 'an unknown number falls back to the default');
+  assert.deepEqual(cfg.upcoming, { view: 'compact' }, 'which number only matters for one number');
+  assert.equal(cfg.bookmarks, undefined, 'bookmarks has no number');
+  assert.equal(cfg.notes, undefined, 'notes has no list to shorten');
+  for (const type of Object.keys(NUMBERS)) assert.ok(viewsOf(type as never).some(([x]) => x === 'number'), type);
+});

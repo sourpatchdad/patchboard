@@ -19,12 +19,15 @@ import {
   HOME_ID,
   MIN_COLUMN_PX,
   noteKey,
+  NUMBERS,
   spanOf,
   STARTERS,
+  viewsOf,
   WIDGET_INFO,
   type Widget,
   type WidgetType,
 } from '../../shared/board.ts';
+import { NumberView } from './OneNumber.tsx';
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
@@ -48,7 +51,7 @@ import { useAppearance } from '../lib/appearance.ts';
 import { useLanding } from '../lib/landing.ts';
 import { deg, pct, size, uptime, weatherText } from '../lib/format.ts';
 import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.ts';
-import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
+import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
 import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
@@ -798,7 +801,7 @@ function Cell(props: {
   return (
     <div
       {...(props.bind ?? {})}
-      className={`cell ${props.dragging ? 'is-dragging' : ''} ${resizing ? 'is-resizing' : ''}`}
+      className={`cell ${props.dragging ? 'is-dragging' : ''} ${resizing ? 'is-resizing' : ''} ${w.config?.view ? `is-${w.config.view}` : ''}`}
       data-span={props.span}
       data-type={w.type}
       id={`w-${w.id}`}
@@ -885,16 +888,7 @@ function Cell(props: {
           </span>
         )}
         <div className="cell-body" inert={editing || undefined} style={{ minHeight: props.alignedHeight ? `${props.alignedHeight - 24}px` : undefined, '--fit-poster-height': props.posterHeight ? `${props.posterHeight}px` : undefined } as CSSProperties}>
-          <WidgetCtx.Provider
-            value={{
-              title: w.config?.title,
-              limit: props.limit ?? (w.config?.limit ? Number(w.config.limit) : undefined),
-              style: w.config?.style,
-              days: w.config?.days ? Number(w.config.days) : undefined,
-              editing,
-              configure: props.onQuick,
-            }}
-          >
+          <WidgetCtx.Provider value={{ ...settingsOf(w, props.limit), editing, configure: props.onQuick }}>
             {props.children}
           </WidgetCtx.Provider>
         </div>
@@ -903,10 +897,42 @@ function Cell(props: {
   );
 }
 
+/** What a widget's own settings ask of what's inside it. */
+function settingsOf(w: Widget, fitLimit?: number) {
+  const own = fitLimit ?? (w.config?.limit ? Number(w.config.limit) : undefined);
+  return {
+    title: w.config?.title,
+    // Compact: the top three, whatever the widget's own count.
+    limit: w.config?.view === 'compact' ? Math.min(3, own ?? 3) : own,
+    style: w.config?.style,
+    view: w.config?.view,
+    number: w.config?.number,
+    days: w.config?.days ? Number(w.config.days) : undefined,
+  };
+}
+
+/** One widget on its own, filling a page: for a small screen that shows only it. */
+export function WidgetAlone({ boardId, widgetId }: { boardId: string; widgetId: string }) {
+  const { board, missing } = useBoard(boardId);
+  const now = useNow(15_000);
+  const w = board?.widgets.find((x) => x.id === widgetId);
+  if (missing || (board && !w)) return <p className="widget-alone-missing">{t("This widget isn't on its board any more. Pick another in Settings, Devices.")}</p>;
+  if (!w) return null;
+  return (
+    <div className={`widget-alone cell-body ${w.config?.view ? `is-${w.config.view}` : ''}`}>
+      <WidgetCtx.Provider value={settingsOf(w)}>
+        <WidgetBody w={w} board={boardId} now={now} saved />
+      </WidgetCtx.Provider>
+    </div>
+  );
+}
+
 function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Widget; board: string; now: number; saved: boolean; editing?: boolean; downloadsOnBoard?: boolean }) {
   const { snap } = useStore();
   const { homeApps, homeStatusSize } = useAppearance();
   if (!snap) return null;
+  // One number: every widget in NUMBERS but Markets, which fetches its own prices.
+  if (w.config?.view === 'number' && NUMBERS[w.type] && w.type !== 'markets') return <NumberView w={w} now={now} name={WIDGET_INFO[w.type].name} />;
   switch (w.type) {
     case 'apps':
       return (w.config?.style || homeApps) === 'patchbay' ? <PatchRow names={w.config?.names === 'show'} groups={pickedGroups(w.config?.groups)} /> : <AppTiles legend groups={pickedGroups(w.config?.groups)} />;
@@ -1495,7 +1521,31 @@ function SettingsDrawer({
               </span>
             </div>
           )}
-          {o.styles && (
+          {viewsOf(w.type).length > 0 && (
+            <div className="ws-row">
+              <span>Show as</span>
+              <span className="seg" role="group" aria-label="Show as">
+                {viewsOf(w.type).map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={(cfg.view ?? '') === v} onClick={() => set('view', v)}>
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
+          {cfg.view === 'number' && (NUMBERS[w.type]?.length ?? 0) > 1 && (
+            <label>
+              <span>Which number</span>
+              <select className="field" value={cfg.number ?? NUMBERS[w.type]![0][0]} onChange={(e) => set('number', e.target.value)}>
+                {NUMBERS[w.type]!.map(([v, label]) => (
+                  <option key={v} value={v}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {o.styles && cfg.view !== 'number' && (
             <div className="ws-row">
               <span>Look</span>
               <span className="seg" role="group" aria-label="Look">

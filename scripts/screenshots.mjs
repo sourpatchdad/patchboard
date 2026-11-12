@@ -170,6 +170,22 @@ try {
     await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), device);
     for (const id of Object.values(made)) await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);
   }
+  // One number: a board of them, and one widget alone on a 480 by 320 Pi screen.
+  {
+    const n = (id, type, number, extra = {}) => ({ id, type, size: 's', config: { view: 'number', ...(number ? { number } : {}), ...extra } });
+    const board = { name: 'Numbers', columns: 4, widgets: [{ id: 'attention', type: 'attention', size: 'm', config: { style: 'card', view: 'number' } }, n('vitals', 'vitals', 'cpu'), n('weather', 'weather', 'now'), n('markets', 'markets', '', { symbols: 'Bitcoin=BTC' }), n('speed', 'speed', 'down'), n('dns', 'dns', 'blocked'), n('countdown', 'countdown', '', { events: 'New Year=01-01' }), n('power', 'power', 'charge')] };
+    const id = await page.evaluate(async (body) => (await (await fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(body) })).json()).id, board);
+    await go(`/b/${id}`);
+    await settle(page, 2500);
+    await shoot(page, 'one-number');
+    const pi = await context(browser, { viewport: { width: 480, height: 320 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+    const pp = await pi.newPage();
+    await pp.goto(`${demo.base}/w/${id}/markets`);
+    await settle(pp, 3000);
+    await shoot(pp, 'one-widget');
+    await pi.close();
+    await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);
+  }
   await go('/stacks');
   await shoot(page, 'stacks');
   await go('/c/unpackerr');
