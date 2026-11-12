@@ -57,6 +57,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # A signed record of how the image was built, and a list of what's in it.
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
       # The slim image: no Docker CLI. onlatest=true matters: without it the
@@ -80,6 +83,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-slim.outputs.tags }}
           labels: ${{ steps.meta-slim.outputs.labels }}
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

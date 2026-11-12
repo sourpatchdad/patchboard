@@ -163,4 +163,11 @@ container creation, which comes close to full access.
 
 ## Reporting a vulnerability
 
-Open a private security advisory on the GitHub repository.
+[Report it privately](https://github.com/sourpatchdad/patchboard/security/advisories/new)
+from the repository's Security tab, not in a public issue. You'll hear back
+within a few days, and the fix ships in a release with credit to you unless
+you'd rather not.
+
+Release images carry build provenance and a software bill of materials:
+`docker buildx imagetools inspect ghcr.io/sourpatchdad/patchboard:latest
+--format '{{ json .Provenance }}'` shows how an image was built.

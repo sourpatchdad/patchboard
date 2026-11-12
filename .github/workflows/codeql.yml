@@ -1,0 +1,29 @@
+name: CodeQL
+
+# GitHub's code scanning: reads the server and the browser code for injection,
+# unsafe redirects, path traversal and the like, on every push to main and
+# dev, every pull request, and weekly. Findings land in the Security tab.
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  schedule:
+    - cron: '41 5 * * 3'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v4

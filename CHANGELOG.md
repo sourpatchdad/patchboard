@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Safer to trust:** release images now carry a signed record of how they
+  were built and a list of what's inside them, and GitHub's code scanning
+  reads every change. Report a security problem privately from the
+  repository's Security tab.
+
 ## 1.8.0 (2026-11-12)
 
 - **Français:** Settings, Look, Language switches the boards, the wall

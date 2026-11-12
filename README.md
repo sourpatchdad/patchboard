@@ -89,6 +89,20 @@ layout, drag to move, drag an edge to resize, and turn on Fit the window to
 trim lists to one screen. Add more boards: one for the TV, one for the rack.
 Five themes come in dark and light, or build a Custom one from three colors.
 
+**Wall screens.** Hang a tablet, an e-ink reader or an e-paper panel and
+set it up from your desk. A household device gets its own pages to swipe
+between (the Monitor, wall boards for the clock and weather, markets, the
+house, cameras or media), turns them by itself if you like, and dims at
+night. Set its screen to E-ink for black on white with a redraw a minute.
+A TRMNL, Inky or ESP32 with no browser fetches the server as a one-bit
+picture instead.
+
+![A clock and weather wall board on a household tablet](docs/screenshots/wall-clock.webp)
+
+**Your language and region.** Dates, times, numbers and prices follow your
+part of the world, from 28 regions. The boards, wall screens and Monitor
+speak French as well as English, and another language is one file.
+
 **Playback.** Hover, focus or tap a playback row for its artwork, details and
 a link to its app, with time left when the service reports it.
 
@@ -150,6 +164,16 @@ Vite. [DESIGN.md](docs/DESIGN.md) records why.
 Demo and screenshot posters come from [TVmaze](https://www.tvmaze.com) and
 Wikipedia and belong to their studios. Demo article photos come from
 Wikimedia Commons under the licenses credited in `server/demo.ts`.
+
+## Star history
+
+<a href="https://www.star-history.com/?repos=sourpatchdad%2Fpatchboard&type=date&logscale=&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=timeline&theme=dark&logscale&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=timeline&logscale&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=sourpatchdad/patchboard&type=timeline&logscale&legend=bottom-right" />
+ </picture>
+</a>
 
 ## License
 
