@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.1 (2026-11-12)
 
 - **Wall tablets pick up updates:** after you update Patchboard, a household
   device loads the new version by itself. Before, it reconnected but kept
