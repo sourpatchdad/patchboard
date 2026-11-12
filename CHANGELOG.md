@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.2 (2026-11-11)
 
 - **Monitor feed:** Unpackerr's status line ("0 failed") no longer counts as
   an error, and Immich lines lose their own date prefix like the rest.
