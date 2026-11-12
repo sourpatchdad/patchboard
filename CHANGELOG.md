@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.3 (2026-11-12)
 
 - **Faster swiping on wall tablets:** a household device draws each of its
   pages once and keeps them, so a swipe shows the next page instead of
