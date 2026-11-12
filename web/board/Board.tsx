@@ -64,6 +64,17 @@ const NONE: Widget[] = [];
 // a blank frame.
 const boardCache = new Map<string, { board: BoardData; custom: boolean }>();
 
+/** What the page around a board needs to know of it: its widget types, and '@wall' for a wall board. */
+export function widgetTypes(board: BoardData, homeStatusSize: string): string[] {
+  return [...board.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)), ...(board.wall ? ['@wall'] : [])];
+}
+
+/** The same, from a board fetched ahead, before it has drawn. */
+export function cachedWidgetTypes(id: string, homeStatusSize: string): string[] {
+  const c = boardCache.get(id);
+  return c ? widgetTypes(c.board, homeStatusSize) : [];
+}
+
 /** Fetch a board ahead of time, so the first visit is as quick as the next. */
 export async function warmBoard(id: string): Promise<void> {
   if (boardCache.has(id)) return;
@@ -330,10 +341,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const { homeApps, homeStatusSize } = useAppearance();
   // An alert that points at a widget (#w-power) lands on it once the board is drawn.
   useLanding(!!board);
-  const types = board?.widgets.map((w) => (w.type === 'attention' && (w.config?.style === 'card' || homeStatusSize === 'hidden') ? 'attention-card' : w.type)).join(',') ?? '';
+  const types = board ? widgetTypes(board, homeStatusSize).join(',') : '';
   useEffect(() => {
-    if (board) onWidgets?.([...types.split(','), ...(board.wall ? ['@wall'] : [])]);
-  }, [types, board?.wall]);
+    if (board) onWidgets?.(types.split(','));
+  }, [types]);
   const [draft, setDraft] = useState<BoardData | null>(null);
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);

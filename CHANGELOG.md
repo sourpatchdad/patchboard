@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Wall boards on a swipe:** a household device fetches every board's layout
+  before it draws the pages out of sight, so the next page shows as a wall
+  board straight away. Before, it could flash the top bar and board tabs for
+  half a second.
+
 ## 1.9.3 (2026-11-12)
 
 - **Faster swiping on wall tablets:** a household device draws each of its

@@ -9,7 +9,7 @@ import { NameForm } from '../components/BrandName.tsx';
 import { useJson } from '../lib/api.ts';
 import type { CatalogAudit, ListeningData } from '../../shared/types.ts';
 import { adoptAll, saveLayout } from '../lib/adopt.ts';
-import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useWidget } from '../board/widget-context.ts';
 import { Link, NavLink, useLocation, useParams } from 'react-router-dom';
 import { PauseButton, useDownloadClients } from '../lib/downloads.tsx';
@@ -28,8 +28,8 @@ import type {
   TruenasData,
   WeatherData,
 } from '../../shared/types.ts';
-import { Board, Vitals } from '../board/Board.tsx';
-import { useAppearance } from '../lib/appearance.ts';
+import { Board, cachedWidgetTypes, Vitals } from '../board/Board.tsx';
+import { getAppearance, useAppearance } from '../lib/appearance.ts';
 import { Empty, Episode, Icon, Ident, Led, Meter, Poster, Section, WithSubject } from '../components/ui.tsx';
 import {
   count,
@@ -58,11 +58,13 @@ export function Home() {
   const { snap } = useStore();
   const { board = HOME_ID } = useParams();
   const now = useNow(15_000);
-  const [widgets, setWidgets] = useState<string[]>([]);
+  // From a board fetched ahead when there is one, so a wall board drawn out
+  // of sight (a household device's next page) is already a wall board.
+  const [widgets, setWidgets] = useState<string[]>(() => cachedWidgetTypes(board, getAppearance().homeStatusSize));
   // A wall board: one status line instead of the header, no tabs, and on a
   // household device no navigation either; swiping moves between pages.
   const wall = widgets.includes('@wall');
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.toggleAttribute('data-wall', wall);
     return () => document.documentElement.removeAttribute('data-wall');
   }, [wall]);

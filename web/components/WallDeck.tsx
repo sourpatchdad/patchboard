@@ -4,11 +4,12 @@
 // a slow tablet seconds. A hidden page keeps its picture and state, stops
 // its timers and listeners, and catches up on new data when it shows.
 
-import { Activity, lazy, Suspense } from 'react';
+import { Activity, lazy, Suspense, useEffect, useState } from 'react';
 import { Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { useStore } from '../lib/store.tsx';
 import { Shell } from './Shell.tsx';
 import { Home } from '../views/Home.tsx';
+import { warmBoard } from '../board/Board.tsx';
 
 const Monitor = lazy(async () => ({ default: (await import('../views/Monitor.tsx')).Monitor }));
 const Server = lazy(async () => ({ default: (await import('../views/Server.tsx')).Server }));
@@ -46,10 +47,18 @@ function Page({ path }: { path: string }) {
 export function Root() {
   const deck = useDeck();
   const { pathname } = useLocation();
+  // A hidden page doesn't fetch, so each board's layout comes first: a
+  // board drawn without it would show as a plain page until it arrived.
+  const key = deck.join(' ');
+  const [warm, setWarm] = useState('');
+  useEffect(() => {
+    if (!key) return;
+    void Promise.all(key.split(' ').map((p) => (p === '/' ? warmBoard('home') : p.startsWith('/b/') ? warmBoard(p.slice(3)) : null))).then(() => setWarm(key));
+  }, [key]);
   if (!deck.includes(pathname)) return <Outlet />;
   return (
     <>
-      {deck.map((p) => (
+      {deck.filter((p) => p === pathname || warm === key).map((p) => (
         <Activity key={p} mode={p === pathname ? 'visible' : 'hidden'}>
           <Page path={p} />
         </Activity>

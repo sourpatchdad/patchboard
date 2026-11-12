@@ -6,7 +6,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store.tsx';
-import { warmBoard } from '../board/Board.tsx';
 import { t } from '../lib/i18n.ts';
 
 // A touch counts as a swipe past this far sideways, and mostly sideways.
@@ -130,25 +129,6 @@ export function WallPages() {
       removeEventListener('keydown', key);
     };
   }, [list.length]);
-
-  // Every page this device turns to, fetched ahead: the code for each page
-  // and each board's layout, so the first swipe is as quick as the tenth.
-  const pagesKey = list.join(' ');
-  useEffect(() => {
-    if (list.length < 2) return;
-    const t = setTimeout(() => {
-      for (const p of list) {
-        if (p.startsWith('/b/')) void warmBoard(p.slice(3));
-        else if (p === '/') void warmBoard('home');
-        else if (p === '/monitor') void import('../views/Monitor.tsx');
-        else if (p === '/server') void import('../views/Server.tsx');
-        else if (p === '/weather') void import('../views/Weather.tsx');
-        else if (p === '/upcoming') void import('../views/Upcoming.tsx');
-        else if (p === '/reading') void import('../views/Feeds.tsx');
-      }
-    }, 1500);
-    return () => clearTimeout(t);
-  }, [pagesKey]);
 
   // Turning by itself, held off for a while after a touch.
   useEffect(() => {
