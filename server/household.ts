@@ -116,6 +116,20 @@ export function householdOf(c: Context): ({ id: string; name: string } & DeviceV
 }
 
 /** Opening a household link: the browser keeps the token as an HttpOnly cookie. */
+/** The device a link token belongs to, for a screen that sends no cookie (the panel picture). */
+export function deviceByToken(token: string): { id: string; name: string } | null {
+  const hash = sha(token);
+  const entry = Object.entries(devices()).find(([, d]) => d.hash === hash);
+  if (!entry) return null;
+  const [id, d] = entry;
+  const all = devices();
+  if (!d.seen || Date.now() - d.seen > SEEN_EVERY) {
+    all[id].seen = Date.now();
+    kvSet('household', all);
+  }
+  return { id, name: d.name };
+}
+
 export function joinHousehold(c: Context, token: string): string | null {
   const hash = sha(token);
   const entry = Object.entries(devices()).find(([, d]) => d.hash === hash);

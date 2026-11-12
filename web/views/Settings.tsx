@@ -937,6 +937,11 @@ function Household() {
               {copied ? 'Copied' : 'Copy link'}
             </button>
           </div>
+          <p className="settings-note">
+            For an e-paper panel with no browser (TRMNL, Inky, an ESP32), point it at this picture instead. Add <code>?w=</code> and <code>?h=</code> for its size,
+            or use <code>.bmp</code> in place of <code>.png</code>:
+          </p>
+          <input className="field mono household-url" readOnly value={made.url.replace('/join/', '/panel/') + '.png'} aria-label={`Panel picture for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
         </div>
       )}
       {list.length > 0 && (

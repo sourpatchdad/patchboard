@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **A picture for panels with no browser:** a TRMNL, an Inky or an ESP32
+  e-paper screen can show the server as a one-bit PNG or BMP: the status
+  and what needs you, the weather, and CPU, memory and the pool. Make a
+  household device for it and Settings shows the picture's address beside
+  the link; `?w=` and `?h=` set the size. It's drawn on the server in a
+  bitmap font, with nothing added to the image.
+
 ## 1.7.0 (2026-11-12)
 
 - **Wall tablets swipe between pages:** give a household device more pages

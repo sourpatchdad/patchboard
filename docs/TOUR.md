@@ -76,6 +76,16 @@ marked by shape, and a redraw once a minute rather than with every change.
 E-ink needs a current browser, as on Boox and other Android readers; a
 Kindle e-reader's built-in browser is too old to run Patchboard.
 
+**A panel with no browser:** a TRMNL, a Pimoroni Inky, or an ESP32 with an
+e-paper screen can show the server as a picture. Make a household device for
+it, and Settings gives you its picture address next to the link:
+`/panel/<token>.png`, or `.bmp`. Add `?w=800&h=480` for the panel's size,
+`?units=c` or `f`, `?clock=24`, and `?invert=1` for white on black. The
+picture is one bit per pixel: the status and what needs you, the weather,
+and CPU, memory and the pool, drawn in the Spleen bitmap font.
+
+![The server as an 800 by 480 picture for an e-paper panel](screenshots/panel.png)
+
 ![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
 
 ![A clock and weather wall board on a household tablet, with page dots](screenshots/wall-clock.webp)

@@ -162,6 +162,10 @@ try {
     await settle(wp, 3000);
     await shoot(wp, 'wall-markets');
     await wall.close();
+    // The same device's picture, as an e-paper panel with no browser fetches it.
+    const pic = await fetch(`${demo.base}${link.replace('/join/', '/panel/')}.png`);
+    writeFileSync(join(OUT, 'panel.png'), Buffer.from(await pic.arrayBuffer()));
+    console.log('  panel.png');
     // Leave the demo as it was for the shots after this.
     await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), device);
     for (const id of Object.values(made)) await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);

@@ -81,7 +81,8 @@ import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
-import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice, setHouseholdView } from './household.ts';
+import { bmp, drawPanel, png } from './panel.ts';
+import { addHouseholdDevice, deviceByToken, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice, setHouseholdView } from './household.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
@@ -1627,6 +1628,30 @@ app.get('/join/:token', (c) => {
   // leave the browser signed in with full access.
   logout(c);
   return c.redirect('/', 302);
+});
+
+// The server as a picture for an e-paper panel (TRMNL, Inky, an ESP32): a
+// household device's link token opens it, since such a screen keeps no
+// cookie. /panel/<token>.png or .bmp; ?w= and ?h= for the panel's size,
+// ?units=c or f, ?clock=24, ?invert=1.
+app.get('/panel/:file', (c) => {
+  c.header('Cache-Control', 'no-store');
+  const m = /^([\w-]{20,100})\.(png|bmp)$/.exec(c.req.param('file'));
+  const device = m ? deviceByToken(m[1]) : null;
+  if (!m || !device) return c.text('No such panel', 404);
+  const num = (v: string | undefined, lo: number, hi: number, d: number) => Math.min(hi, Math.max(lo, Math.round(Number(v) || d)));
+  const w = num(c.req.query('w'), 200, 2560, 800);
+  const h = num(c.req.query('h'), 120, 2560, 480);
+  const american = (process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? '').startsWith('America/');
+  const pic = drawPanel(hub.snapshot(), {
+    w,
+    h,
+    f: (c.req.query('units') ?? (american ? 'f' : 'c')) === 'f',
+    clock24: (c.req.query('clock') ?? (american ? '12' : '24')) === '24',
+    invert: c.req.query('invert') === '1',
+  });
+  const body = m[2] === 'png' ? png(pic) : bmp(pic);
+  return c.body(new Uint8Array(body), 200, { 'Content-Type': m[2] === 'png' ? 'image/png' : 'image/bmp' });
 });
 
 // Static client and SPA fallback.
