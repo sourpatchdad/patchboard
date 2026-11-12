@@ -78,7 +78,8 @@ test('Jellyfin: subscribes, keeps the line alive, and passes on only changes', a
   const stop = a.live!({ update: (d) => updates.push(d as { streams: Stream[] }), refresh: () => {} });
   await until(() => lines.some((l) => l.path.startsWith('/socket')));
   const line = lines.find((l) => l.path.startsWith('/socket'))!;
-  assert.match(line.path, /api_key=live-key/);
+  // ApiKey: Jellyfin 10.11 refuses the old api_key spelling.
+  assert.match(line.path, /[?&]ApiKey=live-key/);
   await until(() => line.got.length > 0);
   assert.deepEqual(JSON.parse(line.got[0]), { MessageType: 'SessionsStart', Data: '0,2000' });
 

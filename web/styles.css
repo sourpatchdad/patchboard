@@ -11445,11 +11445,12 @@ a.jack .jack-socket {
   --ink-2: #9aa7af;
   --ink-3: #74828b;
   --head: #eef4f7;
-  --accent: #4fd1e0;
+  /* Monochrome: grays carry everything healthy, so amber and red are the only color. */
+  --accent: #8e999f;
   --warn: #e3a253;
   --crit: #ef6b5e;
-  --mon-up: #1f6670;
-  --mon-off: #26323a;
+  --mon-up: #3a454b;
+  --mon-off: #1a2125;
   position: fixed;
   inset: 0;
   display: grid;
@@ -11498,7 +11499,7 @@ a.jack .jack-socket {
 
 .mon-state {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--ink-2);
 }
 
 .mon-clock {
@@ -11535,9 +11536,20 @@ a.jack .jack-socket {
   overflow: visible;
 }
 
+.mon-chart.is-thin {
+  height: 18px;
+  margin-top: 0;
+}
+
+/* The pool's month: a solid hairline, not the dashed second line. */
+.is-thin .is-quiet .mon-line {
+  stroke-dasharray: none;
+  stroke-width: 1;
+}
+
 .mon-area {
   fill: var(--accent);
-  opacity: 0.12;
+  opacity: 0.07;
 }
 
 .mon-line {
@@ -11625,19 +11637,20 @@ a.jack .jack-socket {
 
 /* CPU and memory as a hundred squares each; they fade as the load moves. */
 .mon-waffles {
-  display: flex;
-  gap: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
 .mon-waffle100 {
   display: grid;
-  grid-template-columns: repeat(10, 9px);
+  grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 2px;
+  max-width: 150px;
 }
 
 .mon-waffle100 i {
-  width: 9px;
-  height: 9px;
+  aspect-ratio: 1;
   background: var(--mon-off);
   transition: background-color 600ms var(--ease-out, ease-out);
 }
@@ -11737,7 +11750,7 @@ a.jack .jack-socket {
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  line-height: 13px;
+  line-height: 12px;
 }
 
 .mon-squares {
@@ -11766,9 +11779,28 @@ a.jack .jack-socket {
   white-space: nowrap;
 }
 
-.mon-week .heatmap,
-.mon-week {
+/* The CPU week, compact: small square cells, no legend. */
+.monitor .heat {
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.monitor :is(.heat-row, .heat-hours) {
+  grid-template-columns: 2.4em repeat(24, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.monitor :is(.heat-hours span, .heat-day) {
   font-size: 10px;
+}
+
+.monitor .heat .hq {
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.monitor .heat-legend {
+  display: none;
 }
 
 .mon-feed {
@@ -11790,7 +11822,7 @@ a.jack .jack-socket {
 
 .mon-lines li {
   display: grid;
-  grid-template-columns: 5.4em minmax(0, 7.5em) minmax(0, 1fr);
+  grid-template-columns: 5.4em minmax(0, 7.5em) minmax(0, 1fr) auto;
   gap: 8px;
   padding: 1px 0;
   white-space: nowrap;
@@ -11806,7 +11838,12 @@ a.jack .jack-socket {
 }
 
 .mon-who {
-  color: var(--accent);
+  color: var(--ink-2);
+}
+
+/* How many times the same message came, kept to one line. */
+.mon-count {
+  color: var(--ink-3);
 }
 
 .lvl-warn .mon-lvl {
@@ -11818,7 +11855,7 @@ a.jack .jack-socket {
 }
 
 .mon-cursor {
-  color: var(--accent);
+  color: var(--ink-3);
   animation: mon-blink 1.1s steps(1) infinite;
 }
 
@@ -11853,13 +11890,8 @@ a.jack .jack-socket {
   }
 
   .mon-waffle100 {
-    grid-template-columns: repeat(10, 15px);
+    max-width: 230px;
     gap: 3px;
-  }
-
-  .mon-waffle100 i {
-    width: 15px;
-    height: 15px;
   }
 
   .mon-fleet i {

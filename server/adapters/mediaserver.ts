@@ -185,9 +185,12 @@ export function mediaServerAdapter(kind: MediaKind): Adapter<MediaServerData> {
     live(on) {
       const { url, key } = settings(kind);
       let alive: ReturnType<typeof setInterval> | undefined;
-      // Jellyfin's line is /socket, Emby's /embywebsocket; both take the key in the address.
+      // Jellyfin's line is /socket, Emby's /embywebsocket; both take the key in
+      // the address. Jellyfin 10.11 turned off the old api_key spelling by
+      // default and logs "Token is required" on every try, so it gets ApiKey.
       const path = kind === 'jellyfin' ? '/socket' : '/embywebsocket';
-      return keepSocket(`${wsUrl(url)}${path}?api_key=${encodeURIComponent(key)}&deviceId=patchboard`, {
+      const param = kind === 'jellyfin' ? 'ApiKey' : 'api_key';
+      return keepSocket(`${wsUrl(url)}${path}?${param}=${encodeURIComponent(key)}&deviceId=patchboard`, {
         open(send) {
           // Sessions now, then every 2 seconds; only changes go further.
           send(JSON.stringify({ MessageType: 'SessionsStart', Data: '0,2000' }));

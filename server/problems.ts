@@ -21,9 +21,15 @@ const ERROR = /\b(?:error|err|fatal|panic|exception|critical|crit|failed|failure
 const WARN = /\b(?:warn|warning|wrn)\b|level=warn/i;
 const FINE = /\b(?:no|0|zero) (?:errors?|warnings?|failures?)\b|\b(?:errors?|warnings?|failures?|failed)[=:]\s*0\b/i;
 
+// A Python traceback's frame lines name files, not problems; its last line
+// ("ValueError: ...") is the one that counts.
+const FRAME = /^\s*(?:File "[^"]+", line \d+|Traceback \(most recent call last\)|\^+\s*$|at [\w$.<>]+ \()/;
+
 export function classify(text: string): ProblemLine['level'] | null {
+  if (FRAME.test(text.replace(/^\s*\[?\d{4}[-/]\d\d[-/]\d\d[ T][\d:.,]+\]?\s*/, ''))) return null;
   if (FINE.test(text) && !/\b(?:fatal|panic|exception)\b/i.test(text)) return null;
-  if (ERROR.test(text)) return 'error';
+  // Python and Java name the error itself: ConnectionError, IOException. Case-sensitive, so "terror" isn't one.
+  if (ERROR.test(text) || /\b\w+(?:Error|Exception)\b/.test(text)) return 'error';
   if (WARN.test(text)) return 'warn';
   return null;
 }

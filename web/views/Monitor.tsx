@@ -11,7 +11,7 @@ import { HourHeatmap } from '../components/Squares.tsx';
 import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
 import { needsYou } from '../lib/attention.ts';
-import { pct, size, speed, temp, uptime } from '../lib/format.ts';
+import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 
 interface FeedLine {
@@ -20,6 +20,8 @@ interface FeedLine {
   level: 'warn' | 'error' | 'event';
   who: string;
   text: string;
+  /** The same message again: how many times, shown once. */
+  count?: number;
 }
 
 const EVENT_WORDS: Record<ChangeEvent['kind'], string> = {
@@ -43,7 +45,8 @@ export function Monitor() {
   const sys = sysState.data;
   const nas = nasState.data;
   const { data: backups } = useSource<BackupsData>('backups');
-  const h = useHistory(['cpu', 'mem.used'], 2, POINTS, 5 * 60_000);
+  const h = useHistory(['cpu', 'mem.used', 'net.rx', 'net.tx'], 2, POINTS, 5 * 60_000);
+  const poolHistory = useHistory(['pool.used'], 24 * 30, 120, 30 * 60_000);
   const week = useHistory(['cpu'], 24 * 7, 1000, 10 * 60_000);
   const problems = useProblemFeed();
 
@@ -55,8 +58,8 @@ export function Monitor() {
   const net = nas?.net?.reduce((t, n) => ({ rx: t.rx + n.rx, tx: t.tx + n.tx }), { rx: 0, tx: 0 });
   const cpuLine = useLive(h.cpu, sys ? sys.cpuPct : null, sysState.state?.updatedAt);
   const memLine = useLive(h['mem.used'], mem ? memUsed : null, sysState.state?.updatedAt);
-  const rxLine = useLive(undefined, net ? net.rx : null, nasState.state?.updatedAt);
-  const txLine = useLive(undefined, net ? net.tx : null, nasState.state?.updatedAt);
+  const rxLine = useLive(h['net.rx'], net ? net.rx : null, nasState.state?.updatedAt);
+  const txLine = useLive(h['net.tx'], net ? net.tx : null, nasState.state?.updatedAt);
 
   const events = useMemo<FeedLine[]>(
     () =>
@@ -91,7 +94,7 @@ export function Monitor() {
           {host.toLowerCase()}
         </Link>
         <span className="mon-dim">{nas?.version ? nas.version.replace(/^TrueNAS-/, 'truenas ').toLowerCase() : ''}</span>
-        {sys && <span className="mon-dim">up {uptime(sys.uptimeSec)}</span>}
+        {sys && <span className="mon-dim">up {ticking(sys.uptimeSec + Math.max(0, (now - (sysState.state?.updatedAt ?? now)) / 1000))}</span>}
         {sys && <span className="mon-dim">load {sys.load.map((l) => l.toFixed(2)).join(' ')}</span>}
         <span className={`mon-state ${trouble.some((a) => a.level === 'critical') ? 'is-crit' : trouble.length ? 'is-warn' : ''}`} role="status">
           {trouble.length ? `${trouble.length} need${trouble.length === 1 ? 's' : ''} you` : 'all quiet'}
@@ -117,10 +120,11 @@ export function Monitor() {
               <b style={{ left: `${limits.poolCritPct}%` }} />
             </div>
           )}
+          {pool && (poolHistory['pool.used']?.length ?? 0) > 2 && <LiveChart lines={[{ points: poolHistory['pool.used']!, quiet: true }]} label="Pool used, last 30 days" thin />}
         </Tile>
       </section>
 
-      <section className="mon-col" aria-label="Load, fleet and disks">
+      <section className="mon-col" aria-label="Load, the week and disks">
         {sys && (
           <div className="mon-waffles">
             <div>
@@ -141,12 +145,9 @@ export function Monitor() {
             )}
           </div>
         )}
-        <div className="mon-block">
-          <p className="mon-label">
-            fleet <span className="mon-num">{running}</span>
-            <span className="mon-dim">/{containers.length} running</span>
-          </p>
-          <Fleet containers={containers} updates={snap.updates} />
+        <div className="mon-block mon-week">
+          <p className="mon-label">cpu by hour, 7 days</p>
+          <HourHeatmap series={week.cpu} label="CPU by hour over the last seven days" />
         </div>
         {nas && nas.disks.length > 0 && (
           <div className="mon-block">
@@ -169,7 +170,7 @@ export function Monitor() {
         )}
       </section>
 
-      <section className="mon-col" aria-label="Backups and the week">
+      <section className="mon-col" aria-label="Backups, cloud sync and the fleet">
         {backups && (
           <div className="mon-block">
             <p className="mon-label">backups, 14 nights</p>
@@ -193,9 +194,12 @@ export function Monitor() {
             </ul>
           </div>
         )}
-        <div className="mon-block mon-week">
-          <p className="mon-label">cpu by hour, 7 days</p>
-          <HourHeatmap series={week.cpu} label="CPU by hour over the last seven days" />
+        <div className="mon-block">
+          <p className="mon-label">
+            fleet <span className="mon-num">{running}</span>
+            <span className="mon-dim">/{containers.length} running</span>
+          </p>
+          <Fleet containers={containers} updates={snap.updates} />
         </div>
       </section>
 
@@ -210,6 +214,7 @@ export function Monitor() {
                 <span className="mon-lvl">{l.level === 'error' ? 'err ' : l.level === 'warn' ? 'warn ' : ''}</span>
                 {l.text}
               </span>
+              <span className="mon-count">{l.count && l.count > 1 ? `×${l.count}` : ''}</span>
             </li>
           ))}
           <li className="mon-cursor" aria-hidden>
@@ -238,6 +243,14 @@ function Waffle({ parts, label }: { parts: { pct: number; tone: string }[]; labe
       ))}
     </div>
   );
+}
+
+/** Uptime down to the second: "68d 07:12:04". */
+function ticking(sec: number): string {
+  const s = Math.floor(sec);
+  const d = Math.floor(s / 86_400);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d ? `${d}d ` : ''}${pad(Math.floor((s % 86_400) / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 }
 
 function Tile({ label, value, note, tone = '', children }: { label: string; value: string; note?: string; tone?: string; children?: React.ReactNode }) {
@@ -269,7 +282,7 @@ function useLive(history: Series | undefined, value: number | null, updatedAt: n
 }
 
 /** A filled line, scaled to `max`; a second, quieter line for comparisons (network out). */
-function LiveChart({ lines, max, label }: { lines: { points: Series; quiet?: boolean }[]; max?: number; label: string }) {
+function LiveChart({ lines, max, label, thin }: { lines: { points: Series; quiet?: boolean }[]; max?: number; label: string; thin?: boolean }) {
   const W = 100;
   const H = 36;
   const top = max ?? Math.max(1, ...lines.flatMap((l) => l.points.map((p) => p[1])));
@@ -280,7 +293,7 @@ function LiveChart({ lines, max, label }: { lines: { points: Series; quiet?: boo
     return pts.map((p, i) => `${i ? 'L' : 'M'}${(((p[0] - t0) / span) * W).toFixed(2)},${(H - Math.min(1, p[1] / top) * (H - 2) - 1).toFixed(2)}`).join(' ');
   };
   return (
-    <svg className="mon-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
+    <svg className={`mon-chart ${thin ? 'is-thin' : ''}`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
       {lines.map((l, i) => {
         const d = path(l.points);
         if (!d) return null;
@@ -343,19 +356,49 @@ function useProblemFeed(): FeedLine[] {
     const es = new EventSource('/api/monitor/feed');
     es.onmessage = (m) => {
       const l = JSON.parse(m.data as string) as { at: number; container: string; level: 'warn' | 'error'; text: string };
-      setLines((prev) => [...prev, { key: `p${n.current++}`, at: l.at, level: l.level, who: l.container, text: plainLine(l.text, l.container) }].slice(-120));
+      const text = plainLine(l.text, l.container);
+      const same = shape(l.container, text);
+      setLines((prev) => {
+        // The same message again within ten minutes: one line, counted, moved to now.
+        const i = prev.findIndex((p) => p.at > l.at - 10 * 60_000 && shape(p.who, p.text) === same);
+        if (i >= 0) {
+          const hit = prev[i];
+          return [...prev.slice(0, i), ...prev.slice(i + 1), { ...hit, at: l.at, text, count: (hit.count ?? 1) + 1 }];
+        }
+        return [...prev, { key: `p${n.current++}`, at: l.at, level: l.level, who: l.container, text }].slice(-120);
+      });
     };
     return () => es.close();
   }, []);
   return lines;
 }
 
-/** Apps open their lines with their own time, name and level; the feed shows those in its own columns. */
+const DATE = /^\s*\[?\d{4}[-/]\d\d[-/]\d\d[ T][\d:.,]+(?:Z|[+-]\d\d:?\d\d)?\]?\s*/;
+const TIME = /^\[?\d\d:\d\d:\d\d(?:[.,]\d+)?\]?\s*/;
+const LEVEL = /^\[?(?:warn(?:ing)?|wrn|err(?:or)?|fatal|crit(?:ical)?|inf(?:o)?|dbg|debug)\]?:?\s+/i;
+const PID = /^\[\d+\]\s*/;
+// nginx: "23#23: *1234 "
+const NGINX = /^\d+#\d+:\s*(?:\*\d+\s*)?/;
+
+/** Apps open their lines with their own time, name, level and process numbers; the feed has columns for those. */
 function plainLine(text: string, container: string): string {
-  return text
-    .replace(/^\s*\[?\d{4}-\d\d-\d\d[ T][\d:.,]+Z?\]?\s*/, '')
-    .replace(/^\[\d\d:\d\d:\d\d\]\s*/, '')
-    .replace(new RegExp(`^\\[${container.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\s*`, 'i'), '')
-    .replace(/^\[?(?:warn(?:ing)?|wrn|err(?:or)?|fatal|crit(?:ical)?|inf(?:o)?)\]?:?\s+/i, '')
-    .replace(/^\[\d+\]\s*/, '');
+  const name = new RegExp(`^\\[?${container.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]?:?\\s*`, 'i');
+  let t = text;
+  // Prefixes come in any order and some apps stack them, so peel until nothing changes.
+  for (let pass = 0; pass < 5; pass++) {
+    const before = t;
+    t = t.replace(DATE, '').replace(TIME, '').replace(name, '').replace(LEVEL, '').replace(PID, '').replace(NGINX, '');
+    if (t === before) break;
+  }
+  return t.trim();
+}
+
+/** A message without its numbers, ids and quoted values: two lines with the same shape are the same news. */
+function shape(who: string, text: string): string {
+  const bare = text
+    .toLowerCase()
+    .replace(/"[^"]*"|'[^']*'/g, '"')
+    .replace(/[0-9a-f]{8,}|\d+(?:[.,:]\d+)*/g, '#')
+    .slice(0, 90);
+  return `${who}|${bare}`;
 }

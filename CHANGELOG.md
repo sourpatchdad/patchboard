@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **Monitor:** quiet grays now carry everything healthy, so only amber and
+  red stand out. CPU and memory waffles and the CPU week sit together on the
+  left, backups, cloud sync and the fleet in the middle. Uptime ticks by the
+  second, the network line starts with two hours of history, and the pool
+  shows its last 30 days.
+- **A calmer feed:** the same message from the same app shows once, with a
+  count, and apps' own dates, levels and process numbers come off the front.
+  A Python crash counts once, by its last line, and errors named like
+  `ConnectionError` count as errors.
+- **Fixes:** Jellyfin 10.11's live playback works again: Patchboard sends
+  its key the way 10.11 expects, which also stops "Token is required" in
+  Jellyfin's log. Goodreads, Patchboard and Tailnet keep their capital
+  letters in setup messages.
+
 ## 1.3.0 (2026-11-11)
 
 - **Monitor:** the server on one full screen for a tablet on the wall, at

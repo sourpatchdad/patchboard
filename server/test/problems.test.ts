@@ -13,6 +13,10 @@ test('only lines that say something went wrong count, and "no errors" is not one
     assert.equal(classify(fine), null, fine);
   }
   assert.equal(classify('panic: runtime error, 0 errors before this'), 'error', 'a panic still counts');
+  // A Python traceback counts once: its frames name files, its last line names the error.
+  assert.equal(classify('Traceback (most recent call last):'), null);
+  assert.equal(classify('  File "/app/.venv/lib/python3.12/site-packages/errors.py", line 41, in raise_for_error'), null);
+  assert.equal(classify('requests.exceptions.ConnectionError: Max retries exceeded'), 'error');
 });
 
 test('the feed follows running containers, masks keys, keeps a backlog, and holds a flood back', async () => {

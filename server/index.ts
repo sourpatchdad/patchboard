@@ -837,7 +837,7 @@ app.post('/api/setup/integrations/:id/test', async (c) => {
 /** "Fill in the address and API key first.": the fields' own names, not environment variables. */
 function fillIn(gaps: string[]): string {
   // "Address" reads "the address"; a name (Goodreads, Patchboard) keeps its capital.
-  const names = [...new Set(gaps.map((g) => fieldLabel(g)).map((l) => (/^(Goodreads|Patchboard|Tailnet)/.test(l) ? l : l.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase()))))];
+  const names = [...new Set(gaps.map((g) => fieldLabel(g)).map((l) => (/^(Goodreads|Patchboard|Tailnet)\b/.test(l) ? l : l.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase()))))];
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
   return `Fill in the ${list} first.`;
 }

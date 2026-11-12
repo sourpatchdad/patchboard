@@ -159,6 +159,11 @@ export class Hub {
         out.push(['mem.arc', sys.mem.arc]);
       }
     }
+    // The host's network, all interfaces together: the Monitor's network line.
+    const live = this.sources.truenas?.ok ? (this.sources.truenas.data as TruenasData) : null;
+    if (live?.net?.length) {
+      out.push(['net.rx', live.net.reduce((n, i) => n + i.rx, 0)], ['net.tx', live.net.reduce((n, i) => n + i.tx, 0)]);
+    }
     const stats = this.sources.stats?.ok ? (this.sources.stats.data as StatsData) : null;
     for (const [name, s] of Object.entries(stats?.containers ?? {})) {
       out.push([`ctr.cpu:${name}`, s.cpu], [`ctr.mem:${name}`, s.memBytes]);
