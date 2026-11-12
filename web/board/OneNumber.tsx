@@ -45,11 +45,12 @@ export function OneNumber({ title, label, reading }: { title: string; label: str
             {reading.value}
           </span>
           <span className="one-number-label">{reading.sub ?? label}</span>
-          {reading.line && reading.line.data.length > 1 && (
-            <span className="one-number-line">
+          {/* Always there, empty when there's no line, so cards in a row end level. */}
+          <span className="one-number-line">
+            {reading.line && reading.line.data.length > 1 && (
               <Spark data={reading.line.data} min={reading.line.min ?? Math.min(...reading.line.data.map((p) => p[1]))} max={reading.line.max ?? Math.max(...reading.line.data.map((p) => p[1]))} height={40} label={reading.line.label} />
-            </span>
-          )}
+            )}
+          </span>
         </div>
       )}
     </Section>

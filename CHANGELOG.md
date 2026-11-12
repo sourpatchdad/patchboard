@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **One number, level in a row:** every number gets the room of the largest
+  and keeps space for its line, so the labels under a row of them sit on one
+  line and the cards end level, whatever the figure's length.
+- **One number on e-ink:** a critical number is underlined and a warning's
+  line is bold, as problems are marked everywhere else on an e-ink screen.
+
 ## 1.11.0 (2026-11-12)
 
 - **Show as, on every widget that has more than one way:** Detailed is the

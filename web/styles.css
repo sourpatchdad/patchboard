@@ -12596,6 +12596,19 @@ html[data-eink] .crit-text {
   text-underline-offset: 3px;
 }
 
+/* One number on e-ink: critical is underlined, and a warning or worse says
+   so in bold under it, as problems are marked everywhere else on paper. */
+html[data-eink] .one-number-body.tone-crit .one-number-value {
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.08em;
+}
+
+html[data-eink] .one-number-body:is(.tone-warn, .tone-crit) .one-number-label {
+  font-weight: 600;
+  color: #000;
+}
+
 /* The Monitor on e-ink: paper, ink, and the waffles in solid black. */
 .monitor.tint-eink {
   --bg: #fff;
@@ -12946,6 +12959,11 @@ html.wall-swipe .widget-page {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  /* Every number gets the room of the largest, sitting on one baseline, so
+     the labels under a row of them line up whatever their length. */
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(28px, calc(100cqi / 2.48), 104px);
 }
 
 .one-number-label {
@@ -12956,6 +12974,7 @@ html.wall-swipe .widget-page {
 /* The line under it stays quiet: a hint of the trend, not a chart to read. */
 .one-number-line {
   display: block;
+  min-height: 40px;
   margin-top: 4px;
   opacity: 0.55;
 }
@@ -13004,8 +13023,14 @@ html.wall-swipe .widget-page {
 }
 
 .widget-page .one-number-value {
+  justify-content: center;
+  min-height: 0;
   font-size: min(calc((100vw - 32px) / (var(--chars, 4) * 0.62) / var(--zoom)), calc(42vh / var(--zoom)));
   max-width: 100%;
+}
+
+.widget-page .one-number-line:empty {
+  display: none;
 }
 
 .widget-page .one-number-label {
