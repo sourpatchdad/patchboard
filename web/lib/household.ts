@@ -1,7 +1,8 @@
 // A household device follows the page set for it in Settings: once when the
 // app starts, and again whenever someone changes it, with nobody touching
-// the device. It also dims through the night hours set for it. Mounted in
-// the page frame and in the Monitor, which sits outside it.
+// the device. It loads the new version after an update, and dims through
+// the night hours set for it. Mounted in the page frame and in the Monitor,
+// which sits outside it.
 
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,6 +11,8 @@ import { useStore } from './store.tsx';
 
 // Shared across both mounts, so a page change isn't applied twice.
 let followed: number | null | undefined;
+// The Patchboard version this page loaded with.
+let loadedWith: string | undefined;
 
 export function useFollowOpens(): void {
   const { snap } = useStore();
@@ -17,6 +20,14 @@ export function useFollowOpens(): void {
   const { pathname } = useLocation();
   const opens = snap?.household?.opens;
   const rev = snap?.household?.rev ?? null;
+  // After an update the device reconnects on its own but would keep running
+  // the old page, so it loads the new one. Nothing is lost: it can't edit.
+  const version = snap?.self?.version;
+  useEffect(() => {
+    if (!snap?.household || !version) return;
+    loadedWith ??= version;
+    if (version !== loadedWith) location.reload();
+  }, [snap?.household, version]);
   useEffect(() => {
     if (!snap?.household) return;
     if (followed === rev) return;

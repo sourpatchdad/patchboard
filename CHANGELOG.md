@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Wall tablets pick up updates:** after you update Patchboard, a household
+  device loads the new version by itself. Before, it reconnected but kept
+  the old page, so a new setting such as the Monitor's Color did nothing
+  until someone reloaded it by hand.
+
 ## 1.6.0 (2026-11-12)
 
 - **Showcase mode:** before you share a screenshot, turn it on in Settings,
