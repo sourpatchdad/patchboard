@@ -4,6 +4,10 @@
 
 - **Monitor feed:** Unpackerr's status line ("0 failed") no longer counts as
   an error, and Immich lines lose their own date prefix like the rest.
+- **Monitor fills the screen:** the left column ends with the busiest
+  containers right now, the middle with what needs you and the containers
+  waiting for an update. Each shows as many rows as fit, and the last one
+  fades instead of being cut in half.
 
 ## 1.3.1 (2026-11-11)
 

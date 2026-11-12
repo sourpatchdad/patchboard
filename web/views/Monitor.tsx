@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import type { BackupRun, BackupsData, ChangeEvent, Container, Series, SystemData, TruenasData } from '../../shared/types.ts';
+import type { BackupRun, BackupsData, ChangeEvent, Container, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { HourHeatmap } from '../components/Squares.tsx';
 import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
@@ -81,6 +81,12 @@ export function Monitor() {
   const containers = (snap.sources.docker?.data as { containers: Container[] } | null)?.containers ?? [];
   const running = containers.filter((c) => c.state === 'running').length;
   const trouble = needsYou(snap.alerts);
+  const stats = (snap.sources.stats?.data as StatsData | null)?.containers ?? {};
+  // As many as the column has room for; the rest stay off screen.
+  const busiest = Object.entries(stats)
+    .sort((a, b) => b[1].cpu - a[1].cpu)
+    .slice(0, 12);
+  const updating = Object.keys(snap.updates).sort();
   const host = nas?.hostname ?? snap.brand?.name ?? 'patchboard';
   const time = new Date(now).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
   const pool = nas?.pools[0];
@@ -168,6 +174,23 @@ export function Monitor() {
             </ul>
           </div>
         )}
+        {busiest.length > 0 && (
+          <div className="mon-block mon-fill">
+            <p className="mon-label">busiest now</p>
+            <ul className="mon-busy">
+              {busiest.map(([name, s]) => (
+                <li key={name}>
+                  <span className="mon-clip">{name}</span>
+                  <span className="mon-meter">
+                    <i style={{ width: `${Math.min(100, (s.cpu / Math.max(1, busiest[0][1].cpu)) * 100)}%` }} />
+                  </span>
+                  <span className="mon-num">{pct(s.cpu)}</span>
+                  <span className="mon-dim">{size(s.memBytes)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       <section className="mon-col" aria-label="Backups, cloud sync and the fleet">
@@ -201,6 +224,32 @@ export function Monitor() {
           </p>
           <Fleet containers={containers} updates={snap.updates} />
         </div>
+        {(trouble.length > 0 || updating.length > 0) && (
+          <div className="mon-block mon-fill">
+            {trouble.length > 0 && (
+              <>
+                <p className="mon-label">needs you</p>
+                <ul className="mon-list">
+                  {trouble.map((a) => (
+                    <li key={a.id} className={a.level === 'critical' ? 'is-crit' : 'is-warn'}>
+                      {a.title}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {updating.length > 0 && (
+              <>
+                <p className="mon-label mon-gap">updates waiting {updating.length}</p>
+                <ul className="mon-tags">
+                  {updating.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="mon-feed" aria-label="Events and log problems">

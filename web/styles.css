@@ -11732,6 +11732,39 @@ a.jack .jack-socket {
   gap: 10px;
 }
 
+/* The last block in a column takes the height that's left and shows as many
+   rows as fit; the edge fades, so a row that doesn't fit isn't cut in half. */
+.mon-fill {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+}
+
+.mon-gap {
+  margin-top: 8px;
+}
+
+.mon-busy li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 3.6em 4.8em;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.mon-busy li > :is(.mon-num, .mon-dim) {
+  text-align: right;
+}
+
+.mon-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  color: var(--ink-2);
+}
+
 .mon-clip {
   min-width: 0;
   overflow: hidden;
