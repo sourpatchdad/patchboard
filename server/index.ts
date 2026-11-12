@@ -83,7 +83,7 @@ import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
 import { bmp, drawPanel, png } from './panel.ts';
-import { addHouseholdDevice, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
+import { addHouseholdDevice, cleanLook, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newJoinToken, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
 import { checkPassword, noteVisitor, currentUser, endAllSessions, hashPassword, hasSession, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
@@ -389,6 +389,15 @@ app.post('/api/household', async (c) => {
   return c.json({ id: made.id, path: `/join/${made.token}`, panel: `/panel/${newPanelToken(made.id)}.png` });
 });
 
+// A fresh link for a device; the old one stops working on the next request.
+app.post('/api/household/:id/link', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const token = newJoinToken(c.req.param('id'));
+  if (!token) return c.json({ error: 'No such device' }, 404);
+  recordAudit(who(c), 'household.link', c.req.param('id'), '');
+  return c.json({ path: `/join/${token}` });
+});
+
 // A fresh panel address for a device; the old one stops working.
 app.post('/api/household/:id/panel', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
@@ -403,7 +412,12 @@ const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/we
 const isPlace = (v: unknown): v is string => typeof v === 'string' && (OPENS.has(v) || (/^\/b\/[\w-]+$/.test(v) && !!getBoard(v.slice(3))));
 app.put('/api/household/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown; screen?: unknown };
+  const body = (await c.req.json().catch(() => ({}))) as { name?: unknown; opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown; screen?: unknown; look?: unknown };
+  let name: string | undefined;
+  if (body.name !== undefined) {
+    name = typeof body.name === 'string' ? body.name.replace(/\s+/g, ' ').trim() : '';
+    if (!name || name.length > 40) return c.json({ error: 'Give the device a name of up to 40 characters.' }, 400);
+  }
   let opens: string | null | undefined;
   if (body.opens !== undefined) {
     if (body.opens === null || body.opens === '') opens = null;
@@ -420,9 +434,10 @@ app.put('/api/household/:id', async (c) => {
   const rotate = body.rotate === undefined ? undefined : typeof body.rotate === 'number' ? body.rotate : null;
   const dim = body.dim === undefined ? undefined : typeof body.dim === 'string' ? body.dim : null;
   const screen = body.screen === undefined ? undefined : body.screen === 'eink' ? 'eink' : null;
-  const view = setHouseholdView(c.req.param('id'), { opens, pages, rotate, tint, dim, screen });
+  const look = body.look === undefined ? undefined : (cleanLook(body.look) ?? null);
+  const view = setHouseholdView(c.req.param('id'), { name, opens, pages, rotate, tint, dim, screen, look });
   if (!view) return c.json({ error: 'No such device' }, 404);
-  recordAudit(who(c), 'household.view', c.req.param('id'), [[view.opens ?? 'wherever', ...(view.pages ?? [])].join(' > '), view.rotate ? `turns every ${view.rotate}s` : '', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims', view.screen === 'eink' ? 'e-ink' : ''].filter(Boolean).join(', '));
+  recordAudit(who(c), 'household.view', c.req.param('id'), [[view.opens ?? 'wherever', ...(view.pages ?? [])].join(' > '), view.rotate ? `turns every ${view.rotate}s` : '', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims', view.screen === 'eink' ? 'e-ink' : '', name ? `named ${name}` : '', view.look ? `look ${Object.entries(view.look).map(([k, v]) => `${k} ${v}`).join(' ')}` : ''].filter(Boolean).join(', '));
   hub.emitHousehold(c.req.param('id'), view);
   return c.json(view);
 });

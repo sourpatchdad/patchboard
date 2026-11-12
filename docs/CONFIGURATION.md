@@ -7,9 +7,11 @@ You configure almost everything in the UI:
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
 | Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
-| Settings, Connections, Sign-in and keys | A password, other names you open Patchboard by, and household devices | Every device |
+| Settings, Connections, Sign-in and keys | A password and other names you open Patchboard by | Every device |
+| Settings, Devices | Each wall tablet, e-ink panel and family phone: its link, its pages, and its look (theme, density, units, language), set from any browser | That device |
 | Settings, Look, Name | The name in the header and tab | Every device |
-| Settings, Look and Home | Theme, colors, type, density, region (how dates, numbers and prices are written), keyboard shortcuts, units and Home header | This device only |
+| Settings, Look | Theme, colors, type, density, language and region (dates, numbers, prices, time format, temperature units), keyboard shortcuts | This browser only |
+| Settings, Home | The Home header and the default app style | This browser only |
 | The compose file | Time zone, port, mounts | The server |
 
 Settings, Home controls the header on this device. By default it shows

@@ -106,3 +106,24 @@ test('a panel token shows the picture and nothing else; the link token is not a 
   assert.equal(h.deviceByPanelToken(panel), null, 'a new panel address retires the last');
   assert.equal(h.deviceByPanelToken(again)?.id, made.id);
 });
+
+test('a look set from Settings keeps only fields it knows, and a new link retires the old one', async () => {
+  assert.deepEqual(h.cleanLook({ theme: 'forest', scheme: 'dark', density: 'compact', clock24: false, temp: 'c', lang: 'fr', locale: 'en-GB', currency: 'EUR' }), { theme: 'forest', scheme: 'dark', density: 'compact', clock24: false, temp: 'c', lang: 'fr', locale: 'en-GB', currency: 'EUR' });
+  assert.deepEqual(h.cleanLook({ theme: 'Forest!', scheme: 'neon', density: 'huge', clock24: 'yes', temp: 'k', lang: 'french', locale: '<b>', currency: 'eur', extra: 1 }), undefined);
+  assert.deepEqual(h.cleanLook({ density: 'large', css: 'body{}' }), { density: 'large' });
+  assert.equal(h.cleanLook('compact'), undefined);
+
+  const made = h.addHouseholdDevice('Office Kindle');
+  assert.ok('token' in made);
+  const view = h.setHouseholdView(made.id, { name: 'Desk Kindle', look: { density: 'compact' } });
+  assert.deepEqual(view?.look, { density: 'compact' });
+  const listed = h.householdDevices().find((d) => d.id === made.id);
+  assert.equal(listed?.name, 'Desk Kindle');
+  assert.equal(h.setHouseholdView(made.id, { look: null })?.look, undefined, 'cleared');
+
+  const app = server();
+  const fresh = h.newJoinToken(made.id);
+  assert.ok(fresh);
+  assert.equal((await app.request(`/join/${made.token}`)).status, 404, 'the old link no longer joins');
+  assert.equal((await app.request(`/join/${fresh}`)).status, 302);
+});

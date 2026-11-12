@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **Settings, Devices:** every wall tablet, e-ink panel and family phone in
+  one place. Pick a device to set the page it opens on and the pages it
+  swipes through, in order, with Edit board beside each board; its screen,
+  night dimming and Monitor colors; and its theme, mode, density, time
+  format, temperature, language, region and currency. The device follows
+  within a second, and a device can be renamed or given a new link.
+- **Settings, sorted:** time format and temperature moved to Language and
+  region under Look, beside the rest of the region. The Name shows it applies
+  to every device. Connections' Apps part is now App catalog, so it isn't
+  mistaken for the Apps page. On a phone, the six tabs sit in two rows.
+- **Cameras on a compact tablet:** a camera opened full screen fills the
+  screen at Compact and Large density too. Five other full-height panels got
+  the same fix.
+
 ## 1.9.4 (2026-11-12)
 
 - **Wall boards on a swipe:** a household device fetches every board's layout

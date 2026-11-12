@@ -9,8 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
-import type { CatalogAudit, DeviceView, SelfCheck } from '../../shared/types.ts';
-import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
+import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
 import { setShowcase, useShowcase } from '../lib/showcase.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
@@ -35,12 +34,9 @@ import { agoLong } from '../lib/format.ts';
 import { SelfUpdate } from '../components/Updater.tsx';
 import { CURRENCIES, currency, locale, money, num, REGIONS } from '../lib/region.ts';
 import { LANGUAGES } from '../lib/i18n.ts';
-import { Qr } from '../components/Qr.tsx';
+import { Devices } from '../components/Devices.tsx';
 
-/** A household device as Settings lists it. */
-type Listed = { id: string; name: string; created: number; seen?: number } & DeviceView;
-
-type Tab = 'look' | 'home' | 'alerts' | 'connections' | 'activity';
+type Tab = 'look' | 'home' | 'devices' | 'alerts' | 'connections' | 'activity';
 
 /** Tabs move with the arrow keys, Home and End, as tabs do everywhere else. */
 function tabKeys(e: React.KeyboardEvent<HTMLDivElement>) {
@@ -57,20 +53,21 @@ type Part = 'integrations' | 'access' | 'apps' | 'backup';
 const PARTS: [Part, string][] = [
   ['integrations', 'Integrations'],
   ['access', 'Sign-in and keys'],
-  ['apps', 'Apps'],
+  ['apps', 'App catalog'],
   ['backup', 'Backup'],
 ];
 const TABS: [Tab, string, string][] = [
-  ['look', 'Look', 'Saved on this device, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved.'],
-  ['home', 'Home', 'Header, app appearance and units for this device. Arrange board on Home changes the shared widget layout.'],
+  ['look', 'Look', 'This browser only, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved. The name is shared.'],
+  ['home', 'Home', "Home's header and app style in this browser only. The widgets on a board are shared: Customize on the board changes them for everyone."],
+  ['devices', 'Devices', 'Wall tablets, e-ink panels and family phones: the pages each one shows and how it looks, set from here. A device follows within a second.'],
   ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],
-  ['connections', 'Connections', 'Integrations, sign-in, keys and setup backups. Shared by every device.'],
+  ['connections', 'Connections', 'Integrations, sign-in, keys, the app catalog and setup backups. Shared by every device.'],
   ['activity', 'Activity', 'Who changed what, newest first.'],
 ];
 
 export function Settings() {
   const a = useAppearance();
-  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'alerts', 'connections', 'activity'], 'look', true, ['part']);
+  const [tab, setTab] = useUrlChoice<Tab>('tab', ['look', 'home', 'devices', 'alerts', 'connections', 'activity'], 'look', true, ['part', 'device']);
   // Connections is four pages in one: each part on its own, so none is a long scroll away.
   const [part, setPart] = useUrlChoice<Part>('part', ['integrations', 'access', 'apps', 'backup'], 'integrations', true);
   const { hash, search } = useLocation();
@@ -191,7 +188,7 @@ export function Settings() {
         </div>
       </Section>
 
-      <Section title="Region">
+      <Section title="Language and region">
         <div className="region-picks">
           <label>
             <span>Language</span>
@@ -235,8 +232,19 @@ export function Settings() {
             </select>
           </label>
         </div>
+        <div className="choice-row">
+          {seg('clock24', [
+            [false, '12-hour'],
+            [true, '24-hour'],
+          ])}
+          {seg('temp', [
+            ['f', '°F'],
+            ['c', '°C'],
+            ['both', 'Both'],
+          ])}
+        </div>
         <p className="settings-note">
-          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. The time format and temperature units are under Home. Français covers the boards, the wall screens and the Monitor so far; Settings stays in English.
+          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Français covers the boards, the wall screens and the Monitor so far; Settings stays in English.
         </p>
       </Section>
 
@@ -245,7 +253,7 @@ export function Settings() {
           <input type="checkbox" checked={a.eink} onChange={(e) => setAppearance({ eink: e.target.checked })} />
           E-ink
         </label>
-        <p className="settings-note">For an e-ink reader or panel: black on white, no motion, problems marked by shape as well as color, and the page redrawn once a minute with whatever changed, so it doesn't flash all day. A household device can be set from Settings, Household devices, instead.</p>
+        <p className="settings-note">For an e-ink reader or panel: black on white, no motion, problems marked by shape as well as color, and the page redrawn once a minute with whatever changed, so it doesn't flash all day. A wall device is set from Devices instead.</p>
       </Section>
 
       <Section title="Keyboard">
@@ -294,20 +302,6 @@ export function Settings() {
         </p>
       </Section>
 
-      <Section title="Units and time">
-        <div className="choice-row">
-          {seg('clock24', [
-            [false, '12-hour'],
-            [true, '24-hour'],
-          ])}
-          {seg('temp', [
-            ['f', '°F'],
-            ['c', '°C'],
-            ['both', 'Both'],
-          ])}
-        </div>
-      </Section>
-
       </>
       )}
       {tab === 'look' && (
@@ -340,7 +334,6 @@ export function Settings() {
           {part === 'access' && (
             <>
               <SignIn />
-              <Household />
               <Keys />
             </>
           )}
@@ -348,6 +341,7 @@ export function Settings() {
           {part === 'backup' && <SetupFile />}
         </>
       )}
+      {tab === 'devices' && <Devices />}
       {tab === 'alerts' && <Alerts />}
       {tab === 'activity' && <Activity />}
       </div>
@@ -869,236 +863,6 @@ function Keys() {
           </button>
           {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
-      )}
-    </Section>
-  );
-}
-
-/**
- * Household devices: a link per family phone or wall tablet. The device sees
- * the boards, cameras, reading and calendar and can switch pinned lights and
- * scenes; the server refuses everything else from it.
- */
-function Household() {
-  const { snap } = useStore();
-  const readOnly = !!snap?.readOnly;
-  // Where a device can open: Home, the other boards, and the pages a household device may see.
-  const places: [string, string][] = [
-    ['', 'Wherever it is'],
-    ['/', 'Home'],
-    ...(snap?.boards ?? []).filter((b) => b.id !== 'home').map((b) => [`/b/${b.id}`, b.name] as [string, string]),
-    ['/monitor', 'Monitor'],
-    ['/server', 'Server'],
-    ['/upcoming', 'Upcoming'],
-    ['/reading', 'Reading'],
-    ['/weather', 'Weather'],
-  ];
-  // Saved at once; the device follows within a second.
-  const setView = async (id: string, view: { opens?: string; pages?: string[]; rotate?: number; tint?: string; dim?: string; screen?: string }) => {
-    const res = await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
-    if (!res.ok) return;
-    // The server's answer is the whole view: a field it leaves out is unset.
-    const saved = (await res.json()) as DeviceView;
-    setList((l) => l && l.map((d) => (d.id === id ? { id: d.id, name: d.name, created: d.created, seen: d.seen, ...saved } : d)));
-  };
-  const placeName = (path: string) => places.find(([v]) => v === path)?.[1] ?? path;
-  const [list, setList] = useState<Listed[] | null>(null);
-  const [auth, setAuth] = useState<string>('none');
-  const [name, setName] = useState('');
-  const [made, setMade] = useState<{ name: string; url: string; panel: string } | null>(null);
-  // A panel address just made for an existing device, shown once.
-  const [panelFor, setPanelFor] = useState<{ id: string; url: string } | null>(null);
-  const newPanel = async (id: string) => {
-    const res = await fetch(`/api/household/${id}/panel`, { method: 'POST', headers: ACTION });
-    const body = (await res.json()) as { panel?: string };
-    if (res.ok && body.panel) setPanelFor({ id, url: `${location.origin}${body.panel}` });
-  };
-  const [copied, setCopied] = useState(false);
-  const [err, setErr] = useState('');
-  const load = async () => setList((await (await fetch('/api/household')).json()) as Listed[]);
-  useEffect(() => {
-    void load();
-    void fetch('/api/session')
-      .then((r) => r.json())
-      .then((s: { auth?: string }) => setAuth(s.auth ?? 'none'));
-  }, []);
-  const add = async () => {
-    setErr('');
-    setCopied(false);
-    const res = await fetch('/api/household', { method: 'POST', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    const body = (await res.json()) as { path?: string; panel?: string; error?: string };
-    if (!res.ok || !body.path) return setErr(body.error ?? `HTTP ${res.status}`);
-    setMade({ name: name.trim(), url: `${location.origin}${body.path}`, panel: `${location.origin}${body.panel}` });
-    setName('');
-    await load();
-  };
-  const remove = async (id: string) => {
-    await fetch(`/api/household/${id}`, { method: 'DELETE', headers: ACTION });
-    setMade(null);
-    await load();
-  };
-  const copy = async () => {
-    // Browsers allow the clipboard only on https or localhost; elsewhere the field is selected to copy by hand.
-    try {
-      await navigator.clipboard.writeText(made!.url);
-      setCopied(true);
-    } catch {
-      document.querySelector<HTMLInputElement>('.household-url')?.select();
-    }
-  };
-  if (!list) return null;
-  return (
-    <Section title="Household devices" count={list.length ? String(list.length) : undefined}>
-      <p className="settings-note">
-        A link for a family phone or a wall tablet. Open it once on that device: it sees the boards, cameras, Server and Monitor, reading and calendar, and switches the lights
-        and scenes pinned to a board. It can't update, restart or stop anything, or open Settings, logs or container pages. Give a wall tablet more pages and a swipe moves
-        between them, or let it turn them by itself.
-      </p>
-      {made && (
-        <div className="household-made" role="status">
-          <p>
-            Open this link on <strong>{made.name}</strong>, or point its camera at the code. Patchboard shows them only now, and anyone with them gets the same view.
-          </p>
-          <Qr text={made.url} label={`QR code of the household link for ${made.name}`} />
-          <div className="key-add household-add">
-            <input className="field mono household-url" readOnly value={made.url} aria-label={`Household link for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
-            <button type="button" className="button button-quiet" onClick={() => void copy()}>
-              {copied ? 'Copied' : 'Copy link'}
-            </button>
-          </div>
-          <p className="settings-note">
-            For an e-paper panel with no browser (TRMNL, Inky, an ESP32), point it at this picture instead. Add <code>?w=</code> and <code>?h=</code> for its size,
-            or use <code>.bmp</code> in place of <code>.png</code>:
-          </p>
-          <input className="field mono household-url" readOnly value={made.panel} aria-label={`Panel picture for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
-        </div>
-      )}
-      {list.length > 0 && (
-        <ul className="audit keys household-list">
-          {list.map((d) => (
-            <li key={d.id}>
-              <span>{d.name}</span>
-              <time>{d.seen ? `used ${agoLong(d.seen)}` : 'not opened yet'}</time>
-              {!readOnly && (
-                <HoldButton className="text-button" danger hint="Hold to remove. The device stops working as a household device." onConfirm={() => void remove(d.id)}>
-                  Remove
-                </HoldButton>
-              )}
-              {!readOnly && (
-                <button type="button" className="text-button household-panel" title="An address for an e-paper panel with no browser. It shows the picture and nothing else, and a new one retires the last." onClick={() => void newPanel(d.id)}>
-                  New panel address
-                </button>
-              )}
-              {panelFor?.id === d.id && (
-                <input className="field mono household-url household-panel-url" readOnly value={panelFor.url} aria-label={`Panel picture for ${d.name}`} autoFocus onFocus={(e) => e.currentTarget.select()} />
-              )}
-              {!readOnly && (
-                <div className="household-view">
-                  <label>
-                    <span>Opens</span>
-                    <select className="field" value={d.opens ?? ''} onChange={(e) => void setView(d.id, { opens: e.target.value })}>
-                      {places.map(([v, label]) => (
-                        <option key={v} value={v}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  {d.opens && (
-                    <div className="household-pages">
-                      <span>Swipes to</span>
-                      {(d.pages ?? []).map((pg) => (
-                        <button
-                          key={pg}
-                          type="button"
-                          className="chip"
-                          aria-label={`Remove ${placeName(pg)}`}
-                          onClick={() => void setView(d.id, { pages: (d.pages ?? []).filter((x) => x !== pg) })}
-                        >
-                          {placeName(pg)} <span aria-hidden="true">×</span>
-                        </button>
-                      ))}
-                      {(d.pages?.length ?? 0) < MAX_PAGES - 1 && (
-                        <select className="field" aria-label="Add a page" value="" onChange={(e) => e.target.value && void setView(d.id, { pages: [...(d.pages ?? []), e.target.value] })}>
-                          <option value="">{d.pages?.length ? 'Add another' : 'Add a page'}</option>
-                          {places
-                            .filter(([v]) => v && v !== d.opens && !d.pages?.includes(v))
-                            .map(([v, label]) => (
-                              <option key={v} value={v}>
-                                {label}
-                              </option>
-                            ))}
-                        </select>
-                      )}
-                    </div>
-                  )}
-                  {!!d.pages?.length && (
-                    <label>
-                      <span>Turns pages</span>
-                      <select className="field" value={d.rotate ?? 0} onChange={(e) => void setView(d.id, { rotate: Number(e.target.value) })}>
-                        {ROTATE_SECONDS.map((s) => (
-                          <option key={s} value={s}>
-                            {s === 0 ? 'When swiped' : s < 60 ? `Every ${s} seconds` : s === 60 ? 'Every minute' : `Every ${s / 60} minutes`}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-                  <label>
-                    <span>Monitor</span>
-                    <select className="field" value={d.tint ?? 'gray'} onChange={(e) => void setView(d.id, { tint: e.target.value })}>
-                      <option value="gray">Gray</option>
-                      <option value="blue">Blue</option>
-                      <option value="color">Color</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span>Screen</span>
-                    <select className="field" value={d.screen ?? ''} onChange={(e) => void setView(d.id, { screen: e.target.value })}>
-                      <option value="">Color</option>
-                      <option value="eink">E-ink</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span>Dims</span>
-                    <select className="field" value={d.dim ?? ''} onChange={(e) => void setView(d.id, { dim: e.target.value })}>
-                      <option value="">Never</option>
-                      {DIM_HOURS.map((h) => (
-                        <option key={h} value={h}>
-                          {dimLabel(h)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      {!readOnly && (
-        <div className="key-add household-add">
-          <input
-            className="field"
-            value={name}
-            maxLength={40}
-            placeholder="Kitchen tablet"
-            aria-label="Device name"
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && name.trim() && void add()}
-          />
-          <button type="button" className="button button-quiet" disabled={!name.trim()} onClick={() => void add()}>
-            Make a link
-          </button>
-          {err && (
-            <span className="crit-text" role="alert">
-              {err}
-            </span>
-          )}
-        </div>
-      )}
-      {auth === 'none' && list.length > 0 && (
-        <p className="settings-note">With sign-in off, a device you remove goes back to full access, like any browser on your network. Turn on a password above if that matters.</p>
       )}
     </Section>
   );

@@ -14,7 +14,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { kvGet, kvSet, recordAudit } from './db.ts';
-import type { DeviceView } from '../shared/types.ts';
+import type { DeviceLook, DeviceView } from '../shared/types.ts';
 import { DIM_HOURS, MAX_PAGES, ROTATE_SECONDS } from '../shared/wall.ts';
 
 export type { DeviceView };
@@ -42,7 +42,27 @@ export interface HouseholdDevice extends DeviceView {
 }
 
 /** A device's view, field by field, so nothing else stored on it leaks out. */
-const viewOf = (d: DeviceView): DeviceView => ({ opens: d.opens, pages: d.pages, rotate: d.rotate, tint: d.tint, dim: d.dim, screen: d.screen, rev: d.rev });
+const viewOf = (d: DeviceView): DeviceView => ({ opens: d.opens, pages: d.pages, rotate: d.rotate, tint: d.tint, dim: d.dim, screen: d.screen, look: d.look, rev: d.rev });
+
+const one = <T extends string>(v: unknown, allowed: readonly T[]): T | undefined => (allowed.includes(v as T) ? (v as T) : undefined);
+
+/** A look as sent from Settings, keeping only fields with a value it knows. */
+export function cleanLook(raw: unknown): DeviceLook | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  const look: DeviceLook = {
+    theme: typeof r.theme === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(r.theme) ? r.theme : undefined,
+    scheme: one(r.scheme, ['auto', 'dark', 'light'] as const),
+    density: one(r.density, ['compact', 'comfortable', 'large'] as const),
+    clock24: typeof r.clock24 === 'boolean' ? r.clock24 : undefined,
+    temp: one(r.temp, ['f', 'c', 'both'] as const),
+    lang: typeof r.lang === 'string' && /^[a-z]{2}$/.test(r.lang) ? r.lang : undefined,
+    locale: typeof r.locale === 'string' && /^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-\d{3})?$/.test(r.locale) ? r.locale : undefined,
+    currency: typeof r.currency === 'string' && /^[A-Z]{3}$/.test(r.currency) ? r.currency : undefined,
+  };
+  for (const k of Object.keys(look) as (keyof DeviceLook)[]) if (look[k] === undefined) delete look[k];
+  return Object.keys(look).length ? look : undefined;
+}
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const devices = (): Record<string, Device> => kvGet<Record<string, Device>>('household') ?? {};
@@ -64,6 +84,16 @@ export function newPanelToken(id: string): string | null {
   return token;
 }
 
+/** A new link for a device, replacing the last one, for a new tablet or one that lost it. It comes back once. */
+export function newJoinToken(id: string): string | null {
+  const all = devices();
+  if (!all[id]) return null;
+  const token = randomBytes(32).toString('base64url');
+  all[id].hash = sha(token);
+  kvSet('household', all);
+  return token;
+}
+
 /** A new device. The token comes back once, inside the link; only its hash is kept. */
 export function addHouseholdDevice(name: string): { id: string; token: string } | { error: string } {
   const clean = name.replace(/\s+/g, ' ').trim();
@@ -79,10 +109,12 @@ export function addHouseholdDevice(name: string): { id: string; token: string } 
 }
 
 /** Set what a device shows. `opens` and `pages` are checked by the caller, which knows the boards. */
-export function setHouseholdView(id: string, view: { opens?: string | null; pages?: string[] | null; rotate?: number | null; tint?: string | null; dim?: string | null; screen?: string | null }): DeviceView | null {
+export function setHouseholdView(id: string, view: { name?: string; opens?: string | null; pages?: string[] | null; rotate?: number | null; tint?: string | null; dim?: string | null; screen?: string | null; look?: DeviceLook | null }): DeviceView | null {
   const all = devices();
   const d = all[id];
   if (!d) return null;
+  if (view.name) d.name = view.name;
+  if (view.look !== undefined) d.look = view.look ?? undefined;
   if (view.opens !== undefined) d.opens = view.opens || undefined;
   if (view.pages !== undefined) d.pages = view.pages?.length ? view.pages.slice(0, MAX_PAGES - 1) : undefined;
   if (view.rotate !== undefined) d.rotate = (ROTATE_SECONDS as readonly number[]).includes(view.rotate ?? 0) && view.rotate ? view.rotate : undefined;

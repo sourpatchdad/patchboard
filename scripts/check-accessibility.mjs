@@ -34,7 +34,7 @@ try {
     return saved;
   };
   const before = await setup();
-  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=connections', '/settings?tab=connections&part=access', '/settings?tab=connections&part=apps', '/settings?tab=connections&part=backup'];
+  const paths = ['/', '/server', '/stacks', '/reading', '/upcoming', '/apps', '/settings?tab=home', '/settings?tab=devices', '/settings?tab=connections', '/settings?tab=connections&part=access', '/settings?tab=connections&part=apps', '/settings?tab=connections&part=backup'];
   const checkTree = async (scope) => {
     const { nodes } = await cdp.send('Accessibility.getFullAXTree');
     const exposed = nodes.filter((node) => !node.ignored);

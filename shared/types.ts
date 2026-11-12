@@ -1233,8 +1233,25 @@ export interface DeviceView {
   dim?: string;
   /** An e-ink screen: black on white, no motion, redrawn once a minute. */
   screen?: 'eink';
+  /** How it looks, set from Settings, Devices. A field left out stays as the device has it. */
+  look?: DeviceLook;
   /** Changes with every save, so the device knows to follow. */
   rev?: number;
+}
+
+/** The parts of a device's look that can be set from another one. */
+export interface DeviceLook {
+  theme?: string;
+  scheme?: 'auto' | 'dark' | 'light';
+  density?: 'compact' | 'comfortable' | 'large';
+  clock24?: boolean;
+  temp?: 'f' | 'c' | 'both';
+  /** A language code with a catalog: en, fr. */
+  lang?: string;
+  /** How dates and numbers are written, as a language tag. */
+  locale?: string;
+  /** Prices in this currency. */
+  currency?: string;
 }
 
 /** One published Patchboard release and its notes (Markdown), from GitHub Releases. */

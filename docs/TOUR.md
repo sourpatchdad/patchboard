@@ -64,9 +64,9 @@ container events and the warning and error lines from every container's log.
 It keeps its own terminal look whatever the theme: gray, a muted blue, or
 color, where each part keeps one cool hue and only trouble turns warm. Jump
 to finds it, or open `/monitor`. For a wall tablet, make it a household
-device and set it to open the Monitor in Settings, Connections, Sign-in and
-keys: change that, the color, or the night hours it dims through, from your
-desk and the tablet follows within a second. A tap brightens a dimmed
+device in Settings, Devices and set it to open the Monitor: change that, the
+color, the night hours it dims through, or its theme, density, units and
+language from your desk, and the tablet follows within a second. A tap brightens a dimmed
 screen for two minutes. Give it more pages, the Monitor, wall boards,
 Server or Weather, and a swipe moves between them, with dots at the bottom
 to show where it is; it can also turn them by itself every half minute to
@@ -78,7 +78,7 @@ Kindle e-reader's built-in browser is too old to run Patchboard.
 
 **A panel with no browser:** a TRMNL, a Pimoroni Inky, or an ESP32 with an
 e-paper screen can show the server as a picture. Make a household device for
-it, and Settings gives you its picture address next to the link:
+it in Settings, Devices, and New panel address gives you its picture address:
 `/panel/<token>.png`, or `.bmp`. Add `?w=800&h=480` for the panel's size,
 `?units=c` or `f`, `?clock=24`, and `?invert=1` for white on black. The
 picture is one bit per pixel: the status and what needs you, the weather,
@@ -234,19 +234,27 @@ Cameras picks its cameras the same way.
 
 ![Customize a page](screenshots/page-customize.webp)
 
-**Settings** has themes, colors, type and density, saved per device; units
-and the header are under Home. A new browser or home-screen app starts from
-the last look you saved. Language, under Look, switches the boards, the wall
-screens and the Monitor to French, with more of the app to follow. Region,
-under Look, writes dates, times, numbers
-and prices the way your part of the world does: "jeudi 12 novembre, 14:30,
+**Settings** has themes, colors, type and density, saved per browser; the
+Home header is under Home. A new browser or home-screen app starts from the
+last look you saved. Language and region, under Look, switches the boards,
+the wall screens and the Monitor to French, with more of the app to follow,
+and writes dates, times, numbers, prices and temperatures the way your part
+of the world does: "jeudi 12 novembre, 14:30,
 1 234,50 €" in France. Showcase mode, under Look, swaps addresses, domain
 names and the words you list for stand-ins and blurs the cameras, so a
 screenshot is safe to post.
 
 ![Settings](screenshots/settings-look.webp)
 
-![Settings, Home: the header switches, app appearance, units and time](screenshots/settings-home.webp)
+![Settings, Home: the header switches and app appearance](screenshots/settings-home.webp)
+
+**Devices** lists every wall tablet, e-ink panel and family phone with a
+household link. Pick one to set the page it opens on and the pages it swipes
+through, in order, with Edit board beside each board; its screen, night
+dimming and Monitor colors; and its theme, density, units and language. A
+new link or a new panel address retires the old one.
+
+![Settings, Devices: a kitchen tablet's pages, screen and look](screenshots/settings-devices.webp)
 
 **Connections** shows which integrations run. **Set up** takes an address and
 a key, tests the connection, and saves. The server encrypts keys and never

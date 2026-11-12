@@ -8,7 +8,7 @@
 import { useModal } from '../lib/modal.ts';
 import { Roll } from '../components/Roll.tsx';
 import { type CSSProperties, Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLeaveGuard } from '../lib/leave.ts';
 import {
   type Board as BoardData,
@@ -346,6 +346,14 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     if (board) onWidgets?.(types.split(','));
   }, [types]);
   const [draft, setDraft] = useState<BoardData | null>(null);
+  // ?arrange=1, from a device's pages in Settings: open the board ready to arrange.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (!board || params.get('arrange') !== '1') return;
+    if (!snap?.readOnly) setDraft(structuredClone(board));
+    params.delete('arrange');
+    setParams(params, { replace: true });
+  }, [!!board]);
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
   /** The JSON widget being edited: an existing id, or 'new' while adding one. */

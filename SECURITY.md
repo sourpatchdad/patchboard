@@ -42,8 +42,7 @@ cookie arrives on the redirect back from the provider. Changes still need the
 Marking articles read still works.
 
 For one device instead of everyone, make it a household device: Settings,
-Connections, Sign-in and keys, Household devices, Make a link, then open the
-link once on that phone or tablet. It sees the boards, cameras, the Server
+Devices, Make a link, then open the link once on that phone or tablet. It sees the boards, cameras, the Server
 and Monitor pages, reading and calendar, and can switch the Home Assistant
 lights and scenes pinned to a board. From the logs it gets only the Monitor
 feed: warning and error lines, masked like every log line, at most twelve a
@@ -57,15 +56,17 @@ on, so send it only to the device it's for. A browser that's signed in asks
 before it becomes a household device, so a link someone sends you can't
 switch yours. A household device never receives your inbox.
 
+Patchboard stores the hash of a device's link (SHA-256) and keeps the link's
+token in an HttpOnly, SameSite=Lax cookie for 400 days. Settings, Devices
+sets each device's pages, Monitor color and look; the device follows at
+once, and no other browser hears about it. New link there retires the old
+link, and Remove ends the device on its next request. With sign-in off, a
+removed device goes back to full access like any browser on your network;
+with sign-in on, it sees the sign-in page.
+
 An e-paper panel with no browser gets its own address, `/panel/<token>.png`,
-from Settings. That token shows the picture and nothing else: it can't join
-as a household device. Make a new one there and the old one stops working. Patchboard stores its SHA-256
-hash and keeps the token in an HttpOnly, SameSite=Lax cookie for 400 days.
-Removing the device in Settings ends it on its next request. Settings also
-sets where each device opens and the Monitor's color; the device follows at
-once, and no other browser hears about it. With sign-in
-off, a removed device goes back to full access like any browser on your
-network; with sign-in on, it sees the sign-in page.
+from Settings, Devices. That token shows the picture and nothing else: it
+can't join as a household device. A new panel address retires the last.
 
 ### How much of Docker it can touch
 

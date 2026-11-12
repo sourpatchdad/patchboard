@@ -1,12 +1,14 @@
 // A household device follows the page set for it in Settings: once when the
 // app starts, and again whenever someone changes it, with nobody touching
-// the device. It loads the new version after an update, and dims through
-// the night hours set for it. Mounted in the page frame and in the Monitor,
-// which sits outside it.
+// the device. It takes the look set for it, loads the new version after an
+// update, and dims through the night hours set for it. Mounted in the page
+// frame and in the Monitor, which sits outside it.
 
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { isNight } from '../../shared/wall.ts';
+import type { DeviceLook } from '../../shared/types.ts';
+import { getAppearance, setAppearance } from './appearance.ts';
 import { useStore } from './store.tsx';
 
 // Shared across both mounts, so a page change isn't applied twice.
@@ -28,6 +30,19 @@ export function useFollowOpens(): void {
     loadedWith ??= version;
     if (version !== loadedWith) location.reload();
   }, [snap?.household, version]);
+  // The look set for it in Settings, Devices, kept as its own so the next
+  // load paints with it at once. It can't open Settings, so nothing here is
+  // lost. A new language redraws every word: load the page again.
+  const look = snap?.household?.look;
+  const lookKey = JSON.stringify(look ?? {});
+  useEffect(() => {
+    if (!look) return;
+    const a = getAppearance();
+    const patch = Object.fromEntries(Object.entries(look).filter(([k, v]) => a[k as keyof DeviceLook] !== v));
+    if (!Object.keys(patch).length) return;
+    setAppearance(patch, { push: false });
+    if ('lang' in patch) location.reload();
+  }, [lookKey]);
   useEffect(() => {
     if (!snap?.household) return;
     if (followed === rev) return;

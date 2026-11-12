@@ -90,7 +90,9 @@ trim lists to one screen. Add more boards: one for the TV, one for the rack.
 Five themes come in dark and light, or build a Custom one from three colors.
 
 **Wall screens.** Hang a tablet, an e-ink reader or an e-paper panel and
-set it up from your desk. A household device gets its own pages to swipe
+set it up from your desk in Settings, Devices: its pages, theme, density,
+units and language change there and the device follows within a second.
+A household device gets its own pages to swipe
 between (the Monitor, wall boards for the clock and weather, markets, the
 house, cameras or media), turns them by itself if you like, and dims at
 night. Set its screen to E-ink for black on white with a redraw a minute.

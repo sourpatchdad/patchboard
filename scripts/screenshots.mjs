@@ -314,6 +314,14 @@ try {
   await shoot(page, 'settings-look', { fullPage: true });
   await go('/settings?tab=home');
   await shoot(page, 'settings-home', { fullPage: true });
+  // Settings, Devices: a wall tablet's pages and look, set from the desk.
+  {
+    const made = await page.evaluate(async () => (await fetch('/api/household', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ name: 'Kitchen tablet' }) })).json());
+    await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ opens: '/monitor', pages: ['/', '/weather'], rotate: 120, dim: '22-7', tint: 'color', look: { density: 'compact', clock24: false } }) }), made.id);
+    await go(`/settings?tab=devices&device=${made.id}`);
+    await shoot(page, 'settings-devices', { fullPage: true });
+    await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), made.id);
+  }
   await go('/settings?tab=alerts');
   await shoot(page, 'settings-alerts');
   await go('/settings?tab=connections');
