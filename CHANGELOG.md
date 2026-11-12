@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.3 (2026-11-11)
 
 - **Monitor feed:** lines from before today show their day ("tue 22:13"),
   and apps that log JSON, such as autobrr, show their message instead of
