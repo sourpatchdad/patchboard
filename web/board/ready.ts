@@ -31,6 +31,11 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
     watched: has('tautulli') || has('jellyfin') || has('emby'),
     listening: has('audiobookshelf') || has('navidrome'),
     downloads: ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget', 'sonarr', 'radarr'].some(has),
+    managers: ['lidarr', 'readarr', 'prowlarr', 'bazarr'].some(has),
+    documents: has('paperless'),
+    nextcloud: has('nextcloud'),
+    git: has('gitea'),
+    monitoring: has('netdata') || has('prometheus'),
   };
 }
 
@@ -59,6 +64,11 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   downloads: { label: 'a download client, Sonarr or Radarr', setup: 'qbit' },
   watched: { label: 'Plex (Tautulli), Jellyfin or Emby', setup: 'tautulli' },
   listening: { label: 'Audiobookshelf or Navidrome', setup: 'audiobookshelf' },
+  managers: { label: 'Lidarr, Readarr, Prowlarr or Bazarr', setup: 'lidarr' },
+  documents: { label: 'Paperless-ngx', setup: 'paperless' },
+  nextcloud: { label: 'Nextcloud', setup: 'nextcloud' },
+  git: { label: 'Gitea or Forgejo', setup: 'gitea' },
+  monitoring: { label: 'Netdata or Prometheus', setup: 'netdata' },
 };
 
 /** Where to set up what a widget needs. */

@@ -166,6 +166,12 @@ guests, Docker hosts every Portainer environment, Network your UniFi devices
 and Tailscale machines. Each one raises its own trouble in Needs attention,
 at the thresholds in Settings, Alerts.
 
+**The other apps:** Media managers gives Lidarr, Readarr, Prowlarr and
+Bazarr a line each, healthy or what's wrong, with the queue or the missing
+subtitles. Documents shows the Paperless inbox, Nextcloud its files, people
+on today, free space and app updates, Git the notifications waiting in Gitea
+or Forgejo, and Monitoring alerts what's firing in Netdata or Prometheus.
+
 ![Hosts, Power, Storage, Proxmox, Drives, Docker hosts, Network and Photos on the board](screenshots/machines.webp)
 
 **The household:** a Calendar from any iCal address, Notes with checklists

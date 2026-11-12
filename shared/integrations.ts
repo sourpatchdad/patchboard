@@ -299,7 +299,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'netdata',
     name: 'Netdata',
-    adds: "Netdata's raised alarms join Needs attention, warnings and criticals alike, with a link back to Netdata. Patchboard leaves the charts to Netdata.",
+    adds: "Netdata's raised alarms join Needs attention, warnings and criticals alike, with a link back to Netdata. The Monitoring alerts widget lists them. Patchboard leaves the charts to Netdata.",
     env: ['NETDATA_URL'],
     where: "The Netdata agent's address, port 19999. One agent per address; a parent node covers its children.",
     source: true,
@@ -307,7 +307,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'prometheus',
     name: 'Prometheus or Alertmanager',
-    adds: 'Firing alerts join Needs attention: severity critical, page or error as alarms, the rest as warnings. Pending and silenced alerts stay out.',
+    adds: 'Firing alerts join Needs attention: severity critical, page or error as alarms, the rest as warnings. Pending and silenced alerts stay out. The Monitoring alerts widget lists them.',
     env: ['PROMETHEUS_URL'],
     optional: ['PROMETHEUS_TOKEN'],
     where: 'The Prometheus address (port 9090) or the Alertmanager address (port 9093). A bearer token only if a proxy in front asks for one.',
@@ -334,7 +334,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'lidarr',
     name: 'Lidarr',
-    adds: 'The queue on the Lidarr tile, and downloads it cannot import or health errors in Needs attention.',
+    adds: 'The queue on the Lidarr tile and the Media managers widget, and downloads it cannot import or health errors in Needs attention.',
     env: ['LIDARR_URL', 'LIDARR_KEY'],
     where: 'Settings, General, API Key.',
     source: true,
@@ -342,7 +342,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'readarr',
     name: 'Readarr',
-    adds: 'The queue on the Readarr tile, and downloads it cannot import or health errors in Needs attention.',
+    adds: 'The queue on the Readarr tile and the Media managers widget, and downloads it cannot import or health errors in Needs attention.',
     env: ['READARR_URL', 'READARR_KEY'],
     where: 'Settings, General, API Key.',
     source: true,
@@ -350,7 +350,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'prowlarr',
     name: 'Prowlarr',
-    adds: 'Health errors, such as indexers that keep failing, in Needs attention, and a word on the Prowlarr tile.',
+    adds: 'Health errors, such as indexers that keep failing, in Needs attention, and a word on the Prowlarr tile and the Media managers widget.',
     env: ['PROWLARR_URL', 'PROWLARR_KEY'],
     where: 'Settings, General, API Key.',
     source: true,
@@ -358,7 +358,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'bazarr',
     name: 'Bazarr',
-    adds: 'Missing subtitles on the Bazarr tile, and its health problems in Needs attention.',
+    adds: 'Missing subtitles on the Bazarr tile and the Media managers widget, and its health problems in Needs attention.',
     env: ['BAZARR_URL', 'BAZARR_KEY'],
     where: 'Settings, General, Security, API Key.',
     source: true,
@@ -366,7 +366,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'paperless',
     name: 'Paperless-ngx',
-    adds: 'Documents waiting in your inbox, on the Paperless tile.',
+    adds: 'Documents waiting in your inbox, on the Paperless tile and the Documents widget.',
     env: ['PAPERLESS_URL', 'PAPERLESS_TOKEN'],
     where: 'Your profile (top right), API Auth Token, Generate.',
     source: true,
@@ -374,7 +374,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'nextcloud',
     name: 'Nextcloud',
-    adds: 'Files, users and app updates waiting, on the Nextcloud tile. App updates show in Needs attention as a quiet note.',
+    adds: 'Files, users and app updates waiting, on the Nextcloud tile and the Nextcloud widget. App updates show in Needs attention as a quiet note.',
     env: ['NEXTCLOUD_URL', 'NEXTCLOUD_USERNAME', 'NEXTCLOUD_PASSWORD'],
     where: 'An admin account: Personal settings, Security, Devices & sessions, Create new app password, and give Patchboard that one.',
     source: true,
@@ -398,7 +398,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'gitea',
     name: 'Gitea or Forgejo',
-    adds: 'Unread notifications (review requests, mentions, issues you follow) on the tile, or how many repositories there are when you are caught up.',
+    adds: 'Unread notifications (review requests, mentions, issues you follow) on the tile, or how many repositories there are when you are caught up. The Git widget shows both.',
     env: ['GITEA_URL', 'GITEA_TOKEN'],
     where: 'Settings, Applications, Generate New Token, with read access to notifications and repositories.',
     source: true,

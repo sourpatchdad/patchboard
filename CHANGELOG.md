@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- **Five new widgets** for apps that had only a number on their tile:
+  - **Media managers:** Lidarr, Readarr, Prowlarr and Bazarr, a line each,
+    healthy or what's wrong, with the queue or the missing subtitles.
+  - **Documents:** the Paperless-ngx inbox and how many documents it holds.
+  - **Nextcloud:** files, people on today, free space and app updates.
+  - **Git:** notifications waiting in Gitea or Forgejo, and the repositories.
+  - **Monitoring alerts:** what's firing in Netdata or Prometheus, critical
+    first, each linking back.
+
+  Each can show as one number too, and Add widget offers them once their app
+  is set up. Files and work is a new group there.
+
 ## 1.11.1 (2026-11-12)
 
 - **One number, level in a row:** every number gets the room of the largest

@@ -13042,3 +13042,56 @@ html.wall-swipe .widget-page {
   justify-self: center;
   color: var(--ink-2);
 }
+
+/* Media managers and monitoring alerts: a line per app or alert, its name,
+   what's going on, and a number or how long ago, ruled like Drives. */
+.app-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-rows li {
+  display: grid;
+  grid-template-columns: minmax(5em, auto) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 13.5px;
+}
+
+.app-rows li:first-child {
+  border-top: 0;
+}
+
+.app-row-name {
+  color: var(--head);
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-row-state {
+  min-width: 0;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-row-num {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.monitoring .app-rows li {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.monitoring .app-row-state {
+  grid-column: 1;
+  grid-row: 2;
+}

@@ -27,6 +27,7 @@ import type {
   PortainerData,
   MonitorData,
   UnifiData,
+  GiteaData,
   PaperlessData,
   NextcloudData,
   ListeningData,
@@ -767,7 +768,9 @@ export function demoAdapters(): Adapter[] {
     }),
     demo<MonitorData>('netdata', 'Netdata', 30 * SECOND, () => ({ alerts: [], webUrl: 'http://netdata.local:19999' })),
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
-    demo<ArrData>('prowlarr', 'Prowlarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 0, problems: [], health: [] })),
+    demo<ArrData>('prowlarr', 'Prowlarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 0, problems: [], health: [{ level: 'warning', message: 'Indexers unavailable: The Pirate Bay' }] })),
+    demo<ArrData>('lidarr', 'Lidarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 3, problems: [], health: [] })),
+    demo<GiteaData>('gitea', 'Gitea', 2 * MINUTE, () => ({ unread: 2, repos: 37, webUrl: 'http://git.local' })),
     demo<ArrData>('bazarr', 'Bazarr', 5 * MINUTE, () => ({ upcoming: [], queueTotal: 23, problems: [], health: [] })),
     demo<NextcloudData>('nextcloud', 'Nextcloud', 5 * MINUTE, () => ({ version: '30.0.2', files: 128_403, users: 4, activeToday: 2, appUpdates: 0, webUrl: 'http://nextcloud.local' })),
     demo<ListeningData>('navidrome', 'Navidrome', 20 * SECOND, () => ({

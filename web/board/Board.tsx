@@ -28,6 +28,7 @@ import {
   type WidgetType,
 } from '../../shared/board.ts';
 import { NumberView } from './OneNumber.tsx';
+import { DocumentsWidget, GitWidget, ManagersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
@@ -1028,6 +1029,16 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <SkyWidget now={now} />;
     case 'countdown':
       return <CountdownWidget config={w.config} now={now} />;
+    case 'managers':
+      return <ManagersWidget />;
+    case 'documents':
+      return <DocumentsWidget />;
+    case 'nextcloud':
+      return <NextcloudWidget />;
+    case 'git':
+      return <GitWidget />;
+    case 'monitoring':
+      return <MonitoringWidget now={now} />;
   }
 }
 
@@ -1052,6 +1063,10 @@ const ALSO: Partial<Record<WidgetType, string>> = {
   hosts: 'disks machines computers',
   now: 'playing streams watching',
   cameras: 'frigate nvr security',
+  managers: 'arr lidarr readarr prowlarr bazarr music books subtitles indexers',
+  documents: 'paperless scans paper',
+  git: 'gitea forgejo code repositories',
+  monitoring: 'netdata prometheus alertmanager alarms',
 };
 
 /** The groups an apps widget shows: those ticked, or every group when none are. */
@@ -1252,8 +1267,9 @@ function NewBoard({ onClose }: { onClose: () => void }) {
 /** Add widget sorts its list into a few kinds, so 40 widgets read as four short lists. */
 const KINDS: [string, WidgetType[]][] = [
   ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'bookmarks', 'search', 'clocks', 'weather', 'sky', 'countdown', 'markets']],
-  ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'books', 'photos']],
-  ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
+  ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'managers', 'books', 'photos']],
+  ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'monitoring', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
+  ['Files and work', ['documents', 'nextcloud', 'git']],
   ['House and network', ['homeassistant', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
 ];
 const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';

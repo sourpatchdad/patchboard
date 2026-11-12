@@ -8,6 +8,7 @@ import type { CSSProperties } from 'react';
 import { daysUntil, nextDay } from '../../shared/almanac.ts';
 import { NUMBERS, type Widget } from '../../shared/board.ts';
 import type { Series } from '../../shared/types.ts';
+import type { ArrData, GiteaData, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
 import type { CarData, DnsData, FastmailData, ImmichData, MinifluxData, NutData, PortainerData, ScrutinyData, SeerrData, SpeedData, SyncthingData, SystemData, TruenasData, UnifiData, WeatherData } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { Spark } from '../components/Spark.tsx';
@@ -193,6 +194,37 @@ function useReading(w: Widget, now: number): Reading | null | undefined {
       const d = data<MinifluxData>('miniflux');
       if (!d) return d;
       return { value: count(d.unread), sub: t('unread articles') };
+    }
+    case 'managers': {
+      const apps = (['lidarr', 'readarr', 'prowlarr', 'bazarr'] as const).map((id) => ({ id, d: data<ArrData>(id), ok: snap.sources[id]?.ok }));
+      const on = apps.filter((a) => a.d !== undefined);
+      if (!on.length) return null;
+      if (which === 'queued') return { value: count(on.reduce((s, a) => s + (a.d?.queueTotal ?? 0), 0)), sub: t('queued or missing subtitles') };
+      const bad = on.filter((a) => !a.ok || (a.d?.health.length ?? 0) > 0 || (a.d?.problems.length ?? 0) > 0);
+      return { value: count(bad.length), sub: bad.length ? bad.map((a) => a.id.charAt(0).toUpperCase() + a.id.slice(1)).join(', ') : t('All healthy'), tone: bad.length ? 'warn' : 'ok' };
+    }
+    case 'documents': {
+      const d = data<PaperlessData>('paperless');
+      if (!d) return d;
+      return which === 'total' ? { value: count(d.total), sub: t('documents') } : { value: count(d.inbox), sub: t('in the inbox') };
+    }
+    case 'nextcloud': {
+      const d = data<NextcloudData>('nextcloud');
+      if (!d) return d;
+      if (which === 'active') return d.activeToday == null ? null : { value: count(d.activeToday), sub: t('of {n} on today', { n: d.users }) };
+      if (which === 'free') return d.freeBytes == null ? null : { value: size(d.freeBytes), sub: t('free') };
+      return { value: count(d.files), sub: t('files') };
+    }
+    case 'git': {
+      const d = data<GiteaData>('gitea');
+      if (!d) return d;
+      return which === 'repos' ? { value: count(d.repos), sub: t('repositories') } : { value: count(d.unread), sub: t('notifications') };
+    }
+    case 'monitoring': {
+      const lists = [data<MonitorData>('netdata'), data<MonitorData>('prometheus')].filter((x) => x !== undefined);
+      if (!lists.length) return null;
+      const firing = lists.flatMap((x) => x?.alerts ?? []);
+      return { value: count(firing.length), sub: firing.length ? firing[0].name : t('Nothing firing'), tone: firing.some((a) => a.severity === 'critical') ? 'crit' : firing.length ? 'warn' : 'ok' };
     }
   }
   return null;

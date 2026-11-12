@@ -52,7 +52,12 @@ export type WidgetType =
   | 'weather'
   | 'markets'
   | 'sky'
-  | 'countdown';
+  | 'countdown'
+  | 'managers'
+  | 'documents'
+  | 'nextcloud'
+  | 'git'
+  | 'monitoring';
 
 /** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
@@ -203,6 +208,24 @@ export const NUMBERS: Partial<Record<WidgetType, [string, string][]>> = {
   sync: [['behind', 'Folders not up to date']],
   inbox: [['unread', 'Unread mail']],
   feeds: [['unread', 'Unread articles']],
+  managers: [
+    ['trouble', 'Apps that need you'],
+    ['queued', 'Queued, all together'],
+  ],
+  documents: [
+    ['inbox', 'In the inbox'],
+    ['total', 'Documents'],
+  ],
+  nextcloud: [
+    ['files', 'Files'],
+    ['active', 'People on today'],
+    ['free', 'Free space'],
+  ],
+  git: [
+    ['unread', 'Notifications'],
+    ['repos', 'Repositories'],
+  ],
+  monitoring: [['firing', 'Alerts firing']],
 };
 
 /** The ways this widget can be shown, for its settings. */
@@ -336,6 +359,11 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
     },
   },
   sky: { name: 'Sun and moon', about: "Sunrise, sunset, how long the day is and how it's changing, and the moon tonight. Uses the weather's place.", size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  managers: { name: 'Media managers', about: "Lidarr, Readarr, Prowlarr and Bazarr, a line each: whether it's healthy, what's stuck, and what's queued or missing subtitles.", size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  documents: { name: 'Documents', about: 'Paperless-ngx: documents waiting in the inbox, and how many it holds.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  nextcloud: { name: 'Nextcloud', about: 'Files, people on today, free space, and app updates waiting.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  git: { name: 'Git', about: 'Gitea or Forgejo: notifications waiting and how many repositories it holds.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
+  monitoring: { name: 'Monitoring alerts', about: 'Alerts firing now in Netdata or Prometheus, critical first, each linking back to where it fired.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
   countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },

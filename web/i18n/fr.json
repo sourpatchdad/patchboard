@@ -258,5 +258,22 @@
  "unread articles": "articles non lus",
  "Upload, recent tests": "Envoi, tests récents",
  "UPS load": "Charge de l'onduleur",
- "videos": "vidéos"
+ "videos": "vidéos",
+ "All healthy": "Tout va bien",
+ "documents": "documents",
+ "Documents": "Documents",
+ "files": "fichiers",
+ "free": "libres",
+ "Git": "Git",
+ "in the inbox": "dans la boîte de réception",
+ "Media managers": "Gestionnaires de médias",
+ "Monitoring alerts": "Alertes de supervision",
+ "Nextcloud": "Nextcloud",
+ "Nothing firing": "Aucune alerte",
+ "notifications": "notifications",
+ "Notifications": "Notifications",
+ "of {n} on today": "sur {n} connectés aujourd'hui",
+ "Open Paperless": "Ouvrir Paperless",
+ "queued or missing subtitles": "en file ou sous-titres manquants",
+ "repositories": "dépôts"
 }
