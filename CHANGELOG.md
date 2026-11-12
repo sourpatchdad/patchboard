@@ -10,6 +10,8 @@
 - **Lighter on open screens:** a source whose data didn't change since its
   last poll isn't sent again for a minute, so a tablet on the wall, or any
   tab left open, redraws only when something moved.
+- **Monitor on a big screen:** on a TV or a large monitor, labels, numbers,
+  lines, squares and bars all step up, so it reads from across the room.
 - **Monitor:** the network tile shows the latest recorded reading while
   TrueNAS's live feed reconnects, instead of a blank.
 

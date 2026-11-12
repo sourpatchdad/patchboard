@@ -11960,22 +11960,52 @@ a.jack .jack-socket {
   }
 }
 
-/* A big screen: bigger numbers and taller lines. */
+/* A big screen (a TV, a monitor on the wall): everything a step up, so it
+   reads from across the room. */
 @media (min-width: 1500px) and (min-height: 900px) {
   .monitor {
+    gap: 0 28px;
+    padding: 16px 28px 18px;
     font-size: 14px;
   }
 
+  .mon-status {
+    gap: 24px;
+    padding-bottom: 10px;
+  }
+
+  .mon-label,
+  .mon-dim {
+    font-size: 13px;
+  }
+
   .mon-big {
-    font-size: 32px;
+    font-size: 40px;
+  }
+
+  .mon-charts {
+    gap: 28px;
+    padding: 12px 0 14px;
+    margin-bottom: 14px;
   }
 
   .mon-chart {
-    height: 72px;
+    height: 84px;
+    margin-top: 8px;
   }
 
-  .mon-fleet {
-    grid-template-columns: repeat(auto-fill, 15px);
+  .mon-chart.is-thin {
+    height: 30px;
+  }
+
+  .mon-gauge {
+    height: 18px;
+    margin: 20px 0 14px;
+  }
+
+  .mon-col {
+    gap: 16px;
+    padding-right: 28px;
   }
 
   .mon-waffle100 {
@@ -11983,19 +12013,51 @@ a.jack .jack-socket {
     gap: 3px;
   }
 
+  .mon-fleet {
+    grid-template-columns: repeat(auto-fill, 16px);
+    gap: 4px;
+  }
+
   .mon-fleet i {
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .mon-squares {
+    gap: 3px;
   }
 
   .mon-squares i {
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
   }
 
   .mon-waffle li {
-    font-size: 12.5px;
-    line-height: 16px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .mon-temps li {
+    grid-template-columns: 6em minmax(0, 1fr) 4.5em;
+    padding: 2px 0;
+  }
+
+  .mon-meter {
+    height: 6px;
+  }
+
+  .mon-busy li {
+    grid-template-columns: minmax(0, 1fr) 120px 4em 5.5em;
+    padding: 2px 0;
+  }
+
+  .monitor :is(.heat-hours span, .heat-day) {
+    font-size: 12px;
+  }
+
+  .mon-lines li {
+    grid-template-columns: 6em minmax(0, 9em) minmax(0, 1fr) auto;
+    padding: 2px 0;
   }
 }
 
