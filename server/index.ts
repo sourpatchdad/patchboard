@@ -79,7 +79,7 @@ import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { ProblemFeed } from './problems.ts';
-import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice } from './household.ts';
+import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice, setHouseholdView } from './household.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
@@ -373,6 +373,24 @@ app.post('/api/household', async (c) => {
   recordAudit(who(c), 'household.add', made.id, typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '');
   return c.json({ id: made.id, path: `/join/${made.token}` });
 });
+// Where a device opens and the Monitor's color, from Settings; the device follows at once.
+const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/weather']);
+app.put('/api/household/:id', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; tint?: unknown };
+  let opens: string | null | undefined;
+  if (body.opens !== undefined) {
+    if (body.opens === null || body.opens === '') opens = null;
+    else if (typeof body.opens === 'string' && (OPENS.has(body.opens) || (/^\/b\/[\w-]+$/.test(body.opens) && getBoard(body.opens.slice(3))))) opens = body.opens;
+    else return c.json({ error: 'Pick a page or a board that exists' }, 400);
+  }
+  const tint = body.tint === undefined ? undefined : body.tint === 'blue' ? 'blue' : null;
+  const view = setHouseholdView(c.req.param('id'), { opens, tint });
+  if (!view) return c.json({ error: 'No such device' }, 404);
+  recordAudit(who(c), 'household.view', c.req.param('id'), [view.opens ?? 'wherever', view.tint ?? 'gray'].join(', '));
+  hub.emitHousehold(c.req.param('id'), view);
+  return c.json(view);
+});
 app.delete('/api/household/:id', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (!removeHouseholdDevice(c.req.param('id'))) return c.json({ error: 'No such device' }, 404);
@@ -428,12 +446,17 @@ app.post('/api/widgets/preview', async (c) => {
 app.get('/api/snapshot', (c) => {
   const device = householdOf(c);
   const snap = hub.snapshot();
-  return c.json(device ? { ...snap, readOnly: true, household: { name: device.name, lights: !config.readOnly } } : snap);
+  return c.json(
+    device ? { ...snap, readOnly: true, household: { id: device.id, name: device.name, lights: !config.readOnly, opens: device.opens, tint: device.tint, rev: device.rev } } : snap,
+  );
 });
 
 app.get('/api/events', (c) =>
   streamSSE(c, async (stream) => {
+    // A household device's own view changes reach that device and no one else.
+    const device = householdOf(c);
     const unsubscribe = hub.subscribe((e) => {
+      if (e.type === 'household' && e.id !== device?.id) return;
       void stream.writeSSE({ data: JSON.stringify(e) });
     });
     // Comment pings keep proxies from closing an idle connection.

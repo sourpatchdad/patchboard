@@ -673,6 +673,7 @@ const ACTION_TEXT: Record<string, string> = {
   'household.add': 'made a household link',
   'household.remove': 'removed a household device',
   'household.join': 'opened its household link',
+  'household.view': 'changed what a household device shows',
   'auth.failed': 'failed to sign in',
   'auth.hosts': 'changed the addresses Patchboard answers on',
   'auth.off': 'turned sign-in off',
@@ -812,14 +813,31 @@ function Keys() {
  * scenes; the server refuses everything else from it.
  */
 function Household() {
-  const readOnly = !!useStore().snap?.readOnly;
-  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number }[] | null>(null);
+  const { snap } = useStore();
+  const readOnly = !!snap?.readOnly;
+  // Where a device can open: Home, the other boards, and the pages a household device may see.
+  const places: [string, string][] = [
+    ['', 'Wherever it is'],
+    ['/', 'Home'],
+    ...(snap?.boards ?? []).filter((b) => b.id !== 'home').map((b) => [`/b/${b.id}`, b.name] as [string, string]),
+    ['/monitor', 'Monitor'],
+    ['/server', 'Server'],
+    ['/upcoming', 'Upcoming'],
+    ['/reading', 'Reading'],
+    ['/weather', 'Weather'],
+  ];
+  // Saved at once; the device follows within a second.
+  const setView = async (id: string, view: { opens?: string; tint?: string }) => {
+    setList((l) => l && l.map((d) => (d.id === id ? { ...d, ...view, opens: view.opens === undefined ? d.opens : view.opens || undefined, tint: (view.tint ?? d.tint) as 'gray' | 'blue' | undefined } : d)));
+    await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
+  };
+  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' }[] | null>(null);
   const [auth, setAuth] = useState<string>('none');
   const [name, setName] = useState('');
   const [made, setMade] = useState<{ name: string; url: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
-  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number }[]);
+  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' }[]);
   useEffect(() => {
     void load();
     void fetch('/api/session')
@@ -871,7 +889,7 @@ function Household() {
         </div>
       )}
       {list.length > 0 && (
-        <ul className="audit keys">
+        <ul className="audit keys household-list">
           {list.map((d) => (
             <li key={d.id}>
               <span>{d.name}</span>
@@ -880,6 +898,27 @@ function Household() {
                 <HoldButton className="text-button" danger hint="Hold to remove. The device stops working as a household device." onConfirm={() => void remove(d.id)}>
                   Remove
                 </HoldButton>
+              )}
+              {!readOnly && (
+                <div className="household-view">
+                  <label>
+                    <span>Opens</span>
+                    <select className="field" value={d.opens ?? ''} onChange={(e) => void setView(d.id, { opens: e.target.value })}>
+                      {places.map(([v, label]) => (
+                        <option key={v} value={v}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Monitor</span>
+                    <select className="field" value={d.tint ?? 'gray'} onChange={(e) => void setView(d.id, { tint: e.target.value })}>
+                      <option value="gray">Gray</option>
+                      <option value="blue">Blue</option>
+                    </select>
+                  </label>
+                </div>
               )}
             </li>
           ))}

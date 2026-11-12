@@ -55,7 +55,9 @@ by name.
 The link is the credential, and it signs the device in even when sign-in is
 on, so send it only to the device it's for. Patchboard stores its SHA-256
 hash and keeps the token in an HttpOnly, SameSite=Lax cookie for 400 days.
-Removing the device in Settings ends it on its next request. With sign-in
+Removing the device in Settings ends it on its next request. Settings also
+sets where each device opens and the Monitor's color; the device follows at
+once, and no other browser hears about it. With sign-in
 off, a removed device goes back to full access like any browser on your
 network; with sign-in on, it sees the sign-in page.
 

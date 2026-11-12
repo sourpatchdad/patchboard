@@ -11465,6 +11465,15 @@ a.jack .jack-socket {
   font-variant-numeric: tabular-nums;
 }
 
+/* Blue, set per device in Settings: a muted steel blue on the live lines,
+   waffles, running containers and good backups. Text stays gray; amber and
+   red still mean trouble. */
+.monitor.tint-blue {
+  --accent: #86a7cc;
+  --mon-up: #2c4157;
+  --mon-off: #172029;
+}
+
 .monitor p,
 .monitor ul,
 .monitor ol {
@@ -11757,6 +11766,29 @@ a.jack .jack-socket {
 .mon-fill > ul > li {
   flex: none;
   width: 100%;
+}
+
+/* Settings: each household device's Opens and Monitor color, under its name. */
+.household-list .household-view {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 6px;
+}
+
+.household-view label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.household-view .field {
+  width: auto;
+  min-width: 9em;
+  margin: 0;
 }
 
 /* Needs you takes what it needs before updates take the rest. */

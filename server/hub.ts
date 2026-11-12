@@ -271,6 +271,11 @@ export class Hub {
     this.emit({ type: 'boards', boards: boardList(), ...(changed ? { changed } : {}) });
   }
 
+  /** A household device's view changed: the events route passes it to that device only. */
+  emitHousehold(id: string, view: { opens?: string; tint?: 'gray' | 'blue'; rev?: number }): void {
+    this.emit({ type: 'household', id, ...view });
+  }
+
   /** The catalog changed outside a poll (e.g. a rearrange): tell every tab. */
   emitCatalog(): void {
     const cat = getCatalog();

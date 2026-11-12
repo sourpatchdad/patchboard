@@ -32,6 +32,9 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
       return { ...prev, brand: e.brand };
     case 'boards':
       return { ...prev, boards: e.boards, boardSaved: e.changed ? { id: e.changed, at: Date.now() } : prev.boardSaved };
+    case 'household':
+      // Sent only to this device: what it should show now.
+      return prev.household?.id === e.id ? { ...prev, household: { ...prev.household, opens: e.opens, tint: e.tint, rev: e.rev } } : prev;
   }
 }
 

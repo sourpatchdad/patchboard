@@ -21,14 +21,23 @@ const COOKIE_DAYS = 400;
 // Last seen is written at most this often, so a board left open doesn't write the database all day.
 const SEEN_EVERY = 10 * 60_000;
 
-interface Device {
+/** What a device shows, set from Settings: where it opens, and the Monitor's color. */
+export interface DeviceView {
+  /** A path: /, /b/<board>, /server, /monitor, /upcoming, /reading or /weather. */
+  opens?: string;
+  tint?: 'gray' | 'blue';
+  /** Changes with every save, so the device knows to follow. */
+  rev?: number;
+}
+
+interface Device extends DeviceView {
   name: string;
   hash: string;
   created: number;
   seen?: number;
 }
 
-export interface HouseholdDevice {
+export interface HouseholdDevice extends DeviceView {
   id: string;
   name: string;
   created: number;
@@ -41,7 +50,7 @@ const devices = (): Record<string, Device> => kvGet<Record<string, Device>>('hou
 /** The devices, newest first, without their hashes. */
 export function householdDevices(): HouseholdDevice[] {
   return Object.entries(devices())
-    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen }))
+    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, opens: d.opens, tint: d.tint, rev: d.rev }))
     .sort((a, b) => b.created - a.created);
 }
 
@@ -59,6 +68,18 @@ export function addHouseholdDevice(name: string): { id: string; token: string } 
   return { id, token };
 }
 
+/** Set what a device shows. `opens` is checked by the caller, which knows the boards. */
+export function setHouseholdView(id: string, view: { opens?: string | null; tint?: string | null }): DeviceView | null {
+  const all = devices();
+  const d = all[id];
+  if (!d) return null;
+  if (view.opens !== undefined) d.opens = view.opens || undefined;
+  if (view.tint !== undefined) d.tint = view.tint === 'blue' ? 'blue' : undefined;
+  d.rev = Date.now();
+  kvSet('household', all);
+  return { opens: d.opens, tint: d.tint, rev: d.rev };
+}
+
 export function removeHouseholdDevice(id: string): boolean {
   const all = devices();
   if (!all[id]) return false;
@@ -67,21 +88,21 @@ export function removeHouseholdDevice(id: string): boolean {
   return true;
 }
 
-const found = new WeakMap<Request, { id: string; name: string } | null>();
+const found = new WeakMap<Request, ({ id: string; name: string } & DeviceView) | null>();
 
 /** The household device this request comes from, or null. Looked up once per request. */
-export function householdOf(c: Context): { id: string; name: string } | null {
+export function householdOf(c: Context): ({ id: string; name: string } & DeviceView) | null {
   const cached = found.get(c.req.raw);
   if (cached !== undefined) return cached;
   const token = getCookie(c, COOKIE);
-  let hit: { id: string; name: string } | null = null;
+  let hit: ({ id: string; name: string } & DeviceView) | null = null;
   if (token) {
     const hash = sha(token);
     const all = devices();
     const entry = Object.entries(all).find(([, d]) => d.hash === hash);
     if (entry) {
       const [id, d] = entry;
-      hit = { id, name: d.name };
+      hit = { id, name: d.name, opens: d.opens, tint: d.tint, rev: d.rev };
       if (!d.seen || Date.now() - d.seen > SEEN_EVERY) {
         d.seen = Date.now();
         kvSet('household', all);

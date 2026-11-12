@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Remote control for household devices:** in Settings, Connections,
+  Sign-in and keys, set where each device opens (Home, any board, Monitor,
+  Server, Upcoming, Reading or Weather) and the Monitor's color, gray or
+  blue. The device follows within a second, with nobody touching it, and
+  opens there again after a restart.
 - **Monitor:** the network tile shows the latest recorded reading while
   TrueNAS's live feed reconnects, instead of a blank.
 

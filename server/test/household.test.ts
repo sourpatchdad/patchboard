@@ -65,3 +65,20 @@ test('names are short and plain, the list never carries a hash, and twenty is th
   while (h.householdDevices().length < 20) h.addHouseholdDevice(`Device ${h.householdDevices().length}`);
   assert.ok('error' in h.addHouseholdDevice('One more'));
 });
+
+test('a device remembers where it opens and its Monitor color; each change bumps its revision', () => {
+  // The test above filled all twenty places.
+  for (const d of h.householdDevices()) h.removeHouseholdDevice(d.id);
+  const made = h.addHouseholdDevice('Wall');
+  assert.ok('token' in made);
+  const first = h.setHouseholdView(made.id, { opens: '/monitor', tint: 'blue' });
+  assert.deepEqual({ opens: first?.opens, tint: first?.tint }, { opens: '/monitor', tint: 'blue' });
+  const second = h.setHouseholdView(made.id, { tint: 'pink' });
+  assert.equal(second?.opens, '/monitor', 'a change to the color keeps the page');
+  assert.equal(second?.tint, undefined, 'an unknown color goes back to gray');
+  assert.ok((second?.rev ?? 0) >= (first?.rev ?? 0));
+  assert.equal(h.setHouseholdView(made.id, { opens: null })?.opens, undefined, 'cleared: wherever it is');
+  assert.equal(h.setHouseholdView('nope', { opens: '/' }), null);
+  const listed = h.householdDevices().find((d) => d.id === made.id);
+  assert.ok(listed && !('hash' in listed));
+});

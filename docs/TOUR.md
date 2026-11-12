@@ -61,8 +61,11 @@ Live lines for CPU, memory and network; CPU and memory as a hundred squares
 each; the pool against its alert lines; a square per container; every
 backup across 14 nights; the CPU week; disk temperatures; and a feed of
 container events and the warning and error lines from every container's log.
-It keeps its own terminal look whatever the theme. Jump to finds it, or open
-`/monitor`.
+It keeps its own terminal look, in gray or a muted blue, whatever the
+theme. Jump to finds it, or open `/monitor`. For a wall tablet, make it a
+household device and set it to open the Monitor in Settings, Connections,
+Sign-in and keys: change that, or the color, from your desk and the tablet
+follows within a second.
 
 ![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
 

@@ -10,6 +10,7 @@ import { SignIn } from '../views/SignIn.tsx';
 import { HELP } from '../lib/docs.ts';
 import { needsYou } from '../lib/attention.ts';
 import { serviceFor } from '../lib/services.ts';
+import { useFollowOpens } from '../lib/household.ts';
 
 // On a phone the tab bar holds Home, Server, Stacks, then Reading once
 // Miniflux is set up (Upcoming until then), and More: every other page and
@@ -148,6 +149,7 @@ export function Shell() {
   }, [location.key]);
   const onBoard = location.pathname.startsWith('/b/');
   const household = !!snap?.household;
+  useFollowOpens();
   const householdRef = useRef(false);
   householdRef.current = household;
   // On a household device, links into the admin pages stay as text: styles

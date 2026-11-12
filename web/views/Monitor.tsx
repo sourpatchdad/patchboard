@@ -11,6 +11,7 @@ import { HourHeatmap } from '../components/Squares.tsx';
 import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
 import { needsYou } from '../lib/attention.ts';
+import { useFollowOpens } from '../lib/household.ts';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 
@@ -51,6 +52,9 @@ export function Monitor() {
   const problems = useProblemFeed();
 
   useEffect(() => setPageName('Monitor'), []);
+  useFollowOpens();
+  // The Monitor's color: set per household device in Settings, or ?tint= in the address.
+  const tint = snap?.household?.tint ?? (new URLSearchParams(location.search).get('tint') === 'blue' ? 'blue' : 'gray');
 
   // Live lines: the last two hours from history, then every new reading on the end.
   const mem = sys?.mem;
@@ -97,7 +101,7 @@ export function Monitor() {
   const netOut = net ? net.tx : (txLine[txLine.length - 1]?.[1] ?? null);
 
   return (
-    <div className="monitor">
+    <div className={`monitor tint-${tint}`}>
       <header className="mon-status">
         <Link to="/" className="mon-host" title="Back to Home">
           {host.toLowerCase()}
