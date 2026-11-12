@@ -58,6 +58,9 @@ async function post(url: string, body: unknown, action = false): Promise<void> {
 
 export function Feeds() {
   const { snap } = useStore();
+  // Read inside the stable markRead callback, so it follows the live value.
+  const household = useRef(false);
+  household.current = !!snap?.household;
   const now = useNow();
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState<FeedsResponse | null>(null);
@@ -169,7 +172,8 @@ export function Feeds() {
   const markRead = useCallback((ids: number[]) => {
     if (!ids.length) return;
     setRead((prev) => new Set([...prev, ...ids]));
-    void post('/api/feeds/read', { ids }, true);
+    // A household device keeps what it read to itself; the unread count is the owner's.
+    if (!household.current) void post('/api/feeds/read', { ids }, true);
   }, []);
 
   async function markAll() {

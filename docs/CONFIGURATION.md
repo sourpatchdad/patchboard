@@ -7,7 +7,7 @@ You configure almost everything in the UI:
 | Settings, Connections | Integrations: addresses and keys, encrypted on the server | Every device |
 | Apps, Edit apps, Arrange board, and Customize on other pages | Apps, groups, icons, live numbers, the boards on Home, what each page shows | Every device |
 | Settings, Alerts | When storage, drives and links count as trouble | Every device |
-| Settings, Connections, Sign-in and keys | A password, and other names you open Patchboard by | Every device |
+| Settings, Connections, Sign-in and keys | A password, other names you open Patchboard by, and household devices | Every device |
 | Settings, Look, Name | The name in the header and tab | Every device |
 | Settings, Look and Home | Theme, colors, type, density, keyboard shortcuts, units and Home header | This device only |
 | The compose file | Time zone, port, mounts | The server |
@@ -89,7 +89,7 @@ services.yaml.
 | `OIDC_NAME` | `your identity provider` | The name on the sign-in button. |
 | `OIDC_SCOPES` | `openid email profile` | Add `groups` if your provider needs it to send groups. |
 | `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |
-| `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. |
+| `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. For one family phone or tablet, make it a household device instead ([SECURITY.md](../SECURITY.md)). |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
 
 ## Alerts

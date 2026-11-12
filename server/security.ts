@@ -12,12 +12,16 @@
 //
 // READ_ONLY=1 refuses every change to the server (actions, updates, board
 // edits, sign-ins to integrations) no matter who asks.
+//
+// Household devices (household.ts) are signed in by a link and limited to
+// viewing, in every mode.
 
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { config } from './config.ts';
 import { kvGet, kvSet, recordAudit } from './db.ts';
+import { householdOf } from './household.ts';
 
 const COOKIE = 'pb_session';
 const SESSION_DAYS = 30;
@@ -163,8 +167,13 @@ export function logout(c: Context): void {
   deleteCookie(c, COOKIE, { path: '/' });
 }
 
-/** The signed-in user, or null. In 'none' mode everyone is "local". */
+/**
+ * The signed-in user, or null. A household device is signed in by its link,
+ * in every mode; otherwise in 'none' mode everyone is "local".
+ */
 export function currentUser(c: Context): string | null {
+  const device = householdOf(c);
+  if (device) return `household: ${device.name}`;
   if (config.auth.mode === 'none') return 'local';
   if (config.auth.mode === 'forward') {
     const v = c.req.header(config.auth.userHeader);

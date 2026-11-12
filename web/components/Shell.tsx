@@ -1,7 +1,7 @@
 import { useModal } from '../lib/modal.ts';
 import { count } from '../lib/format.ts';
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Navigate, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { setAppName, setPageName, setStatus, getAppearance } from '../lib/appearance.ts';
 import { PullRefresh } from './PullRefresh.tsx';
 import { useStore } from '../lib/store.tsx';
@@ -46,6 +46,11 @@ const GO: Record<string, [string, string]> = {
   a: ['/apps', 'Apps'],
   ',': ['/settings', 'Settings'],
 };
+
+// Pages for whoever runs the server. A household device doesn't see them;
+// it does see Server, which only shows how things stand.
+const ADMIN = ['/stacks', '/logs', '/apps', '/settings', '/c'];
+export const adminPage = (path: string) => ADMIN.some((a) => path === a || path.startsWith(`${a}/`));
 
 const isTyping = (el: EventTarget | null) =>
   el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
@@ -142,6 +147,24 @@ export function Shell() {
     return () => clearInterval(t);
   }, [location.key]);
   const onBoard = location.pathname.startsWith('/b/');
+  const household = !!snap?.household;
+  const householdRef = useRef(false);
+  householdRef.current = household;
+  // On a household device, links into the admin pages stay as text: styles
+  // key off this attribute, and a click or Enter on one goes nowhere.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-household', household);
+    if (!household) return;
+    const stop = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (a && a.origin === window.location.origin && adminPage(a.pathname)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener('click', stop, true);
+    return () => document.removeEventListener('click', stop, true);
+  }, [household]);
   const navigate = useNavigate();
   const gAt = useRef(0);
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -192,7 +215,7 @@ export function Shell() {
         }
       } else if (e.key === 'g') {
         gAt.current = Date.now();
-      } else if (Date.now() - gAt.current < 1200 && GO[e.key]) {
+      } else if (Date.now() - gAt.current < 1200 && GO[e.key] && !(householdRef.current && adminPage(GO[e.key][0]))) {
         gAt.current = 0;
         setHelp(false);
         navigate(GO[e.key][0]);
@@ -204,8 +227,11 @@ export function Shell() {
 
   const unreadFeeds = (snap?.sources.miniflux?.data as { unread: number } | null)?.unread ?? 0;
   const reading = !!snap?.sources.miniflux || !!snap?.demo;
-  const phoneTabs = ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
-  const more: { to: string; label: string }[] = [...NAV.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }];
+  const phoneTabs = household ? ['/', '/upcoming', reading ? '/reading' : '/weather'] : ['/', '/server', '/stacks', reading ? '/reading' : '/upcoming'];
+  const nav = household ? NAV.filter((n) => !adminPage(n.to)) : NAV;
+  const more: { to: string; label: string }[] = [...nav.filter((n) => !phoneTabs.includes(n.to)), { to: '/weather', label: 'Weather' }, { to: '/settings', label: 'Settings' }].filter(
+    (m) => !phoneTabs.includes(m.to) && !(household && adminPage(m.to)),
+  );
   const inMore = more.some((m) => location.pathname === m.to || location.pathname.startsWith(`${m.to}/`));
 
   return (
@@ -217,7 +243,7 @@ export function Shell() {
           <span title={name}>{name}</span>
         </NavLink>
         <nav className="nav" aria-label="Views">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -242,10 +268,16 @@ export function Shell() {
         </nav>
         <div className="topbar-end">
           {snap?.demo && <span className="pill demo-pill">Demo data</span>}
-          {snap?.readOnly && (
-            <span className="pill" title="READ_ONLY=1: you can't change anything on this server from here">
-              Read-only
+          {household ? (
+            <span className="pill" title={`${snap?.household?.name}: this device can look, and switch lights and scenes, but not change the server`}>
+              Household
             </span>
+          ) : (
+            snap?.readOnly && (
+              <span className="pill" title="READ_ONLY=1: you can't change anything on this server from here">
+                Read-only
+              </span>
+            )
           )}
           <span className={`live ${live ? 'live-on' : ''}`} title={live ? 'Receiving live updates' : 'Reconnecting'}>
             {live ? 'Live' : failed ? 'Offline' : 'Connecting'}
@@ -256,6 +288,7 @@ export function Shell() {
               <path d="M16 16l4 4" />
             </svg>
           </button>
+          {!household && (
           <NavLink to="/settings" className="topbar-icon topbar-settings" aria-label="Settings">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
@@ -264,6 +297,7 @@ export function Shell() {
             </svg>
             <span className="topbar-label" aria-hidden>Settings</span>
           </NavLink>
+          )}
           <button type="button" className="topbar-icon topbar-help" aria-label="Help and keyboard shortcuts" onClick={() => setHelp(true)}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <circle cx="12" cy="12" r="8.5" />
@@ -285,6 +319,8 @@ export function Shell() {
             <h1>Can't reach the Patchboard server</h1>
             <p>The page loaded, but /api/snapshot didn't answer. Check that the container is running, then reload.</p>
           </div>
+        ) : household && adminPage(location.pathname) ? (
+          <Navigate to="/" replace />
         ) : (
           <Outlet />
         )}
@@ -299,7 +335,7 @@ export function Shell() {
 
       <Palette open={palette} onClose={() => setPalette(false)} onKeys={() => (setPalette(false), setHelp(true))} />
       {moreOpen && <MoreSheet items={more} unread={unreadFeeds} onJump={() => (setMoreOpen(false), setPalette(true))} onClose={() => setMoreOpen(false)} />}
-      {help && <KeyboardHelp mac={mac} onClose={() => setHelp(false)} />}
+      {help && <KeyboardHelp mac={mac} household={household} onClose={() => setHelp(false)} />}
     </div>
   );
 }
@@ -332,7 +368,7 @@ function MoreSheet({ items, unread, onJump, onClose }: { items: { to: string; la
   );
 }
 
-function KeyboardHelp({ mac, onClose }: { mac: boolean; onClose: () => void }) {
+function KeyboardHelp({ mac, household, onClose }: { mac: boolean; household: boolean; onClose: () => void }) {
   const modal = useModal<HTMLDivElement>(onClose);
   return (
     <div className="palette-backdrop" onClick={onClose}>
@@ -346,7 +382,7 @@ function KeyboardHelp({ mac, onClose }: { mac: boolean; onClose: () => void }) {
         <h3 className="jw-sub">Keyboard</h3>
         <dl>
           <div><dt><kbd>{mac ? '⌘' : 'Ctrl'} K</kbd> <kbd>/</kbd></dt><dd>Jump to anything</dd></div>
-          {Object.entries(GO).map(([k, [, label]]) => (
+          {Object.entries(GO).filter(([, [to]]) => !(household && adminPage(to))).map(([k, [, label]]) => (
             <div key={k}><dt><kbd>g</kbd> <kbd>{k}</kbd></dt><dd>{label}</dd></div>
           ))}
           <div><dt><kbd>j</kbd> <kbd>k</kbd> <kbd>o</kbd> <kbd>u</kbd></dt><dd>Reading: next, previous, open, back to the list</dd></div>

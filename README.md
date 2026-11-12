@@ -94,7 +94,8 @@ a link to its app, with time left when the service reports it.
 
 **Security.** Keys stay on the server. Read-only mode, a Docker socket
 proxy, forward auth and an activity log let you decide how much it can do
-and see who did what.
+and see who did what. A household device, set up from a link, gets the
+boards, cameras and lights and none of the server controls.
 
 ## Pages
 

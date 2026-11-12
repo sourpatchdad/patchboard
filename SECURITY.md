@@ -41,6 +41,22 @@ cookie arrives on the redirect back from the provider. Changes still need the
 `READ_ONLY=1` refuses every change for everyone and hides the controls.
 Marking articles read still works.
 
+For one device instead of everyone, make it a household device: Settings,
+Connections, Sign-in and keys, Household devices, Make a link, then open the
+link once on that phone or tablet. It sees the boards, cameras, the Server
+page, reading and calendar, and can switch the Home Assistant lights and
+scenes pinned to a board. The server refuses every other change from it, and
+refuses the reads meant for you: logs, container pages, settings, keys and
+the activity log. A route added later stays closed to it until it's allowed
+by name.
+
+The link is the credential, and it signs the device in even when sign-in is
+on, so send it only to the device it's for. Patchboard stores its SHA-256
+hash and keeps the token in an HttpOnly, SameSite=Lax cookie for 400 days.
+Removing the device in Settings ends it on its next request. With sign-in
+off, a removed device goes back to full access like any browser on your
+network; with sign-in on, it sees the sign-in page.
+
 ### How much of Docker it can touch
 
 The Docker socket gives root on the host, and `:ro` on the mount doesn't

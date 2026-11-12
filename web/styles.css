@@ -5611,7 +5611,36 @@ body.is-sorting * {
   }
 }
 
-/* ---------- Settings: keys ---------- */
+/* ---------- Settings: keys and household devices ---------- */
+
+.key-add.household-add {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* A household device: links into the admin pages read as plain text, and a
+   section's own link there (Details) goes away. */
+:root[data-household] :is(a[href^='/c/'], a[href^='/logs'], a[href^='/apps'], a[href^='/settings']) {
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+}
+
+:root[data-household] .section-action:is([href^='/c/'], [href^='/logs'], [href^='/apps'], [href^='/settings']) {
+  display: none;
+}
+
+/* Nothing left in the foot on a household device: no gap for it either. */
+.board-foot:empty {
+  display: none;
+}
+
+.household-made {
+  margin-top: 12px;
+}
+
+.household-made p {
+  margin: 0;
+}
 
 .keys li {
   grid-template-columns: minmax(0, 1fr) auto auto;

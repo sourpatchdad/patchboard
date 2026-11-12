@@ -126,6 +126,12 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       { id: 'a-light', label: 'Light mode', hint: 'Appearance', run: () => setAppearance({ scheme: 'light' }) },
       ...THEMES.map((t) => ({ id: `a-${t.id}`, label: `${t.name} theme`, hint: 'Appearance', run: () => setAppearance({ theme: t.id }) })),
     ];
+    // A household device sees no admin pages, container pages or logs.
+    const household = !!snap.household;
+    if (household) {
+      const adminViews = new Set(['v-stacks', 'v-logs', 'v-apps', 'v-settings']);
+      out.splice(0, out.length, ...out.filter((it) => !adminViews.has(it.id) && !it.id.startsWith('set-')));
+    }
     const ctrs = containerMap(snap);
     const pages = (name: string, withDetails: boolean) => [
       ...(withDetails ? [{ label: 'Details', run: go(`/c/${encodeURIComponent(name)}`) }] : []),
@@ -139,14 +145,16 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
         if (!s.href && !c) continue;
         const external = !!s.href && isExternal(s.href);
         if (c) claimed.add(c.name);
+        // A household device opens an app at its own address, or not at all.
+        if (household && !s.href) continue;
         out.push({
           id: `s-${s.name}`,
           label: s.name,
           hint: c && c.state !== 'running' ? `${g.name}, ${c.state}` : g.name,
           icon: s.icon,
           terms: c ? `${c.name} container logs details` : undefined,
-          run: external ? openUrl(s.href!) : go(c ? `/c/${encodeURIComponent(c.name)}` : '/apps'),
-          subs: c ? pages(c.name, external) : undefined,
+          run: external || (household && s.href) ? openUrl(s.href!) : go(c ? `/c/${encodeURIComponent(c.name)}` : '/apps'),
+          subs: c && !household ? pages(c.name, external) : undefined,
         });
       }
     }
@@ -155,7 +163,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
     }
     for (const c of ctrs.values()) {
       const hint = c.state === 'running' ? `Container${c.project ? ` in ${c.project}` : ''}` : `Container, ${c.state}`;
-      if (!claimed.has(c.name)) out.push({ id: `c-${c.name}`, label: c.name, hint, terms: 'container logs details', run: go(`/c/${encodeURIComponent(c.name)}`), subs: pages(c.name, false) });
+      if (!claimed.has(c.name) && !household) out.push({ id: `c-${c.name}`, label: c.name, hint, terms: 'container logs details', run: go(`/c/${encodeURIComponent(c.name)}`), subs: pages(c.name, false) });
       // Actions by name: "restart sonarr". Stop and restart ask first, as the
       // hold buttons do; the container page then follows it through.
       if (!snap.readOnly && c.name !== (snap.self?.container ?? 'patchboard')) {

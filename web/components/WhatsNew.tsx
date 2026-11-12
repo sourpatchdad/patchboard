@@ -44,7 +44,8 @@ export function VersionLine() {
     }
   }, [version, seen]);
 
-  if (!me) return null;
+  // A household device has nothing to update.
+  if (!me || snap.household) return null;
   const releases = data?.releases ?? [];
   const newer = releases.filter((r) => compareVersions(r.version, version) > 0);
   const newImage = !!(me.container && snap.updates[me.container]);

@@ -1168,8 +1168,10 @@ export interface Snapshot {
   links: Links;
   /** Container name -> pending image update. */
   updates: Record<string, ImageUpdate>;
-  /** READ_ONLY=1: the UI hides every control that changes something. */
+  /** READ_ONLY=1, or a household device: the UI hides every control that changes something. */
   readOnly: boolean;
+  /** This browser is a household device: it views, and may switch pinned lights and scenes when `lights` is true. */
+  household?: { name: string; lights: boolean };
   /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
   limits?: Limits;
   /** What each page shows (its Customize button). */

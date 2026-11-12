@@ -78,6 +78,7 @@ import { demoAppStat, demoJson } from './demo-ops.ts';
 import { kvGet, kvSet } from './db.ts';
 import { type DiunNotice, recordDiunNotice } from './updates.ts';
 import { listAudit, recordAudit, recordEvent } from './db.ts';
+import { addHouseholdDevice, householdDevices, householdGuard, householdOf, joinHousehold, removeHouseholdDevice } from './household.ts';
 import { currentUser, endAllSessions, hashPassword, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
 import { startDeviceFlow, traktDisconnect, traktStatus, whenTraktConnects } from './trakt-auth.ts';
@@ -256,12 +257,13 @@ app.use('/api/*', async (c, next) => {
   await next();
 });
 
+app.use('/api/*', householdGuard());
 app.use('/api/*', requireAuth());
 app.use('/api/*', readOnlyGuard());
 const who = (c: Parameters<typeof currentUser>[0]) => currentUser(c) ?? '?';
 
 // Who's here, how sign-in works, and whether changes are allowed.
-app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly, provider: config.auth.mode === 'oidc' ? config.auth.oidc.name : undefined }));
+app.get('/api/session', (c) => c.json({ auth: config.auth.mode, user: currentUser(c), readOnly: config.readOnly, household: householdOf(c)?.name, provider: config.auth.mode === 'oidc' ? config.auth.oidc.name : undefined }));
 
 // OIDC: send the browser to the provider, then take it back.
 const oidcRedirect = (c: Parameters<typeof currentUser>[0]) => {
@@ -360,6 +362,23 @@ app.post('/api/logout', (c) => {
 
 app.get('/api/audit', (c) => c.json(listAudit(200)));
 
+// Household devices: a link per device, made and removed here.
+app.get('/api/household', (c) => c.json(householdDevices()));
+app.post('/api/household', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const body = (await c.req.json().catch(() => ({}))) as { name?: unknown };
+  const made = addHouseholdDevice(typeof body.name === 'string' ? body.name : '');
+  if ('error' in made) return c.json(made, 400);
+  recordAudit(who(c), 'household.add', made.id, typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '');
+  return c.json({ id: made.id, path: `/join/${made.token}` });
+});
+app.delete('/api/household/:id', (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!removeHouseholdDevice(c.req.param('id'))) return c.json({ error: 'No such device' }, 404);
+  recordAudit(who(c), 'household.remove', c.req.param('id'), '');
+  return c.json({ ok: true });
+});
+
 // Feeds and Releases widgets: the server reads the addresses saved in the
 // board; the browser names only the board and the widget.
 app.get('/api/rss/:board/:id', async (c) => {
@@ -403,7 +422,13 @@ app.post('/api/widgets/preview', async (c) => {
   return c.json(await fetchJsonWidget(v.config, true));
 });
 
-app.get('/api/snapshot', (c) => c.json(hub.snapshot()));
+// A household device gets the same picture with every control turned off,
+// except the lights and scenes it may still switch.
+app.get('/api/snapshot', (c) => {
+  const device = householdOf(c);
+  const snap = hub.snapshot();
+  return c.json(device ? { ...snap, readOnly: true, household: { name: device.name, lights: !config.readOnly } } : snap);
+});
 
 app.get('/api/events', (c) =>
   streamSSE(c, async (stream) => {
@@ -1526,6 +1551,15 @@ app.get('/api/img/tautulli', async (c) => {
 });
 
 app.get('/healthz', (c) => c.text('ok'));
+
+// Opening a household link: keep it in this browser, then show Home.
+app.get('/join/:token', (c) => {
+  c.header('Cache-Control', 'no-store');
+  if (!joinHousehold(c, c.req.param('token'))) {
+    return c.html('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Patchboard</title><body style="font:16px system-ui;margin:2rem;max-width:32rem"><h1 style="font-size:1.4rem">This link no longer works</h1><p>Whoever runs Patchboard removed it or made a new one. Ask them for a fresh link.</p></body>', 404);
+  }
+  return c.redirect('/', 302);
+});
 
 // Static client and SPA fallback.
 const indexPath = join(config.staticDir, 'index.html');

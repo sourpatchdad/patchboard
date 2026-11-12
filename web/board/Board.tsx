@@ -621,7 +621,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
 
       <div className="board-foot" inert={editing || undefined}>
           <VersionLine />
-          <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Edit header</Link>
+          {!snap?.readOnly && <Link className="text-button board-header-settings" to="/settings?tab=home#home-header">Edit header</Link>}
           {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             Arrange board
           </button>

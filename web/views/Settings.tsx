@@ -273,6 +273,7 @@ export function Settings() {
           {part === 'access' && (
             <>
               <SignIn />
+              <Household />
               <Keys />
             </>
           )}
@@ -669,6 +670,9 @@ const ACTION_TEXT: Record<string, string> = {
   'trakt.connect': 'started a Trakt sign-in',
   'trakt.disconnect': 'disconnected Trakt',
   'auth.signin': 'signed in',
+  'household.add': 'made a household link',
+  'household.remove': 'removed a household device',
+  'household.join': 'opened its household link',
   'auth.failed': 'failed to sign in',
   'auth.hosts': 'changed the addresses Patchboard answers on',
   'auth.off': 'turned sign-in off',
@@ -797,6 +801,113 @@ function Keys() {
           </button>
           {err && <span className="crit-text" role="alert">{err}</span>}
         </div>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * Household devices: a link per family phone or wall tablet. The device sees
+ * the boards, cameras, reading and calendar and can switch pinned lights and
+ * scenes; the server refuses everything else from it.
+ */
+function Household() {
+  const readOnly = !!useStore().snap?.readOnly;
+  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number }[] | null>(null);
+  const [auth, setAuth] = useState<string>('none');
+  const [name, setName] = useState('');
+  const [made, setMade] = useState<{ name: string; url: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [err, setErr] = useState('');
+  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number }[]);
+  useEffect(() => {
+    void load();
+    void fetch('/api/session')
+      .then((r) => r.json())
+      .then((s: { auth?: string }) => setAuth(s.auth ?? 'none'));
+  }, []);
+  const add = async () => {
+    setErr('');
+    setCopied(false);
+    const res = await fetch('/api/household', { method: 'POST', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    const body = (await res.json()) as { path?: string; error?: string };
+    if (!res.ok || !body.path) return setErr(body.error ?? `HTTP ${res.status}`);
+    setMade({ name: name.trim(), url: `${location.origin}${body.path}` });
+    setName('');
+    await load();
+  };
+  const remove = async (id: string) => {
+    await fetch(`/api/household/${id}`, { method: 'DELETE', headers: ACTION });
+    setMade(null);
+    await load();
+  };
+  const copy = async () => {
+    // Browsers allow the clipboard only on https or localhost; elsewhere the field is selected to copy by hand.
+    try {
+      await navigator.clipboard.writeText(made!.url);
+      setCopied(true);
+    } catch {
+      document.querySelector<HTMLInputElement>('.household-url')?.select();
+    }
+  };
+  if (!list) return null;
+  return (
+    <Section title="Household devices" count={list.length ? String(list.length) : undefined}>
+      <p className="settings-note">
+        A link for a family phone or a wall tablet. Open it once on that device: it sees the boards, cameras, server, reading and calendar, and switches the lights
+        and scenes pinned to a board. It can't update, restart or stop anything, or open Settings, logs or container pages.
+      </p>
+      {made && (
+        <div className="household-made" role="status">
+          <p>
+            Open this link on <strong>{made.name}</strong>. Patchboard shows it only now, and anyone with it gets the same view.
+          </p>
+          <div className="key-add household-add">
+            <input className="field mono household-url" readOnly value={made.url} aria-label={`Household link for ${made.name}`} onFocus={(e) => e.currentTarget.select()} />
+            <button type="button" className="button button-quiet" onClick={() => void copy()}>
+              {copied ? 'Copied' : 'Copy link'}
+            </button>
+          </div>
+        </div>
+      )}
+      {list.length > 0 && (
+        <ul className="audit keys">
+          {list.map((d) => (
+            <li key={d.id}>
+              <span>{d.name}</span>
+              <time>{d.seen ? `used ${agoLong(d.seen)}` : 'not opened yet'}</time>
+              {!readOnly && (
+                <HoldButton className="text-button" danger hint="Hold to remove. The device stops working as a household device." onConfirm={() => void remove(d.id)}>
+                  Remove
+                </HoldButton>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {!readOnly && (
+        <div className="key-add household-add">
+          <input
+            className="field"
+            value={name}
+            maxLength={40}
+            placeholder="Kitchen tablet"
+            aria-label="Device name"
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && name.trim() && void add()}
+          />
+          <button type="button" className="button button-quiet" disabled={!name.trim()} onClick={() => void add()}>
+            Make a link
+          </button>
+          {err && (
+            <span className="crit-text" role="alert">
+              {err}
+            </span>
+          )}
+        </div>
+      )}
+      {auth === 'none' && list.length > 0 && (
+        <p className="settings-note">With sign-in off, a device you remove goes back to full access, like any browser on your network. Turn on a password above if that matters.</p>
       )}
     </Section>
   );

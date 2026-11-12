@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Household devices:** a link for a family phone or a wall tablet, made in
+  Settings, Connections, Sign-in and keys. Open it once and that device sees
+  the boards, cameras, the Server page, reading and calendar, and switches
+  the lights and scenes pinned to a board. It gets no update, restart or stop
+  buttons, no Settings, logs or container pages, and the server refuses those
+  from it too. Remove a device and its link stops working.
+
 ## 1.1.3 (2026-11-11)
 
 - **Logs:** apps that color their output, such as Immich, read as plain

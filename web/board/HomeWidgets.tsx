@@ -103,7 +103,8 @@ export function HomeAssistantWidget({ entities: list }: { entities?: string }) {
               );
             }
             const d = haDisplay(e);
-            const action = snap?.readOnly ? null : haActionFor(id);
+            // A household device may still switch what's pinned here.
+            const action = snap?.readOnly && !snap.household?.lights ? null : haActionFor(id);
             const body = (
               <>
                 <span className="ha-name">{e.name}</span>

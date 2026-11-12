@@ -4,7 +4,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Making it yours
 
-- [ ] A household view: a sign-in that sees the boards and cameras but no controls
 - [ ] Your own app icon, such as your server's logo, in place of the P
 - [ ] A setup file in YAML, to export and import everything at once
 - [ ] A search box with `!` shortcuts
