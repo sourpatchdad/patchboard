@@ -14,6 +14,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { kvGet, kvSet, recordAudit } from './db.ts';
+import { DIM_HOURS } from '../shared/night.ts';
 
 const COOKIE = 'pb_household';
 // Browsers cap cookie lifetimes at 400 days; a family phone shouldn't have to come back for a new link.
@@ -21,11 +22,13 @@ const COOKIE_DAYS = 400;
 // Last seen is written at most this often, so a board left open doesn't write the database all day.
 const SEEN_EVERY = 10 * 60_000;
 
-/** What a device shows, set from Settings: where it opens, and the Monitor's color. */
+/** What a device shows, set from Settings: where it opens, the Monitor's color, and its night hours. */
 export interface DeviceView {
   /** A path: /, /b/<board>, /server, /monitor, /upcoming, /reading or /weather. */
   opens?: string;
   tint?: 'gray' | 'blue' | 'color';
+  /** Night hours to dim for, like '22-7'; unset never dims. */
+  dim?: string;
   /** Changes with every save, so the device knows to follow. */
   rev?: number;
 }
@@ -50,7 +53,7 @@ const devices = (): Record<string, Device> => kvGet<Record<string, Device>>('hou
 /** The devices, newest first, without their hashes. */
 export function householdDevices(): HouseholdDevice[] {
   return Object.entries(devices())
-    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, opens: d.opens, tint: d.tint, rev: d.rev }))
+    .map(([id, d]) => ({ id, name: d.name, created: d.created, seen: d.seen, opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev }))
     .sort((a, b) => b.created - a.created);
 }
 
@@ -69,15 +72,16 @@ export function addHouseholdDevice(name: string): { id: string; token: string } 
 }
 
 /** Set what a device shows. `opens` is checked by the caller, which knows the boards. */
-export function setHouseholdView(id: string, view: { opens?: string | null; tint?: string | null }): DeviceView | null {
+export function setHouseholdView(id: string, view: { opens?: string | null; tint?: string | null; dim?: string | null }): DeviceView | null {
   const all = devices();
   const d = all[id];
   if (!d) return null;
   if (view.opens !== undefined) d.opens = view.opens || undefined;
   if (view.tint !== undefined) d.tint = view.tint === 'blue' || view.tint === 'color' ? view.tint : undefined;
+  if (view.dim !== undefined) d.dim = (DIM_HOURS as readonly string[]).includes(view.dim ?? '') ? view.dim! : undefined;
   d.rev = Date.now();
   kvSet('household', all);
-  return { opens: d.opens, tint: d.tint, rev: d.rev };
+  return { opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev };
 }
 
 export function removeHouseholdDevice(id: string): boolean {
@@ -102,7 +106,7 @@ export function householdOf(c: Context): ({ id: string; name: string } & DeviceV
     const entry = Object.entries(all).find(([, d]) => d.hash === hash);
     if (entry) {
       const [id, d] = entry;
-      hit = { id, name: d.name, opens: d.opens, tint: d.tint, rev: d.rev };
+      hit = { id, name: d.name, opens: d.opens, tint: d.tint, dim: d.dim, rev: d.rev };
       if (!d.seen || Date.now() - d.seen > SEEN_EVERY) {
         d.seen = Date.now();
         kvSet('household', all);

@@ -79,6 +79,8 @@ test('a device remembers where it opens and its Monitor color; each change bumps
   assert.equal(second?.tint, undefined, 'an unknown color goes back to gray');
   assert.ok((second?.rev ?? 0) >= (first?.rev ?? 0));
   assert.equal(h.setHouseholdView(made.id, { opens: null })?.opens, undefined, 'cleared: wherever it is');
+  assert.equal(h.setHouseholdView(made.id, { dim: '22-7' })?.dim, '22-7', 'night hours');
+  assert.equal(h.setHouseholdView(made.id, { dim: '3-4' })?.dim, undefined, 'only the offered hours');
   assert.equal(h.setHouseholdView('nope', { opens: '/' }), null);
   const listed = h.householdDevices().find((d) => d.id === made.id);
   assert.ok(listed && !('hash' in listed));

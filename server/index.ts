@@ -373,11 +373,11 @@ app.post('/api/household', async (c) => {
   recordAudit(who(c), 'household.add', made.id, typeof body.name === 'string' ? body.name.trim().slice(0, 40) : '');
   return c.json({ id: made.id, path: `/join/${made.token}` });
 });
-// Where a device opens and the Monitor's color, from Settings; the device follows at once.
+// Where a device opens, the Monitor's color and its night hours, from Settings; the device follows at once.
 const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/weather']);
 app.put('/api/household/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; tint?: unknown };
+  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; tint?: unknown; dim?: unknown };
   let opens: string | null | undefined;
   if (body.opens !== undefined) {
     if (body.opens === null || body.opens === '') opens = null;
@@ -385,9 +385,10 @@ app.put('/api/household/:id', async (c) => {
     else return c.json({ error: 'Pick a page or a board that exists' }, 400);
   }
   const tint = body.tint === undefined ? undefined : body.tint === 'blue' || body.tint === 'color' ? body.tint : null;
-  const view = setHouseholdView(c.req.param('id'), { opens, tint });
+  const dim = body.dim === undefined ? undefined : typeof body.dim === 'string' ? body.dim : null;
+  const view = setHouseholdView(c.req.param('id'), { opens, tint, dim });
   if (!view) return c.json({ error: 'No such device' }, 404);
-  recordAudit(who(c), 'household.view', c.req.param('id'), [view.opens ?? 'wherever', view.tint ?? 'gray'].join(', '));
+  recordAudit(who(c), 'household.view', c.req.param('id'), [view.opens ?? 'wherever', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims'].join(', '));
   hub.emitHousehold(c.req.param('id'), view);
   return c.json(view);
 });
@@ -447,7 +448,7 @@ app.get('/api/snapshot', (c) => {
   const device = householdOf(c);
   const snap = hub.snapshot();
   return c.json(
-    device ? { ...snap, readOnly: true, household: { id: device.id, name: device.name, lights: !config.readOnly, opens: device.opens, tint: device.tint, rev: device.rev } } : snap,
+    device ? { ...snap, readOnly: true, household: { id: device.id, name: device.name, lights: !config.readOnly, opens: device.opens, tint: device.tint, dim: device.dim, rev: device.rev } } : snap,
   );
 });
 

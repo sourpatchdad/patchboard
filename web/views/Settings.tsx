@@ -10,6 +10,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
+import { DIM_HOURS, dimLabel } from '../../shared/night.ts';
+import { setShowcase, useShowcase } from '../lib/showcase.ts';
 import { Section } from '../components/ui.tsx';
 import { IntegrationForm } from '../components/IntegrationSetup.tsx';
 import { HomepageImport } from '../components/HomepageImport.tsx';
@@ -190,6 +192,8 @@ export function Settings() {
         </label>
         <p className="settings-note">/ opens Jump to, ? lists the shortcuts, g then a letter goes to a page, and j and k move through Reading. Turn them off if you use speech input. Ctrl K always works.</p>
       </Section>
+
+      <ShowcaseSettings />
 
       </>
       )}
@@ -827,17 +831,17 @@ function Household() {
     ['/weather', 'Weather'],
   ];
   // Saved at once; the device follows within a second.
-  const setView = async (id: string, view: { opens?: string; tint?: string }) => {
-    setList((l) => l && l.map((d) => (d.id === id ? { ...d, ...view, opens: view.opens === undefined ? d.opens : view.opens || undefined, tint: (view.tint ?? d.tint) as 'gray' | 'blue' | 'color' | undefined } : d)));
+  const setView = async (id: string, view: { opens?: string; tint?: string; dim?: string }) => {
+    setList((l) => l && l.map((d) => (d.id === id ? { ...d, ...view, opens: view.opens === undefined ? d.opens : view.opens || undefined, tint: (view.tint ?? d.tint) as 'gray' | 'blue' | 'color' | undefined, dim: view.dim === undefined ? d.dim : view.dim || undefined } : d)));
     await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
   };
-  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color' }[] | null>(null);
+  const [list, setList] = useState<{ id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string }[] | null>(null);
   const [auth, setAuth] = useState<string>('none');
   const [name, setName] = useState('');
   const [made, setMade] = useState<{ name: string; url: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
-  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color' }[]);
+  const load = async () => setList((await (await fetch('/api/household')).json()) as { id: string; name: string; created: number; seen?: number; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string }[]);
   useEffect(() => {
     void load();
     void fetch('/api/session')
@@ -917,6 +921,17 @@ function Household() {
                       <option value="gray">Gray</option>
                       <option value="blue">Blue</option>
                       <option value="color">Color</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Dims</span>
+                    <select className="field" value={d.dim ?? ''} onChange={(e) => void setView(d.id, { dim: e.target.value })}>
+                      <option value="">Never</option>
+                      {DIM_HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {dimLabel(h)}
+                        </option>
+                      ))}
                     </select>
                   </label>
                 </div>
@@ -1333,5 +1348,34 @@ function Alerts() {
         </div>
       )}
     </>
+  );
+}
+
+/** Showcase mode: stand-ins for private details, before a screenshot is shared. */
+function ShowcaseSettings() {
+  const sc = useShowcase();
+  const [words, setWords] = useState(sc.words);
+  return (
+    <Section title="Screenshots">
+      <label className="check">
+        <input type="checkbox" checked={sc.on} onChange={(e) => setShowcase({ on: e.target.checked, words })} />
+        Showcase mode
+      </label>
+      <p className="settings-note">
+        On this device, addresses, domain names, email and MAC addresses become made-up ones, the words below get stand-ins, and camera pictures blur, so a screenshot is safe
+        to post. Fields you type in keep their real values. Turning it off draws the page again.
+      </p>
+      <textarea
+        className="field mono showcase-words"
+        aria-label="Words to swap"
+        rows={4}
+        spellCheck={false}
+        value={words}
+        placeholder={'tank\nNicholas = Rivera\nyour town'}
+        onChange={(e) => setWords(e.target.value)}
+        onBlur={() => words !== sc.words && setShowcase({ words })}
+      />
+      <p className="settings-note">One per line: your server's name, family names, your town. Write Nicholas = Rivera to pick the stand-in.</p>
+    </Section>
   );
 }

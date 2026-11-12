@@ -11825,7 +11825,7 @@ a.jack .jack-socket {
   width: 100%;
 }
 
-/* Settings: each household device's Opens and Monitor color, under its name. */
+/* Settings: each household device's Opens, Monitor color and night hours, under its name. */
 .household-list .household-view {
   grid-column: 1 / -1;
   display: flex;
@@ -12146,4 +12146,33 @@ a.jack .jack-socket {
   .mon-lines {
     max-height: 60vh;
   }
+}
+
+/* A household device's night hours: a black veil over everything. The
+   first tap lifts it for two minutes and doesn't reach the page below. */
+.night-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+
+.night-veil.is-on {
+  opacity: 0.72;
+  pointer-events: auto;
+}
+
+/* Showcase mode: camera pictures blur, so a screenshot shows the board and
+   not the driveway. */
+html.showcase img[src*="/api/img/frigate"],
+html.showcase img[src*="/api/live/"] {
+  filter: blur(14px);
+}
+
+.showcase-words {
+  width: 100%;
+  resize: vertical;
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Showcase mode:** before you share a screenshot, turn it on in Settings,
+  Look. Addresses, domain names, email and MAC addresses become made-up ones
+  that read like real ones, camera pictures blur, and you list the rest
+  (your server's name, family names, your town) for stand-ins. It covers
+  every page and widget, and fields you type in keep their real values.
+- **Wall tablets dim at night:** pick night hours for each household device
+  in Settings, next to Opens and Monitor color. The screen darkens through
+  them, and a tap brightens it for two minutes without pressing anything
+  underneath.
+
 ## 1.5.0 (2026-11-12)
 
 - **Monitor in color:** a third Monitor color in Settings, Household

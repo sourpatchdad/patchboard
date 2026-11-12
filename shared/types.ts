@@ -1171,7 +1171,7 @@ export interface Snapshot {
   /** READ_ONLY=1, or a household device: the UI hides every control that changes something. */
   readOnly: boolean;
   /** This browser is a household device: it views, and may switch pinned lights and scenes when `lights` is true. */
-  household?: { id: string; name: string; lights: boolean; opens?: string; tint?: 'gray' | 'blue' | 'color'; rev?: number };
+  household?: { id: string; name: string; lights: boolean; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string; rev?: number };
   /** Settings, Alerts thresholds, so meters turn amber and red where alerts do. */
   limits?: Limits;
   /** What each page shows (its Customize button). */
@@ -1201,7 +1201,7 @@ export type ServerEvent =
   | { type: 'brand'; brand: Brand }
   | { type: 'boards'; boards: import('./board.ts').BoardRef[]; changed?: string }
   // To one household device only: what it should show, changed from Settings.
-  | { type: 'household'; id: string; opens?: string; tint?: 'gray' | 'blue' | 'color'; rev?: number };
+  | { type: 'household'; id: string; opens?: string; tint?: 'gray' | 'blue' | 'color'; dim?: string; rev?: number };
 
 /** One published Patchboard release and its notes (Markdown), from GitHub Releases. */
 export interface SelfRelease {

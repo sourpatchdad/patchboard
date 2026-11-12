@@ -11,7 +11,7 @@ import { HourHeatmap } from '../components/Squares.tsx';
 import { useHistory } from '../lib/api.ts';
 import { setPageName, useAppearance } from '../lib/appearance.ts';
 import { needsYou } from '../lib/attention.ts';
-import { useFollowOpens } from '../lib/household.ts';
+import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 
@@ -53,6 +53,7 @@ export function Monitor() {
 
   useEffect(() => setPageName('Monitor'), []);
   useFollowOpens();
+  useNightDim();
   // The Monitor's color: set per household device in Settings, or ?tint= in the address.
   const asked = new URLSearchParams(location.search).get('tint') ?? '';
   const tint = snap?.household?.tint ?? (['blue', 'color'].includes(asked) ? asked : 'gray');
