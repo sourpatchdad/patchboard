@@ -219,6 +219,14 @@ export function Settings() {
         </p>
       </Section>
 
+      <Section title="Screen">
+        <label className="check">
+          <input type="checkbox" checked={a.eink} onChange={(e) => setAppearance({ eink: e.target.checked })} />
+          E-ink
+        </label>
+        <p className="settings-note">For an e-ink reader or panel: black on white, no motion, problems marked by shape as well as color, and the page redrawn once a minute with whatever changed, so it doesn't flash all day. A household device can be set from Settings, Household devices, instead.</p>
+      </Section>
+
       <Section title="Keyboard">
         <label className="check">
           <input type="checkbox" checked={a.keys} onChange={(e) => setAppearance({ keys: e.target.checked })} />
@@ -865,7 +873,7 @@ function Household() {
     ['/weather', 'Weather'],
   ];
   // Saved at once; the device follows within a second.
-  const setView = async (id: string, view: { opens?: string; pages?: string[]; rotate?: number; tint?: string; dim?: string }) => {
+  const setView = async (id: string, view: { opens?: string; pages?: string[]; rotate?: number; tint?: string; dim?: string; screen?: string }) => {
     const res = await fetch(`/api/household/${id}`, { method: 'PUT', headers: { ...ACTION, 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
     if (!res.ok) return;
     // The server's answer is the whole view: a field it leaves out is unset.
@@ -1000,6 +1008,13 @@ function Household() {
                       <option value="gray">Gray</option>
                       <option value="blue">Blue</option>
                       <option value="color">Color</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Screen</span>
+                    <select className="field" value={d.screen ?? ''} onChange={(e) => void setView(d.id, { screen: e.target.value })}>
+                      <option value="">Color</option>
+                      <option value="eink">E-ink</option>
                     </select>
                   </label>
                   <label>

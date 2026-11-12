@@ -20,6 +20,12 @@
   round every year.
 - **Big clock:** Clocks can show your own time and date large, for across
   the room, with other places underneath.
+- **E-ink:** set a household device's Screen to E-ink in Settings, or turn
+  on E-ink under Look on any browser. The page goes black on white with no
+  motion, problems show as a solid square or a ring as well as by color,
+  photos turn gray, and what changes is drawn once a minute instead of
+  flashing the panel all day. The Monitor gets a paper version and drops
+  its seconds.
 - **Region:** Settings, Look sets how dates, times, numbers and prices are
   written, from 28 regions, and the currency for prices. It follows the
   browser until you pick, and 24-hour time now starts on where the browser

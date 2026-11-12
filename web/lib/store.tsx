@@ -1,5 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { setParked } from './services.ts';
+import { useAppearance } from './appearance.ts';
+import { EINK_MS, einkOn, setEink, useEink } from './eink.ts';
 import type { ServerEvent, Snapshot, SourceId, SourceState } from '../../shared/types.ts';
 
 interface Store {
@@ -34,7 +36,7 @@ function apply(prev: Snapshot, e: ServerEvent): Snapshot {
       return { ...prev, boards: e.boards, boardSaved: e.changed ? { id: e.changed, at: Date.now() } : prev.boardSaved };
     case 'household':
       // Sent only to this device: what it should show now.
-      return prev.household?.id === e.id ? { ...prev, household: { id: prev.household.id, name: prev.household.name, lights: prev.household.lights, opens: e.opens, pages: e.pages, rotate: e.rotate, tint: e.tint, dim: e.dim, rev: e.rev } } : prev;
+      return prev.household?.id === e.id ? { ...prev, household: { id: prev.household.id, name: prev.household.name, lights: prev.household.lights, opens: e.opens, pages: e.pages, rotate: e.rotate, tint: e.tint, dim: e.dim, screen: e.screen, rev: e.rev } } : prev;
   }
 }
 
@@ -73,21 +75,35 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
       void load();
     };
     es.onerror = () => setLive(false);
-    es.onmessage = (m) => {
-      const e = JSON.parse(m.data as string) as ServerEvent;
+    const take = (events: ServerEvent[]) =>
       setSnap((prev) => {
-        const next = prev ? apply(prev, e) : prev;
+        const next = prev ? events.reduce(apply, prev) : prev;
         if (next) setParked(next.alerts);
         return next;
       });
+    // An e-ink screen flashes on every redraw: what changes is gathered and
+    // drawn once a minute. Its own settings still apply at once.
+    let held: ServerEvent[] = [];
+    const flush = setInterval(() => {
+      if (held.length) take(held.splice(0));
+    }, EINK_MS);
+    es.onmessage = (m) => {
+      const e = JSON.parse(m.data as string) as ServerEvent;
+      if (einkOn() && e.type !== 'household') held.push(e);
+      else take([...held.splice(0), e]);
     };
 
     void load();
     return () => {
       closed = true;
+      clearInterval(flush);
       es.close();
     };
   }, []);
+
+  // E-ink, from this device's household settings or its own Look.
+  const look = useAppearance();
+  useEffect(() => setEink(snap?.household?.screen === 'eink' || look.eink), [snap?.household?.screen, look.eink]);
 
   return <Ctx.Provider value={{ snap, live, failed, auth }}>{children}</Ctx.Provider>;
 }
@@ -114,9 +130,11 @@ export function useSource<T>(id: SourceId): { state: SourceState<T> | undefined;
 /** Re-render on an interval so relative times stay current. */
 export function useNow(intervalMs = 30_000): number {
   const [now, setNow] = useState(Date.now());
+  // An e-ink screen ticks once a minute at most.
+  const every = useEink() ? Math.max(intervalMs, EINK_MS) : intervalMs;
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    const t = setInterval(() => setNow(Date.now()), every);
     return () => clearInterval(t);
-  }, [intervalMs]);
+  }, [every]);
   return now;
 }

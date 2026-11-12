@@ -86,6 +86,8 @@ test('a device remembers where it opens and its Monitor color; each change bumps
   assert.equal(h.setHouseholdView(made.id, { rotate: 7 })?.rotate, undefined, 'only the offered timings');
   assert.equal(h.setHouseholdView(made.id, { pages: [] })?.pages, undefined, 'no pages: no swiping');
   assert.equal(h.setHouseholdView(made.id, { tint: 'color' })?.opens, '/monitor', 'every save keeps the rest of the view');
+  assert.equal(h.setHouseholdView(made.id, { screen: 'eink' })?.screen, 'eink', 'an e-ink screen');
+  assert.equal(h.setHouseholdView(made.id, { screen: 'plasma' })?.screen, undefined, 'anything else is a color screen');
   assert.equal(h.setHouseholdView('nope', { opens: '/' }), null);
   const listed = h.householdDevices().find((d) => d.id === made.id);
   assert.ok(listed && !('hash' in listed));

@@ -12541,3 +12541,101 @@ html[data-household][data-wall] main {
 .region-picks select {
   max-width: 100%;
 }
+
+/* E-ink: black on white, nothing that moves, and status that survives
+   without color. Theme colors are set on the page itself, so these win with
+   !important. */
+html[data-eink] {
+  --bg: #fff !important;
+  --raised: #fff !important;
+  --surface: #fff !important;
+  --line: #000 !important;
+  --line-soft: #8c8c8c !important;
+  --ink: #000 !important;
+  --ink-2: #1c1c1c !important;
+  --ink-3: #454545 !important;
+  --head: #000 !important;
+  --accent: #000 !important;
+  --ok: #000 !important;
+  --warn: #000 !important;
+  --crit: #000 !important;
+  --term-bg: #fff !important;
+  --quiet: #8c8c8c !important;
+  color-scheme: light;
+}
+
+html[data-eink] body {
+  background: #fff;
+}
+
+html[data-eink] *,
+html[data-eink] *::before,
+html[data-eink] *::after {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-eink] img {
+  filter: grayscale(1) contrast(1.15);
+}
+
+/* Status by shape: critical is a solid square, a warning a ring, all well a
+   small dot. */
+html[data-eink] .led[data-state='crit'] {
+  border-radius: 1px;
+  background: #000;
+}
+
+html[data-eink] .led[data-state='warn'] {
+  background: #fff;
+  box-shadow: inset 0 0 0 2px #000 !important;
+}
+
+html[data-eink] .led[data-state='ok'] {
+  transform: scale(0.6);
+  background: #000;
+}
+
+html[data-eink] .crit-text,
+html[data-eink] .warn-text {
+  font-weight: 600;
+}
+
+html[data-eink] .crit-text {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The Monitor on e-ink: paper, ink, and the waffles in solid black. */
+.monitor.tint-eink {
+  --bg: #fff;
+  --line: #000;
+  --line-soft: #9a9a9a;
+  --ink: #000;
+  --ink-2: #1c1c1c;
+  --ink-3: #454545;
+  --head: #000;
+  --accent: #000;
+  --c-cpu: #000;
+  --c-mem: #000;
+  --c-net: #000;
+  --c-pool: #000;
+  --c-disk: #000;
+  --warn: #000;
+  --crit: #000;
+  --mon-up: #000;
+  --mon-off: #d4d4d4;
+}
+
+/* The moon on e-ink: an outlined circle with its lit part in ink. */
+html[data-eink] .moon-dark {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 0.06;
+}
+
+html[data-eink] .moon-lit {
+  fill: #000;
+}

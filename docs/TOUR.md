@@ -70,7 +70,11 @@ desk and the tablet follows within a second. A tap brightens a dimmed
 screen for two minutes. Give it more pages, the Monitor, wall boards,
 Server or Weather, and a swipe moves between them, with dots at the bottom
 to show where it is; it can also turn them by itself every half minute to
-ten minutes, waiting three minutes after anyone touches it.
+ten minutes, waiting three minutes after anyone touches it. Set its Screen
+to E-ink for an e-ink reader or panel: black on white, no motion, problems
+marked by shape, and a redraw once a minute rather than with every change.
+E-ink needs a current browser, as on Boox and other Android readers; a
+Kindle e-reader's built-in browser is too old to run Patchboard.
 
 ![Monitor on a 960 by 600 wall tablet](screenshots/monitor.webp)
 

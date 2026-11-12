@@ -1231,6 +1231,8 @@ export interface DeviceView {
   tint?: 'gray' | 'blue' | 'color';
   /** Night hours to dim for, like '22-7'. */
   dim?: string;
+  /** An e-ink screen: black on white, no motion, redrawn once a minute. */
+  screen?: 'eink';
   /** Changes with every save, so the device knows to follow. */
   rev?: number;
 }

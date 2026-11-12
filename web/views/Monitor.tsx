@@ -13,6 +13,7 @@ import { setPageName, useAppearance } from '../lib/appearance.ts';
 import { needsYou } from '../lib/attention.ts';
 import { useFollowOpens, useNightDim } from '../lib/household.ts';
 import { WallPages } from '../components/WallPages.tsx';
+import { EINK_MS, einkOn, useEink } from '../lib/eink.ts';
 import { pct, size, speed, temp } from '../lib/format.ts';
 import { useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { locale } from '../lib/region.ts';
@@ -58,7 +59,8 @@ export function Monitor() {
   useNightDim();
   // The Monitor's color: set per household device in Settings, or ?tint= in the address.
   const asked = new URLSearchParams(location.search).get('tint') ?? '';
-  const tint = snap?.household?.tint ?? (['blue', 'color'].includes(asked) ? asked : 'gray');
+  const eink = useEink();
+  const tint = eink ? 'eink' : (snap?.household?.tint ?? (['blue', 'color'].includes(asked) ? asked : 'gray'));
 
   // Live lines: the last two hours from history, then every new reading on the end.
   const mem = sys?.mem;
@@ -96,7 +98,8 @@ export function Monitor() {
     .slice(0, 12);
   const updating = Object.keys(snap.updates).sort();
   const host = nas?.hostname ?? snap.brand?.name ?? 'patchboard';
-  const time = new Date(now).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !clock24 });
+  // E-ink redraws once a minute, so its clock shows no seconds.
+  const time = new Date(now).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', ...(eink ? {} : { second: '2-digit' }), hour12: !clock24 });
   const pool = nas?.pools[0];
   const poolLevel = pool ? (pool.usedPct >= limits.poolCritPct ? 'is-crit' : pool.usedPct >= limits.poolWarnPct ? 'is-warn' : '') : '';
   const netMax = Math.max(1, ...rxLine.map((p) => p[1]), ...txLine.map((p) => p[1]));
@@ -441,21 +444,35 @@ function useProblemFeed(): FeedLine[] {
   const n = useRef(0);
   useEffect(() => {
     const es = new EventSource('/api/monitor/feed');
-    es.onmessage = (m) => {
-      const l = JSON.parse(m.data as string) as { at: number; container: string; level: 'warn' | 'error'; text: string };
+    type Raw = { at: number; container: string; level: 'warn' | 'error'; text: string };
+    const add = (prev: FeedLine[], l: Raw): FeedLine[] => {
       const text = plainLine(l.text, l.container);
       const same = shape(l.container, text);
-      setLines((prev) => {
-        // The same message again within ten minutes: one line, counted, moved to now.
-        const i = prev.findIndex((p) => p.at > l.at - 10 * 60_000 && shape(p.who, p.text) === same);
-        if (i >= 0) {
-          const hit = prev[i];
-          return [...prev.slice(0, i), ...prev.slice(i + 1), { ...hit, at: l.at, text, count: (hit.count ?? 1) + 1 }];
-        }
-        return [...prev, { key: `p${n.current++}`, at: l.at, level: l.level, who: l.container, text }].slice(-120);
-      });
+      // The same message again within ten minutes: one line, counted, moved to now.
+      const i = prev.findIndex((p) => p.at > l.at - 10 * 60_000 && shape(p.who, p.text) === same);
+      if (i >= 0) {
+        const hit = prev[i];
+        return [...prev.slice(0, i), ...prev.slice(i + 1), { ...hit, at: l.at, text, count: (hit.count ?? 1) + 1 }];
+      }
+      return [...prev, { key: `p${n.current++}`, at: l.at, level: l.level, who: l.container, text }].slice(-120);
     };
-    return () => es.close();
+    // On e-ink, lines wait and arrive together once a minute.
+    let held: Raw[] = [];
+    const flush = setInterval(() => {
+      if (held.length) {
+        const batch = held.splice(0);
+        setLines((prev) => batch.reduce(add, prev));
+      }
+    }, EINK_MS);
+    es.onmessage = (m) => {
+      const l = JSON.parse(m.data as string) as Raw;
+      if (einkOn()) held.push(l);
+      else setLines((prev) => add(prev, l));
+    };
+    return () => {
+      clearInterval(flush);
+      es.close();
+    };
   }, []);
   return lines;
 }

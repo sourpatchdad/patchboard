@@ -40,7 +40,7 @@ export interface HouseholdDevice extends DeviceView {
 }
 
 /** A device's view, field by field, so nothing else stored on it leaks out. */
-const viewOf = (d: DeviceView): DeviceView => ({ opens: d.opens, pages: d.pages, rotate: d.rotate, tint: d.tint, dim: d.dim, rev: d.rev });
+const viewOf = (d: DeviceView): DeviceView => ({ opens: d.opens, pages: d.pages, rotate: d.rotate, tint: d.tint, dim: d.dim, screen: d.screen, rev: d.rev });
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const devices = (): Record<string, Device> => kvGet<Record<string, Device>>('household') ?? {};
@@ -67,7 +67,7 @@ export function addHouseholdDevice(name: string): { id: string; token: string } 
 }
 
 /** Set what a device shows. `opens` and `pages` are checked by the caller, which knows the boards. */
-export function setHouseholdView(id: string, view: { opens?: string | null; pages?: string[] | null; rotate?: number | null; tint?: string | null; dim?: string | null }): DeviceView | null {
+export function setHouseholdView(id: string, view: { opens?: string | null; pages?: string[] | null; rotate?: number | null; tint?: string | null; dim?: string | null; screen?: string | null }): DeviceView | null {
   const all = devices();
   const d = all[id];
   if (!d) return null;
@@ -76,6 +76,7 @@ export function setHouseholdView(id: string, view: { opens?: string | null; page
   if (view.rotate !== undefined) d.rotate = (ROTATE_SECONDS as readonly number[]).includes(view.rotate ?? 0) && view.rotate ? view.rotate : undefined;
   if (view.tint !== undefined) d.tint = view.tint === 'blue' || view.tint === 'color' ? view.tint : undefined;
   if (view.dim !== undefined) d.dim = (DIM_HOURS as readonly string[]).includes(view.dim ?? '') ? view.dim! : undefined;
+  if (view.screen !== undefined) d.screen = view.screen === 'eink' ? 'eink' : undefined;
   d.rev = Date.now();
   kvSet('household', all);
   return viewOf(d);

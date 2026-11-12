@@ -42,6 +42,8 @@ export interface Appearance {
   locale: string;
   /** Prices in this currency; empty follows the region. */
   currency: string;
+  /** An e-ink screen: black on white, no motion, redrawn once a minute. */
+  eink: boolean;
 }
 
 const KEY = 'pb-appearance';
@@ -77,6 +79,7 @@ export const DEFAULTS: Appearance = {
   keys: true,
   locale: '',
   currency: '',
+  eink: false,
 };
 
 export const ACCENTS: { id: string; name: string; dark: string; light: string }[] = [

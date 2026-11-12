@@ -381,7 +381,7 @@ const OPENS = new Set(['/', '/server', '/monitor', '/upcoming', '/reading', '/we
 const isPlace = (v: unknown): v is string => typeof v === 'string' && (OPENS.has(v) || (/^\/b\/[\w-]+$/.test(v) && !!getBoard(v.slice(3))));
 app.put('/api/household/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown };
+  const body = (await c.req.json().catch(() => ({}))) as { opens?: unknown; pages?: unknown; rotate?: unknown; tint?: unknown; dim?: unknown; screen?: unknown };
   let opens: string | null | undefined;
   if (body.opens !== undefined) {
     if (body.opens === null || body.opens === '') opens = null;
@@ -397,9 +397,10 @@ app.put('/api/household/:id', async (c) => {
   }
   const rotate = body.rotate === undefined ? undefined : typeof body.rotate === 'number' ? body.rotate : null;
   const dim = body.dim === undefined ? undefined : typeof body.dim === 'string' ? body.dim : null;
-  const view = setHouseholdView(c.req.param('id'), { opens, pages, rotate, tint, dim });
+  const screen = body.screen === undefined ? undefined : body.screen === 'eink' ? 'eink' : null;
+  const view = setHouseholdView(c.req.param('id'), { opens, pages, rotate, tint, dim, screen });
   if (!view) return c.json({ error: 'No such device' }, 404);
-  recordAudit(who(c), 'household.view', c.req.param('id'), [[view.opens ?? 'wherever', ...(view.pages ?? [])].join(' > '), view.rotate ? `turns every ${view.rotate}s` : '', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims'].filter(Boolean).join(', '));
+  recordAudit(who(c), 'household.view', c.req.param('id'), [[view.opens ?? 'wherever', ...(view.pages ?? [])].join(' > '), view.rotate ? `turns every ${view.rotate}s` : '', view.tint ?? 'gray', view.dim ? `dims ${view.dim}` : 'never dims', view.screen === 'eink' ? 'e-ink' : ''].filter(Boolean).join(', '));
   hub.emitHousehold(c.req.param('id'), view);
   return c.json(view);
 });
