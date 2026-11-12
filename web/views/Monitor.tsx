@@ -379,6 +379,8 @@ const LEVEL = /^\[?(?:warn(?:ing)?|wrn|err(?:or)?|fatal|crit(?:ical)?|inf(?:o)?|
 const PID = /^\[\d+\]\s*/;
 // nginx: "23#23: *1234 "
 const NGINX = /^\d+#\d+:\s*(?:\*\d+\s*)?/;
+// NestJS (Immich): "[Nest] 32  - 11/11/2026, 9:10:00 PM "
+const NEST = /^\[Nest\]\s+\d+\s+-\s+[\d/.-]+,?\s+[\d:]+(?:\s*[AP]M)?\s*/i;
 
 /** Apps open their lines with their own time, name, level and process numbers; the feed has columns for those. */
 function plainLine(text: string, container: string): string {
@@ -387,7 +389,7 @@ function plainLine(text: string, container: string): string {
   // Prefixes come in any order and some apps stack them, so peel until nothing changes.
   for (let pass = 0; pass < 5; pass++) {
     const before = t;
-    t = t.replace(DATE, '').replace(TIME, '').replace(name, '').replace(LEVEL, '').replace(PID, '').replace(NGINX, '');
+    t = t.replace(DATE, '').replace(TIME, '').replace(name, '').replace(LEVEL, '').replace(PID, '').replace(NGINX, '').replace(NEST, '');
     if (t === before) break;
   }
   return t.trim();

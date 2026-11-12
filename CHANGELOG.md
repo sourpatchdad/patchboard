@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Monitor feed:** Unpackerr's status line ("0 failed") no longer counts as
+  an error, and Immich lines lose their own date prefix like the rest.
+
 ## 1.3.1 (2026-11-11)
 
 - **Monitor:** quiet grays now carry everything healthy, so only amber and

@@ -9,7 +9,7 @@ test('only lines that say something went wrong count, and "no errors" is not one
   assert.equal(classify('Request failed with status 502'), 'error');
   assert.equal(classify('[Warn] RssSync: Indexer is unavailable'), 'warn');
   assert.equal(classify('2026-11-11 WRN slow query'), 'warn');
-  for (const fine of ['Scrub finished, no errors', 'errors: 0, warnings: 0', 'Completed with 0 failures', 'GET /health 200 2ms', 'Terror in the Aisles']) {
+  for (const fine of ['Scrub finished, no errors', 'errors: 0, warnings: 0', 'Completed with 0 failures', 'GET /health 200 2ms', 'Terror in the Aisles', 'Queue: 0 waiting, 0 queued, 0 extracting, 0 extracted, 0 imported, 0 failed, 0 deleted']) {
     assert.equal(classify(fine), null, fine);
   }
   assert.equal(classify('panic: runtime error, 0 errors before this'), 'error', 'a panic still counts');

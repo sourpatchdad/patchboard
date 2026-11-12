@@ -19,7 +19,8 @@ type Follow = (name: string, tail: number, onLine: (l: LogLine) => void, signal:
 // Words that mean trouble, as whole words, and the ways apps say "no trouble".
 const ERROR = /\b(?:error|err|fatal|panic|exception|critical|crit|failed|failure)\b|level=(?:error|fatal|crit)/i;
 const WARN = /\b(?:warn|warning|wrn)\b|level=warn/i;
-const FINE = /\b(?:no|0|zero) (?:errors?|warnings?|failures?)\b|\b(?:errors?|warnings?|failures?|failed)[=:]\s*0\b/i;
+// "0 failed" is Unpackerr's status line every half minute, not a failure.
+const FINE = /\b(?:no|0|zero) (?:errors?|warnings?|failures?|failed)\b|\b(?:errors?|warnings?|failures?|failed)[=:]\s*0\b/i;
 
 // A Python traceback's frame lines name files, not problems; its last line
 // ("ValueError: ...") is the one that counts.
