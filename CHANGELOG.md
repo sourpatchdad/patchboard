@@ -5,6 +5,9 @@
 - **Monitor feed:** lines from before today show their day ("tue 22:13"),
   and apps that log JSON, such as autobrr, show their message instead of
   the raw line.
+- **Monitor, no cut rows:** busiest now, needs you and updates waiting show
+  only rows that fit whole. With room for none, the block hides, heading
+  and all.
 
 ## 1.3.2 (2026-11-11)
 

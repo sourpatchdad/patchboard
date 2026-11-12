@@ -11732,14 +11732,41 @@ a.jack .jack-socket {
   gap: 10px;
 }
 
-/* The last block in a column takes the height that's left and shows as many
-   rows as fit; the edge fades, so a row that doesn't fit isn't cut in half. */
+/* The last block in a column takes the height that's left and shows only the
+   rows that fit whole: a list wraps into columns, and every column after the
+   first sits outside the block, hidden. No row is ever cut in half. */
 .mon-fill {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+}
+
+.mon-fill > ul {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  min-height: 0;
+  column-gap: 100px;
+  overflow: hidden;
+}
+
+.mon-fill > ul > li {
+  flex: none;
+  width: 100%;
+}
+
+/* Needs you takes what it needs before updates take the rest. */
+.mon-fill.is-fit {
+  flex: 0 1 auto;
+}
+
+/* No whole row fits: the block keeps its place but shows nothing. */
+.mon-fill.is-empty {
+  visibility: hidden;
 }
 
 .mon-gap {
@@ -11759,9 +11786,6 @@ a.jack .jack-socket {
 }
 
 .mon-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
   color: var(--ink-2);
 }
 

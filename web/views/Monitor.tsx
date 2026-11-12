@@ -4,7 +4,7 @@
 // temperatures; and one feed of container events and the warning and error
 // lines from every container's log. Terminal-styled whatever the theme.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import type { BackupRun, BackupsData, ChangeEvent, Container, Series, StatsData, SystemData, TruenasData } from '../../shared/types.ts';
 import { HourHeatmap } from '../components/Squares.tsx';
@@ -175,7 +175,7 @@ export function Monitor() {
           </div>
         )}
         {busiest.length > 0 && (
-          <div className="mon-block mon-fill">
+          <Fill>
             <p className="mon-label">busiest now</p>
             <ul className="mon-busy">
               {busiest.map(([name, s]) => (
@@ -189,7 +189,7 @@ export function Monitor() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Fill>
         )}
       </section>
 
@@ -224,31 +224,27 @@ export function Monitor() {
           </p>
           <Fleet containers={containers} updates={snap.updates} />
         </div>
-        {(trouble.length > 0 || updating.length > 0) && (
-          <div className="mon-block mon-fill">
-            {trouble.length > 0 && (
-              <>
-                <p className="mon-label">needs you</p>
-                <ul className="mon-list">
-                  {trouble.map((a) => (
-                    <li key={a.id} className={a.level === 'critical' ? 'is-crit' : 'is-warn'}>
-                      {a.title}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {updating.length > 0 && (
-              <>
-                <p className="mon-label mon-gap">updates waiting {updating.length}</p>
-                <ul className="mon-tags">
-                  {updating.map((n) => (
-                    <li key={n}>{n}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
+        {trouble.length > 0 && (
+          <Fill grow={false}>
+            <p className="mon-label">needs you {trouble.length}</p>
+            <ul className="mon-list">
+              {trouble.map((a) => (
+                <li key={a.id} className={a.level === 'critical' ? 'is-crit' : 'is-warn'}>
+                  {a.title}
+                </li>
+              ))}
+            </ul>
+          </Fill>
+        )}
+        {updating.length > 0 && (
+          <Fill>
+            <p className="mon-label">updates waiting {updating.length}</p>
+            <ul className="mon-tags">
+              {updating.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+          </Fill>
         )}
       </section>
 
@@ -271,6 +267,35 @@ export function Monitor() {
           </li>
         </ol>
       </section>
+    </div>
+  );
+}
+
+/**
+ * A column's last blocks: as many whole rows as fit (styles.css wraps the
+ * rest out of sight). With room for no row at all, the block hides, heading
+ * and all, rather than leaving a heading alone or cut. `grow` takes the space
+ * that's left; without it the block takes what it needs first.
+ */
+function Fill({ children, grow = true }: { children: React.ReactNode; grow?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [empty, setEmpty] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      const box = el.getBoundingClientRect();
+      const first = el.querySelector('li')?.getBoundingClientRect();
+      setEmpty(!first || first.left >= box.right - 1 || first.bottom > box.bottom + 0.5);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+  return (
+    <div ref={ref} className={`mon-block mon-fill ${grow ? '' : 'is-fit'} ${empty ? 'is-empty' : ''}`}>
+      {children}
     </div>
   );
 }
