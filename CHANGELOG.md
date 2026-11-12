@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.1 (2026-11-12)
 
 - **Smoother swiping on wall tablets:** the page leans with your finger as it
   moves, boards you've seen draw at once, and a tablet fetches all its pages
