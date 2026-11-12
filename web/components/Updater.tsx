@@ -245,7 +245,39 @@ export function UpdatePanel({ job, error, onRollback, onDismiss }: { job: Update
 export function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }) {
   const u = useUpdateJob(name);
   const j = u.job;
+  const { snap } = useStore();
+  const version = snap?.self?.version;
+  // A helper recreates Patchboard after this job ends, so "done" means it's
+  // restarting. Once the new server answers with another version, load it.
+  const handedOff = j?.status === 'done' && !!j.to && j.from !== j.to && j.steps.find((s) => s.key === 'healthy')?.status === 'skipped';
+  const [from, setFrom] = useState<string | undefined>();
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!handedOff) return;
+    setFrom((f) => f ?? version);
+    const t = window.setTimeout(() => setSlow(true), 120_000);
+    return () => window.clearTimeout(t);
+  }, [handedOff]);
+  useEffect(() => {
+    if (from && version && version !== from) location.reload();
+  }, [from, version]);
+  if (handedOff)
+    return (
+      <span role="status">
+        {slow ? (
+          <>
+            Still restarting after two minutes.{' '}
+            <button type="button" className="text-button" onClick={() => location.reload()}>
+              Reload
+            </button>
+          </>
+        ) : (
+          'Restarting on the new image. This page reloads when it is back.'
+        )}
+      </span>
+    );
   if (j?.status === 'running') return <span>{j.steps.find((s) => s.status === 'running')?.label ?? 'Updating'}...</span>;
+  if (j?.status === 'done' && j.to && j.from !== j.to) return <span>Updated.</span>;
   if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">Update failed. Open it</Link>;
   if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>Already the newest image.</span>;
   return (

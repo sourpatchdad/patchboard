@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Faster swiping on wall tablets:** a household device draws each of its
+  pages once and keeps them, so a swipe shows the next page instead of
+  building it. On a Fire HD 8, going between the Monitor and a board took
+  over two seconds. While you drag, only the page showing moves.
+- **Swipes on a busy tablet:** a quick flick counts by when your finger
+  moved, so a slow page no longer drops it.
+- **Updating Patchboard from the UI:** after the update hands off, the sheet
+  says Patchboard is restarting and loads the new version when it's back.
+  Before, the Update button came back as if nothing had happened. Patchboard
+  also checks for a newer image of itself every hour, up from every six.
+
 ## 1.9.2 (2026-11-12)
 
 - **Cameras full screen:** tapping a camera fills the screen with it, black

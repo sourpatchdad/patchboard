@@ -57,16 +57,22 @@ export function WallPages() {
     let start: { x: number; y: number; t: number } | null = null;
     let swallowUntil = 0;
     let frame = 0;
+    // Only the page showing moves, by its own transform: a style change on
+    // the whole document would restyle every element on each frame.
+    let moved: HTMLElement | null = null;
     const drag = (px: number) => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        root.style.setProperty('--wall-drag', `${px}px`);
-        root.classList.toggle('wall-dragging', px !== 0);
+        moved ??= [...document.querySelectorAll<HTMLElement>('.shell > main, .monitor')].find((el) => el.getClientRects().length > 0) ?? null;
+        if (!moved) return;
+        moved.style.transition = px ? 'none' : '';
+        moved.style.transform = px ? `translateX(${px}px)` : '';
+        if (!px) moved = null;
       });
     };
     const down = (e: PointerEvent) => {
       touchedAt = Date.now();
-      start = e.pointerType !== 'mouse' && e.clientX > EDGE_PX && e.clientX < innerWidth - EDGE_PX && !scrollsSideways(e.target as Element) ? { x: e.clientX, y: e.clientY, t: Date.now() } : null;
+      start = e.pointerType !== 'mouse' && e.clientX > EDGE_PX && e.clientX < innerWidth - EDGE_PX && !scrollsSideways(e.target as Element) ? { x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
     };
     const move = (e: PointerEvent) => {
       if (!start) return;
@@ -79,7 +85,8 @@ export function WallPages() {
       if (!start) return;
       const dx = e.clientX - start.x;
       const dy = e.clientY - start.y;
-      const quick = Date.now() - start.t < 800;
+      // Timed by the touch itself, not by when a busy page got round to it.
+      const quick = e.timeStamp - start.t < 800;
       start = null;
       drag(0);
       if (Math.abs(dx) > 12) swallowUntil = Date.now() + 450;
@@ -111,9 +118,9 @@ export function WallPages() {
     addEventListener('contextmenu', menu);
     addEventListener('keydown', key);
     return () => {
-      root.classList.remove('wall-swipe', 'wall-dragging');
-      root.style.removeProperty('--wall-drag');
+      root.classList.remove('wall-swipe');
       cancelAnimationFrame(frame);
+      if (moved) moved.style.transform = moved.style.transition = '';
       removeEventListener('pointerdown', down);
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);

@@ -12700,19 +12700,9 @@ html.wall-swipe body {
   -webkit-tap-highlight-color: transparent;
 }
 
-html.wall-dragging .shell > main,
-html.wall-dragging .monitor {
-  transform: translateX(var(--wall-drag, 0));
-}
-
 html.wall-swipe .shell > main,
 html.wall-swipe .monitor {
   transition: transform 0.12s ease-out;
-}
-
-html.wall-dragging .shell > main,
-html.wall-dragging .monitor {
-  transition: none;
 }
 
 /* Cameras, large frames: three to a row on a tablet, two on a phone. */
