@@ -454,7 +454,8 @@ app.get('/api/rss/:board/:id', async (c) => {
   const found = getBoard(c.req.param('board'));
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'rss') : undefined;
   const feeds = w?.config?.feeds?.split('\n').filter(Boolean) ?? [];
-  if (!feeds.length) return c.json({ items: [], failed: [] });
+  // Nothing saved yet: the widget says to save the board, not that the feeds are quiet.
+  if (!feeds.length) return c.json({ items: [], failed: [], unsaved: true });
   if (config.demo) return c.json(demoFeedItems());
   return c.json(await readFeeds(feeds));
 });
@@ -463,7 +464,7 @@ app.get('/api/releases/:board/:id', async (c) => {
   const found = getBoard(c.req.param('board'));
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'releases') : undefined;
   const repos = w?.config?.repos?.split('\n').filter(Boolean) ?? [];
-  if (!repos.length) return c.json({ releases: [] });
+  if (!repos.length) return c.json({ releases: [], unsaved: true });
   if (config.demo) return c.json({ releases: demoReleases(repos) });
   return c.json({ releases: await latestReleases(repos) });
 });
@@ -478,7 +479,7 @@ app.get('/api/markets/:board/:id', async (c) => {
   const asked = (c.req.query('currency') ?? '').toUpperCase();
   // A real currency only: each one is its own request to CoinGecko.
   const currency = CURRENCY_CODES.has(asked) ? asked : 'USD';
-  if (!lines.length) return c.json({ quotes: [] });
+  if (!lines.length) return c.json({ quotes: [], unsaved: true });
   return c.json({ quotes: config.demo ? demoQuotes(lines, currency) : await quotes(lines, currency) });
 });
 

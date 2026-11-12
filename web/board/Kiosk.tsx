@@ -26,7 +26,7 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
   const { style } = useWidget();
   const cur = currency();
   const lines = (config?.symbols ?? '').split('\n').filter(Boolean);
-  const { data, failed } = useWidgetData<{ quotes: MarketQuote[] }>(`/api/markets/${encodeURIComponent(board)}/${encodeURIComponent(id)}?currency=${cur}`, 2 * 60_000);
+  const { data, failed } = useWidgetData<{ quotes: MarketQuote[]; unsaved?: boolean }>(`/api/markets/${encodeURIComponent(board)}/${encodeURIComponent(id)}?currency=${cur}`, 2 * 60_000, config?.symbols);
   const big = style === 'big';
   return (
     <Section title="Markets" className={`markets${big ? ' markets-big' : ''}`}>
@@ -36,6 +36,8 @@ export function MarketsWidget({ board, id, config }: { board: string; id: string
         </Empty>
       ) : !data ? (
         failed ? <Empty>{t("Prices aren't loading. Patchboard tries again in two minutes.")}</Empty> : null
+      ) : data.unsaved ? (
+        <Empty>{t('Save the board to load these prices.')}</Empty>
       ) : (
         <ul className="market-list">
           {data.quotes.map((q) => {

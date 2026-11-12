@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-/** A widget's server-side data, refetched every few minutes. */
-export function useWidgetData<T>(path: string, ms: number): { data: T | null; failed: boolean } {
+/**
+ * A widget's server-side data, refetched every few minutes, and at once when
+ * `settings` changes: the server reads what the board saved, so a widget just
+ * set up asks again as soon as its board is saved.
+ */
+export function useWidgetData<T>(path: string, ms: number, settings = ''): { data: T | null; failed: boolean } {
   const [data, setData] = useState<T | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -19,6 +23,6 @@ export function useWidgetData<T>(path: string, ms: number): { data: T | null; fa
       gone = true;
       clearInterval(t);
     };
-  }, [path, ms]);
+  }, [path, ms, settings]);
   return { data, failed };
 }

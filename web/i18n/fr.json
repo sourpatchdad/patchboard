@@ -156,6 +156,7 @@
  "pool {name}": "pool {name}",
  "Power": "Alimentation",
  "Prices aren't loading. Patchboard tries again in two minutes.": "Les cours ne se chargent pas. Patchboard réessaie dans deux minutes.",
+ "Save the board to load these prices.": "Enregistrez le tableau pour charger ces cours.",
  "Proxmox": "Proxmox",
  "Rain": "Pluie",
  "Read": "Lire",

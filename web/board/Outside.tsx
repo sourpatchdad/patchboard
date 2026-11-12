@@ -114,14 +114,16 @@ function ClockPlaces({ zones, now }: { zones: string; now: number }) {
 export function RssWidget({ board, id, config, now }: { board: string; id: string; config?: Record<string, string>; now: number }) {
   const { limit = 8 } = useWidget();
   const feeds = (config?.feeds ?? '').split('\n').filter(Boolean);
-  const { data } = useWidgetData<{ items: FeedItem[]; failed: string[] }>(`/api/rss/${encodeURIComponent(board)}/${encodeURIComponent(id)}`, 5 * 60_000);
+  const { data } = useWidgetData<{ items: FeedItem[]; failed: string[]; unsaved?: boolean }>(`/api/rss/${encodeURIComponent(board)}/${encodeURIComponent(id)}`, 5 * 60_000, config?.feeds);
   return (
     <Section title="Feeds" className="rss">
       {feeds.length === 0 ? (
         <Empty>
           No feeds yet. <SetupLink>Add feed addresses</SetupLink>
         </Empty>
-      ) : !data ? null : (
+      ) : !data ? null : data.unsaved ? (
+        <Empty>Save the board to load these feeds.</Empty>
+      ) : (
         <>
           {data.items.length === 0 && <Empty>Nothing new in these feeds.</Empty>}
           <ul className="play-list">
@@ -149,14 +151,16 @@ export function RssWidget({ board, id, config, now }: { board: string; id: strin
 export function ReleasesWidget({ board, id, config, now }: { board: string; id: string; config?: Record<string, string>; now: number }) {
   const { limit = 8 } = useWidget();
   const repos = (config?.repos ?? '').split('\n').filter(Boolean);
-  const { data } = useWidgetData<{ releases: ReleaseInfo[] }>(`/api/releases/${encodeURIComponent(board)}/${encodeURIComponent(id)}`, 30 * 60_000);
+  const { data } = useWidgetData<{ releases: ReleaseInfo[]; unsaved?: boolean }>(`/api/releases/${encodeURIComponent(board)}/${encodeURIComponent(id)}`, 30 * 60_000, config?.repos);
   return (
     <Section title="Releases" className="releases">
       {repos.length === 0 ? (
         <Empty>
           No projects yet. <SetupLink>Add GitHub projects</SetupLink>
         </Empty>
-      ) : !data ? null : (
+      ) : !data ? null : data.unsaved ? (
+        <Empty>Save the board to load these releases.</Empty>
+      ) : (
         <ul className="play-list">
           {data.releases.slice(0, limit).map((r) => (
             <li key={r.repo}>

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **New widget settings load at once:** Markets, Feeds and Releases fetch
+  again as soon as you save the board. Before, a coin you just added showed
+  nothing for up to two minutes, feeds up to five and releases up to half an
+  hour. Before you save, the widget says to save the board instead of
+  sitting blank.
+
 ## 1.10.0 (2026-11-12)
 
 - **Settings, Devices:** every wall tablet, e-ink panel and family phone in
