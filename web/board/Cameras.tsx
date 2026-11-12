@@ -102,7 +102,8 @@ function LiveFrame({ name }: { name: string }) {
 }
 
 /**
- * One camera, live, over the page. The picture is Frigate's motion-JPEG feed
+ * One camera, live, filling the screen and letterboxed so nothing is cut
+ * off; a tap on the picture closes it. The picture is Frigate's motion-JPEG feed
  * through Patchboard (see the server's frigateLive): it runs only while this
  * is open and the tab is in front. Switching tabs, Escape or Close ends it,
  * and Patchboard holds no frames, so watching costs bandwidth, not memory.
@@ -144,7 +145,7 @@ function CameraLive({ name, web, onClose }: { name: string; web?: string; onClos
         ) : failed ? (
           <p className="settings-note">Couldn't start the live view. Three can be open at once; close one elsewhere, or try again.</p>
         ) : (
-          <img className="cam-live-feed" src={`/api/live/frigate?camera=${encodeURIComponent(name)}`} alt={`${cameraName(name)}, live`} onError={() => setFailed(true)} />
+          <img className="cam-live-feed" src={`/api/live/frigate?camera=${encodeURIComponent(name)}`} alt={`${cameraName(name)}, live`} onError={() => setFailed(true)} onClick={onClose} />
         )}
       </div>
     </div>,

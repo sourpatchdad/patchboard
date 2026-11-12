@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Cameras full screen:** tapping a camera fills the screen with it, black
+  around the picture and nothing cut off, on a wall tablet as on a desktop.
+  A tap on the picture closes it.
+
 ## 1.9.1 (2026-11-12)
 
 - **Smoother swiping on wall tablets:** the page leans with your finger as it

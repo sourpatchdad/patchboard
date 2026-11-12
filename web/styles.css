@@ -11303,9 +11303,34 @@ button.cam {
   cursor: pointer;
 }
 
-/* The live view: wide enough for video, letterboxed so nothing is cropped. */
-.cam-live {
-  width: min(980px, calc(100vw - 32px));
+/* The live view fills the screen, black, the picture letterboxed so nothing
+   is cropped, on a short wall tablet as on a desktop. */
+.palette.cam-live {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+  animation: none;
+}
+
+.cam-live .drawer-head {
+  flex: none;
+  padding: 8px 16px;
+  background: #000;
+  color: #f2f2f2;
+}
+
+.cam-live .drawer-head .text-button {
+  color: #f2f2f2;
 }
 
 .cam-live h2 {
@@ -11328,11 +11353,19 @@ button.cam {
 .cam-live-feed,
 .cam-live > img {
   display: block;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   object-fit: contain;
-  border-radius: var(--radius);
-  background: var(--term-bg);
+  background: #000;
+  cursor: zoom-out;
+}
+
+.cam-live > .cam,
+.cam-live > span {
+  flex: 1;
+  min-height: 0;
 }
 
 /* A widget setting picked from a list (app groups, cameras): tick boxes in
