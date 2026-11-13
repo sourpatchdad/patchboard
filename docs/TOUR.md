@@ -261,7 +261,8 @@ changes. New board, at the foot of any board, adds another with its own
 name, starting empty or from a layout; tabs over the board switch between
 them. Five layouts are made for a screen on the wall: clock and weather,
 markets, house, cameras, and media. A board set For a wall screen shows one
-status line instead of the header, and no tabs.
+status line instead of the header, and no tabs, and it stays off Home's
+tabs; Settings, Devices lists each one to edit.
 
 ![Arrange board with clear card gutters](screenshots/customize.webp)
 
@@ -335,7 +336,9 @@ colors.
 The tab bar holds Home, Server, Stacks and Reading (Upcoming until Miniflux
 is set up). More opens every other page and Settings. Every button and link
 takes a full fingertip. Installed on the home screen, pull the page down to
-reload it. Tap an alert without a link to read why.
+reload it. Tap an alert without a link to read why. Pages don't zoom on a
+phone, pinch or double tap; Density in Settings, Look makes everything
+bigger.
 
 | | | | | |
 |---|---|---|---|---|
@@ -357,7 +360,8 @@ behind; Patchboard names the integrations worth connecting instead.
 ### Server details in the header
 
 Server details are in the header by default, including CPU history, memory,
-storage, uptime and the Details link. Use Edit header on Home to turn
+storage, uptime and the Details link. With NUT connected, the UPS joins
+them: its charge, and "On battery, 23 min left" when the power is out. Use Edit header on Home to turn
 parts off for this device. If your saved board still has a Server card,
 Arrange board can remove that copy.
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import type { SystemData, TruenasData } from '../../shared/types.ts';
+import type { NutData, SystemData, TruenasData } from '../../shared/types.ts';
+import { headlineUps, upsLabel, upsLevel } from '../../shared/ups.ts';
 import { pct, size } from '../lib/format.ts';
 import { useSource } from '../lib/store.tsx';
 
@@ -7,6 +8,7 @@ import { useSource } from '../lib/store.tsx';
 export function HeaderServer({ storage }: { storage: boolean }) {
   const system = useSource<SystemData>('system');
   const truenas = useSource<TruenasData>('truenas');
+  const ups = headlineUps(useSource<NutData>('nut').data?.ups);
   const sys = system.state?.ok ? system.data : null;
   const nas = truenas.state?.ok ? truenas.data : null;
   const pool = nas?.pools.slice().sort((a, b) => b.sizeBytes - a.sizeBytes)[0];
@@ -36,6 +38,14 @@ export function HeaderServer({ storage }: { storage: boolean }) {
           <span className="header-server-value">{pct(space)}</span>
           <span className="header-server-label">Storage</span>
         </Link>
+      )}
+      {ups && (
+        <span className="header-server-metric" title={[ups.name, ups.model].filter(Boolean).join(', ')}>
+          <span className={`header-server-value ${upsLevel(ups) === 'crit' ? 'crit-text' : upsLevel(ups) === 'warn' ? 'warn-text' : ''}`}>
+            {ups.charge != null ? pct(ups.charge) : ups.onBattery ? 'On battery' : 'On mains'}
+          </span>
+          <span className="header-server-label">{upsLabel(ups)}</span>
+        </span>
       )}
     </nav>
   );

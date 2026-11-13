@@ -176,12 +176,13 @@ try {
   await go();
   const headerCard = page.locator('.header-board-vitals');
   await headerCard.waitFor();
-  assert.equal(await headerCard.locator('.vw').count(), 4, 'full card keeps CPU, memory, storage and uptime');
+  assert.equal(await headerCard.locator('.vw').count(), 5, 'full card keeps CPU, memory, storage and uptime, and the demo UPS beside them');
   assert.equal(await headerCard.getByRole('link', { name: 'Details', exact: true }).count(), 1);
   await headerCard.locator('.spark-wrap').waitFor();
   assert.equal(await headerCard.locator('.spark-wrap').count(), 1, 'CPU history remains visible');
   assert.equal(await headerCard.locator('.split').count(), 1, 'memory breakdown remains visible');
-  assert.equal(await headerCard.locator('.meter').count(), 1, 'storage bar remains visible');
+  assert.equal(await headerCard.getByRole('meter', { name: /^Storage used/ }).count(), 1, 'storage bar remains visible');
+  assert.equal(await headerCard.getByRole('meter', { name: /battery charge/ }).count(), 1, 'the UPS charge sits beside it');
   assert.deepEqual(await board(), original, 'choosing a header card does not remove the board copy');
   await page.goto(base + '/settings?tab=home');
   await page.getByRole('button', { name: 'Restore default header', exact: true }).click();

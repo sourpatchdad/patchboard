@@ -106,6 +106,8 @@ export interface Board {
 export interface BoardRef {
   id: string;
   name: string;
+  /** Made for a wall screen: left out of Home's tabs. */
+  wall?: boolean;
 }
 
 /** The first board, at /. It can be renamed and reset but not deleted. */

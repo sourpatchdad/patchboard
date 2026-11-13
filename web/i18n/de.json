@@ -291,5 +291,8 @@
  "Miners": "Miner",
  "No miner answering": "Kein Miner antwortet",
  "{n} miners": "{n} Miner",
- "Hashrate, last 24 hours": "Hashrate, letzte 24 Stunden"
+ "Hashrate, last 24 hours": "Hashrate, letzte 24 Stunden",
+ "UPS": "USV",
+ "Battery nearly empty": "Akku fast leer",
+ "Replace battery": "Akku tauschen"
 }

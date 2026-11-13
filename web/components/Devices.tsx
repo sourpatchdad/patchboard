@@ -132,6 +132,7 @@ export function Devices() {
     pick(body.id);
   };
 
+  const wallBoards = (snap?.boards ?? []).filter((b) => b.wall);
   if (!list) return null;
   return (
     <Section title="Devices" count={list.length ? String(list.length) : undefined} className="span-all">
@@ -177,6 +178,18 @@ export function Devices() {
             A device opens its link once and from then on sees the boards, cameras, Server and Monitor, reading and calendar, and switches the lights pinned to a board. It
             can't update, restart or stop anything, or open Settings, logs or container pages.
           </p>
+          {wallBoards.length > 0 && (
+            <p className="settings-note wall-boards">
+              Wall boards stay off Home's tabs. Edit one:{' '}
+              {wallBoards.map((b, i) => (
+                <span key={b.id}>
+                  {i > 0 && ', '}
+                  <Link to={`/b/${b.id}?arrange=1`}>{b.name}</Link>
+                </span>
+              ))}
+              .
+            </p>
+          )}
           {auth === 'none' && list.length > 0 && (
             <p className="settings-note">With sign-in off, a device you remove goes back to full access, like any browser on your network. Turn on a password under Connections if that matters.</p>
           )}

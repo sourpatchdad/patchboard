@@ -166,6 +166,19 @@ html.is-locked body {
   overscroll-behavior: contain;
 }
 
+/* A phone or tablet only scrolls: no pinch, no double-tap zoom. Density
+   in Settings, Look makes everything bigger instead. */
+html {
+  touch-action: pan-x pan-y;
+}
+
+/* Safari zooms into a field whose text is under 16px when it's tapped. */
+@media (pointer: coarse) {
+  :is(input, select, textarea) {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 a,
 button {
   touch-action: manipulation;
@@ -9756,7 +9769,8 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 .header-board-vitals .section-head { padding-bottom: 6px; }
 .header-board-vitals .section-head h2 { font-size: 16px; }
 
-.header-board-vitals .vw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: 8px; gap: 16px; }
+/* Four numbers, or five with a UPS: one row of equal columns. */
+.header-board-vitals .vw-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding-top: 8px; gap: 16px; }
 .header-board-vitals .vw { min-width: 0; }
 .header-board-vitals .vw-label { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-board-vitals .spark { height: 16px; }
@@ -9770,7 +9784,6 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 }
 @media (max-width: 760px) {
   .header-board-vitals { flex-basis: 100%; min-width: 0; }
-  .header-board-vitals .vw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .header-context { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
   .home-header .header-context .header-weather { width: auto; flex: 1 1 180px; }
   .home-header .header-context .masthead-time { flex-direction: column; align-items: center; }
@@ -10708,11 +10721,10 @@ a.req-come:hover .req-title {
   }
 }
 
-/* Phone header: the server's four numbers in one row, so the apps and
-   Right now start on the first screen. Labels wrap; nothing is cut. */
+/* Phone header: the server's numbers in one row, so the apps and Right now
+   start on the first screen. Labels wrap; nothing is cut. */
 @media (max-width: 760px) {
   .header-board-vitals .vw-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
   }
 
@@ -10938,11 +10950,17 @@ a.req-come:hover .req-title {
   }
 }
 
-/* The narrowest phones: the header's server numbers two by two. */
+/* The narrowest phones: the header's server numbers two by two, and a fifth
+   (the UPS) across the bottom. */
 @media (max-width: 480px) {
   .header-board-vitals .vw-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
     gap: 10px 16px;
+  }
+
+  .header-board-vitals .vw:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 
@@ -12397,7 +12415,7 @@ html.showcase img[src*="/api/live/"] {
 
 html.wall-swipe,
 html.wall-swipe body {
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-y;
   overscroll-behavior-x: none;
 }
 

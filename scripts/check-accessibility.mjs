@@ -65,7 +65,7 @@ try {
   for (const colorScheme of ['dark', 'light']) {
     await page.emulateMedia({ forcedColors: 'active', colorScheme });
     await page.goto(base + '/');
-    await page.locator('.header-board-vitals .meter').waitFor();
+    await page.locator('.header-board-vitals .meter').first().waitFor();
     // Playback bars arrive with the first live snapshot, after the header.
     await page.locator('.playback .meter > span').first().waitFor();
     assert(await page.evaluate(() => matchMedia('(forced-colors: active)').matches));

@@ -50,7 +50,7 @@ export function savedBoards(): { id: string; board: Board }[] {
 
 /** The tabs: each board's address and name. */
 export function boardList(): BoardRef[] {
-  return [{ id: HOME_ID, name: savedHome()?.name ?? 'Home' }, ...extras().map((s) => ({ id: s.id, name: s.board.name ?? s.id }))];
+  return [{ id: HOME_ID, name: savedHome()?.name ?? 'Home' }, ...extras().map((s) => ({ id: s.id, name: s.board.name ?? s.id, ...(s.board.wall ? { wall: true } : {}) }))];
 }
 
 /**

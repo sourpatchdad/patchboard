@@ -12,6 +12,13 @@
   Light a black P on white, each with a gray leg. White on black and Black on
   white are App icon choices of their own too. A phone keeps the icon it was
   added with, so remove and add it again to switch.
+- **Wall boards stay on the wall:** Home's tabs leave out boards set For a
+  wall screen. Settings, Devices lists them, each a link to edit.
+- **The UPS beside the server:** with NUT connected, the Server header shows
+  the UPS charge, or "On battery, 23 min left" in red when the power is out.
+- **No zoom on a phone:** pages scroll and never zoom, by pinch, double tap
+  or tapping into a search box. Density in Settings, Look still makes
+  everything bigger.
 - **Phone polish, from a week on e-ink:**
   - **Alerts:** the why behind an alert folds away on a phone; tap a line
     without a link to read it. A long title wraps beside its light instead

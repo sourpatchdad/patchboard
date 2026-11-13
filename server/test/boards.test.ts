@@ -125,3 +125,26 @@ test('widget placement survives saving and importing without changing legacy boa
   assert(invalid.board.widgets.every((w) => w.column === undefined));
   assert.deepEqual(validateBoard(DEFAULT_BOARD), { board: DEFAULT_BOARD });
 });
+
+test('a wall board says so in the board list, so Home leaves it out of its tabs', () => {
+  putBoard('hall-clock', { ...named('Hall clock'), wall: true });
+  putBoard('office', named('Office'));
+  const list = boardList();
+  assert.equal(list.find((b) => b.id === 'hall-clock')?.wall, true);
+  assert.equal(list.find((b) => b.id === 'office')?.wall, undefined);
+  removeBoard('hall-clock');
+  removeBoard('office');
+});
+
+test('the UPS in one reading: the one in trouble first, its words in the page language', async () => {
+  const { headlineUps, upsLabel, upsLevel } = await import('../../shared/ups.ts');
+  const base = { model: '', lowBattery: false, replaceBattery: false, charging: false };
+  const mains = { ...base, name: 'desk', onBattery: false, charge: 100 };
+  const out = { ...base, name: 'rack', onBattery: true, charge: 64, runtimeSec: 23 * 60 };
+  assert.equal(headlineUps([mains, out])?.name, 'rack');
+  assert.equal(headlineUps([]), undefined);
+  assert.equal(upsLabel(out), 'On battery, 23 min left');
+  assert.equal(upsLabel(mains), 'UPS');
+  assert.equal(upsLevel(out), 'crit');
+  assert.equal(upsLevel(mains), 'ok');
+});

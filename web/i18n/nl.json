@@ -291,5 +291,8 @@
  "Miners": "Miners",
  "No miner answering": "Geen miner antwoordt",
  "{n} miners": "{n} miners",
- "Hashrate, last 24 hours": "Hashrate, afgelopen 24 uur"
+ "Hashrate, last 24 hours": "Hashrate, afgelopen 24 uur",
+ "UPS": "UPS",
+ "Battery nearly empty": "Accu bijna leeg",
+ "Replace battery": "Accu vervangen"
 }

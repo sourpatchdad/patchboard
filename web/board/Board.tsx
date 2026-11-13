@@ -43,7 +43,8 @@ import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
 import { t } from '../lib/i18n.ts';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { FrigateData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import type { FrigateData, NutData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
+import { headlineUps, upsLabel, upsLevel } from '../../shared/ups.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
 import { Spark, Split } from '../components/Spark.tsx';
@@ -562,7 +563,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               <input type="checkbox" checked={!!draft.fit} onChange={(e) => setDraft((d) => (d ? { ...d, fit: e.target.checked || undefined } : d))} />
               Fit the window
             </label>
-            <label className="check board-fit" title="For a tablet or screen on the wall: one status line instead of the header, and no tabs. A household device also drops the navigation and swipes between its pages.">
+            <label className="check board-fit" title="For a tablet or screen on the wall: one status line instead of the header, and no tabs, and it stays off Home's tabs. A household device also drops the navigation and swipes between its pages.">
               <input type="checkbox" checked={!!draft.wall} onChange={(e) => setDraft((d) => (d ? { ...d, wall: e.target.checked || undefined } : d))} />
               For a wall screen
             </label>
@@ -1133,6 +1134,8 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
   const { data: sys } = useSource<SystemData>('system');
   const { data: nas } = useSource<TruenasData>('truenas');
+  // The UPS powers the server, so its charge sits with the server's numbers.
+  const ups = headlineUps(useSource<NutData>('nut').data?.ups);
   const h = useHistory(['cpu', 'mem.used'], 24, 120);
   if (!sys) return null;
   const pool = nas?.pools.slice().sort((a, b) => b.sizeBytes - a.sizeBytes)[0];
@@ -1173,6 +1176,13 @@ export function Vitals({ compact = false }: { compact?: boolean }) {
           <Roll className="vw-num" value={uptime(sys.uptimeSec)} />
           <span className="vw-label">{t('Uptime')}</span>
         </div>
+        {ups && (
+          <div className="vw" title={[ups.name, ups.model, ups.loadPct != null ? `${Math.round(ups.loadPct)}% load` : ''].filter(Boolean).join(', ')}>
+            <Roll className={`vw-num ${upsLevel(ups) === 'crit' ? 'crit-text' : upsLevel(ups) === 'warn' ? 'warn-text' : ''}`} value={ups.charge != null ? `${Math.round(ups.charge)}%` : ups.onBattery ? t('On battery') : t('On mains')} />
+            <span className="vw-label">{upsLabel(ups, t)}</span>
+            {ups.charge != null && <Meter label={`${ups.name} battery charge`} value={ups.charge} level={upsLevel(ups)} />}
+          </div>
+        )}
       </div>
     </Section>
   );

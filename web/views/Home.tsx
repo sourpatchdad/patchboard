@@ -83,10 +83,11 @@ export function Home() {
   );
 }
 
-/** One tab per board, once there is more than Home. */
+/** One tab per board, once there is more than Home. Wall boards belong to
+ * their screens, so they stay out; Settings, Devices opens them to edit. */
 function BoardTabs() {
   const { snap } = useStore();
-  const boards = snap?.boards ?? [];
+  const boards = (snap?.boards ?? []).filter((b) => !b.wall);
   if (boards.length < 2) return null;
   return (
     <nav className="board-tabs" aria-label="Boards">

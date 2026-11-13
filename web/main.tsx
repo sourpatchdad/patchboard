@@ -67,6 +67,9 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
+// iOS ignores user-scalable=no for pinches; its own gesture events can still be refused.
+for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   void navigator.serviceWorker.register('/sw.js');
 }
