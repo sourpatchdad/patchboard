@@ -130,7 +130,7 @@ export function CarWidget() {
                       label={`${c.name} tire pressures, last 7 days`}
                       lines={TIRES.map((t) => ({ data: week[carKey(`tire.${t}`, c.vin)], label: TIRE_NAMES[t], className: soft.includes(t) ? 'is-soft' : undefined }))}
                     />
-                    <span className="car-chart-label">Tires, last 7 days{soft.length ? ', the low one in amber' : ''}</span>
+                    <span className="car-chart-label">Tires, last 7 days</span>
                   </div>
                 )}
                 {soft.length > 0 && (

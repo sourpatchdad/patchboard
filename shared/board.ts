@@ -390,8 +390,8 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   shades: { name: 'Shades', about: 'Home Assistant blinds, shades and curtains: how far open each is, and open, stop or close. Garage doors and gates show their state only.', size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
   people: { name: 'People', about: "Who's home and who's out, from Home Assistant's people, and since when.", size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
   miners: { name: 'Miners', about: 'BitAxe and other AxeOS miners: hashrate with its last day, the ASIC temperature, power and efficiency, the best difficulty and shares, a line each.', size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
-  rooms: { name: 'Rooms', about: "Each room's temperature from Home Assistant, with a strip of its last day in color, blue for cool and orange for warm, so you see which room runs hot and when.", size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
-  chores: { name: 'Chores', about: "Things done every so often, like watering the plants or changing a filter: the days since each was last done, amber once it's due, and Done to start the count again, from any screen, wall tablets too.", size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [choresField] } },
+  rooms: { name: 'Rooms', about: "Each room's temperature from Home Assistant, with a strip of its last day.", size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
+  chores: { name: 'Chores', about: "Things done every so often, like watering the plants or changing a filter: the days since each was last done, and Done to start the count again, from any screen, wall tablets too.", size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [choresField] } },
   countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
@@ -402,7 +402,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   requests: { name: 'Requests', about: 'Overseerr or Jellyseerr: requests waiting for you, with Approve and Decline, and approved ones still on the way. Hidden while there are neither.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [5, 1, 20] } },
   wake: { name: 'Wake', about: 'Wake-on-LAN buttons for the machines you name in Settings, Connections.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   container: { name: 'Container', about: "One container's CPU, memory, response time and 14 days of health.", size: 's', sizes: ['s', 'm', 'l'], removable: true, multiple: true, options: {} },
-  json: { name: 'API numbers', about: 'Up to four values from any JSON API, with thresholds that turn them amber or red.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
+  json: { name: 'API numbers', about: 'Up to four values from any JSON API, with warning and alarm thresholds.', size: 's', sizes: ['s', 'm', 'l', 'w'], removable: true, multiple: true, options: { title: false } },
 };
 
 /**

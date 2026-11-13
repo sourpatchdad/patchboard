@@ -39,8 +39,7 @@ and Navidrome; Tracearr has its own marker for aggregate activity.
 ![Playback details on hover, focus or tap](screenshots/playback-preview.webp)
 
 **Status** stays explicit: the header names problems, and the tab title counts
-what needs you, as in "(2) Patchboard". The tab icon adds an amber dot for
-warnings or a red dot for critical alerts.
+what needs you, as in "(2) Patchboard", and its icon carries a dot.
 
 **Needs attention** sits in Home's header, with problem links wrapping under
 the status line, worst first. Three show, and the rest wait in a panel a
@@ -153,7 +152,7 @@ right there; Escape, Close or switching tabs ends it.
 **The car:** through Tessie, the charge and range with a line of the last
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
 outside temperatures with a line of the last day, and the four tires around
-the car, with a soft one in amber and named. Patchboard records each reading
+the car, with a soft one named. Patchboard records each reading
 Tessie has, without waking the car, so the lines fill in from the day you
 set it up. Set the widget to One number for the battery, the range or the
 lowest tire.
@@ -185,9 +184,9 @@ Shopping list or Chores, with a box to add to it and a tap to tick an item
 off. Thermostat shows the temperature inside and sets it with minus and plus.
 Shades opens, stops and closes blinds, while garage doors and gates only show
 their state. People shows who's home. Rooms gives each temperature sensor a
-strip of its last day, blue when cool and orange when warm. Chores needs no Home Assistant: name
+strip of its last day. Chores needs no Home Assistant: name
 the jobs and how often (Water the plants=7), and it counts the days since
-each, turns amber when one is due, and starts over at Done. A household
+each and starts over at Done. A household
 tablet on the fridge can do all of it.
 
 ![Shopping list, thermostat, shades, people and chores on one board](screenshots/family.webp)

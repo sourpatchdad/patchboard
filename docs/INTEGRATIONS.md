@@ -56,7 +56,7 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
    choose Icon and live number, pick a preset or Any JSON API, paste the key,
    and press Test. The key stays on the server.
 3. **An API numbers widget** on Home shows up to four values from any JSON
-   API, with amber and red thresholds. Paste a key into a header or the
+   API, with warning and alarm thresholds. Paste a key into a header or the
    URL as it is: saving the board moves it to Settings, Keys and leaves a
    `${secret:NAME}` reference in the widget, so boards and setup files
    never carry it. `${env:WIDGET_NAME}` reads one from the environment.
@@ -100,7 +100,7 @@ into Patchboard later, see [Moving off files](CONFIGURATION.md#moving-off-files)
 | **ntfy** | Push notifications: a problem in Needs attention that lasts two minutes reaches your phone, and so does its fix. Test sends a real one. | `NTFY_URL`; optional `NTFY_TOKEN`, `NOTIFY_LEVEL`, `PATCHBOARD_URL` | A topic on your own ntfy server or ntfy.sh. On ntfy.sh, pick a long topic name nobody can guess. NTFY_TOKEN for a server that needs sign-in. |
 | **Gotify** | The same push notifications through Gotify. | `GOTIFY_URL`, `GOTIFY_TOKEN`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | Gotify: Apps, Create application, then copy its token. |
 | **Pushover** | The same notifications through Pushover: outages at high priority, fixes quietly. | `PUSHOVER_TOKEN`, `PUSHOVER_USER_KEY`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | pushover.net: your User Key is on the front page; Create an Application for the token. |
-| **Discord** | The same notifications in a Discord channel, red for down, amber for a warning, green when fixed, each linking back here. Test sends a real one. | `DISCORD_WEBHOOK`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | In Discord: the channel’s settings, Integrations, Webhooks, New Webhook, Copy Webhook URL. Treat it like a password. |
+| **Discord** | The same notifications in a Discord channel, each linking back here. Test sends a real one. | `DISCORD_WEBHOOK`; optional `NOTIFY_LEVEL`, `PATCHBOARD_URL` | In Discord: the channel’s settings, Integrations, Webhooks, New Webhook, Copy Webhook URL. Treat it like a password. |
 | **Webhook** | The same notifications as a JSON POST, for Home Assistant, n8n, Apprise or your own script: level, title, body, a link and the time. | `WEBHOOK_URL`; optional `WEBHOOK_TOKEN`, `NOTIFY_LEVEL`, `PATCHBOARD_URL` | Any address that takes a POST. A token goes out as Authorization: Bearer. Home Assistant: an automation with a Webhook trigger gives you the address. |
 | **Email** | The same notifications by email, subject first: [Down], [Warning] or [Fixed]. Test sends a real one. | `SMTP_HOST`, `SMTP_FROM`, `SMTP_TO`; optional `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_VERIFY_TLS`, `NOTIFY_LEVEL`, `PATCHBOARD_URL` | Any mail server: port 465 for TLS, or 587 with STARTTLS. Gmail, iCloud and Fastmail need an app password. A relay on your network may need no sign-in. |
 | **Speedtest Tracker** | An Internet widget: the latest download, upload and ping, with the last day as a line. A failed test, or one under the thresholds you set in Speedtest Tracker, shows in Needs attention. | `SPEEDTEST_URL`, `SPEEDTEST_TOKEN` | Speedtest Tracker 1.0 or newer: your profile, API tokens, create one with Read results. |

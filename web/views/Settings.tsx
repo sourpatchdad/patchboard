@@ -152,11 +152,8 @@ export function Settings() {
           ))}
         </div>
         <p className="settings-note">
-          For this device: the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick first,
-          then add; to change it, remove the app from the home screen and add it again. On an iPhone with dark home-screen icons, pick a
-          dark one: iOS darkens a white icon and hides its P. With E-ink on, Dark becomes White on black, Light becomes Black on white, and
-          the status bar goes white. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts
-          what needs you.
+          For Add to Home Screen or Install on this device. A phone keeps the icon it had when you added it: to change it, remove the
+          app and add it again. With dark home-screen icons on an iPhone, pick a dark one.
         </p>
       </Section>
 
@@ -171,7 +168,7 @@ export function Settings() {
             <span aria-hidden>+</span>
           </label>
         </div>
-        <p className="settings-note">For links, the current page, focus, charts and the health squares. Problems keep their own amber and red in every theme.</p>
+        <p className="settings-note">For links, the current page, focus and charts.</p>
       </Section>
 
       <Section title="Type">
@@ -258,7 +255,7 @@ export function Settings() {
           <input type="checkbox" checked={a.eink} onChange={(e) => setAppearance({ eink: e.target.checked })} />
           E-ink
         </label>
-        <p className="settings-note">For an e-ink reader or panel: black on white, no motion, problems marked by shape as well as color, and the page redrawn once a minute with whatever changed, so it doesn't flash all day. A wall device is set from Devices instead.</p>
+        <p className="settings-note">For an e-ink reader or panel: no motion, and one redraw a minute. A wall device is set from Devices.</p>
       </Section>
 
       <Section title="Keyboard">
@@ -317,7 +314,6 @@ export function Settings() {
             ['color', 'Full color'],
           ])}
         </div>
-        <p className="settings-note">Grayscale icons get their color back when you point at them.</p>
       </Section>
       )}
       {tab === 'look' && <Portability />}

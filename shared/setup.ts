@@ -220,7 +220,7 @@ export interface Threshold {
 
 export const THRESHOLDS: Threshold[] = [
   { name: 'POOL_WARN_PCT', group: 'Storage', label: 'Warn when storage is', unit: '% full', kind: 'number', default: '85', min: 50, max: 99, hint: 'For every pool, volume or array.' },
-  { name: 'POOL_CRIT_PCT', group: 'Storage', label: 'Alarm when storage is', unit: '% full', kind: 'number', default: '95', min: 50, max: 100, hint: 'Shown in red, and sent as an outage if you get notifications.' },
+  { name: 'POOL_CRIT_PCT', group: 'Storage', label: 'Alarm when storage is', unit: '% full', kind: 'number', default: '95', min: 50, max: 100, hint: 'Sent as an outage if you get notifications.' },
   { name: 'DISK_WARN_C', group: 'Drives', label: 'Warn when a drive reaches', unit: '°C', kind: 'number', default: '50', min: 30, max: 90, hint: 'Hard drives run cooler than SSDs; 45 to 50 suits most hard drives.' },
   { name: 'DISK_CRIT_C', group: 'Drives', label: 'Alarm when a drive reaches', unit: '°C', kind: 'number', default: '58', min: 30, max: 100, hint: 'Above this, drives wear fast. Check the airflow.' },
   { name: 'CHECK_DOMAINS', group: 'Checks', label: 'Also check links on', kind: 'list', default: '', hint: 'Your own domains, comma-separated, e.g. example.com. Links on private and Tailscale addresses are always checked.' },

@@ -324,7 +324,7 @@ export function RoomsWidget({ entities }: { entities?: string }) {
           })}
         </ul>
       )}
-      {ids.length > 0 && <p className="speed-seen">The last 24 hours, blue for the coolest and orange for the warmest.</p>}
+      {ids.length > 0 && <p className="speed-seen">The last 24 hours</p>}
     </Section>
   );
 }

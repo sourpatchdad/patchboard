@@ -230,7 +230,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'discord',
     name: 'Discord',
-    adds: 'The same notifications in a Discord channel, red for down, amber for a warning, green when fixed, each linking back here. Test sends a real one.',
+    adds: 'The same notifications in a Discord channel, each linking back here. Test sends a real one.',
     env: ['DISCORD_WEBHOOK'],
     optional: ['NOTIFY_LEVEL', 'PATCHBOARD_URL'],
     where: 'In Discord: the channel’s settings, Integrations, Webhooks, New Webhook, Copy Webhook URL. Treat it like a password.',

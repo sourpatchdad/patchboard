@@ -15,7 +15,10 @@
 - **Wall boards stay on the wall:** Home's tabs leave out boards set For a
   wall screen. Settings, Devices lists them, each a link to edit.
 - **The UPS beside the server:** with NUT connected, the Server header shows
-  the UPS charge, or "On battery, 23 min left" in red when the power is out.
+  the UPS charge, or "On battery, 23 min left" when the power is out.
+- **Less text where a picture already says it:** captions and settings notes
+  no longer explain colors, bars or dots, and E-ink's notes never mention a
+  color.
 - **No zoom on a phone:** pages scroll and never zoom, by pinch, double tap
   or tapping into a search box. Density in Settings, Look still makes
   everything bigger.
