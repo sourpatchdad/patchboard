@@ -6,21 +6,8 @@ import { boardList } from './boards.ts';
 import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
 import type { Adapter } from './adapters/adapter.ts';
-import type {
-  Alert,
-  ChangeEvent,
-  DeviceView,
-  Container,
-  DockerData,
-  ServerEvent,
-  Snapshot,
-  SourceId,
-  SourceState,
-  ChecksData,
-  StatsData,
-  SystemData,
-  TruenasData,
-} from '../shared/types.ts';
+import type { Alert, CarData, ChangeEvent, ChecksData, Container, DeviceView, DockerData, ServerEvent, Snapshot, SourceId, SourceState, StatsData, SystemData, TruenasData } from '../shared/types.ts';
+import { carKey, TIRES } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
 import { checkSelfImage, composeMounted, selfCheckStatus, whoAmI } from './updater.ts';
@@ -140,6 +127,7 @@ export class Hub {
       pruneSamples('svc.', 8 * 24 * H);
       pruneSamples('cpu', 8 * 24 * H);
       pruneSamples('mem.', 8 * 24 * H);
+      pruneSamples('car.', 31 * 24 * H);
       void seedPoolHistoryFromAudits();
     };
     housekeeping();
@@ -189,8 +177,21 @@ export class Hub {
       if (pool) out.push(['pool.used', pool.usedBytes], ['pool.size', pool.sizeBytes]);
       else if (sys?.pool) out.push(['pool.used', sys.pool.usedBytes], ['pool.size', sys.pool.totalBytes]);
     }
+    // The car's own readings, once each time Tessie has a newer one, kept a month.
+    const cars = this.sources.tessie?.ok ? (this.sources.tessie.data as CarData) : null;
+    for (const car of cars?.cars ?? []) {
+      if ((this.carSeen.get(car.vin) ?? 0) >= car.updatedAt) continue;
+      this.carSeen.set(car.vin, car.updatedAt);
+      out.push([carKey('battery', car.vin), car.battery], [carKey('range', car.vin), car.rangeMi]);
+      if (car.insideC != null) out.push([carKey('inside', car.vin), car.insideC]);
+      if (car.outsideC != null) out.push([carKey('outside', car.vin), car.outsideC]);
+      for (const t of TIRES) if (car.tires) out.push([carKey(`tire.${t}`, car.vin), car.tires[t]]);
+    }
     if (out.length) recordSamples(at, out);
   }
+
+  /** The newest reading recorded for each car, so a sleeping car isn't recorded again every minute. */
+  private carSeen = new Map<string, number>();
 
   /** Re-read recent changes after something was recorded outside a poll. */
   refreshChanges(): void {

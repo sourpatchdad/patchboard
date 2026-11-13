@@ -3,6 +3,7 @@
 
 import { HOME_ID, type WidgetType } from '../shared/board.ts';
 import { getBoard, savedBoards } from './boards.ts';
+import { PSI, softTires } from '../shared/car.ts';
 import type {
   GlancesData,
   NextcloudData,
@@ -12,6 +13,7 @@ import type {
   PortainerData,
   NasSystem,
   NutData,
+  CarData,
   ProxmoxData,
   ScrutinyData,
   SyncthingData,
@@ -447,6 +449,21 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       since: d.lastSeen,
       href: st!.webUrl,
       source: 'syncthing',
+    });
+  }
+
+  // Tessie: a tire going soft, named, so it's caught before the car's own warning.
+  for (const car of data<CarData>(sources, 'tessie')?.cars ?? []) {
+    const soft = softTires(car.tires);
+    if (!soft.length || !car.tires) continue;
+    const names: Record<string, string> = { fl: 'front left', fr: 'front right', rl: 'rear left', rr: 'rear right' };
+    alerts.push({
+      id: `car-tire-${car.vin}`,
+      level: 'warn',
+      subject: car.name,
+      title: `${car.name}'s ${soft.map((t) => names[t]).join(' and ')} ${soft.length === 1 ? 'tire is' : 'tires are'} low`,
+      detail: soft.map((t) => `${names[t]} ${Math.round(car.tires![t] * PSI)} psi`).join(', ') + '. Check it and add air.',
+      source: 'tessie',
     });
   }
 

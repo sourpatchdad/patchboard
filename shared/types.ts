@@ -539,7 +539,17 @@ export interface Car {
   driving: boolean;
   asleep: boolean;
   updatedAt: number;
+  /** What the climate is set to, in °C. */
+  setC?: number;
+  /** Tire pressures in bar, front left to rear right. */
+  tires?: Record<TirePos, number>;
 }
+
+export type TirePos = 'fl' | 'fr' | 'rl' | 'rr';
+export const TIRES: TirePos[] = ['fl', 'fr', 'rl', 'rr'];
+
+/** Where a car's history is kept: car.battery:<vin>, car.tire.fl:<vin>. */
+export const carKey = (what: 'battery' | 'range' | 'inside' | 'outside' | `tire.${TirePos}`, vin: string): string => `car.${what}:${vin}`;
 
 /** One internet speed test, in megabits per second and milliseconds. */
 export interface SpeedRun {

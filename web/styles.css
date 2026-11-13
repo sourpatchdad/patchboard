@@ -7176,6 +7176,127 @@ button.ha-act:hover {
   color: var(--ink-3);
 }
 
+/* A wide card: charge on the left, the temperatures and tires on the right. */
+@container (min-width: 560px) {
+  .car-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 32px;
+  }
+
+  .car-env > .car-temps:first-child {
+    margin-top: 12px;
+  }
+}
+
+/* A line of the car's history under what it describes, with its words. */
+.car-chart {
+  position: relative;
+  margin-top: 10px;
+}
+
+.car-chart-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Inside solid, outside dashed over it, on one scale. */
+.car-chart-outside {
+  position: absolute;
+  inset: 0 0 auto;
+}
+
+.car-chart-outside polyline {
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+
+.car-chart-outside .spark-base,
+.car-chart-outside .spark-now {
+  display: none;
+}
+
+.car-temps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin-top: 14px;
+}
+
+.car-temps p {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+
+.car-temp-num {
+  font: 400 22px/1 var(--f-mono);
+  color: var(--head);
+}
+
+.car-temp-what {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* The four tires where they sit, around the car seen from above. */
+.car-tires {
+  display: grid;
+  grid-template-columns: 1fr 44px 1fr;
+  grid-template-areas: 'fl body fr' 'rl body rr' 'unit unit unit';
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 14px;
+}
+
+.car-tire {
+  display: grid;
+  gap: 1px;
+}
+
+.car-tire-fl { grid-area: fl; justify-items: end; text-align: right; }
+.car-tire-fr { grid-area: fr; }
+.car-tire-rl { grid-area: rl; justify-items: end; text-align: right; }
+.car-tire-rr { grid-area: rr; }
+
+.car-tire-num {
+  font: 400 20px/1 var(--f-mono);
+  color: var(--head);
+}
+
+.car-tire-pos {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.car-tire.is-soft .car-tire-num {
+  color: var(--warn);
+}
+
+html[data-eink] .car-tire.is-soft .car-tire-num {
+  color: #000;
+  text-decoration: underline;
+}
+
+.car-tires-body {
+  grid-area: body;
+  justify-self: center;
+  width: 30px;
+  height: 64px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px 12px 9px 9px;
+}
+
+.car-tires-unit {
+  grid-area: unit;
+  justify-self: center;
+  font: 400 11.5px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+
 /* ---------- Wake ---------- */
 
 .wake-list {
@@ -13373,4 +13494,8 @@ html.wall-swipe .widget-page {
 html[data-eink] .chore-list li.is-due .chore-since {
   color: #000;
   font-weight: 600;
+}
+
+.car-line.warn-text {
+  color: var(--warn);
 }

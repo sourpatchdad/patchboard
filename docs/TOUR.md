@@ -144,6 +144,14 @@ frame, refreshed every few seconds while it's on screen, and, for cameras
 that detect, who and what came by today. Tap a camera to watch it live
 right there; Escape, Close or switching tabs ends it.
 
+**The car:** through Tessie, the charge and range with a line of the last
+week, what it's doing (charging, full in an hour, at 11 kW), the inside and
+outside temperatures with a line of the last day, and the four tires around
+the car, with a soft one in amber and named. Patchboard records each reading
+Tessie has, without waking the car, so the lines fill in from the day you
+set it up. Set the widget to One number for the battery, the range or the
+lowest tire.
+
 ![Home Assistant, the car, Cameras and Wake on the board](screenshots/house.webp)
 
 **The network:** Uptime lists Uptime Kuma monitors with problems first, each

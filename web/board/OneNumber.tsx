@@ -21,6 +21,7 @@ import { t } from '../lib/i18n.ts';
 import { locale, num } from '../lib/region.ts';
 import { useStore } from '../lib/store.tsx';
 import { SetupLink } from './SetupLink.tsx';
+import { softTires } from '../../shared/car.ts';
 
 type Tone = 'ok' | 'warn' | 'crit' | undefined;
 export interface Reading {
@@ -122,6 +123,12 @@ function useReading(w: Widget, now: number): Reading | null | undefined {
     case 'car': {
       const car = data<CarData>('tessie')?.cars[0];
       if (!car) return car === undefined && data<CarData>('tessie') === undefined ? undefined : null;
+      if (which === 'tire') {
+        if (!car.tires) return null;
+        const [pos, bar] = (Object.entries(car.tires) as [string, number][]).sort((a, b) => a[1] - b[1])[0];
+        const names: Record<string, string> = { fl: t('Front left'), fr: t('Front right'), rl: t('Rear left'), rr: t('Rear right') };
+        return { value: unit === 'c' ? `${bar.toFixed(1)} bar` : `${Math.round(bar * 14.5038)} psi`, sub: names[pos], tone: softTires(car.tires).length ? 'warn' : undefined };
+      }
       if (which === 'range') return { value: unit === 'c' ? `${Math.round(car.rangeMi * 1.609)} km` : `${car.rangeMi} mi`, sub: t('{name} range', { name: car.name }) };
       return { value: `${car.battery}%`, sub: car.charging === 'Charging' ? t('{name}, charging', { name: car.name }) : car.name, tone: car.battery <= 20 ? 'warn' : undefined };
     }

@@ -2,7 +2,7 @@
 // Tessie's cached state. Reading it never wakes the car, so polling costs
 // nothing in battery. https://developer.tessie.com
 
-import type { Car, CarData } from '../../shared/types.ts';
+import { type Car, type CarData, TIRES } from '../../shared/types.ts';
 import { config } from '../config.ts';
 import { getJson } from '../http.ts';
 import { type Adapter, MINUTE } from './adapter.ts';
@@ -21,8 +21,18 @@ interface Vehicle {
       charger_power?: number; // kW
       timestamp?: number;
     };
-    climate_state?: { inside_temp?: number; outside_temp?: number; is_climate_on?: boolean };
-    vehicle_state?: { locked?: boolean; odometer?: number; sentry_mode?: boolean; car_version?: string };
+    climate_state?: { inside_temp?: number; outside_temp?: number; is_climate_on?: boolean; driver_temp_setting?: number };
+    vehicle_state?: {
+      locked?: boolean;
+      odometer?: number;
+      sentry_mode?: boolean;
+      car_version?: string;
+      // In bar; null while the car hasn't measured since it woke.
+      tpms_pressure_fl?: number | null;
+      tpms_pressure_fr?: number | null;
+      tpms_pressure_rl?: number | null;
+      tpms_pressure_rr?: number | null;
+    };
     drive_state?: { shift_state?: string | null };
   };
 }
@@ -49,7 +59,16 @@ export function toCar(v: Vehicle): Car | null {
     driving: !!s.drive_state?.shift_state && s.drive_state.shift_state !== 'P',
     asleep: s.state === 'asleep',
     updatedAt: c.timestamp ?? Date.now(),
+    setC: s.climate_state?.driver_temp_setting,
+    tires: tiresOf(s.vehicle_state),
   };
+}
+
+/** All four pressures, or none: a car that has only some reports none yet. */
+function tiresOf(v: NonNullable<Vehicle['last_state']>['vehicle_state']): Car['tires'] {
+  const p = TIRES.map((t) => v?.[`tpms_pressure_${t}`]);
+  if (p.some((x) => typeof x !== 'number' || !(x > 0))) return undefined;
+  return { fl: p[0]!, fr: p[1]!, rl: p[2]!, rr: p[3]! };
 }
 
 export function tessieAdapter(): Adapter<CarData> {

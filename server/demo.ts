@@ -596,6 +596,8 @@ function demoCar(): CarData {
         driving: false,
         asleep: false,
         updatedAt: Date.now() - 4 * 60_000,
+        setC: 21,
+        tires: { fl: 2.9, fr: 2.9, rl: 2.86, rr: 2.62 },
       },
     ],
   };

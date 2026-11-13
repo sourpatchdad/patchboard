@@ -181,6 +181,7 @@ export const NUMBERS: Partial<Record<WidgetType, [string, string][]>> = {
   car: [
     ['battery', 'Battery'],
     ['range', 'Range'],
+    ['tire', 'Lowest tire'],
   ],
   dns: [
     ['blocked', 'Blocked today'],

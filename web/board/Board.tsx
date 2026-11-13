@@ -28,6 +28,7 @@ import {
   type WidgetType,
 } from '../../shared/board.ts';
 import { NumberView } from './OneNumber.tsx';
+import { CarWidget } from './CarWidget.tsx';
 import { DocumentsWidget, GitWidget, ManagersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
 import { ChoresWidget, ListWidget, PeopleWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
 import { HA_WIDGETS } from '../../shared/ha.ts';
@@ -57,7 +58,7 @@ import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { CarWidget, HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
 import { locale } from '../lib/region.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };

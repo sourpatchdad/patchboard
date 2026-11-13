@@ -185,7 +185,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'tessie',
     name: 'Tessie (Tesla)',
-    adds: 'A Car widget: battery, range, charging and time to full, climate, locks. Reads Tessie’s cached state, so it never wakes the car.',
+    adds: 'A Car widget: battery and range with the last 7 days of charge, charging and time to full, inside and outside temperatures with the last day, the four tire pressures with a soft one marked, locks and the odometer. Reads Tessie’s cached state, so it never wakes the car.',
     env: ['TESSIE_TOKEN'],
     optional: ['TESSIE_VIN'],
     where: 'Tessie: Settings, API, Generate access token. TESSIE_VIN picks one car when the account has several.',

@@ -282,5 +282,9 @@
  "People": "Personnes",
  "Shades": "Stores",
  "Thermostat": "Thermostat",
- "to go on {name}": "restants sur {name}"
+ "to go on {name}": "restants sur {name}",
+ "Front left": "Avant gauche",
+ "Front right": "Avant droit",
+ "Rear left": "Arrière gauche",
+ "Rear right": "Arrière droit"
 }

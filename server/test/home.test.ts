@@ -70,6 +70,19 @@ test('Tessie: a charging car reads as charging, with time to full', () => {
   assert.equal(toCar({ vin: 'V2' }), null);
 });
 
+test('the car: all four tire pressures or none, and a soft tire is named', async () => {
+  const { softTires } = await import('../../shared/car.ts');
+  const base = { display_name: 'Blue', charge_state: { battery_level: 64 } };
+  const four = toCar({ vin: 'V1', last_state: { ...base, vehicle_state: { tpms_pressure_fl: 2.9, tpms_pressure_fr: 2.9, tpms_pressure_rl: 2.88, tpms_pressure_rr: 2.6 }, climate_state: { driver_temp_setting: 21 } } });
+  assert.deepEqual(four!.tires, { fl: 2.9, fr: 2.9, rl: 2.88, rr: 2.6 });
+  assert.equal(four!.setC, 21);
+  // A car just awake has measured some tires and not others: show none yet.
+  assert.equal(toCar({ vin: 'V1', last_state: { ...base, vehicle_state: { tpms_pressure_fl: 2.9, tpms_pressure_fr: null } } })!.tires, undefined);
+  // 2.6 bar is 37.7 psi: low outright, and 4 psi under the others.
+  assert.deepEqual(softTires(four!.tires), ['rr']);
+  assert.deepEqual(softTires({ fl: 2.9, fr: 2.9, rl: 2.9, rr: 2.9 }), []);
+});
+
 test('a thermostat may be set and blinds moved, but never a garage door, gate or door', async () => {
   const { haAllows, haService, parseEntities: parse } = await import('../../shared/ha.ts');
   assert.equal(haAllows('climate.living', 'set'), true);

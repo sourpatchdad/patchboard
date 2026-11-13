@@ -258,6 +258,24 @@ export function demoSampleHistory(containers: Container[], record: (at: number, 
     }
     record(t, vals);
   }
+  // The car: a week of charging up overnight and draining through the day,
+  // the cabin and outside temperatures, and a rear tire slowly going soft.
+  for (let t = now - 7 * D; t < now; t += 30 * 60_000) {
+    const hour = new Date(t).getHours();
+    const day = (t - (now - 7 * D)) / D;
+    const battery = hour < 7 ? 55 + hour * 5 : Math.max(20, 90 - (hour - 7) * 3.2 - (Math.random() * 2));
+    const outside = 12 + 7 * Math.sin(((hour - 9) / 24) * 2 * Math.PI) + (Math.random() - 0.5);
+    record(t, [
+      ['car.battery:DEMO', Math.round(battery)],
+      ['car.range:DEMO', Math.round(battery * 3.1)],
+      ['car.inside:DEMO', outside + 5 + Math.random()],
+      ['car.outside:DEMO', outside],
+      ['car.tire.fl:DEMO', 2.9 + (Math.random() - 0.5) * 0.04],
+      ['car.tire.fr:DEMO', 2.9 + (Math.random() - 0.5) * 0.04],
+      ['car.tire.rl:DEMO', 2.86 + (Math.random() - 0.5) * 0.04],
+      ['car.tire.rr:DEMO', 2.9 - day * 0.04 + (Math.random() - 0.5) * 0.03],
+    ]);
+  }
   const size = 43.6 * TiB;
   for (let d = 90; d >= 1; d--) {
     const used = size * (0.872 - d * 0.00062) + (Math.random() - 0.5) * 0.05 * TiB;

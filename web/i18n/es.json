@@ -282,5 +282,9 @@
  "People": "Personas",
  "Shades": "Persianas",
  "Thermostat": "Termostato",
- "to go on {name}": "pendientes en {name}"
+ "to go on {name}": "pendientes en {name}",
+ "Front left": "Delantera izquierda",
+ "Front right": "Delantera derecha",
+ "Rear left": "Trasera izquierda",
+ "Rear right": "Trasera derecha"
 }
