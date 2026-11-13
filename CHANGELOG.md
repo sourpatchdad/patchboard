@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.13.0 (2026-11-12)
 
 - **The house, from Home Assistant:** five widgets beside the general one.
   - **List:** a to-do list such as Shopping list. Add an item, tick one off,
