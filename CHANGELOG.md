@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- **Español:** the boards, the wall screens and the Monitor in Spanish, in
-  Settings, Look, Language and region, or set for a wall device in Settings,
-  Devices.
+- **Deutsch and Español:** the boards, the wall screens and the Monitor in
+  German and Spanish, in Settings, Look, Language and region, or set for a wall
+  device in Settings, Devices.
 - **Home Assistant, for the family:** four widgets beside the general one.
   - **List:** a Home Assistant to-do list such as Shopping list: add an item,
     tick one off, and the done ones fold away.

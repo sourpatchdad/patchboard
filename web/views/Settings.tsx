@@ -244,7 +244,7 @@ export function Settings() {
           ])}
         </div>
         <p className="settings-note">
-          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Español and Français cover the boards, the wall screens and the Monitor so far; Settings stays in English.
+          Here: {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', hour12: !a.clock24 })}, {num(1234567.89, 2)}, {money(1234.5, currency(), 2)}. Deutsch, Español and Français cover the boards, the wall screens and the Monitor so far; Settings stays in English.
         </p>
       </Section>
 

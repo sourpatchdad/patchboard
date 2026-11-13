@@ -281,7 +281,7 @@ Cameras picks its cameras the same way.
 **Settings** has themes, colors, type and density, saved per browser; the
 Home header is under Home. A new browser or home-screen app starts from the
 last look you saved. Language and region, under Look, switches the boards,
-the wall screens and the Monitor to Spanish or French, with more of the app to follow,
+the wall screens and the Monitor to German, Spanish or French, with more of the app to follow,
 and writes dates, times, numbers, prices and temperatures the way your part
 of the world does: "jeudi 12 novembre, 14:30,
 1 234,50 €" in France. Showcase mode, under Look, swaps addresses, domain
