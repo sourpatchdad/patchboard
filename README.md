@@ -48,10 +48,11 @@ an app, grouped by compose stack. Coming from Homepage? Settings imports its
 
 Then connect what you run from Settings, Connections: press **Set up**,
 paste the address and key, test, save. It connects at once, and the server
-stores the key encrypted. There are 68 integrations, among them Sonarr,
+stores the key encrypted. There are 69 integrations, among them Sonarr,
 Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
 Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,
-AdGuard Home, Speedtest Tracker, Overseerr, TrueNAS and weather.
+AdGuard Home, Speedtest Tracker, Overseerr, Paperless, Nextcloud, BitAxe,
+TrueNAS and weather.
 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) has the full list.
 
 No `.env` and no config files: the compose file sets the time zone, and the
@@ -91,21 +92,34 @@ Five themes come in dark and light, or build a Custom one from three colors.
 
 **Wall screens.** Hang a tablet, an e-ink reader or an e-paper panel and
 set it up from your desk in Settings, Devices: its pages, theme, density,
-units and language change there and the device follows within a second.
-A household device gets its own pages to swipe
-between (the Monitor, wall boards for the clock and weather, markets, the
-house, cameras or media), turns them by itself if you like, and dims at
-night. Set its screen to E-ink for black on white with a redraw a minute.
-A TRMNL, Inky or ESP32 with no browser fetches the server as a one-bit
-picture instead. Status widgets can show as one big number with a faint line of
-its day, and a device can show one widget alone, for a Pi with a small
-screen.
+units and language change there, and the device follows within a second.
+A household device gets its own pages to swipe between (the Monitor, wall
+boards for the clock and weather, markets, the house, cameras or media),
+turns them by itself if you like, and dims at night. Set its screen to
+E-ink for black on white with a redraw a minute.
+
+Status widgets can show as one big number with a faint line of their day.
+A device can show one widget alone, for a Pi with a small screen, and a
+TRMNL, Inky or ESP32 with no browser fetches a one-bit picture of the
+server, or of one widget's number.
 
 ![A clock and weather wall board on a household tablet](docs/screenshots/wall-clock.webp)
 
+**The house.** From Home Assistant: a shopping or to-do list to tick off
+and add to, the thermostat with minus and plus, blinds and shades, who's
+home, and each room's last day of temperature as a strip. Chores counts the
+days since the plants were watered or the filter changed. The car shows its
+charge over the week, the cabin and outside temperatures, and the four tires
+with a soft one named. Miners covers BitAxe and other AxeOS miners. A
+kitchen tablet can tick the list and mark chores done; locks and garage
+doors stay read-only for everyone.
+
+![Shopping list, thermostat, shades, people and chores on one board](docs/screenshots/family.webp)
+
 **Your language and region.** Dates, times, numbers and prices follow your
 part of the world, from 28 regions. The boards, wall screens and Monitor
-speak German, Spanish, French, Italian, Dutch and Brazilian Portuguese as well as English, and another language is one file.
+speak German, Spanish, French, Italian, Dutch and Brazilian Portuguese as
+well as English, and another language is one file.
 
 **Playback.** Hover, focus or tap a playback row for its artwork, details and
 a link to its app, with time left when the service reports it.
@@ -119,7 +133,7 @@ boards, cameras and lights and none of the server controls.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Bookmarks, Search, Clocks, Feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, books, any container or JSON API. |
+| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Bookmarks, Search, Clocks, Feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, chores, books, the car, Home Assistant lists, thermostat, shades, people and rooms, media managers, documents, Nextcloud, Git, monitoring alerts, miners, any container or JSON API. |
 | **Server** | Pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate (TrueNAS, or any mounted folder). |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |
