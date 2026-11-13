@@ -141,7 +141,8 @@ export function Settings() {
               ['dark', 'Dark', '/icon-192.png'],
               ['light', 'Light', '/icon-light-192.png'],
               ['auto', 'Match the mode', a.scheme === 'light' || (a.scheme === 'auto' && matchMedia('(prefers-color-scheme: light)').matches) ? '/icon-light-192.png' : '/icon-192.png'],
-              ['mono', 'Black and white', matchMedia('(prefers-color-scheme: light)').matches ? '/icon-mono-192.png' : '/icon-mono-dark-192.png'],
+              ['mono-dark', 'White on black', '/icon-mono-dark-192.png'],
+              ['mono', 'Black on white', '/icon-mono-192.png'],
             ] as const
           ).map(([v, label, src]) => (
             <button key={v} type="button" className="icon-choice" aria-pressed={a.appIcon === v} onClick={() => setAppearance({ appIcon: v })}>
@@ -151,10 +152,10 @@ export function Settings() {
           ))}
         </div>
         <p className="settings-note">
-          For this device: the icon you get from Add to Home Screen or Install. Dark reads on light and dark home screens; a phone in dark
-          mode can darken the Light icon and hide its P. With E-ink on, the icon and the phone's status bar go black and white whatever you
-          pick here. Black and white follows the phone: black on white in light mode, white on black in dark mode. A phone keeps the icon it had when you added it, so pick first, then add; to change it, remove the app from the home
-          screen and add it again. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts
+          For this device: the icon you get from Add to Home Screen or Install. A phone keeps the icon it had when you added it, so pick first,
+          then add; to change it, remove the app from the home screen and add it again. On an iPhone with dark home-screen icons, pick a
+          dark one: iOS darkens a white icon and hides its P. With E-ink on, Dark becomes White on black, Light becomes Black on white, and
+          the status bar goes white. The browser tab adds an amber dot for warnings or a red dot for critical alerts, and its title counts
           what needs you.
         </p>
       </Section>

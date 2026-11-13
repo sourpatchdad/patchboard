@@ -13,7 +13,7 @@ export type Scheme = 'auto' | 'dark' | 'light';
 export type IconMode = 'mono' | 'color';
 export type HomeApps = 'tiles' | 'patchbay';
 /** Which app icon this device installs and shows in its tab: follow the mode, or always one. */
-export type AppIcon = 'auto' | 'dark' | 'light' | 'mono';
+export type AppIcon = 'auto' | 'dark' | 'light' | 'mono' | 'mono-dark';
 export type Density = 'compact' | 'comfortable' | 'large';
 export type TempUnit = 'f' | 'c' | 'both';
 export type HomeSection = 'inbox' | 'feeds' | 'upcoming' | 'now' | 'changes' | 'recent';
@@ -214,12 +214,12 @@ onEink(() => apply(current));
  * logic runs in index.html before the bundle loads.
  */
 export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light', eink = false) {
-  // E-ink, or a device that picked it: no blue, and black on white or white
-  // on black by the phone's own mode, since e-ink keeps the page on paper.
-  if (eink || choice === 'mono') {
-    const m = (media ? media.matches : true) ? 'mono' : 'mono-dark';
-    return { favicon: `/favicon-${m}.png`, touch: `/icon-${m}-180.png`, manifest: `/manifest-${m}.webmanifest` };
-  }
+  // Black and white, picked or from E-ink. E-ink turns the pick into its
+  // black-and-white twin: Dark is white on black, Light black on white.
+  // Match the mode asks the phone, which can be wrong: iOS can darken the
+  // home screen while the phone itself stays light.
+  const m = choice === 'mono' || choice === 'mono-dark' ? choice : eink ? (choice === 'light' || (choice === 'auto' && scheme === 'light') ? 'mono' : 'mono-dark') : null;
+  if (m) return { favicon: `/favicon-${m}.png`, touch: `/icon-${m}-180.png`, manifest: `/manifest-${m}.webmanifest` };
   const fixed = choice === 'dark' || choice === 'light';
   const v = fixed ? choice : scheme;
   return {
@@ -310,7 +310,7 @@ function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): voi
 }
 
 media?.addEventListener('change', () => {
-  if (current.scheme === 'auto' || current.eink || current.appIcon === 'mono' || einkOn()) apply(current);
+  if (current.scheme === 'auto') apply(current);
 });
 
 let pushTimer: ReturnType<typeof setTimeout> | undefined;

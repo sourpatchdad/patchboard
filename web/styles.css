@@ -12753,6 +12753,12 @@ html[data-eink] .icon-img {
   filter: url(#eink-ink);
 }
 
+/* A picked app icon: a thick black border, since e-ink drops shadows. */
+html[data-eink] .icon-choice[aria-pressed='true'] {
+  border: 3px solid #000;
+  padding: 8px 12px 6px;
+}
+
 html[data-eink] .poster-type {
   background: #e8e8e8 !important;
   color: #000;

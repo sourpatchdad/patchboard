@@ -19,11 +19,12 @@
         try { v = JSON.parse(localStorage.getItem('pb-vars') || 'null'); } catch (e) {}
         var light = matchMedia('(prefers-color-scheme: light)').matches;
         // The app icon is dark unless this device picked another (Settings, Look).
-        // E-ink, or Black and white picked, gets the mono icon, white on black
-        // when the phone is in dark mode.
-        function icons(choice, scheme) {
-          var fixed = choice === 'dark' || choice === 'light' || choice === 'mono', k = fixed ? choice : scheme, q = function (s) { return document.querySelector(s); };
-          if (k === 'mono' && !light) k = 'mono-dark';
+        // Black and white, picked or from E-ink, which turns the pick into its
+        // black-and-white twin (Dark is white on black, Light black on white).
+        function icons(choice, scheme, eink) {
+          var fixed = choice === 'dark' || choice === 'light' || choice === 'mono' || choice === 'mono-dark', k = fixed ? choice : scheme, q = function (s) { return document.querySelector(s); };
+          if (eink && k === 'light') k = 'mono';
+          if (eink && k === 'dark') k = 'mono-dark';
           q('link[rel="apple-touch-icon"]').href = k.indexOf('mono') === 0 ? '/icon-' + k + '-180.png' : k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
           q('link[rel="manifest"]').href = k.indexOf('mono') === 0 ? '/manifest-' + k + '.webmanifest' : k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
         }
@@ -34,7 +35,7 @@
         }
         if (!v) { r.dataset.theme = 'graphite'; r.dataset.scheme = light ? 'light' : 'dark'; icons('dark', r.dataset.scheme); statusBar(r.dataset.scheme); return; }
         var scheme = v.scheme === 'auto' ? (light ? 'light' : 'dark') : v.scheme;
-        icons(v.eink ? 'mono' : v.appIcon || 'dark', scheme);
+        icons(v.appIcon || 'dark', scheme, v.eink);
         statusBar(v.eink ? 'light' : scheme);
         if (v.eink) document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = '#ffffff'; });
         var vars = v[scheme] || {};

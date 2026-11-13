@@ -191,15 +191,17 @@ states stay quiet; recovery actions stay visible.
 The app icon is a P: an open bowl in the tile's ink and a blue tab under its
 top bar. Dark (ivory on near-black), light (slate on near-white) and black
 and white (for e-ink: no blue, the tab a quiet gray) share the geometry.
-Black and white comes in two: black on white for a phone in light mode, white
-on black for one in dark mode, so a darkened home screen never hides the P. The tab uses the same mark in all states, adding an amber dot for
+Black and white comes in two, white on black and black on white, each with a
+gray tab. The tab uses the same mark in all states, adding an amber dot for
 warnings or a red dot for critical alerts. The title count and installed-app
 badge also report attention counts.
 
 Settings, Look, App icon chooses dark (the default), light, match the mode,
-or black and white for this device. With E-ink on, the icon, the install
-manifest, the tab icon and the status bar go black and white whatever the
-choice. Dark reads on any home screen; a phone in dark mode can
+white on black, or black on white for this device. With E-ink on, the icon,
+the install manifest and the tab icon take the black-and-white twin of the
+choice (Dark is white on black, Light black on white), and the status bar
+goes white. iOS can darken home-screen icons while the phone stays in light
+mode, which a page can't detect, so a choice beats a guess here. Dark reads on any home screen; a phone in dark mode can
 darken a light icon until its P disappears.
 The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge
