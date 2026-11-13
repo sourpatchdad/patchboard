@@ -2,46 +2,45 @@
 
 ## Unreleased
 
-- **Deutsch, Español, Italiano, Nederlands and Português:** the boards, the
-  wall screens and the Monitor in German, Spanish, Italian, Dutch and
-  Brazilian Portuguese, in Settings, Look, Language and region, or set for a wall
-  device in Settings, Devices.
-- **Home Assistant, for the family:** four widgets beside the general one.
-  - **List:** a Home Assistant to-do list such as Shopping list: add an item,
-    tick one off, and the done ones fold away.
-  - **Thermostat:** the temperature inside, what it's set to with minus and
-    plus, and whether it's heating or cooling.
+- **The house, from Home Assistant:** five widgets beside the general one.
+  - **List:** a to-do list such as Shopping list. Add an item, tick one off,
+    and the done ones fold away.
+  - **Thermostat:** the temperature inside, the set point with minus and plus,
+    and whether it's heating or cooling.
   - **Shades:** blinds, shades and curtains, how far open, with open, stop and
     close. Garage doors, gates and doors stay read-only: the server checks the
-    cover's class with Home Assistant before moving anything.
-  - **People:** who's home and who's out, and since when.
-  - **Rooms:** each room's temperature with a strip of its last day in
-    half-hour cells, blue for cool and orange for warm, from Home Assistant's
-    own history.
+    cover's class with Home Assistant before it moves anything.
+  - **People:** who's home, who's out, and since when.
+  - **Rooms:** each room's last day of temperature as a strip, blue when cool
+    and orange when warm, from Home Assistant's own history.
 - **Chores:** name the jobs and how often (Water the plants=7). The widget
   counts the days since each, turns amber when one is due, and starts over at
-  Done, with a moment to undo. No Home Assistant needed.
-- **Household devices** can keep a list, set a thermostat, move shades and
-  mark chores done, all limited to what's pinned on a board.
-- **The car, redrawn:** the charge with a line of the last seven days, inside
-  and outside temperatures with a line of the last day, and the four tire
-  pressures around the car with a line of each over the week, a soft one in
-  amber and named. A wide card puts
-  the charge on the left and the rest on the right. Patchboard now records
-  each reading Tessie has for a month, without waking the car. One number
-  adds the lowest tire. Range and odometer follow your units.
-- **One widget on an e-paper panel:** a TRMNL, Inky or ESP32 panel can show a
-  widget you pick as one number, with its line along the bottom, in place of
-  the server summary. Settings, Devices, Panel shows builds the address. The
-  number is worked out by the same code as One number on a board.
+  Done, with a moment to undo. It needs no Home Assistant.
+- **Kitchen tablets:** a household device can keep a list, set a thermostat,
+  move shades and mark chores done, all limited to what's pinned on a board.
+- **The car, redrawn:** charge and range with a line of the last week, the
+  cabin and outside temperatures with a line of the last day, and the four
+  tires around the car with a line of each. A tire under 38 psi, or 3 psi
+  under the others, turns amber, is named, and shows in Needs attention before
+  the car's own warning would. A wide card splits into two columns. Range and
+  odometer follow your units, and One number adds the lowest tire.
+  Patchboard records each reading Tessie has for a month, without waking the
+  car.
 - **BitAxe:** a Miners widget for BitAxe and other AxeOS miners, from their
   local API with no key: hashrate with its last day, the ASIC temperature,
-  power and joules per terahash, the best difficulty and shares. Give it one
-  address or several, comma-separated. A miner at 65 °C turns amber, at 70 °C
-  red, and one that runs hot or stops answering shows in Needs attention. One
-  number shows the hashrate, the hottest ASIC or the power, all together.
-- **A soft tire in Needs attention:** a tire under 38 psi, or 3 psi under the
-  others, shows up named, before the car's own warning would.
+  power and joules per terahash, the best difficulty and shares. List one
+  address or several. A miner turns amber at 65 °C and red at 70 °C, and one
+  that runs hot or stops answering shows in Needs attention.
+- **One widget on an e-paper panel:** a TRMNL, Inky or ESP32 panel can show
+  one widget as a big number with its line along the bottom, in place of the
+  server summary. Panel shows, in Settings, Devices, builds the address. A
+  board's One number and the panel use the same code, so they always agree.
+- **Five more languages:** German, Spanish, Italian, Dutch and Brazilian
+  Portuguese for the boards, the wall screens and the Monitor, chosen in
+  Settings, Look, Language and region, or set for a wall device in Settings,
+  Devices.
+- **Fixed:** a Home Assistant widget showed its entities only at the next
+  poll, up to 15 seconds after the board was saved. They show at once now.
 
 ## 1.12.0 (2026-11-12)
 
