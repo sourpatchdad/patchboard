@@ -13,7 +13,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 - [ ] An e-paper panel's picture showing a widget you pick, as one number
 - [ ] Room temperatures as a strip of the last day per room, from Home Assistant sensors
-- [ ] The car's four tire pressures as lines, beside the readings
 
 ### Integrations
 

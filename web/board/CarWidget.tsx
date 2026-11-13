@@ -3,7 +3,7 @@
 // tires where they sit on the car. Patchboard records each reading Tessie
 // has (never waking the car), so the lines start the day Tessie is set up.
 
-import { Spark } from '../components/Spark.tsx';
+import { Lines, Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
 import { useAppearance } from '../lib/appearance.ts';
 import { useHistory } from '../lib/api.ts';
@@ -34,7 +34,7 @@ export function CarWidget() {
   const cars = data?.cars ?? [];
   // A week of charge, a day of temperatures, for every car at once.
   const week = useHistory(
-    cars.flatMap((c) => [carKey('battery', c.vin)]),
+    cars.flatMap((c) => [carKey('battery', c.vin), ...TIRES.map((t) => carKey(`tire.${t}`, c.vin))]),
     24 * 7,
     168,
   );
@@ -121,6 +121,16 @@ export function CarWidget() {
                     ))}
                     <span className="car-tires-body" aria-hidden="true" />
                     <span className="car-tires-unit">{metric ? 'bar' : 'psi'}</span>
+                  </div>
+                )}
+                {c.tires && (
+                  <div className="car-chart">
+                    <Lines
+                      height={34}
+                      label={`${c.name} tire pressures, last 7 days`}
+                      lines={TIRES.map((t) => ({ data: week[carKey(`tire.${t}`, c.vin)], label: TIRE_NAMES[t], className: soft.includes(t) ? 'is-soft' : undefined }))}
+                    />
+                    <span className="car-chart-label">Tires, last 7 days{soft.length ? ', the low one in amber' : ''}</span>
                   </div>
                 )}
                 {soft.length > 0 && (

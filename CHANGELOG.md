@@ -21,7 +21,8 @@
   mark chores done, all limited to what's pinned on a board.
 - **The car, redrawn:** the charge with a line of the last seven days, inside
   and outside temperatures with a line of the last day, and the four tire
-  pressures around the car, a soft one in amber and named. A wide card puts
+  pressures around the car with a line of each over the week, a soft one in
+  amber and named. A wide card puts
   the charge on the left and the rest on the right. Patchboard now records
   each reading Tessie has for a month, without waking the car. One number
   adds the lowest tire. Range and odometer follow your units.

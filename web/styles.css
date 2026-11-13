@@ -13496,6 +13496,23 @@ html[data-eink] .chore-list li.is-due .chore-since {
   font-weight: 600;
 }
 
+.spark-lines polyline {
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+  opacity: 0.8;
+}
+
+.spark-lines polyline.is-soft {
+  stroke: var(--warn);
+  stroke-width: 1.6;
+  opacity: 1;
+}
+
+html[data-eink] .spark-lines polyline.is-soft {
+  stroke: #000;
+  stroke-dasharray: 4 2;
+}
+
 .car-line.warn-text {
   color: var(--warn);
 }

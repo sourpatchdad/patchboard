@@ -53,3 +53,36 @@ export function Split({ parts, label }: { parts: { value: number; tone: 'ink' | 
     </div>
   );
 }
+
+/**
+ * Several lines on one scale and one stretch of time, for readings that
+ * belong together (a car's four tires). Each line names itself for screen
+ * readers; a class lets one stand out.
+ */
+export function Lines({ lines, height = 40, label }: { lines: { data: Series | undefined; label: string; className?: string }[]; height?: number; label: string }) {
+  const all = lines.flatMap((l) => l.data ?? []);
+  if (all.length < 2) return <div className="spark spark-empty" style={{ height }} role="img" aria-label={`${label}: not enough history yet`} />;
+  const t0 = Math.min(...all.map((p) => p[0]));
+  const t1 = Math.max(...all.map((p) => p[0]));
+  const lo = Math.min(...all.map((p) => p[1]));
+  const hi = Math.max(...all.map((p) => p[1]));
+  const pad = (hi - lo) * 0.15 || 0.05;
+  const yOf = (v: number) => height - 1 - ((v - (lo - pad)) / (hi - lo + 2 * pad)) * (height - 2);
+  return (
+    <svg className="spark spark-lines" viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" style={{ height }} role="img" aria-label={label}>
+      <line className="spark-base" x1="0" x2="100" y1={height - 0.5} y2={height - 0.5} vectorEffect="non-scaling-stroke" />
+      {lines.map((l) =>
+        (l.data?.length ?? 0) > 1 ? (
+          <polyline
+            key={l.label}
+            className={l.className}
+            points={l.data!.map(([t, v]) => `${(((t - t0) / (t1 - t0 || 1)) * 100).toFixed(2)},${yOf(v).toFixed(2)}`).join(' ')}
+            vectorEffect="non-scaling-stroke"
+          >
+            <title>{l.label}</title>
+          </polyline>
+        ) : null,
+      )}
+    </svg>
+  );
+}
