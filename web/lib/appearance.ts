@@ -6,13 +6,14 @@
 // with that script.
 
 import { useSyncExternalStore } from 'react';
+import { einkOn, onEink } from './eink.ts';
 import { contrast, MEDIA_COLORS, type CustomColors, DEFAULT_CUSTOM, FONTS, type FontSet, mix, THEMES, type Tokens, tokensFrom } from './themes.ts';
 
 export type Scheme = 'auto' | 'dark' | 'light';
 export type IconMode = 'mono' | 'color';
 export type HomeApps = 'tiles' | 'patchbay';
 /** Which app icon this device installs and shows in its tab: follow the mode, or always one. */
-export type AppIcon = 'auto' | 'dark' | 'light';
+export type AppIcon = 'auto' | 'dark' | 'light' | 'mono';
 export type Density = 'compact' | 'comfortable' | 'large';
 export type TempUnit = 'f' | 'c' | 'both';
 export type HomeSection = 'inbox' | 'feeds' | 'upcoming' | 'now' | 'changes' | 'recent';
@@ -189,13 +190,22 @@ function apply(a: Appearance): void {
   r.dataset.icons = a.icons;
   r.dataset.density = a.density;
   try {
-    localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, appIcon: a.appIcon, attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));
+    // eink: so the first paint, before the bundle, picks the black-and-white icon and a white status bar.
+    localStorage.setItem(VARS_KEY, JSON.stringify({ ...vars, scheme: a.theme === 'custom' ? scheme : a.scheme, appIcon: a.appIcon, eink: a.eink || einkOn(), attrs: { theme: r.dataset.theme, icons: a.icons, density: a.density } }));
   } catch {
     // Private mode: fine, the defaults paint first and this applies a moment later.
   }
-  for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = vars[scheme]['--bg'];
-  applyIcon(a.appIcon, scheme);
+  // E-ink paints the page white whatever the theme, so the phone's bars and the icon follow.
+  const eink = a.eink || einkOn();
+  for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) m.content = eink ? '#ffffff' : vars[scheme]['--bg'];
+  // An installed iPhone app's status bar: dark text on white for light and e-ink, white text otherwise.
+  const bar = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (bar) bar.content = eink || scheme === 'light' ? 'default' : 'black';
+  applyIcon(a.appIcon, scheme, eink);
 }
+
+// A wall device set to e-ink from Settings, Devices turns it on after load: follow it.
+onEink(() => apply(current));
 
 /**
  * Point the tab icon, the home-screen icon and the install manifest at the
@@ -203,7 +213,9 @@ function apply(a: Appearance): void {
  * screen or install it, so the choice here is what gets installed. The same
  * logic runs in index.html before the bundle loads.
  */
-export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light') {
+export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light', eink = false) {
+  // E-ink, or a device that picked it: black on white, no blue.
+  if (eink || choice === 'mono') return { favicon: '/favicon-mono.png', touch: '/icon-mono-180.png', manifest: '/manifest-mono.webmanifest' };
   const fixed = choice === 'dark' || choice === 'light';
   const v = fixed ? choice : scheme;
   return {
@@ -242,7 +254,7 @@ export function setAppName(name: string): void {
 export function setStatus(level: 'critical' | 'warn' | null, count: number): void {
   if (level === status.level && count === status.count) return;
   status = { level, count };
-  applyIcon(current.appIcon, resolvedScheme(current));
+  applyIcon(current.appIcon, resolvedScheme(current), current.eink || einkOn());
   showTitle();
   // An installed app shows the count on its icon where the platform allows it.
   const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
@@ -257,9 +269,9 @@ export function setStatus(level: 'critical' | 'warn' | null, count: number): voi
 let drawn = 0;
 
 /** The existing brand mark with a severity dot, as a data URL. */
-async function statusIcon(level: 'critical' | 'warn'): Promise<string> {
+async function statusIcon(level: 'critical' | 'warn', src = '/favicon.png'): Promise<string> {
   const img = new Image();
-  img.src = '/favicon.png';
+  img.src = src;
   await img.decode();
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -274,8 +286,8 @@ async function statusIcon(level: 'critical' | 'warn'): Promise<string> {
   return c.toDataURL('image/png');
 }
 
-function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
-  const f = iconFiles(choice, scheme);
+function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): void {
+  const f = iconFiles(choice, scheme, eink);
   const set = (sel: string, href: string) => {
     const el = document.querySelector<HTMLLinkElement>(sel);
     if (el && el.getAttribute('href') !== href) el.setAttribute('href', href);
@@ -288,7 +300,7 @@ function applyIcon(choice: AppIcon, scheme: 'dark' | 'light'): void {
     set('link[rel="icon"]', f.favicon);
     return;
   }
-  statusIcon(level)
+  statusIcon(level, f.favicon)
     .then((url) => turn === drawn && set('link[rel="icon"]', url))
     .catch(() => turn === drawn && set('link[rel="icon"]', f.favicon));
 }

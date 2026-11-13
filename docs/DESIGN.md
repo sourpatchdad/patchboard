@@ -189,13 +189,15 @@ Status uses explicit text, counts and consistent severity indicators. Healthy
 states stay quiet; recovery actions stay visible.
 
 The app icon is a P: an open bowl in the tile's ink and a blue tab under its
-top bar. Dark (ivory on near-black) and light (slate on near-white) share the
-geometry. The tab uses the same mark in all states, adding an amber dot for
+top bar. Dark (ivory on near-black), light (slate on near-white) and black
+and white (black on white, the tab black too, for e-ink) share the geometry. The tab uses the same mark in all states, adding an amber dot for
 warnings or a red dot for critical alerts. The title count and installed-app
 badge also report attention counts.
 
-Settings, Look, App icon chooses dark (the default), light or match the mode
-for this device. Dark reads on any home screen; a phone in dark mode can
+Settings, Look, App icon chooses dark (the default), light, match the mode,
+or black and white for this device. With E-ink on, the icon, the install
+manifest, the tab icon and the status bar go black and white whatever the
+choice. Dark reads on any home screen; a phone in dark mode can
 darken a light icon until its P disappears.
 The Apple touch icon and install manifest follow that choice before the bundle
 loads. Installed home-screen icons may keep their original artwork; badge

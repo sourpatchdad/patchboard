@@ -3,8 +3,10 @@
 //
 // The mark is a P on a 512 grid: an open bowl in the tile's ink, and a blue
 // tab under its top bar with a slanted foot. Dark and light share the
-// geometry; only the tile and the ink change. The whole mark sits inside the
-// circle Android crops maskable icons to, so one file serves both purposes.
+// geometry; only the tile and the ink change. Mono is for e-ink: black on
+// white, the tab in the ink too, since a gray screen shows no blue. The whole
+// mark sits inside the circle Android crops maskable icons to, so one file
+// serves both purposes.
 
 import { writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
@@ -15,12 +17,13 @@ const BLUE = '#3b82f6';
 const TILES = {
   dark: { tile: '#0b0c0e', ink: '#f1e2cc' },
   light: { tile: '#f7f7f8', ink: '#20252d' },
+  mono: { tile: '#ffffff', ink: '#000000', tab: '#000000' },
 };
 
 /** The mark on a tile. `scale` grows it about the center; `radius` rounds the tile. */
 export const iconSvg = (tone, { scale = 1, radius = 0 } = {}) => {
-  const { tile, ink } = TILES[tone];
-  const mark = `<path fill="${ink}" d="${BOWL}"/><path fill="${BLUE}" d="${TAB}"/>`;
+  const { tile, ink, tab = BLUE } = TILES[tone];
+  const mark = `<path fill="${ink}" d="${BOWL}"/><path fill="${tab}" d="${TAB}"/>`;
   const grown = scale === 1 ? mark : `<g transform="translate(256 256) scale(${scale}) translate(-256 -256)">${mark}</g>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="${radius}" fill="${tile}"/>${grown}</svg>`;
 };
@@ -30,7 +33,9 @@ const jobs = [
   ...[180, 192, 512].flatMap((size) => [
     { name: `icon-${size}.png`, svg: iconSvg('dark'), size },
     { name: `icon-light-${size}.png`, svg: iconSvg('light'), size },
+    { name: `icon-mono-${size}.png`, svg: iconSvg('mono'), size },
   ]),
+  { name: 'favicon-mono.png', svg: iconSvg('mono', { scale: 1.3, radius: 96 }), size: 64 },
   // The tab icon and the sizes inside favicon.ico: a rounded tile with the
   // mark grown, so the P still reads at 16 pixels on light and dark tab bars.
   { name: 'favicon.png', svg: iconSvg('dark', { scale: 1.3, radius: 96 }), size: 64 },

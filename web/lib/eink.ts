@@ -22,6 +22,12 @@ export function setEink(next: boolean): void {
   for (const fn of listeners) fn();
 }
 
+/** Called whenever e-ink turns on or off, from anywhere. */
+export function onEink(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
 export function useEink(): boolean {
   return useSyncExternalStore(
     (fn) => {
