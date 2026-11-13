@@ -16,7 +16,7 @@ const walk = (dir) => {
   }
 };
 walk('web');
-files.push('shared/almanac.ts');
+files.push('shared/almanac.ts', 'shared/reading.ts');
 
 const keys = new Set();
 const str = String.raw`(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")`;

@@ -6,6 +6,7 @@
 import type { ArrData, GiteaData, MinerData, MonitorAlert, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
 import { MINER_HOT_C, MINER_WARM_C, minerKey } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
+import { hashrate } from '../../shared/reading.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { useHistory } from '../lib/api.ts';
 import { Empty, Section } from '../components/ui.tsx';
@@ -159,8 +160,6 @@ export function MonitoringWidget({ now }: { now: number }) {
 
 // ---------- Miners ----------
 
-/** Gigahashes as people say them: 1.21 TH/s, 980 GH/s. */
-export const hashrate = (gh: number): string => (gh >= 1000 ? `${(gh / 1000).toFixed(gh >= 10_000 ? 1 : 2)} TH/s` : `${Math.round(gh)} GH/s`);
 
 /** BitAxe and other AxeOS miners: a line each, hashrate with its day, the ASIC's temperature, power and efficiency. */
 export function MinersWidget() {
