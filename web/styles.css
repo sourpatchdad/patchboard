@@ -225,6 +225,13 @@ textarea {
   border-radius: 4px;
 }
 
+/* A page's heading takes focus on arrival so a screen reader announces it;
+   it isn't a control, so it shows no ring (Safari draws one for it). */
+main h1[tabindex='-1']:focus,
+.main:focus {
+  outline: none;
+}
+
 h1,
 h2,
 h3 {
@@ -642,7 +649,7 @@ a.ident:hover,
 }
 
 .head-alert > a,
-.head-alert > span {
+.head-alert > :is(span, button) {
   display: flex;
   align-items: baseline;
   gap: 1px 8px;
@@ -692,17 +699,17 @@ h2.status-line {
   }
 
   .head-alert > a,
-  .head-alert > span {
+  .head-alert > :is(span, button) {
     text-align: left;
   }
 
   .head-alert.alert-critical > a,
-  .head-alert.alert-critical > span {
+  .head-alert.alert-critical > :is(span, button) {
     border-left-color: var(--crit);
   }
 
   .head-alert.alert-info > a,
-  .head-alert.alert-info > span {
+  .head-alert.alert-info > :is(span, button) {
     border-left-color: transparent;
   }
 }
@@ -2202,7 +2209,7 @@ input[type='checkbox'] {
   }
 
   .reader {
-    padding: 20px 18px 64px;
+    padding: 20px 16px 64px;
   }
 
   .reader-back {
@@ -2238,6 +2245,12 @@ input[type='checkbox'] {
 
   .page-head {
     flex-wrap: wrap;
+  }
+
+  /* The board's links sit at the page's edge like everything above them. */
+  .board-foot {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .page-head .field {
@@ -8223,6 +8236,24 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   padding: 0 20px;
 }
 
+@media (max-width: 760px) {
+  .feeds-head {
+    padding-inline: 16px;
+  }
+
+  /* One size for every section heading on a phone: widgets, pages, stacks. */
+  :is(.section-head, .stack-head) h2,
+  .cell .cell-body > .section > .section-head h2,
+  .home-header .status-line {
+    font-size: 22px;
+  }
+
+  /* A long title keeps its words together; the count and action wrap instead. */
+  .section-head h2 {
+    white-space: nowrap;
+  }
+}
+
 .feeds-head > :last-child {
   margin-left: auto;
 }
@@ -8741,21 +8772,24 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
     font-size: 13.5px;
   }
 
-  .page .page-title {
+  .page:has(.page-customize) .page-title {
     padding-right: 110px;
   }
 
-  /* Sort choices fill the row and share it, so every choice shows without
-     scrolling sideways. */
+  /* Sort choices fill the row and share it, wrapping rather than clipping a
+     label, so every choice shows without scrolling sideways. */
   .sort-seg {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     width: 100%;
   }
 
+  /* Three choices fit one row. */
+  .sort-seg:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .sort-seg button {
-    flex: 1 1 auto;
-    min-width: 0;
     padding: 6px 6px;
     font-size: 12.5px;
     line-height: 1.15;
@@ -8977,7 +9011,7 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
    header and fills; full means let go. */
 .ptr {
   position: fixed;
-  top: calc(var(--topbar-h) + var(--safe-top) - 40px);
+  top: calc(var(--topbar-h) + var(--safe-top) - 18px);
   left: 50%;
   z-index: 19;
   width: 36px;
@@ -9154,20 +9188,24 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   color: var(--ink-3);
 }
 
-/* Stacks on a phone: a healthy stack folds to its header until tapped. */
-.stack-toggle {
-  display: none;
+/* Every stack folds to its header. */
+.stack-head .stack-toggle {
+  margin-left: auto;
 }
 
+.stack-head .stack-load + .stack-toggle {
+  margin-left: 16px;
+}
+
+/* A phone hides the load figures, so the toggle takes the far edge. */
 @media (max-width: 760px) {
-  .stack-toggle {
-    display: inline;
+  .stack-head .stack-load + .stack-toggle {
     margin-left: auto;
   }
+}
 
-  .stack.is-quiet:not(.is-open) .stack-rows {
-    display: none;
-  }
+.stack.is-shut .stack-rows {
+  display: none;
 }
 
 /* Sign-in */
@@ -9493,10 +9531,31 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   }
 }
 
-.head-alert > a,
-.head-alert > span {
+.head-alert > :is(a, span, button) {
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+/* A line without a link opens its why in place. */
+.head-alert-tell {
+  display: flex;
+  align-items: baseline;
+  gap: 1px 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* The title takes the room beside the light, so a long one wraps under
+   itself instead of leaving the light alone on a line. */
+@media (max-width: 1099px) {
+  .head-alert-title {
+    flex: 1 1 0;
+  }
 }
 
 /* The welcome's name step: the field under its sentence. */
@@ -9536,7 +9595,7 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
 .home-header.status-large .status-line { font-size: 26px; }
 .home-header .head-alerts { display: flex; flex-wrap: wrap; align-items: baseline; max-width: none; margin: 0; gap: 5px 12px; font-size: 13px; line-height: 1.35; }
 .home-header .head-alert > a,
-.home-header .head-alert > span {
+.home-header .head-alert > :is(span, button) {
   justify-content: flex-start;
   text-align: left;
 }
@@ -9872,14 +9931,10 @@ html[data-eink] .car-tire.is-soft .car-tire-num {
   .spark-base { stroke: GrayText; }
 }
 
-/* Shared intrinsic tracks keep calendar times clear when text is enlarged. */
-.agenda-compact { display: grid; grid-template-columns: minmax(62px, max-content) minmax(0, 1fr) minmax(0, max-content); column-gap: 12px; }
-.agenda-compact .agenda-day,
-.agenda-compact .agenda-day > ul,
-.agenda-compact .rel,
+/* The time column grows with enlarged text instead of clipping. Each row is
+   its own grid: nested subgrids lay out slowly and leave gaps in Safari. */
 .agenda-compact .rel > a,
-.agenda-compact .rel > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
-.agenda-compact .agenda-day > :is(h2, h3) { grid-column: 1 / -1; }
+.agenda-compact .rel > div { grid-template-columns: minmax(62px, max-content) minmax(0, 1fr) minmax(0, max-content); }
 
 /* An update waiting: one line under the container's state. */
 .update-notice {
@@ -12609,7 +12664,7 @@ html.wall-swipe body {
 }
 
 .wall-status .head-alert > a,
-.wall-status .head-alert > span {
+.wall-status .head-alert > :is(span, button) {
   display: flex;
   flex-wrap: nowrap;
   text-align: left;
@@ -12757,6 +12812,12 @@ html[data-eink] .icon-img {
 html[data-eink] .icon-choice[aria-pressed='true'] {
   border: 3px solid #000;
   padding: 8px 12px 6px;
+}
+
+/* Cards are paper on paper here, so their inset would only push content off
+   the page's edge: widgets line up with every other page instead. */
+html[data-eink] :is(.cell:not([data-type='apps']):not([data-type='json']) .cell-body, .home-header > .masthead-status, .header-board-vitals > .section, .cal-day, .agenda-day, .patchrow) {
+  padding-inline: 0;
 }
 
 html[data-eink] .poster-type {

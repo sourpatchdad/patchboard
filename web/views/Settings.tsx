@@ -57,7 +57,7 @@ const PARTS: [Part, string][] = [
   ['backup', 'Backup'],
 ];
 const TABS: [Tab, string, string][] = [
-  ['look', 'Look', 'This browser only, so the phone and the desktop can differ. A new browser or home-screen app starts from the last look you saved. The name is shared.'],
+  ['look', 'Look', 'For this browser, so a phone and a desktop can differ. A new browser starts from the last look you saved.'],
   ['home', 'Home', "Home's header and app style in this browser only. The widgets on a board are shared: Customize on the board changes them for everyone."],
   ['devices', 'Devices', 'Wall tablets, e-ink panels and family phones: the pages each one shows and how it looks, set from here. A device follows within a second.'],
   ['alerts', 'Alerts', 'When storage, drives and links count as trouble. Shared by every device.'],

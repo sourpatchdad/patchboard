@@ -12,6 +12,24 @@
   Light a black P on white, each with a gray leg. White on black and Black on
   white are App icon choices of their own too. A phone keeps the icon it was
   added with, so remove and add it again to switch.
+- **Phone polish, from a week on e-ink:**
+  - **Alerts:** the why behind an alert folds away on a phone; tap a line
+    without a link to read it. A long title wraps beside its light instead
+    of under it, and a low-tire alert reads "sudo ./drive's tires are low"
+    with "All four at 36 psi" behind the tap.
+  - **Pull to refresh:** the page follows your finger down, with the ring in
+    the gap, instead of the ring drawing over the alerts.
+  - **Stacks:** every stack folds and unfolds, on any screen. The sort
+    choices wrap to a second row instead of clipping.
+  - **One edge, one size:** in E-ink, cards drop their inset along with
+    their shading, so Home, Upcoming and the app rack line up with every
+    other page. Reading sits on the same edge, and section headings share
+    one size on a phone.
+  - **Quieter:** opening a page no longer draws a box around its title, a
+    title only makes room for Customize where there is one, This week lays
+    out without the nested grids Safari stalled on, and a few lines lost
+    their repeats: Reading's count shows once, and an idle torrent client
+    says "qBittorrent is seeding 218, nothing downloading" in one line.
 - **E-ink, finished:** playback bars lose their brand colors for ink, the top
   bar and the phone's tab bar are solid paper with no blur, pale app icons
   are darkened until they read, an empty poster is a gray card, and a chosen

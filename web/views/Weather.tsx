@@ -165,7 +165,7 @@ export function Weather() {
           ))}
         </ul>
         <p className="settings-note">
-          Updated {Math.max(1, Math.round((now - (state.updatedAt ?? now)) / 60_000))} min ago. Forecast from Open-Meteo; alerts, in the US, from the National Weather Service.
+          Updated {Math.max(1, Math.round((now - (state.updatedAt ?? now)) / 60_000))} min ago from Open-Meteo, with US alerts from the National Weather Service.
         </p>
       </Section>
     </div>

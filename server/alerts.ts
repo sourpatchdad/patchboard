@@ -480,8 +480,8 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       id: `car-tire-${car.vin}`,
       level: 'warn',
       subject: car.name,
-      title: `${car.name}'s ${soft.map((t) => names[t]).join(' and ')} ${soft.length === 1 ? 'tire is' : 'tires are'} low`,
-      detail: soft.map((t) => `${names[t]} ${Math.round(car.tires![t] * PSI)} psi`).join(', ') + '. Check it and add air.',
+      title: soft.length === 1 ? `${car.name}'s ${names[soft[0]]} tire is low` : soft.length === 4 ? `${car.name}'s tires are low` : `${car.name} has ${soft.length} low tires`,
+      detail: tireDetail(soft, car.tires, names),
       source: 'tessie',
     });
   }
@@ -576,4 +576,12 @@ export function stoppedDetail(status: string, image: string): string {
 
 function fmtTB(bytes: number): string {
   return bytes >= 1e12 ? `${(bytes / 1e12).toFixed(1)} TB` : `${Math.round(bytes / 1e9)} GB`;
+}
+
+/** "All four at 36 psi. Add air." or "Front left 33 psi, rear right 34 psi. Add air." */
+export function tireDetail(soft: string[], tires: Record<string, number>, names: Record<string, string>): string {
+  const psi = soft.map((t) => Math.round(tires[t] * PSI));
+  if (soft.length === 4 && psi.every((p) => p === psi[0])) return `All four at ${psi[0]} psi. Add air.`;
+  const list = soft.map((t, i) => `${names[t]} ${psi[i]} psi`).join(', ');
+  return `${list[0].toUpperCase()}${list.slice(1)}. Add air.`;
 }

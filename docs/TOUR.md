@@ -118,7 +118,8 @@ logs beside them, and buttons to start, restart, update or roll back.
 ![A container page](screenshots/container.webp)
 
 **Stacks:** every container by compose project. Sort by problems, CPU or
-memory.
+memory. Each stack folds to its header with Hide; on a phone the healthy
+ones start folded.
 
 ![Stacks](screenshots/stacks.webp)
 
@@ -333,7 +334,8 @@ colors.
 
 The tab bar holds Home, Server, Stacks and Reading (Upcoming until Miniflux
 is set up). More opens every other page and Settings. Every button and link
-takes a full fingertip.
+takes a full fingertip. Installed on the home screen, pull the page down to
+reload it. Tap an alert without a link to read why.
 
 | | | | | |
 |---|---|---|---|---|

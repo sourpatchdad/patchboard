@@ -488,7 +488,7 @@ function Edition(props: {
     <div className="edition">
       <p className="edition-date">
         {new Date(now).toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric' })}
-        {total != null && <span>, {count(total)} unread</span>}.<span className="keys-only"> Press <kbd>j</kbd> to read from the top.</span>
+        .<span className="keys-only"> Press <kbd>j</kbd> to read from the top.</span>
       </p>
       <button type="button" className="edition-lead" data-entry={lead.id} onClick={() => onPick(lead.id)}>
         <Thumb src={lead.image} className="edition-lead-img" />

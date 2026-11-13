@@ -238,6 +238,8 @@ function HeaderWeatherChart({ weather, clock24, unit }: { weather: WeatherData; 
  */
 function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
   const [all, setAll] = useState(false);
+  // On a phone the why stays folded, like a tooltip: tap a line without a link to read it.
+  const [told, setTold] = useState<string | null>(null);
   // Arriving from Jump to's "All N that need you": open the rest straight away.
   const arrived = useLocation();
   useEffect(() => {
@@ -288,13 +290,29 @@ function HeaderAlerts({ alerts, now }: { alerts: Alert[]; now: number }) {
           <WithSubject title={a.title} subject={a.subject} />
         </span>
         {a.since && <span className="head-alert-since">{agoLong(a.since, now)}</span>}
-        {/* Shown on touch screens, where the hover title can't be read. */}
-        {a.detail && <span className="head-alert-detail">{a.detail}</span>}
+        {/* On touch screens, where the hover title can't be read, a tap shows it. */}
+        {a.detail && told === a.id && <span className="head-alert-detail">{a.detail}</span>}
       </>
     );
     return (
       <li key={a.id} className={`head-alert alert-${a.level}`} title={a.detail}>
-        {a.href ? isExternal(a.href) ? <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>{body}</a> : <Link to={a.href} aria-label={spoken(a, now)}>{body}</Link> : <span tabIndex={-1}>{body}</span>}
+        {a.href ? (
+          isExternal(a.href) ? (
+            <a href={a.href} target="_blank" rel="noreferrer" aria-label={spoken(a, now)}>
+              {body}
+            </a>
+          ) : (
+            <Link to={a.href} aria-label={spoken(a, now)}>
+              {body}
+            </Link>
+          )
+        ) : a.detail ? (
+          <button type="button" className="head-alert-tell" aria-expanded={told === a.id} aria-label={spoken(a, now)} onClick={() => setTold(told === a.id ? null : a.id)}>
+            {body}
+          </button>
+        ) : (
+          <span tabIndex={-1}>{body}</span>
+        )}
       </li>
     );
   };
@@ -507,6 +525,8 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
   const idle = watching.length || listening.length ? [] : servers;
   const isQuiet = (d: (typeof clients)[number]) => !d.data.paused && !d.data.downloading && !d.data.errored.length;
   const quietClients = clients.filter(isQuiet);
+  const seedingClients = quietClients.filter((d) => d.data.kind !== 'usenet' && d.data.seeding > 0);
+  const idleClients = quietClients.filter((d) => !seedingClients.includes(d));
   const busyClients = clients.filter((d) => !isQuiet(d));
 
   return (
@@ -580,30 +600,30 @@ export function NowPlaying({ downloads = true }: { downloads?: boolean }) {
 
       {quietClients.length > 0 && (
         <div className="now-block">
-          <h3 className="now-idle">
-            <Led state="idle" />
-            Nothing downloading in{' '}
-            {quietClients.map((d, i) => (
-              <span key={d.id}>
-                {i > 0 && (i === quietClients.length - 1 ? ' or ' : ', ')}
-                <AppLink container={d.container}>{d.label}</AppLink>
-              </span>
-            ))}
-            .
-          </h3>
-          {/* Seeding still uses the line, so its Pause stays. */}
-          {quietClients
-            .filter((d) => d.data.kind !== 'usenet' && d.data.seeding > 0)
-            .map((d) => (
-              <p className="now-foot now-seed" key={d.id}>
-                <span>
-                  {d.label} seeding {d.data.seeding}
-                  {d.data.up ? ` at ${speed(d.data.up)}` : ''}
-                  {d.data.stalled ? `, ${d.data.stalled} stalled` : ''}
+          {idleClients.length > 0 && (
+            <h3 className="now-idle">
+              <Led state="idle" />
+              Nothing downloading in{' '}
+              {idleClients.map((d, i) => (
+                <span key={d.id}>
+                  {i > 0 && (i === idleClients.length - 1 ? ' or ' : ', ')}
+                  <AppLink container={d.container}>{d.label}</AppLink>
                 </span>
-                <PauseButton client={d} />
-              </p>
-            ))}
+              ))}
+              .
+            </h3>
+          )}
+          {/* Seeding still uses the line, so its Pause stays; one line says both. */}
+          {seedingClients.map((d) => (
+            <p className="now-foot now-seed" key={d.id}>
+              <span>
+                <AppLink container={d.container}>{d.label}</AppLink> is seeding {d.data.seeding}
+                {d.data.up ? ` at ${speed(d.data.up)}` : ''}
+                {d.data.stalled ? `, ${d.data.stalled} stalled` : ''}, nothing downloading
+              </span>
+              <PauseButton client={d} />
+            </p>
+          ))}
         </div>
       )}
       {busyClients.map((d) => {

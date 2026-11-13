@@ -27,8 +27,16 @@ export function Stacks() {
   const onlyUpdates = params.get('updates') === '1';
   const [sort, setSort] = useUrlChoice<SortKey>('sort', ['problems', 'name', 'cpu', 'memory'], 'problems');
   const { hash } = useLocation();
-  // On a phone, healthy stacks fold to their header; these are the ones opened.
-  const [opened, setOpened] = useState<Set<string>>(() => new Set(hash ? [decodeURIComponent(hash.slice(1))] : []));
+  // Every stack folds. A phone starts with the healthy ones folded, a wider
+  // screen with all open; a tap flips one, and arriving at a stack opens it.
+  const [flipped, setFlipped] = useState<Map<string, boolean>>(() => new Map(hash ? [[decodeURIComponent(hash.slice(1)), true]] : []));
+  const [phone, setPhone] = useState(() => matchMedia('(max-width: 760px)').matches);
+  useEffect(() => {
+    const m = matchMedia('(max-width: 760px)');
+    const on = () => setPhone(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
   const uptime = useJson<UptimeData>('/api/uptime?days=14', 5 * 60_000).data;
 
   // Arriving from a container page's breadcrumb: scroll to that stack.
@@ -146,32 +154,32 @@ export function Stacks() {
         const cpu = list.reduce((n, c) => n + (s[c.name]?.cpu ?? 0), 0);
         const mem = list.reduce((n, c) => n + (s[c.name]?.memBytes ?? 0), 0);
         const quiet = list.every((c) => ['up', 'idle', 'none'].includes(ctrState(c, serviceFor(snap, c.name)))) && !list.some(hasUpdate);
-        const isOpen = opened.has(project);
+        const isOpen = flipped.get(project) ?? !(phone && quiet);
         // Says what runs: a stopped or finished container isn't counted as running.
         const running = list.filter((c) => c.state === 'running').length;
         return (
-          <section className={`stack ${quiet ? 'is-quiet' : ''} ${isOpen ? 'is-open' : ''}`} key={project} id={`stack-${project}`}>
+          <section className={`stack ${quiet ? 'is-quiet' : ''} ${isOpen ? 'is-open' : 'is-shut'}`} key={project} id={`stack-${project}`}>
             <header className="stack-head">
               <h2>{project}</h2>
               <span className="section-count">{running === list.length ? `${list.length} running` : `${running} of ${list.length} running`}</span>
-              {quiet && (
-                <button
-                  type="button"
-                  className="text-button stack-toggle"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpened((prev) => (prev.has(project) ? new Set([...prev].filter((x) => x !== project)) : new Set([...prev, project])))}
-                >
-                  {isOpen ? 'Hide' : 'Show'}
-                </button>
-              )}
               {stats && list.some((c) => s[c.name]) && (
                 <span className="stack-load">
                   <span>{pct(cpu)}</span>
                   <span>{size(mem)}</span>
                 </span>
               )}
+              <button
+                type="button"
+                className="text-button stack-toggle"
+                aria-expanded={isOpen}
+                aria-controls={`stack-rows-${project}`}
+                onClick={() => setFlipped((prev) => new Map(prev).set(project, !isOpen))}
+              >
+                {isOpen ? 'Hide' : 'Show'}
+                <span className="sr-only"> {project}</span>
+              </button>
             </header>
-            <ul className="stack-rows">
+            <ul className="stack-rows" id={`stack-rows-${project}`}>
               {list.map((c) => {
                 const svc = serviceFor(snap, c.name);
                 const st = ctrState(c, svc);

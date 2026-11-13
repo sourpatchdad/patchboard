@@ -1,9 +1,17 @@
 // Pull down to refresh, for the installed app: iOS and Android give a
 // home-screen app no gesture of its own, while a browser tab already has one.
-// A ring fills as you pull; let go past the line and the page reloads, which
-// also picks up a new version of Patchboard.
+// The page follows the finger down and a ring fills in the gap above it; let
+// go past the line and the page reloads, which also picks up a new version.
 
 import { useEffect, useState } from 'react';
+
+/** Slide the page under the top bar; the ring sits in the gap. */
+function drag(px: number, settle = false): void {
+  const main = document.getElementById('main-content');
+  if (!main) return;
+  main.style.transition = settle ? 'transform 0.2s ease-out' : '';
+  main.style.transform = px ? `translateY(${px}px)` : '';
+}
 
 const LINE = 64;
 
@@ -41,19 +49,26 @@ export function PullRefresh() {
       if (window.scrollY > 0) {
         active = false;
         setPull(0);
+        drag(0);
         return;
       }
-      // Resistance: the ring moves half as far as the finger.
+      // Resistance: the page moves half as far as the finger.
       dist = Math.max(0, (e.touches[0].clientY - startY) * 0.5);
-      setPull(Math.min(LINE * 1.6, dist));
+      const shown = Math.min(LINE * 1.6, dist);
+      setPull(shown);
+      drag(shown);
     };
     const end = () => {
       if (!active) return;
       active = false;
       if (dist >= LINE) {
         setGoing(true);
+        drag(LINE, true);
         location.reload();
-      } else setPull(0);
+      } else {
+        setPull(0);
+        drag(0, true);
+      }
     };
     window.addEventListener('touchstart', start, { passive: true });
     window.addEventListener('touchmove', move, { passive: true });
@@ -70,7 +85,7 @@ export function PullRefresh() {
   if (!pull && !going) return null;
   const p = going ? 1 : Math.min(1, pull / LINE);
   return (
-    <div className="ptr" style={{ transform: `translate(-50%, ${going ? LINE : pull}px)` }} role="status" aria-label={going ? 'Refreshing' : p >= 1 ? 'Release to refresh' : 'Pull to refresh'}>
+    <div className="ptr" style={{ transform: `translate(-50%, ${(going ? LINE : pull) / 2}px)` }} role="status" aria-label={going ? 'Refreshing' : p >= 1 ? 'Release to refresh' : 'Pull to refresh'}>
       <span className={`ptr-ring ${p >= 1 ? 'is-ready' : ''} ${going ? 'is-going' : ''}`} style={{ ['--p' as string]: p }} />
     </div>
   );

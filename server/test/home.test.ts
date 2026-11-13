@@ -81,6 +81,12 @@ test('the car: all four tire pressures or none, and a soft tire is named', async
   // 2.6 bar is 37.7 psi: low outright, and 4 psi under the others.
   assert.deepEqual(softTires(four!.tires), ['rr']);
   assert.deepEqual(softTires({ fl: 2.9, fr: 2.9, rl: 2.9, rr: 2.9 }), []);
+  // The alert's detail stays one short line.
+  const { tireDetail } = await import('../alerts.ts');
+  const names = { fl: 'front left', fr: 'front right', rl: 'rear left', rr: 'rear right' };
+  const at36 = 36 / 14.5038;
+  assert.equal(tireDetail(['fl', 'fr', 'rl', 'rr'], { fl: at36, fr: at36, rl: at36, rr: at36 }, names), 'All four at 36 psi. Add air.');
+  assert.equal(tireDetail(['rr'], four!.tires!, names), 'Rear right 38 psi. Add air.');
 });
 
 test('a thermostat may be set and blinds moved, but never a garage door, gate or door', async () => {
