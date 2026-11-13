@@ -29,6 +29,10 @@
   the charge on the left and the rest on the right. Patchboard now records
   each reading Tessie has for a month, without waking the car. One number
   adds the lowest tire. Range and odometer follow your units.
+- **One widget on an e-paper panel:** a TRMNL, Inky or ESP32 panel can show a
+  widget you pick as one number, with its line along the bottom, in place of
+  the server summary. Settings, Devices, Panel shows builds the address. The
+  number is worked out by the same code as One number on a board.
 - **BitAxe:** a Miners widget for BitAxe and other AxeOS miners, from their
   local API with no key: hashrate with its last day, the ASIC temperature,
   power and joules per terahash, the best difficulty and shares. Give it one

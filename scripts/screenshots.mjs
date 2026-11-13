@@ -166,6 +166,10 @@ try {
     const pic = await fetch(`${demo.base}${panel}`);
     writeFileSync(join(OUT, 'panel.png'), Buffer.from(await pic.arrayBuffer()));
     console.log('  panel.png');
+    // The same panel showing one widget: Bitcoin's price from the markets board.
+    const one = await fetch(`${demo.base}${panel}?widget=${made['wall-markets']}/markets`);
+    writeFileSync(join(OUT, 'panel-widget.png'), Buffer.from(await one.arrayBuffer()));
+    console.log('  panel-widget.png');
     // Leave the demo as it was for the shots after this.
     await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), device);
     for (const id of Object.values(made)) await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);

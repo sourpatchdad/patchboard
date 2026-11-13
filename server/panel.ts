@@ -6,6 +6,7 @@
 
 import { readFileSync } from 'node:fs';
 import { crc32, deflateSync } from 'node:zlib';
+import type { Reading, ReadingFormat } from '../shared/reading.ts';
 import type { Alert, Snapshot, SystemData, TruenasData, WeatherData } from '../shared/types.ts';
 
 type Face = { w: number; h: number; ascent: number; glyphs: Record<string, string> };
@@ -251,3 +252,117 @@ export function drawPanel(snap: Snapshot, o: PanelOptions): Bitmap {
   if (o.invert) b.invert();
   return b;
 }
+
+/** A line through points, two pixels thick, for a reading's history. */
+function polyline(b: Bitmap, pts: [number, number][], t = 2): void {
+  for (let i = 1; i < pts.length; i++) {
+    let [x0, y0] = pts[i - 1].map(Math.round) as [number, number];
+    const [x1, y1] = pts[i].map(Math.round) as [number, number];
+    const dx = Math.abs(x1 - x0);
+    const dy = -Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    for (;;) {
+      b.rect(x0, y0, t, t);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) {
+        err += dy;
+        x0 += sx;
+      }
+      if (e2 <= dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+  }
+}
+
+/**
+ * One widget's number, for a panel that shows just that: its name and the
+ * time across the top, the number as large as the panel allows, what it is
+ * under it, and its line along the bottom. Critical gets a solid square
+ * before the words, a warning an open one, as on the server panel.
+ */
+export function drawNumberPanel(r: Reading | null | undefined, title: string, o: PanelOptions): Bitmap {
+  const b = new Bitmap(o.w, o.h);
+  const now = new Date(o.now ?? Date.now());
+  const k = Math.min(o.w / 800, o.h / 480);
+  const up = k >= 2 ? 2 : k >= 1.4 ? 1 : 0;
+  const S = (base: 16 | 24 | 32 | 64) => [16, 24, 32, 64, 128][Math.min(4, [16, 24, 32, 64].indexOf(base) + up)];
+  const pad = Math.round(20 * Math.max(1, k));
+
+  const bandH = S(32) + pad;
+  b.rect(0, 0, o.w, bandH);
+  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: !o.clock24 });
+  b.text(o.w - pad - Bitmap.textWidth(time, S(32)), Math.round((bandH - S(32)) / 2), time, S(32), 0);
+  b.text(pad, Math.round((bandH - S(32)) / 2), title, S(32), 0, o.w - pad * 3 - Bitmap.textWidth(time, S(32)));
+
+  const value = r ? r.value : r === null ? 'Nothing yet' : 'Loading';
+  const lineH = r?.line && r.line.data.length > 1 ? Math.round(o.h * 0.18) : 0;
+  const subSize = S(32);
+  // The largest size the value fits at, across and down: 64-pixel glyphs scaled up whole.
+  const roomW = o.w - pad * 2;
+  const roomH = o.h - bandH - pad * 3 - subSize - lineH;
+  const sizes = [512, 448, 384, 320, 256, 192, 128, 64, 32, 24, 16];
+  const big = sizes.find((z) => Bitmap.textWidth(value, z) <= roomW && z * 1.0 <= roomH) ?? 16;
+  let y = bandH + pad + Math.max(0, Math.round((roomH - big) / 2));
+  b.text(pad, y, value, big, 1, roomW);
+  y += big + Math.round(pad / 2);
+  const sub = r?.sub ?? '';
+  if (sub) {
+    let x = pad;
+    if (r?.tone === 'crit' || r?.tone === 'warn') {
+      const mark = Math.round(subSize * 0.55);
+      const my = y + Math.round((subSize - mark) / 2);
+      if (r.tone === 'crit') b.rect(x, my, mark, mark);
+      else b.frame(x, my, mark, mark, Math.max(2, Math.round(mark / 6)));
+      x += mark + Math.round(subSize * 0.5);
+    }
+    b.text(x, y, sub, subSize, 1, o.w - x - pad);
+  }
+
+  if (lineH && r?.line) {
+    const pts = r.line.data;
+    const t0 = pts[0][0];
+    const t1 = pts[pts.length - 1][0];
+    const lo = r.line.min ?? Math.min(...pts.map((p) => p[1]));
+    const hi = r.line.max ?? Math.max(...pts.map((p) => p[1]));
+    const top = o.h - pad - lineH;
+    const yOf = (v: number) => top + lineH - ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo || 1)) * lineH;
+    b.rect(pad, o.h - pad, o.w - pad * 2, 1);
+    polyline(
+      b,
+      pts.map(([t, v]) => [pad + ((t - t0) / (t1 - t0 || 1)) * (o.w - pad * 2), yOf(v)]),
+      Math.max(2, Math.round(k * 2)),
+    );
+  }
+
+  if (o.invert) b.invert();
+  return b;
+}
+
+/** English words and formats for a panel, which has no browser to say otherwise. */
+export const PANEL_FORMAT: ReadingFormat = {
+  t: (english, vars) => english.replace(/\{(\w+)\}/g, (m, k: string) => (vars && k in vars ? String(vars[k]) : m)),
+  count: (n) => Math.round(n).toLocaleString('en-US'),
+  pct: (n) => `${n < 10 ? n.toFixed(1) : Math.round(n)}%`,
+  size: (n) => {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    let i = 0;
+    let v = n;
+    while (v >= 1024 && i < units.length - 1) {
+      v /= 1024;
+      i++;
+    }
+    return `${v.toFixed(v >= 100 || i === 0 ? 0 : v >= 10 ? 1 : 2)} ${units[i]}`;
+  },
+  uptime: (sec) => {
+    const d = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    return d > 0 ? `${d}d ${h}h` : `${h}h ${Math.floor((sec % 3600) / 60)}m`;
+  },
+  deg: (c, unit) => Math.round(unit === 'c' ? c : c * 1.8 + 32),
+  day: (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+};

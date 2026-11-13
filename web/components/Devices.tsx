@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { DeviceLook, DeviceView } from '../../shared/types.ts';
-import { type Widget, WIDGET_INFO } from '../../shared/board.ts';
+import { NUMBERS, type Widget, type WidgetType, WIDGET_INFO } from '../../shared/board.ts';
 import { DIM_HOURS, dimLabel, MAX_PAGES, ROTATE_SECONDS } from '../../shared/wall.ts';
 import { THEMES } from '../lib/appearance.ts';
 import { agoLong } from '../lib/format.ts';
@@ -28,7 +28,7 @@ const ON_MS = 15 * 60_000;
 const KEEP = 'As the device has it';
 
 /** A page a device can show: its address, its name, and whether it's one widget on its own. */
-type Place = [string, string, boolean?];
+type Place = [string, string, boolean?, WidgetType?];
 
 /**
  * Every page a device can show, by name: Home, the other boards, the pages a
@@ -46,7 +46,7 @@ function usePlaces(): Place[] {
         const body = r?.ok ? ((await r.json()) as { board?: { widgets: Widget[] } }) : null;
         return (body?.board?.widgets ?? [])
           .filter((w) => w.type !== 'attention' || w.config?.style === 'card')
-          .map((w) => [`/w/${b.id}/${w.id}`, `${w.config?.title || WIDGET_INFO[w.type]?.name || w.type}, from ${b.name}`, true] as Place);
+          .map((w) => [`/w/${b.id}/${w.id}`, `${w.config?.title || WIDGET_INFO[w.type]?.name || w.type}, from ${b.name}`, true, w.type] as Place);
       }),
     ).then((lists) => setWidgets(lists.flat()));
   }, [key]);
@@ -261,6 +261,7 @@ function DeviceEditor({
     const body = (await res.json()) as { path?: string };
     if (res.ok && body.path) onLink({ id: d.id, url: `${location.origin}${body.path}` });
   };
+  const [panelShows, setPanelShows] = useState('');
   const newPanel = async () => {
     const res = await fetch(`/api/household/${d.id}/panel`, { method: 'POST', headers: ACTION });
     const body = (await res.json()) as { panel?: string };
@@ -457,9 +458,23 @@ function DeviceEditor({
           </div>
           {link?.panel && (
             <>
-              <input className="field mono" readOnly value={link.panel} aria-label={`Panel picture for ${d.name}`} onFocus={(e) => e.currentTarget.select()} />
+              <label className="device-inline">
+                <span>Panel shows</span>
+                <select className="field" value={panelShows} onChange={(e) => setPanelShows(e.target.value)}>
+                  <option value="">The server: status, weather and gauges</option>
+                  {/* Any widget with a number of its own, as one big number. */}
+                  {places
+                    .filter((p) => p[2] && p[3] && (NUMBERS[p[3]] || p[3] === 'markets'))
+                    .map(([v, l]) => (
+                      <option key={v} value={v.slice(3)}>
+                        {l}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <input className="field mono" readOnly value={`${link.panel}${panelShows ? `?widget=${panelShows}` : ''}`} aria-label={`Panel picture for ${d.name}`} onFocus={(e) => e.currentTarget.select()} />
               <p className="settings-note">
-                Add <code>?w=</code> and <code>?h=</code> for the panel's size, or use <code>.bmp</code> in place of <code>.png</code>. A new address retires the last.
+                Add <code>w=</code> and <code>h=</code> for the panel's size, or use <code>.bmp</code> in place of <code>.png</code>. A widget shows the number its One number setting picks. A new address retires the last.
               </p>
             </>
           )}

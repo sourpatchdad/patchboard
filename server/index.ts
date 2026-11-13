@@ -70,7 +70,7 @@ import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
 import { uptimeDays } from './uptime.ts';
-import { boardId, validateBoard } from '../shared/board.ts';
+import { boardId, NUMBERS, validateBoard, type Widget, WIDGET_INFO } from '../shared/board.ts';
 import { type JsonField, validateJsonConfig } from '../shared/jsonwidget.ts';
 import { cachedJsonWidget, fetchJsonWidget } from './jsonwidget.ts';
 import { deleteSecret, listSecrets, SECRET_NAME, setSecret } from './secrets.ts';
@@ -84,7 +84,8 @@ import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
-import { bmp, drawPanel, png } from './panel.ts';
+import { bmp, drawPanel, png, drawNumberPanel, PANEL_FORMAT } from './panel.ts';
+import { historyFor, type Reading, readingOf } from '../shared/reading.ts';
 import { addHouseholdDevice, cleanLook, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newJoinToken, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
 import { checkPassword, noteVisitor, currentUser, endAllSessions, hashPassword, hasSession, login, logout, passwordMatches, readOnlyGuard, requireAuth, securityHeaders, startSession } from './security.ts';
 import * as oidc from './oidc.ts';
@@ -1825,7 +1826,7 @@ app.post('/join/:token', (c) => {
 // household device's link token opens it, since such a screen keeps no
 // cookie. /panel/<token>.png or .bmp; ?w= and ?h= for the panel's size,
 // ?units=c or f, ?clock=24, ?invert=1.
-app.get('/panel/:file', (c) => {
+app.get('/panel/:file', async (c) => {
   c.header('Cache-Control', 'no-store');
   const m = /^([\w-]{20,100})\.(png|bmp)$/.exec(c.req.param('file'));
   const device = m ? deviceByPanelToken(m[1]) : null;
@@ -1834,16 +1835,38 @@ app.get('/panel/:file', (c) => {
   const w = num(c.req.query('w'), 200, 2560, 800);
   const h = num(c.req.query('h'), 120, 2560, 480);
   const american = (process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? '').startsWith('America/');
-  const pic = drawPanel(hub.snapshot(), {
+  const o = {
     w,
     h,
     f: (c.req.query('units') ?? (american ? 'f' : 'c')) === 'f',
     clock24: (c.req.query('clock') ?? (american ? '12' : '24')) === '24',
     invert: c.req.query('invert') === '1',
-  });
+  };
+  // ?widget=<board>/<widget>: that widget as one number, in place of the server summary.
+  const pick = /^([\w-]+)\/([\w-]+)$/.exec(c.req.query('widget') ?? '');
+  const widget = pick ? getBoard(pick[1])?.board.widgets.find((x) => x.id === pick[2] && (NUMBERS[x.type] || x.type === 'markets')) : undefined;
+  if (pick && !widget) return c.text('No such widget with a number on that board', 404);
+  const pic = widget ? drawNumberPanel(await panelReading(widget, o.f ? 'f' : 'c'), widget.config?.title || WIDGET_INFO[widget.type].name, o) : drawPanel(hub.snapshot(), o);
   const body = m[2] === 'png' ? png(pic) : bmp(pic);
   return c.body(new Uint8Array(body), 200, { 'Content-Type': m[2] === 'png' ? 'image/png' : 'image/bmp' });
 });
+
+/** A widget's number for a panel: shared/reading.ts with English words, or the first price for Markets. */
+async function panelReading(w: Widget, unit: 'f' | 'c'): Promise<Reading | null | undefined> {
+  if (w.type === 'markets') {
+    const line = (w.config?.symbols ?? '').split('\n').filter(Boolean)[0];
+    if (!line) return null;
+    const q = (config.demo ? demoQuotes([line], 'USD') : await quotes([line], 'USD'))[0];
+    if (!q || q.failed || q.price === undefined) return { value: '-', sub: `${q?.label ?? q?.symbol ?? line}: ${q?.failed ?? 'no price'}`, tone: 'warn' };
+    const name = q.label ?? q.name ?? q.symbol;
+    const price = q.currency ? new Intl.NumberFormat('en-US', { style: 'currency', currency: q.currency, maximumFractionDigits: q.price >= 1000 ? 0 : 2 }).format(q.price) : String(q.price);
+    return { value: price, sub: q.change === undefined ? name : `${name} ${q.change >= 0 ? '▲' : '▼'} ${q.change.toFixed(2)}%`, line: q.line && q.line.length > 1 ? { data: q.line.map((v, i) => [i, v] as [number, number]), label: name } : undefined };
+  }
+  const snap = hub.snapshot();
+  const need = historyFor(w, snap.sources);
+  const history = Object.fromEntries(need.keys.map((k) => [k, series(k, need.hours * 3_600_000, 96)]));
+  return readingOf(w, { sources: snap.sources, alerts: snap.alerts, limits: snap.limits, unit, now: Date.now(), history, f: PANEL_FORMAT });
+}
 
 // Static client and SPA fallback.
 const indexPath = join(config.staticDir, 'index.html');

@@ -95,7 +95,12 @@ it in Settings, Devices, and New panel address gives you its picture address:
 `/panel/<token>.png`, or `.bmp`. Add `?w=800&h=480` for the panel's size,
 `?units=c` or `f`, `?clock=24`, and `?invert=1` for white on black. The
 picture is one bit per pixel: the status and what needs you, the weather,
-and CPU, memory and the pool, drawn in the Spleen bitmap font.
+and CPU, memory and the pool, drawn in the Spleen bitmap font. For one
+number instead, pick a widget under Panel shows, or add
+`?widget=<board>/<widget>`: Bitcoin's price, CPU or the car's charge, as
+large as the panel allows, with its line along the bottom.
+
+![Bitcoin's price alone on an 800 by 480 panel](screenshots/panel-widget.png)
 
 ![The server as an 800 by 480 picture for an e-paper panel](screenshots/panel.png)
 

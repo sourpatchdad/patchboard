@@ -55,3 +55,17 @@ test('the panel draws with no data at all, and at any size asked', () => {
     assert.ok(b.px.some((p) => p === 1));
   }
 });
+
+test('one widget on a panel: the number fills the middle, the line runs along the bottom, English words fill their blanks', async () => {
+  const { drawNumberPanel, PANEL_FORMAT } = await import('../panel.ts');
+  assert.equal(PANEL_FORMAT.t('{pool} used', { pool: 'tank' }), 'tank used');
+  assert.equal(PANEL_FORMAT.t('Memory in use, of {total}'), 'Memory in use, of {total}', 'a blank with no value stays visible');
+  assert.equal(PANEL_FORMAT.pct(9.84), '9.8%');
+  const o = { w: 800, h: 480, f: true, clock24: false, invert: false, now: Date.UTC(2026, 10, 12, 20, 0) };
+  const ink = (b: Bitmap, y0: number, y1: number) => b.px.subarray(y0 * b.w, y1 * b.w).reduce((n, v) => n + v, 0);
+  const b = drawNumberPanel({ value: '$71,880', sub: 'Bitcoin', line: { data: [[0, 1], [1, 3], [2, 2]], label: 'BTC' } }, 'Markets', o);
+  assert.ok(ink(b, 120, 260) > 5000, 'a big number in the middle');
+  assert.ok(ink(b, 380, 470) > 200, 'its line near the bottom');
+  // Nothing yet still draws a frame and says so, rather than failing.
+  assert.ok(ink(drawNumberPanel(null, 'Server', o), 100, 300) > 500);
+});
