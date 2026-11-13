@@ -11,6 +11,10 @@
   from the first paint. Black and white is also an App icon choice of its own.
   A phone keeps the icon it was added with, so remove and add it again to
   switch.
+- **E-ink, finished:** playback bars lose their brand colors for ink, the top
+  bar and the phone's tab bar are solid paper with no blur, pale app icons
+  are darkened until they read, an empty poster is a gray card, and a chosen
+  tab or chip is a filled black block everywhere.
 
 ## 1.13.0 (2026-11-12)
 

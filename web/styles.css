@@ -12730,6 +12730,40 @@ html[data-eink] .one-number-body:is(.tone-warn, .tone-crit) .one-number-label {
   color: #000;
 }
 
+/* E-ink, finished: brand colors become ink, glass bars become paper, pale
+   app icons get the contrast to read, an empty poster is a gray card, and a
+   choice reads as a filled black block wherever it's made. */
+html[data-eink] {
+  --media-plex: #000 !important;
+  --media-jellyfin: #000 !important;
+  --media-emby: #000 !important;
+  --media-tracearr: #000 !important;
+  --media-audiobookshelf: #000 !important;
+  --media-navidrome: #000 !important;
+}
+
+html[data-eink] :is(.topbar, .nav) {
+  background: #fff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: #000;
+}
+
+html[data-eink] .icon-img {
+  filter: url(#eink-ink);
+}
+
+html[data-eink] .poster-type {
+  background: #e8e8e8 !important;
+  color: #000;
+}
+
+html[data-eink] :is(.seg button[aria-pressed='true'], .seg button[aria-selected='true'], .chip[aria-pressed='true'], .chip[aria-selected='true']) {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
 /* The Monitor on e-ink: paper, ink, and the waffles in solid black. */
 .monitor.tint-eink {
   --bg: #fff;
