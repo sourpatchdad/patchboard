@@ -32,6 +32,7 @@ import { beszelAdapter } from './adapters/beszel.ts';
 import { syncthingAdapter } from './adapters/syncthing.ts';
 import { tracearrAdapter } from './adapters/tracearr.ts';
 import { glancesAdapter } from './adapters/glances.ts';
+import { bitaxeAdapter } from './adapters/bitaxe.ts';
 import { nutAdapter } from './adapters/nut.ts';
 import { unraidAdapter } from './adapters/unraid.ts';
 import { synologyAdapter } from './adapters/synology.ts';
@@ -157,6 +158,7 @@ const FACTORIES: Record<string, () => Made | null> = {
   syncthing: () => (config.syncthing ? { adapter: syncthingAdapter() } : null),
   tracearr: () => (config.tracearr ? { adapter: tracearrAdapter() } : null),
   glances: () => (config.glances ? { adapter: glancesAdapter() } : null),
+  bitaxe: () => (config.bitaxe?.urls.length ? { adapter: bitaxeAdapter() } : null),
   nut: () => (config.nut ? { adapter: nutAdapter() } : null),
   unraid: () => (config.unraid ? { adapter: unraidAdapter() } : null),
   synology: () => (config.synology ? { adapter: synologyAdapter() } : null),

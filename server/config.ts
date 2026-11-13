@@ -262,6 +262,9 @@ function build(str: Lookup) {
     nut: str('NUT_HOST')
       ? { host: str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[0], port: Number(str('NUT_HOST')!.replace(/^nut:\/\//, '').split(':')[1] ?? 3493) || 3493 }
       : undefined,
+    bitaxe: str('BITAXE_URL')
+      ? { urls: str('BITAXE_URL')!.split(',').map((u) => trimSlash(u.trim())).filter((u) => /^https?:\/\//i.test(u)).slice(0, 50) }
+      : undefined,
     glances: str('GLANCES_URL')
       ? { urls: str('GLANCES_URL')!.split(',').map((u) => trimSlash(u.trim())).filter(Boolean).slice(0, 50) }
       : undefined,

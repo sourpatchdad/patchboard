@@ -118,3 +118,13 @@ test('a room strip is 48 half-hour cells, each the last reading by its end, carr
   assert.equal(cells[38], 73);
   assert.equal(cells[47], 73, 'a quiet sensor carries its last reading');
 });
+
+test('BitAxe: AxeOS fields become a miner, and missing ones stay missing', async () => {
+  const { toMiner } = await import('../adapters/bitaxe.ts');
+  const m = toMiner('http://192.168.1.50', { hostname: 'gamma', ASICModel: 'BM1370', deviceModel: 'Gamma', hashRate: 1210.4, temp: 58.4, power: 17.8, bestDiff: '4.29G', sharesAccepted: 10, sharesRejected: 1, uptimeSeconds: 60 });
+  assert.deepEqual([m.name, m.model, m.hashGh, m.tempC, m.powerW, m.bestDiff, m.accepted, m.rejected, m.ok], ['gamma', 'Gamma', 1210.4, 58.4, 17.8, '4.29G', 10, 1, true]);
+  const bare = toMiner('http://192.168.1.51', {});
+  assert.equal(bare.name, '192.168.1.51', 'no hostname: the address names it');
+  assert.equal(bare.tempC, undefined);
+  assert.equal(bare.hashGh, 0);
+});

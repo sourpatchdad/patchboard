@@ -186,6 +186,11 @@ tablet on the fridge can do all of it.
 
 ![Shopping list, thermostat, shades, people and chores on one board](screenshots/family.webp)
 
+**Miners:** BitAxe and other AxeOS miners (NerdQAxe, Gamma, Supra), a block
+each: hashrate with a line of its day, the ASIC's temperature, power and
+joules per terahash, the best difficulty and shares. One that runs hot or
+stops answering shows in Needs attention. Give it one address or several.
+
 **The other apps:** Media managers gives Lidarr, Readarr, Prowlarr and
 Bazarr a line each, healthy or what's wrong, with the queue or the missing
 subtitles. Documents shows the Paperless inbox, Nextcloud its files, people

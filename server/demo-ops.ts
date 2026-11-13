@@ -258,6 +258,13 @@ export function demoSampleHistory(containers: Container[], record: (at: number, 
     }
     record(t, vals);
   }
+  // Two miners: a day of hashrate, wobbling as shares come in.
+  for (let t = now - D; t < now; t += 5 * 60_000) {
+    record(t, [
+      ['miner.hash:bitaxe-gamma', 1210 + (Math.random() - 0.5) * 90],
+      ['miner.hash:nerdqaxe', 4720 + (Math.random() - 0.5) * 260 - (new Date(t).getHours() >= 13 && new Date(t).getHours() < 16 ? 400 : 0)],
+    ]);
+  }
   // The car: a week of charging up overnight and draining through the day,
   // the cabin and outside temperatures, and a rear tire slowly going soft.
   for (let t = now - 7 * D; t < now; t += 30 * 60_000) {

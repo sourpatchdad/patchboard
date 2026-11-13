@@ -29,6 +29,12 @@
   the charge on the left and the rest on the right. Patchboard now records
   each reading Tessie has for a month, without waking the car. One number
   adds the lowest tire. Range and odometer follow your units.
+- **BitAxe:** a Miners widget for BitAxe and other AxeOS miners, from their
+  local API with no key: hashrate with its last day, the ASIC temperature,
+  power and joules per terahash, the best difficulty and shares. Give it one
+  address or several, comma-separated. A miner at 65 °C turns amber, at 70 °C
+  red, and one that runs hot or stops answering shows in Needs attention. One
+  number shows the hashrate, the hottest ASIC or the power, all together.
 - **A soft tire in Needs attention:** a tire under 38 psi, or 3 psi under the
   others, shows up named, before the car's own warning would.
 

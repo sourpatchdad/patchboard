@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { emptyTrack, settle, type Track } from './transitions.ts';
 import type { Adapter } from './adapters/adapter.ts';
 import type { Alert, CarData, ChangeEvent, ChecksData, Container, DeviceView, DockerData, ServerEvent, Snapshot, SourceId, SourceState, StatsData, SystemData, TruenasData } from '../shared/types.ts';
-import { carKey, TIRES } from '../shared/types.ts';
+import { carKey, type MinerData, minerKey, TIRES } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
 import { checkSelfImage, composeMounted, selfCheckStatus, whoAmI } from './updater.ts';
@@ -128,6 +128,7 @@ export class Hub {
       pruneSamples('cpu', 8 * 24 * H);
       pruneSamples('mem.', 8 * 24 * H);
       pruneSamples('car.', 31 * 24 * H);
+      pruneSamples('miner.', 8 * 24 * H);
       void seedPoolHistoryFromAudits();
     };
     housekeeping();
@@ -187,6 +188,9 @@ export class Hub {
       if (car.outsideC != null) out.push([carKey('outside', car.vin), car.outsideC]);
       for (const t of TIRES) if (car.tires) out.push([carKey(`tire.${t}`, car.vin), car.tires[t]]);
     }
+    // Each miner's hashrate, a point a minute, for the Miners widget's line.
+    const rigs = this.sources.bitaxe?.ok ? (this.sources.bitaxe.data as MinerData) : null;
+    for (const m of rigs?.miners ?? []) if (m.ok) out.push([minerKey(m.name), m.hashGh]);
     if (out.length) recordSamples(at, out);
   }
 

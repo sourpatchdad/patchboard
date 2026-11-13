@@ -28,6 +28,7 @@ import type {
   MonitorData,
   UnifiData,
   GiteaData,
+  MinerData,
   PaperlessData,
   NextcloudData,
   ListeningData,
@@ -831,6 +832,12 @@ export function demoAdapters(): Adapter[] {
     demo<PaperlessData>('paperless', 'Paperless-ngx', 5 * MINUTE, () => ({ total: 4_382, inbox: 7, webUrl: 'http://paperless.local' })),
     demo<ArrData>('prowlarr', 'Prowlarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 0, problems: [], health: [{ level: 'warning', message: 'Indexers unavailable: The Pirate Bay' }] })),
     demo<ArrData>('lidarr', 'Lidarr', 2 * MINUTE, () => ({ upcoming: [], queueTotal: 3, problems: [], health: [] })),
+    demo<MinerData>('bitaxe', 'BitAxe', 30 * SECOND, () => ({
+      miners: [
+        { url: 'http://192.168.1.50', name: 'bitaxe-gamma', model: 'Gamma', version: 'v2.6.1', ok: true, hashGh: 1210 + Math.round((Math.random() - 0.5) * 60), tempC: 58.4, vrTempC: 49, powerW: 17.8, fanPct: 64, bestDiff: '4.29G', accepted: 18_402, rejected: 12, uptimeSec: 9 * 86_400 },
+        { url: 'http://192.168.1.51', name: 'nerdqaxe', model: 'NerdQAxe++', version: 'v1.0.30', ok: true, hashGh: 4720 + Math.round((Math.random() - 0.5) * 140), tempC: 66.1, vrTempC: 61, powerW: 76.5, fanPct: 88, bestDiff: '12.7G', accepted: 51_337, rejected: 41, uptimeSec: 3 * 86_400 },
+      ],
+    })),
     demo<GiteaData>('gitea', 'Gitea', 2 * MINUTE, () => ({ unread: 2, repos: 37, webUrl: 'http://git.local' })),
     demo<ArrData>('bazarr', 'Bazarr', 5 * MINUTE, () => ({ upcoming: [], queueTotal: 23, problems: [], health: [] })),
     demo<NextcloudData>('nextcloud', 'Nextcloud', 5 * MINUTE, () => ({ version: '30.0.2', files: 128_403, users: 4, activeToday: 2, appUpdates: 0, webUrl: 'http://nextcloud.local' })),

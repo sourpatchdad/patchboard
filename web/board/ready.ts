@@ -41,6 +41,7 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
     shades: has('homeassistant'),
     people: has('homeassistant'),
     rooms: has('homeassistant'),
+    miners: has('bitaxe'),
   };
 }
 
@@ -79,6 +80,7 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   shades: { label: 'Home Assistant', setup: 'homeassistant' },
   people: { label: 'Home Assistant', setup: 'homeassistant' },
   rooms: { label: 'Home Assistant', setup: 'homeassistant' },
+  miners: { label: 'BitAxe', setup: 'bitaxe' },
 };
 
 /** Where to set up what a widget needs. */

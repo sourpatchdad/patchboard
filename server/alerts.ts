@@ -4,6 +4,7 @@
 import { HOME_ID, type WidgetType } from '../shared/board.ts';
 import { getBoard, savedBoards } from './boards.ts';
 import { PSI, softTires } from '../shared/car.ts';
+import { MINER_HOT_C, MINER_WARM_C } from '../shared/types.ts';
 import type {
   GlancesData,
   NextcloudData,
@@ -14,6 +15,7 @@ import type {
   NasSystem,
   NutData,
   CarData,
+  MinerData,
   ProxmoxData,
   ScrutinyData,
   SyncthingData,
@@ -450,6 +452,23 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
       href: st!.webUrl,
       source: 'syncthing',
     });
+  }
+
+  // BitAxe: a miner running hot, or not answering.
+  for (const m of data<MinerData>(sources, 'bitaxe')?.miners ?? []) {
+    if (!m.ok) {
+      alerts.push({ id: `miner-down-${m.name}`, level: 'warn', subject: m.name, title: `Miner ${m.name} isn't answering`, detail: `${m.error ?? 'No answer'} from ${m.url}.`, href: m.url, source: 'bitaxe' });
+    } else if (m.tempC != null && m.tempC >= MINER_WARM_C) {
+      alerts.push({
+        id: `miner-hot-${m.name}`,
+        level: m.tempC >= MINER_HOT_C ? 'critical' : 'warn',
+        subject: m.name,
+        title: `Miner ${m.name} is running hot`,
+        detail: `The ASIC is at ${Math.round(m.tempC)} °C. Check its fan and airflow, or lower its frequency in AxeOS.`,
+        href: m.url,
+        source: 'bitaxe',
+      });
+    }
   }
 
   // Tessie: a tire going soft, named, so it's caught before the car's own warning.

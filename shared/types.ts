@@ -40,6 +40,7 @@ export type SourceId =
   | 'qnap'
   | 'portainer'
   | 'netdata'
+  | 'bitaxe'
   | 'prometheus'
   | 'unifi'
   | 'tailscale'
@@ -504,6 +505,39 @@ export interface HaEntity {
   /** The few attributes the Thermostat and Shades widgets read. */
   attrs?: { current?: number; target?: number; min?: number; max?: number; step?: number; action?: string; position?: number };
 }
+
+/** One AxeOS miner (BitAxe and kin), as its local API reports it. */
+export interface Miner {
+  url: string;
+  name: string;
+  model?: string;
+  version?: string;
+  /** False when it didn't answer this time. */
+  ok: boolean;
+  error?: string;
+  /** Gigahashes a second. */
+  hashGh: number;
+  tempC?: number;
+  vrTempC?: number;
+  powerW?: number;
+  fanPct?: number;
+  /** As AxeOS writes it: "4.29G". */
+  bestDiff?: string;
+  accepted: number;
+  rejected: number;
+  uptimeSec?: number;
+}
+
+export interface MinerData {
+  miners: Miner[];
+}
+
+/** Where a miner's hashrate history is kept. */
+export const minerKey = (name: string): string => `miner.hash:${name}`;
+
+/** The ASIC's temperature: amber from 65 °C, red from 70, where AxeOS itself starts to throttle. */
+export const MINER_WARM_C = 65;
+export const MINER_HOT_C = 70;
 
 /** One item on a Home Assistant to-do list. */
 export interface TodoItem {

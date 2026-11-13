@@ -3,9 +3,13 @@
 // alerts firing in Netdata or Prometheus. Each reads the source its tile
 // already reads, so turning one on costs no extra requests.
 
-import type { ArrData, GiteaData, MonitorAlert, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import type { ArrData, GiteaData, MinerData, MonitorAlert, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import { MINER_HOT_C, MINER_WARM_C, minerKey } from '../../shared/types.ts';
+import { Spark } from '../components/Spark.tsx';
+import { useAppearance } from '../lib/appearance.ts';
+import { useHistory } from '../lib/api.ts';
 import { Empty, Section } from '../components/ui.tsx';
-import { agoLong, size } from '../lib/format.ts';
+import { agoLong, deg, size, uptime } from '../lib/format.ts';
 import { locale } from '../lib/region.ts';
 import { useSource } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
@@ -149,6 +153,82 @@ export function MonitoringWidget({ now }: { now: number }) {
           ))}
         </ul>
       )}
+    </Section>
+  );
+}
+
+// ---------- Miners ----------
+
+/** Gigahashes as people say them: 1.21 TH/s, 980 GH/s. */
+export const hashrate = (gh: number): string => (gh >= 1000 ? `${(gh / 1000).toFixed(gh >= 10_000 ? 1 : 2)} TH/s` : `${Math.round(gh)} GH/s`);
+
+/** BitAxe and other AxeOS miners: a line each, hashrate with its day, the ASIC's temperature, power and efficiency. */
+export function MinersWidget() {
+  const { state, data } = useSource<MinerData>('bitaxe');
+  const { temp: unit } = useAppearance();
+  const miners = data?.miners ?? [];
+  const day = useHistory(
+    miners.map((m) => minerKey(m.name)),
+    24,
+    96,
+  );
+  if (!state || !data) return null;
+  const total = miners.reduce((n, m) => n + (m.ok ? m.hashGh : 0), 0);
+  const watts = miners.reduce((n, m) => n + (m.ok ? (m.powerW ?? 0) : 0), 0);
+  return (
+    <Section title="Miners" source={state} className="miners" count={miners.length > 1 ? `${hashrate(total)}, ${Math.round(watts)} W` : undefined}>
+      <ul className="miner-list">
+        {miners.map((m) => {
+          const tone = !m.ok ? 'crit' : m.tempC != null && m.tempC >= MINER_HOT_C ? 'crit' : m.tempC != null && m.tempC >= MINER_WARM_C ? 'warn' : '';
+          // Joules per terahash: power over hashrate, the number miners compare.
+          const jth = m.ok && m.powerW && m.hashGh ? (m.powerW / (m.hashGh / 1000)).toFixed(1) : null;
+          return (
+            <li key={m.url}>
+              <div className="miner-head">
+                <a className="miner-name" href={m.url} target="_blank" rel="noreferrer">
+                  {m.name}
+                </a>
+                <span className="miner-model">{[m.model, m.version].filter(Boolean).join(', ')}</span>
+              </div>
+              {m.ok ? (
+                <>
+                  <div className="miner-nums">
+                    <p>
+                      <span className="speed-big">{hashrate(m.hashGh)}</span>
+                    </p>
+                    <p>
+                      <span className={`speed-mid ${tone ? `${tone}-text` : ''}`}>{m.tempC != null ? `${deg(m.tempC, unit)}°` : '–'}</span>
+                      <span className="speed-unit">ASIC</span>
+                    </p>
+                    {m.powerW != null && (
+                      <p>
+                        <span className="speed-mid">{Math.round(m.powerW)} W</span>
+                        {jth && <span className="speed-unit">{jth} J/TH</span>}
+                      </p>
+                    )}
+                  </div>
+                  {/* On the miner's own scale, so a dip shows. */}
+                  <Spark
+                    data={day[minerKey(m.name)]}
+                    min={Math.max(0, Math.min(...(day[minerKey(m.name)] ?? [[0, 0]]).map((p) => p[1])) * 0.95)}
+                    max={Math.max(...(day[minerKey(m.name)] ?? [[0, 1]]).map((p) => p[1])) * 1.02}
+                    height={26}
+                    label={`${m.name} hashrate, last 24 hours`}
+                  />
+                  <p className="speed-seen">
+                    {m.bestDiff ? `Best ${m.bestDiff}. ` : ''}
+                    {m.accepted.toLocaleString(locale())} shares{m.rejected ? `, ${m.rejected.toLocaleString(locale())} rejected` : ''}
+                    {m.fanPct != null ? `. Fan ${Math.round(m.fanPct)}%` : ''}
+                    {m.uptimeSec != null ? `. Up ${uptime(m.uptimeSec)}` : ''}.
+                  </p>
+                </>
+              ) : (
+                <p className="crit-text miner-down">Not answering. {m.error}</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </Section>
   );
 }

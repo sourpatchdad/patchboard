@@ -48,6 +48,7 @@ export const UI_SETUP = new Set([
   'portainer',
   'netdata',
   'prometheus',
+  'bitaxe',
   'unifi',
   'tailscale',
   'lidarr',
@@ -88,7 +89,7 @@ export function fieldKind(name: string): FieldKind {
   // Calendar addresses carry private keys (Google's secret address), so they are secrets too.
   if (/(KEY|TOKEN|PASSWORD|SECRET)$/.test(name) || name === 'CALENDAR_URLS' || name === 'DISCORD_WEBHOOK') return 'secret';
   if (/VERIFY_TLS$/.test(name)) return 'flag';
-  if (name === 'GLANCES_URL') return 'urls';
+  if (name === 'GLANCES_URL' || name === 'BITAXE_URL') return 'urls';
   if (/_URL$/.test(name)) return 'url';
   return 'text';
 }
@@ -101,6 +102,7 @@ const LABELS: [RegExp, string][] = [
   [/^DISCORD_WEBHOOK$/, 'Webhook address'],
   [/^PATCHBOARD_URL$/, 'Patchboard address'],
   [/^GLANCES_URL$/, 'Addresses'],
+  [/^BITAXE_URL$/, 'Miner addresses'],
   [/^NUT_HOST$/, 'NUT server'],
   [/^CALENDAR_URLS$/, 'Calendar addresses'],
   [/^GOODREADS_USER$/, 'Goodreads user ID'],
@@ -143,6 +145,7 @@ const HINTS: Record<string, string> = {
   PROXMOX_URL: 'https://pve.local:8006',
   SCRUTINY_URL: 'http://192.168.1.10:8080',
   GLANCES_URL: 'http://192.168.1.10:61208, http://192.168.1.11:61208',
+  BITAXE_URL: 'http://192.168.1.50, http://192.168.1.51',
   NUT_HOST: '192.168.1.10, or 192.168.1.10:3493',
   SMTP_HOST: 'smtp.fastmail.com:465, or smtp.gmail.com:587',
   SMTP_TO: 'you@example.com, partner@example.com',

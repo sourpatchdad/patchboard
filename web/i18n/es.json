@@ -287,5 +287,9 @@
  "Front right": "Delantera derecha",
  "Rear left": "Trasera izquierda",
  "Rear right": "Trasera derecha",
- "Rooms": "Habitaciones"
+ "Rooms": "Habitaciones",
+ "Miners": "Mineros",
+ "No miner answering": "Ningún minero responde",
+ "{n} miners": "{n} mineros",
+ "Hashrate, last 24 hours": "Hashrate, últimas 24 horas"
 }

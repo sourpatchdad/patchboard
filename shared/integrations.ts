@@ -436,6 +436,14 @@ export const INTEGRATIONS: Integration[] = [
     source: true,
   },
   {
+    id: 'bitaxe',
+    name: 'BitAxe',
+    adds: 'A Miners widget for BitAxe and other AxeOS miners (NerdQAxe, Gamma, Supra): hashrate with its last day, the ASIC temperature, power and efficiency, the best difficulty and shares. A miner that runs hot or stops answering shows in Needs attention.',
+    env: ['BITAXE_URL'],
+    where: "The miner's address on your network, as AxeOS shows it, such as http://192.168.1.50. No key: AxeOS serves its stats to the network. Several miners: separate the addresses with commas.",
+    source: true,
+  },
+  {
     id: 'glances',
     name: 'Glances',
     adds: 'A Hosts widget for any machine that runs Glances, from a mini PC or a Pi to a rack server: CPU, memory, the fullest disk, network and the hottest sensor. List several addresses to watch every machine at once. A disk past your storage thresholds, or a host that stops answering, shows in Needs attention.',
@@ -606,6 +614,6 @@ export const CATEGORIES: [name: string, ids: string[]][] = [
   ['Storage and servers', ['docker', 'system', 'truenas', 'unraid', 'synology', 'qnap', 'proxmox', 'portainer', 'glances', 'beszel', 'scrutiny', 'nut', 'syncthing']],
   ['Monitoring', ['checks', 'uptimekuma', 'gatus', 'healthchecks', 'netdata', 'prometheus', 'speedtest', 'backups', 'diun', 'updates', 'runbook', 'dozzle']],
   ['Network', ['unifi', 'tailscale', 'pihole', 'adguard', 'wake']],
-  ['Home and life', ['homeassistant', 'frigate', 'tessie', 'weather', 'calendar', 'fastmail', 'miniflux', 'hardcover', 'goodreads', 'paperless', 'nextcloud', 'gitea']],
+  ['Home and life', ['homeassistant', 'frigate', 'tessie', 'bitaxe', 'weather', 'calendar', 'fastmail', 'miniflux', 'hardcover', 'goodreads', 'paperless', 'nextcloud', 'gitea']],
   ['Notifications', ['ntfy', 'gotify', 'pushover', 'discord', 'email', 'webhook']],
 ];

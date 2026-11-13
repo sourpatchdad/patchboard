@@ -15,7 +15,6 @@ What comes next. CHANGELOG.md has what has shipped.
 
 ### Integrations
 
-- [ ] BitAxe: hashrate, temperature and power from its local API
 - [ ] Bambu Lab printers: the print, its progress and time left
 - [ ] TP-Link Omada
 - [ ] Backrest

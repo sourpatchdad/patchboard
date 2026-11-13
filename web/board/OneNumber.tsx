@@ -8,7 +8,9 @@ import type { CSSProperties } from 'react';
 import { daysUntil, nextDay } from '../../shared/almanac.ts';
 import { NUMBERS, type Widget } from '../../shared/board.ts';
 import type { Series } from '../../shared/types.ts';
-import type { ArrData, GiteaData, HomeAssistantData, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import type { ArrData, GiteaData, HomeAssistantData, MinerData, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import { MINER_HOT_C, MINER_WARM_C, minerKey } from '../../shared/types.ts';
+import { hashrate } from './AppWidgets.tsx';
 import { parseEntities } from '../../shared/ha.ts';
 import type { CarData, DnsData, FastmailData, ImmichData, MinifluxData, NutData, PortainerData, ScrutinyData, SeerrData, SpeedData, SyncthingData, SystemData, TruenasData, UnifiData, WeatherData } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
@@ -69,6 +71,10 @@ function useReading(w: Widget, now: number): Reading | null | undefined {
   const kept = w.type === 'vitals' ? ({ cpu: 'cpu', memory: 'mem.used', storage: 'pool.used' } as Record<string, string>)[which ?? ''] : undefined;
   const history = useHistory(kept ? [kept] : [], kept === 'pool.used' ? 24 * 30 : 24, 96);
   const past = kept ? history[kept] : undefined;
+  // One miner's day, when the widget shows one.
+  const rigs = (snap?.sources.bitaxe?.data as MinerData | undefined)?.miners.filter((m) => m.ok) ?? [];
+  const minerHistory = useHistory(w.type === 'miners' && rigs.length === 1 ? [minerKey(rigs[0].name)] : [], 24, 96);
+  const minerPast = rigs.length === 1 ? minerHistory[minerKey(rigs[0].name)] : undefined;
   if (!snap) return undefined;
   const data = <T,>(id: string): T | null | undefined => {
     const s = snap.sources[id as keyof typeof snap.sources];
@@ -243,6 +249,18 @@ function useReading(w: Widget, now: number): Reading | null | undefined {
       }
       const a = found[0].attrs ?? {};
       return which === 'target' ? (a.target == null ? null : { value: `${a.target}°`, sub: t('{name} set to', { name: found[0].name }) }) : a.current == null ? null : { value: `${Math.round(a.current)}°`, sub: found[0].name };
+    }
+    case 'miners': {
+      const d = data<MinerData>('bitaxe');
+      if (!d) return d;
+      const up = d.miners.filter((m) => m.ok);
+      if (!up.length) return { value: '0', sub: t('No miner answering'), tone: 'crit' };
+      if (which === 'temp') {
+        const hot = up.filter((m) => m.tempC != null).sort((a, b) => b.tempC! - a.tempC!)[0];
+        return hot ? { value: `${deg(hot.tempC!, unit)}°`, sub: hot.name, tone: hot.tempC! >= MINER_HOT_C ? 'crit' : hot.tempC! >= MINER_WARM_C ? 'warn' : undefined } : null;
+      }
+      if (which === 'power') return { value: `${Math.round(up.reduce((n, m) => n + (m.powerW ?? 0), 0))} W`, sub: up.length === 1 ? up[0].name : t('{n} miners', { n: up.length }) };
+      return { value: hashrate(up.reduce((n, m) => n + m.hashGh, 0)), sub: up.length === 1 ? up[0].name : t('{n} miners', { n: up.length }), line: up.length === 1 && minerPast ? { data: minerPast, label: t('Hashrate, last 24 hours'), min: 0 } : undefined };
     }
     case 'monitoring': {
       const lists = [data<MonitorData>('netdata'), data<MonitorData>('prometheus')].filter((x) => x !== undefined);
