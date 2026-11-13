@@ -9,8 +9,16 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] A search box with `!` shortcuts
 - [ ] Several Docker hosts
 
+### Wall screens and small displays
+
+- [ ] An e-paper panel's picture showing a widget you pick, as one number
+- [ ] Room temperatures as a strip of the last day per room, from Home Assistant sensors
+- [ ] The car's four tire pressures as lines, beside the readings
+
 ### Integrations
 
+- [ ] BitAxe: hashrate, temperature and power from its local API
+- [ ] Bambu Lab printers: the print, its progress and time left
 - [ ] TP-Link Omada
 - [ ] Backrest
 - [ ] Kavita, Komga
@@ -25,7 +33,7 @@ What comes next. CHANGELOG.md has what has shipped.
 - [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
   - Covered: Home and editor keyboard paths, focus return, cancelled drafts, theme text contrast, accessible names, narrow reflow, forced-color graphics, actual Chromium zoom, and enlarged text.
   - Remaining: a spoken screen-reader walkthrough, Firefox text-only zoom, and native Windows contrast themes. See [Accessibility checks](ACCESSIBILITY.md).
-- [ ] Translations: Spanish and French cover the boards, the wall screens and the Monitor; next, Settings and the problem titles the server writes, and more languages
+- [ ] Translations: Spanish and French cover the boards, the wall screens and the Monitor; next, Settings and the problem titles the server writes, then German, Portuguese, Italian and Dutch
 - [ ] A read-only API for scripts and AI tools
 
 Open an issue if you want something here sooner or don't see it here.
