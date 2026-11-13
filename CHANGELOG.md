@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- **Deutsch and Español:** the boards, the wall screens and the Monitor in
-  German and Spanish, in Settings, Look, Language and region, or set for a wall
+- **Deutsch, Español and Português:** the boards, the wall screens and the
+  Monitor in German, Spanish and Brazilian Portuguese, in Settings, Look, Language and region, or set for a wall
   device in Settings, Devices.
 - **Home Assistant, for the family:** four widgets beside the general one.
   - **List:** a Home Assistant to-do list such as Shopping list: add an item,

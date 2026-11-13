@@ -8,9 +8,10 @@
 import de from '../i18n/de.json' with { type: 'json' };
 import es from '../i18n/es.json' with { type: 'json' };
 import fr from '../i18n/fr.json' with { type: 'json' };
+import pt from '../i18n/pt.json' with { type: 'json' };
 import { getAppearance } from './appearance.ts';
 
-const CATALOGS: Record<string, Record<string, string>> = { de, es, fr };
+const CATALOGS: Record<string, Record<string, string>> = { de, es, fr, pt };
 
 /** Languages offered in Settings, each in its own words. */
 export const LANGUAGES: [string, string][] = [
@@ -18,6 +19,7 @@ export const LANGUAGES: [string, string][] = [
   ['de', 'Deutsch'],
   ['es', 'Español'],
   ['fr', 'Français'],
+  ['pt', 'Português (Brasil)'],
 ];
 
 /** The language this device shows: chosen, or the browser's when there's a catalog for it. */
