@@ -203,6 +203,7 @@ const READS = new Set([
   '/api/events',
   '/api/feeds',
   '/api/ha/entities',
+  '/api/ha/history',
   '/api/self/releases',
   '/api/appearance',
   '/api/boards',

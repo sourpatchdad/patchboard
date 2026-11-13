@@ -12,7 +12,6 @@ What comes next. CHANGELOG.md has what has shipped.
 ### Wall screens and small displays
 
 - [ ] An e-paper panel's picture showing a widget you pick, as one number
-- [ ] Room temperatures as a strip of the last day per room, from Home Assistant sensors
 
 ### Integrations
 

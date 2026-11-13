@@ -6,7 +6,7 @@
 // for on the fridge tablet.
 
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
-import { parseEntities } from '../../shared/ha.ts';
+import { parseEntities, roomCells } from '../../shared/ha.ts';
 import { parseChores } from '../../shared/fields.ts';
 import type { HaEntity, HomeAssistantData, TodoItem } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
@@ -22,7 +22,7 @@ async function send(url: string, body?: unknown): Promise<void> {
 }
 
 /** The pinned entities this widget shows, in its order, and whether this screen may change them. */
-function usePinned(list: string | undefined, type: 'halist' | 'climate' | 'shades' | 'people') {
+function usePinned(list: string | undefined, type: 'halist' | 'climate' | 'shades' | 'people' | 'rooms') {
   const { state, data } = useSource<HomeAssistantData>('homeassistant');
   const { snap } = useStore();
   const ids = parseEntities(list, type);
@@ -261,6 +261,70 @@ export function ShadesWidget({ entities }: { entities?: string }) {
         </ul>
       )}
       {error && <p className="settings-note crit-text">{error}</p>}
+    </Section>
+  );
+}
+
+// ---------- Rooms ----------
+
+/** Cool blue to warm orange across the widget's own range; e-ink gets gray steps instead. */
+function warmth(v: number, lo: number, hi: number): string {
+  const f = hi > lo ? Math.min(1, Math.max(0, (v - lo) / (hi - lo))) : 0.5;
+  // Blue, then sand, then orange: never through a status green or red.
+  return f < 0.5 ? `color-mix(in oklab, #4c8fe6 ${Math.round((1 - f * 2) * 100)}%, #c9b07c)` : `color-mix(in oklab, #c9b07c ${Math.round((2 - f * 2) * 100)}%, #ef8a2e)`;
+}
+
+/** Each room's temperature now, and its last day as a strip of half-hour cells. */
+export function RoomsWidget({ entities }: { entities?: string }) {
+  const { state, ids, entities: found } = usePinned(entities, 'rooms');
+  const [history, setHistory] = useState<Record<string, [number, number][]> | null>(null);
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!key) return;
+    let gone = false;
+    const load = () =>
+      fetch(`/api/ha/history?ids=${encodeURIComponent(key)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((b: { history?: Record<string, [number, number][]> } | null) => !gone && b?.history && setHistory(b.history))
+        .catch(() => {});
+    void load();
+    const t = setInterval(load, 5 * 60_000);
+    return () => {
+      gone = true;
+      clearInterval(t);
+    };
+  }, [key]);
+  if (!state) return null;
+  const now = Date.now();
+  const cells = Object.fromEntries(found.map((e) => [e.id, roomCells(history?.[e.id] ?? [], now)]));
+  const all = Object.values(cells).flat().filter((v): v is number => v != null);
+  const lo = all.length ? Math.min(...all) : 0;
+  const hi = all.length ? Math.max(...all) : 1;
+  return (
+    <Section title="Rooms" className="rooms">
+      {!ids.length ? (
+        <Empty>
+          No rooms picked yet. <SetupLink>Pick temperature sensors</SetupLink>
+        </Empty>
+      ) : (
+        <ul className="room-list">
+          {found.map((e) => {
+            const reading = Number(e.state);
+            return (
+              <li key={e.id}>
+                <span className="room-name">{e.name}</span>
+                <span className="room-now mono">{Number.isFinite(reading) ? `${Math.round(reading * 10) / 10}${e.unit ?? ''}` : e.state}</span>
+                <span className="room-strip" role="img" aria-label={`${e.name}, last 24 hours: from ${Math.min(...cells[e.id].filter((v): v is number => v != null))} to ${Math.max(...cells[e.id].filter((v): v is number => v != null))}`}>
+                  {cells[e.id].map((v, i) => (
+                    <i key={i} style={v == null ? undefined : { background: warmth(v, lo, hi) }} title={v == null ? undefined : `${v}${e.unit ?? ''}`} />
+                  ))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {ids.length > 0 && <p className="speed-seen">The last 24 hours, blue for the coolest and orange for the warmest.</p>}
     </Section>
   );
 }

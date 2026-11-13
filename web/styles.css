@@ -13516,3 +13516,48 @@ html[data-eink] .spark-lines polyline.is-soft {
 .car-line.warn-text {
   color: var(--warn);
 }
+
+/* Rooms: the name and the temperature now, then the last day as a strip. */
+.room-list {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+}
+
+.room-name {
+  font: 600 12px/1.2 var(--f-body);
+  letter-spacing: 0.02em;
+  color: var(--head);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.room-now {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.room-strip {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(48, minmax(0, 1fr));
+  gap: 1px;
+  height: 14px;
+}
+
+.room-strip i {
+  border-radius: 1px;
+  background: var(--line-soft);
+}
+
+html[data-eink] .room-strip i {
+  filter: grayscale(1) contrast(1.3);
+}

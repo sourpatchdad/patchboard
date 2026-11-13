@@ -62,7 +62,8 @@ export type WidgetType =
   | 'climate'
   | 'shades'
   | 'people'
-  | 'chores';
+  | 'chores'
+  | 'rooms';
 
 /** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
@@ -380,6 +381,7 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   climate: { name: 'Thermostat', about: "A Home Assistant thermostat: the temperature inside, what it's set to with minus and plus, and whether it's heating or cooling.", size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
   shades: { name: 'Shades', about: 'Home Assistant blinds, shades and curtains: how far open each is, and open, stop or close. Garage doors and gates show their state only.', size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
   people: { name: 'People', about: "Who's home and who's out, from Home Assistant's people, and since when.", size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  rooms: { name: 'Rooms', about: "Each room's temperature from Home Assistant, with a strip of its last day in color, blue for cool and orange for warm, so you see which room runs hot and when.", size: 'm', sizes: ANY, removable: true, multiple: true, options: {} },
   chores: { name: 'Chores', about: "Things done every so often, like watering the plants or changing a filter: the days since each was last done, amber once it's due, and Done to start the count again, from any screen, wall tablets too.", size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [choresField] } },
   countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },

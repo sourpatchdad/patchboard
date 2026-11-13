@@ -93,6 +93,22 @@ export async function haCall(entityId: string, action: HaAction, extra: Record<s
   });
 }
 
+/** The last day of these sensors' readings, from Home Assistant's own history: [time, value] per entity. */
+export async function haHistory(ids: string[]): Promise<Record<string, [number, number][]>> {
+  const since = new Date(Date.now() - 25 * 3_600_000).toISOString();
+  const rows = await getJson<{ state: string; last_changed: string }[][]>(
+    `${config.homeassistant!.url}/api/history/period/${since}?filter_entity_id=${ids.map(encodeURIComponent).join(',')}&minimal_response&no_attributes`,
+    { headers: headers() },
+  );
+  const out: Record<string, [number, number][]> = {};
+  // Home Assistant answers one list per entity, in the order asked; the first row names it.
+  rows.forEach((list, i) => {
+    const id = (list[0] as { entity_id?: string } | undefined)?.entity_id ?? ids[i];
+    out[id] = list.map((r) => [Date.parse(r.last_changed), Number(r.state)] as [number, number]).filter(([t, v]) => Number.isFinite(t) && Number.isFinite(v));
+  });
+  return out;
+}
+
 /** A to-do list's items, open first. Needs Home Assistant 2024.1 or later, for services that answer. */
 export async function haTodoItems(entityId: string): Promise<TodoItem[]> {
   const r = await getJson<{ service_response?: Record<string, { items?: { uid?: string; summary?: string; status?: string; due?: string }[] }> }>(

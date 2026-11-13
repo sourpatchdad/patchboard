@@ -19,7 +19,7 @@ import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter, frigateImage, frigateLive, LIVE_MAX } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
-import { haCall, haEntity, haEntityList, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
+import { haCall, haEntity, haEntityList, haHistory, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
 import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
@@ -49,7 +49,7 @@ import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './a
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, authProblem, envHas, withConfig } from './config.ts';
-import { type HaAction, haActionFor, haAllows } from '../shared/ha.ts';
+import { type HaAction, haActionFor, haAllows, pinnedEntities } from '../shared/ha.ts';
 import { parseChores } from '../shared/fields.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
@@ -64,7 +64,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -894,6 +894,28 @@ app.post('/api/chores/:board/:id', async (c) => {
   return c.json({ ok: true, done: mine });
 });
 
+// The last day of the sensors pinned to a Rooms widget, for its strips.
+// Asked of Home Assistant at most every five minutes for the same set.
+const roomHistory = new Map<string, { at: number; value: Promise<Record<string, [number, number][]>> }>();
+app.get('/api/ha/history', async (c) => {
+  const pinned = pinnedAnywhere();
+  const ids = [...new Set((c.req.query('ids') ?? '').split(','))].filter((id) => id.startsWith('sensor.') && pinned.has(id)).slice(0, 24);
+  if (!ids.length) return c.json({ history: {} });
+  if (config.demo) return c.json({ history: demoHaHistory(ids) });
+  if (!config.homeassistant) return c.json({ error: 'Home Assistant is not configured' }, 404);
+  const key = ids.sort().join(',');
+  const hit = roomHistory.get(key);
+  if (!hit || Date.now() - hit.at > 5 * 60_000) {
+    if (roomHistory.size > 50) roomHistory.clear();
+    roomHistory.set(key, { at: Date.now(), value: haHistory(ids).catch((err) => (roomHistory.delete(key), Promise.reject(err))) });
+  }
+  try {
+    return c.json({ history: await roomHistory.get(key)!.value });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
 // A Home Assistant to-do list pinned to a List widget: its items, then adding
 // one or ticking one off. Household devices may do both; that's the point of
 // a shopping list on the fridge.
@@ -1323,6 +1345,8 @@ app.post('/api/boards', async (c) => {
   const put = putBoard(id, v.board);
   if ('error' in put) return c.json({ error: put.error }, 400);
   recordAudit(who(c), 'board.add', id, v.board.name);
+  // Entities pinned just now show at once, not at Home Assistant's next poll.
+  if (pinnedEntities(v.board).size) void hub.pollNow('homeassistant');
   hub.emitBoards();
   return c.json({ id, board: put.board });
 });
@@ -1337,6 +1361,8 @@ app.put('/api/boards/:id', async (c) => {
   const put = putBoard(id, v.board);
   if ('error' in put) return c.json({ error: put.error }, 400);
   recordAudit(who(c), 'board.save', id, `${v.board.widgets.length} widgets`);
+  // Entities pinned just now show at once, not at Home Assistant's next poll.
+  if (pinnedEntities(v.board).size) void hub.pollNow('homeassistant');
   hub.emitBoards(id);
   // Newly pinned Home Assistant entities show up without waiting for the next poll.
   if (config.homeassistant || config.demo) void hub.pollNow('homeassistant');

@@ -30,7 +30,7 @@ import {
 import { NumberView } from './OneNumber.tsx';
 import { CarWidget } from './CarWidget.tsx';
 import { DocumentsWidget, GitWidget, ManagersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
-import { ChoresWidget, ListWidget, PeopleWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
+import { ChoresWidget, ListWidget, PeopleWidget, RoomsWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
 import { HA_WIDGETS } from '../../shared/ha.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
@@ -1052,6 +1052,8 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <PeopleWidget entities={w.config?.entities} now={now} />;
     case 'chores':
       return <ChoresWidget board={board} id={w.id} config={w.config} now={now} />;
+    case 'rooms':
+      return <RoomsWidget entities={w.config?.entities} />;
   }
 }
 
@@ -1081,6 +1083,7 @@ const ALSO: Partial<Record<WidgetType, string>> = {
   shades: 'home assistant blinds curtains covers',
   people: 'home assistant presence family who is home',
   chores: 'plants watering filter recurring days since household',
+  rooms: 'home assistant temperature sensors heatmap climate history',
   managers: 'arr lidarr readarr prowlarr bazarr music books subtitles indexers',
   documents: 'paperless scans paper',
   git: 'gitea forgejo code repositories',
@@ -1288,7 +1291,7 @@ const KINDS: [string, WidgetType[]][] = [
   ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'managers', 'books', 'photos']],
   ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'monitoring', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
   ['Files and work', ['documents', 'nextcloud', 'git']],
-  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
+  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'rooms', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
 ];
 const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
 

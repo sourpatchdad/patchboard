@@ -224,6 +224,7 @@ export function HaPicker({ value, onChange, type = 'homeassistant' }: { value: s
           {matches.length > 80 && <p className="settings-note">Showing 80 of {matches.length.toLocaleString(locale())}. Search or pick a kind to narrow it.</p>}
           {type === 'homeassistant' && <p className="settings-note">Lights, switches, fans and automations toggle; scenes and scripts run. Locks, garage doors and alarms show their state only.</p>}
           {type === 'shades' && <p className="settings-note">Blinds, shades, curtains, awnings and shutters open, stop and close. Garage doors, gates and doors show their state only.</p>}
+          {type === 'rooms' && <p className="settings-note">Pick a temperature sensor for each room. Humidity and other number sensors work too.</p>}
         </>
       )}
     </div>

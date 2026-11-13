@@ -178,7 +178,8 @@ at the thresholds in Settings, Alerts.
 Shopping list or Chores, with a box to add to it and a tap to tick an item
 off. Thermostat shows the temperature inside and sets it with minus and plus.
 Shades opens, stops and closes blinds, while garage doors and gates only show
-their state. People shows who's home. Chores needs no Home Assistant: name
+their state. People shows who's home. Rooms gives each temperature sensor a
+strip of its last day, blue when cool and orange when warm. Chores needs no Home Assistant: name
 the jobs and how often (Water the plants=7), and it counts the days since
 each, turns amber when one is due, and starts over at Done. A household
 tablet on the fridge can do all of it.

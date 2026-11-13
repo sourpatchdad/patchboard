@@ -28,7 +28,30 @@ export const HA_WIDGETS: Partial<Record<WidgetType, { domains: string[]; max: nu
   climate: { domains: ['climate'], max: 1 },
   shades: { domains: ['cover'], max: 12 },
   people: { domains: ['person'], max: 12 },
+  rooms: { domains: ['sensor'], max: 12 },
 };
+
+/** Half-hour steps across the last day: the cells of a Rooms strip. */
+export const ROOM_CELLS = 48;
+export const ROOM_CELL_MS = 30 * 60_000;
+
+/**
+ * A sensor's history in half-hour cells, oldest first: each cell the last
+ * reading at or before its end, so a quiet sensor carries its value forward.
+ * Null where there's nothing yet.
+ */
+export function roomCells(points: [number, number][], now: number): (number | null)[] {
+  const sorted = [...points].sort((a, b) => a[0] - b[0]);
+  const out: (number | null)[] = [];
+  let i = 0;
+  let last: number | null = null;
+  for (let c = 0; c < ROOM_CELLS; c++) {
+    const end = now - (ROOM_CELLS - 1 - c) * ROOM_CELL_MS;
+    while (i < sorted.length && sorted[i][0] <= end) last = sorted[i++][1];
+    out.push(last);
+  }
+  return out;
+}
 
 /**
  * Whether this action is allowed on this entity, beyond a tap: a thermostat's

@@ -512,6 +512,9 @@ const HA_DEMO: HaEntity[] = [
   { id: 'scene.movie_night', name: 'Movie night', state: 'scening', changedAt: Date.now() - D },
   { id: 'script.goodnight', name: 'Goodnight', state: 'off', changedAt: Date.now() - 20 * H },
   { id: 'sensor.living_room_temperature', name: 'Living room', state: '71.2', unit: '°F', deviceClass: 'temperature', changedAt: Date.now() - 5 * 60_000 },
+  { id: 'sensor.outside_temperature', name: 'Outside', state: '67.1', unit: '°F', deviceClass: 'temperature', changedAt: Date.now() - 4 * 60_000 },
+  { id: 'sensor.office_temperature', name: 'Office', state: '75.4', unit: '°F', deviceClass: 'temperature', changedAt: Date.now() - 3 * 60_000 },
+  { id: 'sensor.kid_room_temperature', name: 'Kid room', state: '71.4', unit: '°F', deviceClass: 'temperature', changedAt: Date.now() - 6 * 60_000 },
   { id: 'sensor.outdoor_humidity', name: 'Outside humidity', state: '58', unit: '%', deviceClass: 'humidity', changedAt: Date.now() - 9 * 60_000 },
   { id: 'sensor.house_power', name: 'House power', state: '1.84', unit: 'kW', deviceClass: 'power', changedAt: Date.now() - 60_000 },
   { id: 'sensor.washer_status', name: 'Washer', state: 'Rinse', changedAt: Date.now() - 22 * 60_000 },
@@ -544,6 +547,24 @@ export function demoHaAction(id: string, action: string, extra: Record<string, n
     e.state = action === 'open' ? 'open' : 'closed';
   }
   e.changedAt = Date.now();
+}
+
+/** A day of each room: outside swings with the sun, the office warms through the workday. */
+export function demoHaHistory(ids: string[]): Record<string, [number, number][]> {
+  const now = Date.now();
+  const out: Record<string, [number, number][]> = {};
+  for (const id of ids) {
+    const base = Number(haState.get(id)?.state ?? 70);
+    const points: [number, number][] = [];
+    for (let t = now - 24 * H; t <= now; t += 15 * 60_000) {
+      const hour = new Date(t).getHours() + new Date(t).getMinutes() / 60;
+      const sun = Math.sin(((hour - 9) / 24) * 2 * Math.PI);
+      const swing = id.includes('outside') ? 9 * sun : id.includes('office') ? (hour >= 8 && hour <= 18 ? 3 : -1) : 1.5 * sun;
+      points.push([t, Math.round((base + swing - (id.includes('outside') ? 3 : 0) + (Math.random() - 0.5) * 0.6) * 10) / 10]);
+    }
+    out[id] = points;
+  }
+  return out;
 }
 
 const todos = new Map<string, TodoItem[]>([

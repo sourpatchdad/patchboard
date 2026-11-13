@@ -106,3 +106,15 @@ test('chores keep a name and how often, and drop repeats and stray characters', 
     { name: 'Odd', every: 2 },
   ]);
 });
+
+test('a room strip is 48 half-hour cells, each the last reading by its end, carried forward', async () => {
+  const { roomCells, ROOM_CELL_MS } = await import('../../shared/ha.ts');
+  const now = 1_000_000_000_000;
+  const cells = roomCells([[now - 46.5 * ROOM_CELL_MS, 70], [now - 10 * ROOM_CELL_MS, 72], [now - 9.9 * ROOM_CELL_MS, 73]], now);
+  assert.equal(cells.length, 48);
+  assert.equal(cells[0], null, 'nothing before the first reading');
+  assert.equal(cells[1], 70);
+  assert.equal(cells[37], 72);
+  assert.equal(cells[38], 73);
+  assert.equal(cells[47], 73, 'a quiet sensor carries its last reading');
+});

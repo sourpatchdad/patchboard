@@ -40,6 +40,7 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
     climate: has('homeassistant'),
     shades: has('homeassistant'),
     people: has('homeassistant'),
+    rooms: has('homeassistant'),
   };
 }
 
@@ -77,6 +78,7 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   climate: { label: 'Home Assistant', setup: 'homeassistant' },
   shades: { label: 'Home Assistant', setup: 'homeassistant' },
   people: { label: 'Home Assistant', setup: 'homeassistant' },
+  rooms: { label: 'Home Assistant', setup: 'homeassistant' },
 };
 
 /** Where to set up what a widget needs. */

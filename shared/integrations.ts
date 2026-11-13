@@ -177,7 +177,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'homeassistant',
     name: 'Home Assistant',
-    adds: 'A widget of the lights, switches, sensors and scenes you pick: tap a light to toggle it or a scene to run it. List keeps a to-do list such as Shopping list, Thermostat sets the temperature, Shades opens and closes blinds, and People shows who is home. Locks, garage doors and alarms show their state only.',
+    adds: 'A widget of the lights, switches, sensors and scenes you pick: tap a light to toggle it or a scene to run it. List keeps a to-do list such as Shopping list, Thermostat sets the temperature, Shades opens and closes blinds, People shows who is home, and Rooms shows each room’s last day of temperature. Locks, garage doors and alarms show their state only.',
     env: ['HA_URL', 'HA_TOKEN'],
     where: 'Home Assistant: your profile, Security, Long-lived access tokens, Create token. A token for a non-admin user limits what Patchboard can reach.',
     source: true,

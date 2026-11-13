@@ -14,6 +14,9 @@
     close. Garage doors, gates and doors stay read-only: the server checks the
     cover's class with Home Assistant before moving anything.
   - **People:** who's home and who's out, and since when.
+  - **Rooms:** each room's temperature with a strip of its last day in
+    half-hour cells, blue for cool and orange for warm, from Home Assistant's
+    own history.
 - **Chores:** name the jobs and how often (Water the plants=7). The widget
   counts the days since each, turns amber when one is due, and starts over at
   Done, with a moment to undo. No Home Assistant needed.
