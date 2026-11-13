@@ -3,8 +3,9 @@
 //
 // The mark is a P on a 512 grid: an open bowl in the tile's ink, and a blue
 // tab under its top bar with a slanted foot. Dark and light share the
-// geometry; only the tile and the ink change. Mono is for e-ink: black on
-// white, the tab in the ink too, since a gray screen shows no blue. The whole
+// geometry; only the tile and the ink change. Mono is for e-ink and comes in
+// two: black on white for a light phone, white on black for a dark one, the
+// tab a quiet gray instead of blue. The whole
 // mark sits inside the circle Android crops maskable icons to, so one file
 // serves both purposes.
 
@@ -17,7 +18,8 @@ const BLUE = '#3b82f6';
 const TILES = {
   dark: { tile: '#0b0c0e', ink: '#f1e2cc' },
   light: { tile: '#f7f7f8', ink: '#20252d' },
-  mono: { tile: '#ffffff', ink: '#000000', tab: '#000000' },
+  mono: { tile: '#ffffff', ink: '#000000', tab: '#b4b4b4' },
+  'mono-dark': { tile: '#000000', ink: '#ffffff', tab: '#6e6e6e' },
 };
 
 /** The mark on a tile. `scale` grows it about the center; `radius` rounds the tile. */
@@ -34,8 +36,10 @@ const jobs = [
     { name: `icon-${size}.png`, svg: iconSvg('dark'), size },
     { name: `icon-light-${size}.png`, svg: iconSvg('light'), size },
     { name: `icon-mono-${size}.png`, svg: iconSvg('mono'), size },
+    { name: `icon-mono-dark-${size}.png`, svg: iconSvg('mono-dark'), size },
   ]),
   { name: 'favicon-mono.png', svg: iconSvg('mono', { scale: 1.3, radius: 96 }), size: 64 },
+  { name: 'favicon-mono-dark.png', svg: iconSvg('mono-dark', { scale: 1.3, radius: 96 }), size: 64 },
   // The tab icon and the sizes inside favicon.ico: a rounded tile with the
   // mark grown, so the P still reads at 16 pixels on light and dark tab bars.
   { name: 'favicon.png', svg: iconSvg('dark', { scale: 1.3, radius: 96 }), size: 64 },

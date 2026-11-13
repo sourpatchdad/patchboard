@@ -190,7 +190,9 @@ states stay quiet; recovery actions stay visible.
 
 The app icon is a P: an open bowl in the tile's ink and a blue tab under its
 top bar. Dark (ivory on near-black), light (slate on near-white) and black
-and white (black on white, the tab black too, for e-ink) share the geometry. The tab uses the same mark in all states, adding an amber dot for
+and white (for e-ink: no blue, the tab a quiet gray) share the geometry.
+Black and white comes in two: black on white for a phone in light mode, white
+on black for one in dark mode, so a darkened home screen never hides the P. The tab uses the same mark in all states, adding an amber dot for
 warnings or a red dot for critical alerts. The title count and installed-app
 badge also report attention counts.
 

@@ -7,8 +7,10 @@
   (1.13.0, edge 4f2c1a9), so Settings shows exactly which build runs and wall
   tablets reload onto each new one.
 - **A black-and-white app icon:** with E-ink on, the home-screen icon, the
-  install manifest, the tab icon and the phone's status bar go black on white,
-  from the first paint. Black and white is also an App icon choice of its own.
+  install manifest, the tab icon and the phone's status bar go black and white,
+  from the first paint. The icon follows the phone: a black P on white in light
+  mode, a white P on black in dark mode, each with a gray leg. Black and white
+  is also an App icon choice of its own.
   A phone keeps the icon it was added with, so remove and add it again to
   switch.
 - **E-ink, finished:** playback bars lose their brand colors for ink, the top

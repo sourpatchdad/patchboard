@@ -19,11 +19,13 @@
         try { v = JSON.parse(localStorage.getItem('pb-vars') || 'null'); } catch (e) {}
         var light = matchMedia('(prefers-color-scheme: light)').matches;
         // The app icon is dark unless this device picked another (Settings, Look).
-        // E-ink, or Black and white picked, gets the mono icon.
+        // E-ink, or Black and white picked, gets the mono icon, white on black
+        // when the phone is in dark mode.
         function icons(choice, scheme) {
           var fixed = choice === 'dark' || choice === 'light' || choice === 'mono', k = fixed ? choice : scheme, q = function (s) { return document.querySelector(s); };
-          q('link[rel="apple-touch-icon"]').href = k === 'mono' ? '/icon-mono-180.png' : k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
-          q('link[rel="manifest"]').href = k === 'mono' ? '/manifest-mono.webmanifest' : k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
+          if (k === 'mono' && !light) k = 'mono-dark';
+          q('link[rel="apple-touch-icon"]').href = k.indexOf('mono') === 0 ? '/icon-' + k + '-180.png' : k === 'light' ? '/icon-light-180.png' : '/icon-180.png';
+          q('link[rel="manifest"]').href = k.indexOf('mono') === 0 ? '/manifest-' + k + '.webmanifest' : k === 'light' ? '/manifest-light.webmanifest' : '/manifest.webmanifest';
         }
         // An installed iPhone app gets a solid status bar in the mode's color.
         // A translucent one lets iOS blur the page under the clock.

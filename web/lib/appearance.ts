@@ -214,8 +214,12 @@ onEink(() => apply(current));
  * logic runs in index.html before the bundle loads.
  */
 export function iconFiles(choice: AppIcon, scheme: 'dark' | 'light', eink = false) {
-  // E-ink, or a device that picked it: black on white, no blue.
-  if (eink || choice === 'mono') return { favicon: '/favicon-mono.png', touch: '/icon-mono-180.png', manifest: '/manifest-mono.webmanifest' };
+  // E-ink, or a device that picked it: no blue, and black on white or white
+  // on black by the phone's own mode, since e-ink keeps the page on paper.
+  if (eink || choice === 'mono') {
+    const m = (media ? media.matches : true) ? 'mono' : 'mono-dark';
+    return { favicon: `/favicon-${m}.png`, touch: `/icon-${m}-180.png`, manifest: `/manifest-${m}.webmanifest` };
+  }
   const fixed = choice === 'dark' || choice === 'light';
   const v = fixed ? choice : scheme;
   return {
@@ -306,7 +310,7 @@ function applyIcon(choice: AppIcon, scheme: 'dark' | 'light', eink = false): voi
 }
 
 media?.addEventListener('change', () => {
-  if (current.scheme === 'auto') apply(current);
+  if (current.scheme === 'auto' || current.eink || current.appIcon === 'mono' || einkOn()) apply(current);
 });
 
 let pushTimer: ReturnType<typeof setTimeout> | undefined;
