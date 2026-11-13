@@ -19,6 +19,10 @@ RUN npm ci --omit=dev --no-audit --no-fund
 # reading Docker through its socket works the same. Build it with
 # --target slim, or pull the -slim tags.
 FROM node:26-alpine AS slim
+# Edge and dev images pass "edge.<commit>" or "dev.<commit>", so the version
+# reads 1.13.0+edge.4f2c1a9. Release images leave it empty.
+ARG PATCHBOARD_BUILD=""
+ENV PATCHBOARD_BUILD=${PATCHBOARD_BUILD}
 LABEL org.opencontainers.image.title="Patchboard" \
       org.opencontainers.image.description="A control center and start page for a home server." \
       org.opencontainers.image.licenses="AGPL-3.0-only" \

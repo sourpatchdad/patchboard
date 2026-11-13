@@ -2,6 +2,7 @@
 // can update itself, the button that does it. Loaded only when opened, so
 // the Markdown renderer stays out of the first page load.
 
+import { baseVersion, showVersion } from '../../shared/version.ts';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import type { SelfRelease } from '../../shared/types.ts';
@@ -44,8 +45,9 @@ export default function WhatsNew({
   // An exact version tag never moves, so the newer release needs a new tag, not a pull.
   const pinned = /^\d+\.\d+\.\d+(-slim)?$/.test(tag);
   const canUpdate = !snap!.readOnly && !!me.container && !!snap!.features?.includes('updates');
-  const shown = newer.length ? newer : releases.filter((r) => r.version === version);
-  const title = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : `What's new in v${version}`;
+  // An edge build shows the notes of the release it grew from.
+  const shown = newer.length ? newer : releases.filter((r) => r.version === baseVersion(version));
+  const title = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : `What's new in v${baseVersion(version)}`;
 
   return (
     <div className="palette-backdrop" onClick={onClose}>
@@ -57,7 +59,7 @@ export default function WhatsNew({
           </button>
         </header>
         <p className="settings-note">
-          You're on v{version}
+          You're on v{showVersion(version)}
           {tag ? `, from the ${tag} tag` : ''}.
         </p>
         <div className="whats-new-body">

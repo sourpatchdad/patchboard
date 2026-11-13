@@ -5,7 +5,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react';
 import type { SelfRelease } from '../../shared/types.ts';
-import { compareVersions } from '../../shared/version.ts';
+import { compareVersions, showVersion } from '../../shared/version.ts';
 import { useJson } from '../lib/api.ts';
 import { useStore } from '../lib/store.tsx';
 
@@ -50,11 +50,11 @@ export function VersionLine() {
   const newer = releases.filter((r) => compareVersions(r.version, version) > 0);
   const newImage = !!(me.container && snap.updates[me.container]);
   const fresh = !!seen && compareVersions(version, seen) > 0;
-  const label = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : fresh ? `What's new in v${version}` : `Patchboard v${version}`;
+  const label = newer.length ? `Update to v${newer[0].version}` : newImage ? 'A newer image is out' : fresh ? `What's new in v${showVersion(version)}` : `Patchboard v${showVersion(version)}`;
 
   return (
     <>
-      <button type="button" className={`text-button version-line ${newer.length || newImage || fresh ? 'is-news' : ''}`} aria-haspopup="dialog" aria-label={newer.length || newImage ? `${label}: what's new` : `Patchboard v${version}: what's new`} onClick={() => setOpen(true)}>
+      <button type="button" className={`text-button version-line ${newer.length || newImage || fresh ? 'is-news' : ''}`} aria-haspopup="dialog" aria-label={newer.length || newImage ? `${label}: what's new` : `Patchboard v${showVersion(version)}: what's new`} onClick={() => setOpen(true)}>
         {label}
       </button>
       {open && (

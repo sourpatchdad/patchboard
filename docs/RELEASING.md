@@ -5,7 +5,7 @@
 | Name | What it is | Image |
 |---|---|---|
 | `dev` | Where work lands. Features and fixes go here first. | `dev`, and `dev-<sha>` per commit |
-| `main` | What the next release will be. `dev` merges in when a batch is ready. | `edge`, and `edge-<sha>` per commit |
+| `main` | The beta: what the next release will be, running on the maintainer's own server before it ships. | `edge`, and `edge-<sha>` per commit |
 | `v1.2.0` | A tag on `main`: one released version, never moved or deleted. | `1.2.0`, `1.2`, `1`, `latest`, and the same with `-slim` (`latest-slim`) |
 | `v1.2.0-rc.1` | A pre-release tag, for a change that needs testing on real installs first. | `1.2.0-rc.1` only |
 | GitHub Release | The page for a tag, with that version's CHANGELOG section. The release workflow writes it. | |
@@ -24,7 +24,9 @@ never pruned.
 - `1`: every 1.x release, never a breaking 2.0.
 - `1.2`: fixes to 1.2 only.
 - `1.2.0`: exactly that build, for rollbacks and reproducible setups.
-- `edge`: the next release, before it ships.
+- `edge`: the beta. Every change on `main`, run for about a week on a real
+  server before it's tagged. It updates often, and a change can land here
+  before it's polished.
 - `dev`: work in progress. It can break.
 
 Each release also comes as a slim image: add `-slim` to any tag above
@@ -32,6 +34,18 @@ Each release also comes as a slim image: add `-slim` to any tag above
 so updating a container from Patchboard is off. Everything else works the
 same. Pick it for a read-only install or a small disk. `edge` and `dev`
 have no slim build.
+
+## Releases come in batches
+
+Changes land on `main` and run as `edge` for about a week. A release then
+tags what has been running, every five to seven days, with the week's
+changes grouped in one set of notes. Nothing reaches `latest` that hasn't run
+on a real server first.
+
+Each `edge` and `dev` image carries the commit it was built from, so its
+version reads `1.13.0+edge.4f2c1a9` and Settings shows "1.13.0, edge
+4f2c1a9". Wall tablets reload onto each new build as they do onto a release.
+Release images are the plain version.
 
 ## Day to day
 

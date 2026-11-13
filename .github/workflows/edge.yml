@@ -1,8 +1,10 @@
 name: Edge
 
-# Unreleased images, for testing before a release. A push to dev publishes
-# :dev (and dev-<sha>); a push to main publishes :edge (and edge-<sha>).
-# latest only moves on a version tag (release.yml).
+# Unreleased images. :edge is the beta: every change on main, run for a week
+# before it's tagged. :dev is work in progress. A push to dev publishes :dev
+# (and dev-<sha>); a push to main publishes :edge (and edge-<sha>). latest
+# only moves on a version tag (release.yml). Each image carries its commit,
+# so its version reads 1.13.0+edge.4f2c1a9.
 
 on:
   push:
@@ -44,5 +46,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: PATCHBOARD_BUILD=${{ github.ref_name == 'main' && 'edge' || 'dev' }}.${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

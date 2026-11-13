@@ -128,3 +128,18 @@ test('BitAxe: AxeOS fields become a miner, and missing ones stay missing', async
   assert.equal(bare.tempC, undefined);
   assert.equal(bare.hashGh, 0);
 });
+
+test('an edge or dev build carries its commit; a release is the plain version', async () => {
+  const { buildSuffix } = await import('../hub.ts');
+  const { baseVersion, compareVersions, showVersion } = await import('../../shared/version.ts');
+  assert.equal(buildSuffix('edge.4f2c1a9e0b77d1c2'), '+edge.4f2c1a9');
+  assert.equal(buildSuffix('dev.abcdef1'), '+dev.abcdef1');
+  assert.equal(buildSuffix(''), '');
+  assert.equal(buildSuffix('latest; rm -rf /'), '', 'nothing odd gets into the version');
+  assert.equal(showVersion('1.13.0+edge.4f2c1a9'), '1.13.0, edge 4f2c1a9');
+  assert.equal(showVersion('1.13.0'), '1.13.0');
+  assert.equal(baseVersion('v1.13.0+edge.4f2c1a9'), '1.13.0');
+  // An edge build of 1.13 is not behind 1.13.0, and 1.14.0 is newer than it.
+  assert.equal(compareVersions('1.13.0', '1.13.0+edge.4f2c1a9'), 0);
+  assert.equal(compareVersions('1.14.0', '1.13.0+edge.4f2c1a9'), 1);
+});

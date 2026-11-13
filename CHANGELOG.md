@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Edge is the beta:** releases now come about weekly, and `edge` carries
+  every change in between. An edge image's version names its commit
+  (1.13.0, edge 4f2c1a9), so Settings shows exactly which build runs and wall
+  tablets reload onto each new one.
+
 ## 1.13.0 (2026-11-12)
 
 - **The house, from Home Assistant:** five widgets beside the general one.

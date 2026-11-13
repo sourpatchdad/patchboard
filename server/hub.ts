@@ -27,13 +27,27 @@ const CHANGE_WINDOW = 48 * 3_600_000;
 /** Always on: these keep their loops when integrations change. */
 const CORE = new Set<SourceId>(['docker', 'stats', 'system', 'checks']);
 
+/**
+ * The version, and for an edge or dev image the commit it was built from:
+ * 1.13.0+edge.4f2c1a9. Release images are the plain version. Between releases
+ * every edge build is a new version, so wall devices reload onto it and
+ * Settings says exactly which build runs.
+ */
 export const APP_VERSION: string = (() => {
+  let base = 'dev';
   try {
-    return (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
+    base = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
   } catch {
-    return 'dev';
+    // Run from a checkout without its package.json: just "dev".
   }
+  return base + buildSuffix(process.env.PATCHBOARD_BUILD);
 })();
+
+/** "edge.4f2c1a9e…" from the image build becomes "+edge.4f2c1a9"; anything else, nothing. */
+export function buildSuffix(build: string | undefined): string {
+  const m = /^(edge|dev)\.([0-9a-f]{7,40})$/.exec(build ?? '');
+  return m ? `+${m[1]}.${m[2].slice(0, 7)}` : '';
+}
 let selfContainer: string | null = null;
 void whoAmI().then((n) => (selfContainer = n));
 
