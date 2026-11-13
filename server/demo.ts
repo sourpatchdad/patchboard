@@ -47,6 +47,7 @@ import type {
   DownloadClientId,
   FeedsResponse,
   HaEntity,
+  TodoItem,
   HomeAssistantData,
   MediaServerData,
   TautulliData,
@@ -518,17 +519,54 @@ const HA_DEMO: HaEntity[] = [
   { id: 'binary_sensor.back_door', name: 'Back door', state: 'on', deviceClass: 'door', changedAt: Date.now() - 6 * 60_000 },
   { id: 'lock.front_door', name: 'Front door lock', state: 'locked', changedAt: Date.now() - 2 * H },
   { id: 'cover.garage_door', name: 'Garage door', state: 'closed', deviceClass: 'garage', changedAt: Date.now() - 5 * H },
+  { id: 'cover.living_room_blinds', name: 'Living room blinds', state: 'open', deviceClass: 'blind', changedAt: Date.now() - 3 * H, attrs: { position: 83 } },
+  { id: 'cover.office_shade', name: 'Office shade', state: 'open', deviceClass: 'shade', changedAt: Date.now() - 5 * H, attrs: { position: 23 } },
+  { id: 'cover.bedroom_curtains', name: 'Bedroom curtains', state: 'closed', deviceClass: 'curtain', changedAt: Date.now() - 9 * H, attrs: { position: 0 } },
+  { id: 'climate.thermostat', name: 'Thermostat', state: 'cool', changedAt: Date.now() - 2 * H, attrs: { current: 72, target: 73, min: 50, max: 90, step: 1, action: 'idle' } },
   { id: 'person.sam', name: 'Sam', state: 'home', changedAt: Date.now() - 7 * H },
+  { id: 'person.alex', name: 'Alex', state: 'home', changedAt: Date.now() - 3 * H },
+  { id: 'person.jo', name: 'Jo', state: 'School', changedAt: Date.now() - 5 * H },
+  { id: 'person.riley', name: 'Riley', state: 'not_home', changedAt: Date.now() - 40 * 60_000 },
+  { id: 'todo.shopping_list', name: 'Shopping list', state: '5', changedAt: Date.now() - 30 * 60_000 },
+  { id: 'todo.chores', name: 'Chores', state: '3', changedAt: Date.now() - 2 * H },
 ];
 const haState = new Map(HA_DEMO.map((e) => [e.id, { ...e }]));
 
 export const demoHaList = (): HaEntity[] => [...haState.values()];
 
-export function demoHaAction(id: string, action: 'toggle' | 'run'): void {
+export function demoHaAction(id: string, action: string, extra: Record<string, number> = {}): void {
   const e = haState.get(id);
   if (!e) throw new Error('No such entity');
   if (action === 'toggle') e.state = e.state === 'on' ? 'off' : 'on';
+  if (action === 'set' && extra.temperature != null) e.attrs = { ...e.attrs, target: extra.temperature };
+  if (action === 'open' || action === 'close') {
+    e.attrs = { ...e.attrs, position: action === 'open' ? 100 : 0 };
+    e.state = action === 'open' ? 'open' : 'closed';
+  }
   e.changedAt = Date.now();
+}
+
+const todos = new Map<string, TodoItem[]>([
+  [
+    'todo.shopping_list',
+    ['Milk', 'Eggs', 'Coffee beans', 'Bananas', 'Dish soap'].map((summary, i) => ({ uid: `s${i}`, summary, done: false })).concat([{ uid: 's9', summary: 'Bread', done: true }]),
+  ],
+  ['todo.chores', ['Take out the recycling', 'Water the plants', 'Change the furnace filter'].map((summary, i) => ({ uid: `c${i}`, summary, done: false }))],
+]);
+
+export const demoTodo = (id: string): TodoItem[] => todos.get(id) ?? [];
+
+export function demoTodoChange(id: string, change: { add?: string; done?: string; undo?: string }): void {
+  const list = todos.get(id) ?? [];
+  if (change.add) list.unshift({ uid: `n${Date.now()}`, summary: change.add, done: false });
+  for (const i of list) {
+    if (i.uid === change.done) i.done = true;
+    if (i.uid === change.undo) i.done = false;
+  }
+  todos.set(id, list);
+  // Home Assistant's own count of what's left, as the real entity reports it.
+  const e = haState.get(id);
+  if (e) e.state = String(list.filter((i) => !i.done).length);
 }
 
 /** The demo pins the board's Home Assistant entities, like the real adapter. */

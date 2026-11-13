@@ -4,7 +4,8 @@
 
 import { HoldButton } from '../components/Hold.tsx';
 import { useEffect, useMemo, useState } from 'react';
-import { haActionFor, HA_MAX_PINNED, parseEntities } from '../../shared/ha.ts';
+import { haActionFor, HA_WIDGETS, parseEntities } from '../../shared/ha.ts';
+import type { WidgetType } from '../../shared/board.ts';
 import { NAS_SOURCES } from '../../shared/types.ts';
 import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, SyncDevice, SyncFolder, SyncthingData, HomeAssistantData, KumaMonitor, KumaState, SourceState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
@@ -160,18 +161,19 @@ const HA_KINDS: [string, string][] = [
 ];
 
 /** The widget's settings: search every entity and tick the ones to show. */
-export function HaPicker({ value, onChange }: { value: string | undefined; onChange: (v: string) => void }) {
+export function HaPicker({ value, onChange, type = 'homeassistant' }: { value: string | undefined; onChange: (v: string) => void; type?: WidgetType }) {
+  const rule = HA_WIDGETS[type] ?? HA_WIDGETS.homeassistant!;
   const [all, setAll] = useState<HaEntity[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [kind, setKind] = useState('');
-  const picked = parseEntities(value);
+  const picked = parseEntities(value, type);
   useEffect(() => {
     fetch('/api/ha/entities')
       .then(async (r) => {
         const body = (await r.json()) as { entities?: HaEntity[]; error?: string };
         if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`);
-        setAll(body.entities ?? []);
+        setAll((body.entities ?? []).filter((e) => !rule.domains.length || rule.domains.includes(e.id.split('.')[0])));
       })
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -186,11 +188,12 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
     const mine = picked.map((id) => (all ?? []).find((e) => e.id === id)).filter((e): e is HaEntity => !!e);
     return [...mine, ...matches.filter((e) => !picked.includes(e.id)).slice(0, 80)];
   }, [all, matches, value]);
-  const toggle = (id: string) => onChange((picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id].slice(0, HA_MAX_PINNED)).join(','));
+  // A widget that takes one entity swaps it; the others add up to their limit.
+  const toggle = (id: string) => onChange((picked.includes(id) ? picked.filter((x) => x !== id) : rule.max === 1 ? [id] : [...picked, id].slice(0, rule.max)).join(','));
   return (
     <div className="ha-picker">
       <span>
-        Entities, {picked.length} of {HA_MAX_PINNED}
+        {rule.max === 1 ? 'Pick one' : `Entities, ${picked.length} of ${rule.max}`}
       </span>
       {error ? (
         <p className="settings-note crit-text">{error}</p>
@@ -219,7 +222,8 @@ export function HaPicker({ value, onChange }: { value: string | undefined; onCha
             ))}
           </ul>
           {matches.length > 80 && <p className="settings-note">Showing 80 of {matches.length.toLocaleString(locale())}. Search or pick a kind to narrow it.</p>}
-          <p className="settings-note">Lights, switches, fans and automations toggle; scenes and scripts run. Locks, garage doors and alarms show their state only.</p>
+          {type === 'homeassistant' && <p className="settings-note">Lights, switches, fans and automations toggle; scenes and scripts run. Locks, garage doors and alarms show their state only.</p>}
+          {type === 'shades' && <p className="settings-note">Blinds, shades, curtains, awnings and shutters open, stop and close. Garage doors, gates and doors show their state only.</p>}
         </>
       )}
     </div>

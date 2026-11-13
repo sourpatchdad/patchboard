@@ -170,6 +170,23 @@ try {
     await page.evaluate(async (id) => fetch(`/api/household/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), device);
     for (const id of Object.values(made)) await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);
   }
+  // The family's widgets: a Home Assistant list, thermostat, shades and people, and chores.
+  {
+    const board = { name: 'Family', columns: 4, widgets: [
+      { id: 'attention', type: 'attention', size: 'm' },
+      { id: 'list', type: 'halist', size: 's', config: { entities: 'todo.shopping_list' } },
+      { id: 'thermo', type: 'climate', size: 's', config: { entities: 'climate.thermostat' } },
+      { id: 'shades', type: 'shades', size: 's', config: { entities: 'cover.living_room_blinds,cover.office_shade,cover.garage_door' } },
+      { id: 'people', type: 'people', size: 's', config: { entities: 'person.sam,person.alex,person.jo,person.riley' } },
+      { id: 'chores', type: 'chores', size: 's', config: { chores: ['Water the plants=7', 'Change the furnace filter=90', 'Clean the gutters'].join(String.fromCharCode(10)) } },
+    ] };
+    const id = await page.evaluate(async (body) => (await (await fetch('/api/boards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify(body) })).json()).id, board);
+    await page.evaluate(async (id) => fetch(`/api/chores/${id}/chores`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Patchboard': 'action' }, body: JSON.stringify({ name: 'Water the plants', at: Date.now() - 9 * 86_400_000 }) }), id);
+    await go(`/b/${id}`);
+    await settle(page, 2500);
+    await shoot(page, 'family');
+    await page.evaluate(async (id) => fetch(`/api/boards/${id}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } }), id);
+  }
   // One number: a board of them, and one widget alone on a 480 by 320 Pi screen.
   {
     const n = (id, type, number, extra = {}) => ({ id, type, size: 's', config: { view: 'number', ...(number ? { number } : {}), ...extra } });

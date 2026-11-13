@@ -275,5 +275,12 @@
  "of {n} on today": "de {n} conectados hoy",
  "Open Paperless": "Abrir Paperless",
  "queued or missing subtitles": "en cola o subtítulos que faltan",
- "repositories": "repositorios"
+ "repositories": "repositorios",
+ "{name} set to": "{name}, programado a",
+ "Chores": "Tareas",
+ "No one home": "No hay nadie en casa",
+ "People": "Personas",
+ "Shades": "Persianas",
+ "Thermostat": "Termostato",
+ "to go on {name}": "pendientes en {name}"
 }

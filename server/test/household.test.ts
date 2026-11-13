@@ -127,3 +127,16 @@ test('a look set from Settings keeps only fields it knows, and a new link retire
   assert.equal((await app.request(`/join/${made.token}`)).status, 404, 'the old link no longer joins');
   assert.equal((await app.request(`/join/${fresh}`)).status, 302);
 });
+
+test('a household device may keep a list, set a thermostat, move a shade and mark a chore done, and nothing else new', () => {
+  const allows = h.householdAllows;
+  assert.equal(allows('GET', '/api/ha/todo/todo.shopping_list'), true);
+  assert.equal(allows('POST', '/api/ha/todo/todo.shopping_list'), true);
+  assert.equal(allows('POST', '/api/ha/climate.living/set'), true);
+  assert.equal(allows('POST', '/api/ha/cover.blinds/open'), true);
+  assert.equal(allows('POST', '/api/chores/home/chores'), true);
+  assert.equal(allows('GET', '/api/chores/home/chores'), true);
+  assert.equal(allows('POST', '/api/ha/lock.front/unlock'), false);
+  assert.equal(allows('PUT', '/api/ha/todo/todo.shopping_list'), false);
+  assert.equal(allows('POST', '/api/chores/home/chores/extra'), false);
+});

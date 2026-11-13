@@ -36,6 +36,10 @@ export function widgetReady(snap: Snapshot | null | undefined): Partial<Record<W
     nextcloud: has('nextcloud'),
     git: has('gitea'),
     monitoring: has('netdata') || has('prometheus'),
+    halist: has('homeassistant'),
+    climate: has('homeassistant'),
+    shades: has('homeassistant'),
+    people: has('homeassistant'),
   };
 }
 
@@ -69,6 +73,10 @@ export const NEEDS: Partial<Record<WidgetType, { label: string; setup: string }>
   nextcloud: { label: 'Nextcloud', setup: 'nextcloud' },
   git: { label: 'Gitea or Forgejo', setup: 'gitea' },
   monitoring: { label: 'Netdata or Prometheus', setup: 'netdata' },
+  halist: { label: 'Home Assistant', setup: 'homeassistant' },
+  climate: { label: 'Home Assistant', setup: 'homeassistant' },
+  shades: { label: 'Home Assistant', setup: 'homeassistant' },
+  people: { label: 'Home Assistant', setup: 'homeassistant' },
 };
 
 /** Where to set up what a widget needs. */

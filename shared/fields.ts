@@ -163,6 +163,34 @@ export const symbolsField: WidgetField = {
   },
 };
 
+/** Chores: one per line, a name and how often in days. The name alone just counts the days since. */
+export function parseChores(raw: string | undefined): { name: string; every?: number }[] {
+  return (raw ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 20)
+    .map((l) => {
+      const at = l.lastIndexOf('=');
+      const every = at > 0 ? Number(l.slice(at + 1).trim()) : NaN;
+      const name = (at > 0 && Number.isInteger(every) ? l.slice(0, at) : l).replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 40);
+      return { name, every: Number.isInteger(every) && every >= 1 && every <= 365 ? every : undefined };
+    })
+    .filter((c, i, all) => c.name && all.findIndex((x) => x.name === c.name) === i);
+}
+
+export const choresField: WidgetField = {
+  key: 'chores',
+  label: 'Chores',
+  hint: 'One per line, with how often in days: Water the plants=7. A name alone counts the days since it was last done.',
+  placeholder: 'Water the plants=7',
+  multiline: true,
+  check: (raw) => {
+    const list = parseChores(raw);
+    return list.length ? list.map((c) => (c.every ? `${c.name}=${c.every}` : c.name)).join('\n') : null;
+  },
+};
+
 /** Countdowns: Name=2026-12-25 for a day, or Name=12-25 for the same day every year. */
 export const eventsField: WidgetField = {
   key: 'events',

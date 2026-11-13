@@ -29,6 +29,8 @@ import {
 } from '../../shared/board.ts';
 import { NumberView } from './OneNumber.tsx';
 import { DocumentsWidget, GitWidget, ManagersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
+import { ChoresWidget, ListWidget, PeopleWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
+import { HA_WIDGETS } from '../../shared/ha.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
 import { WidgetCtx } from './widget-context.ts';
@@ -1039,6 +1041,16 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
       return <GitWidget />;
     case 'monitoring':
       return <MonitoringWidget now={now} />;
+    case 'halist':
+      return <ListWidget entities={w.config?.entities} />;
+    case 'climate':
+      return <ThermostatWidget entities={w.config?.entities} />;
+    case 'shades':
+      return <ShadesWidget entities={w.config?.entities} />;
+    case 'people':
+      return <PeopleWidget entities={w.config?.entities} now={now} />;
+    case 'chores':
+      return <ChoresWidget board={board} id={w.id} config={w.config} now={now} />;
   }
 }
 
@@ -1063,6 +1075,11 @@ const ALSO: Partial<Record<WidgetType, string>> = {
   hosts: 'disks machines computers',
   now: 'playing streams watching',
   cameras: 'frigate nvr security',
+  halist: 'home assistant shopping grocery todo to-do chores checklist',
+  climate: 'home assistant thermostat heat cool temperature hvac',
+  shades: 'home assistant blinds curtains covers',
+  people: 'home assistant presence family who is home',
+  chores: 'plants watering filter recurring days since household',
   managers: 'arr lidarr readarr prowlarr bazarr music books subtitles indexers',
   documents: 'paperless scans paper',
   git: 'gitea forgejo code repositories',
@@ -1266,11 +1283,11 @@ function NewBoard({ onClose }: { onClose: () => void }) {
 
 /** Add widget sorts its list into a few kinds, so 40 widgets read as four short lists. */
 const KINDS: [string, WidgetType[]][] = [
-  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'bookmarks', 'search', 'clocks', 'weather', 'sky', 'countdown', 'markets']],
+  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'chores', 'bookmarks', 'search', 'clocks', 'weather', 'sky', 'countdown', 'markets']],
   ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'managers', 'books', 'photos']],
   ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'monitoring', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
   ['Files and work', ['documents', 'nextcloud', 'git']],
-  ['House and network', ['homeassistant', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
+  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'cameras', 'car', 'wake', 'network', 'dns', 'speed']],
 ];
 const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
 
@@ -1588,7 +1605,7 @@ function SettingsDrawer({
               </span>
             </div>
           )}
-          {w.type === 'homeassistant' && <HaPicker value={cfg.entities} onChange={(v) => set('entities', v)} />}
+          {HA_WIDGETS[w.type] && <HaPicker type={w.type} value={cfg.entities} onChange={(v) => set('entities', v)} />}
           {w.type === 'apps' && (
             <p className="settings-note">
               <Link to="/apps?arrange=1">Edit apps</Link> reorders, regroups, renames, hides and adds apps. Save this board first; Edit apps saves on its own.

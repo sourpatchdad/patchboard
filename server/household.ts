@@ -215,12 +215,17 @@ const READS = new Set([
   '/api/monitor/feed',
 ]);
 const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/markets/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/img/', '/api/live/'];
-// The one change: switching a light, switch or scene pinned to a board.
-const HA_ACTION = /^\/api\/ha\/[^/]+\/(?:toggle|run)$/;
+// The changes it may make, all to what's pinned on a board: switching a
+// light or scene, setting a thermostat, moving a shade, a list's items, and
+// marking a chore done.
+// The server checks each against the entity's own kind (shared/ha.ts).
+const HA_ACTION = /^\/api\/ha\/[^/]+\/(?:toggle|run|set|open|close|stop)$/;
+const HA_TODO = /^\/api\/ha\/todo\/[^/]+$/;
+const CHORE = /^\/api\/chores\/[^/]+\/[^/]+$/;
 
 export function householdAllows(method: string, path: string): boolean {
-  if (method === 'GET' || method === 'HEAD') return READS.has(path) || READ_PREFIXES.some((p) => path.startsWith(p));
-  return method === 'POST' && HA_ACTION.test(path);
+  if (method === 'GET' || method === 'HEAD') return READS.has(path) || READ_PREFIXES.some((p) => path.startsWith(p)) || HA_TODO.test(path) || CHORE.test(path);
+  return method === 'POST' && (HA_ACTION.test(path) || HA_TODO.test(path) || CHORE.test(path));
 }
 
 /** Refuses what a household device may not do. A cookie for a removed device is cleared. */
@@ -232,6 +237,6 @@ export function householdGuard(): MiddlewareHandler {
       return next();
     }
     if (householdAllows(c.req.method, c.req.path)) return next();
-    return c.json({ error: 'This is a household device: it can look, and switch lights and scenes, but not change the server.' }, 403);
+    return c.json({ error: 'This is a household device: it can look, switch what is pinned to a board and keep its lists, but not change the server.' }, 403);
   };
 }

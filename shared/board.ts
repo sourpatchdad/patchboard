@@ -4,8 +4,8 @@
 // board can never hold something the UI can't render.
 // Runtime code is fine here: no Node or DOM use.
 
-import { parseEntities } from './ha.ts';
-import { camerasField, engineField, eventsField, feedsField, groupsField, reposField, searchUrlField, symbolsField, type WidgetField, zonesField } from './fields.ts';
+import { HA_WIDGETS, parseEntities } from './ha.ts';
+import { camerasField, choresField, engineField, eventsField, feedsField, groupsField, reposField, searchUrlField, symbolsField, type WidgetField, zonesField } from './fields.ts';
 import { validateJsonConfig } from './jsonwidget.ts';
 
 export type WidgetType =
@@ -57,7 +57,12 @@ export type WidgetType =
   | 'documents'
   | 'nextcloud'
   | 'git'
-  | 'monitoring';
+  | 'monitoring'
+  | 'halist'
+  | 'climate'
+  | 'shades'
+  | 'people'
+  | 'chores';
 
 /** Width on a 12-column grid: a quarter, a third, a half, two thirds, the full row. */
 export type WidgetSize = 's' | 'm' | 'l' | 'w' | 'xl';
@@ -226,6 +231,12 @@ export const NUMBERS: Partial<Record<WidgetType, [string, string][]>> = {
     ['repos', 'Repositories'],
   ],
   monitoring: [['firing', 'Alerts firing']],
+  halist: [['open', 'Items on the list']],
+  climate: [
+    ['current', 'Temperature inside'],
+    ['target', 'Set to'],
+  ],
+  people: [['home', 'People home']],
 };
 
 /** The ways this widget can be shown, for its settings. */
@@ -364,6 +375,11 @@ export const WIDGET_INFO: Record<WidgetType, Info> = {
   nextcloud: { name: 'Nextcloud', about: 'Files, people on today, free space, and app updates waiting.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   git: { name: 'Git', about: 'Gitea or Forgejo: notifications waiting and how many repositories it holds.', size: 's', sizes: ANY, removable: true, multiple: false, options: {} },
   monitoring: { name: 'Monitoring alerts', about: 'Alerts firing now in Netdata or Prometheus, critical first, each linking back to where it fired.', size: 'm', sizes: ANY, removable: true, multiple: false, options: { limit: [6, 1, 20] } },
+  halist: { name: 'List', about: 'A Home Assistant to-do list, such as Shopping list or Chores: tick items off and add new ones, from any screen, wall tablets too.', size: 's', sizes: ANY, removable: true, multiple: true, options: { limit: [12, 3, 40] } },
+  climate: { name: 'Thermostat', about: "A Home Assistant thermostat: the temperature inside, what it's set to with minus and plus, and whether it's heating or cooling.", size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
+  shades: { name: 'Shades', about: 'Home Assistant blinds, shades and curtains: how far open each is, and open, stop or close. Garage doors and gates show their state only.', size: 's', sizes: ANY, removable: true, multiple: true, options: {} },
+  people: { name: 'People', about: "Who's home and who's out, from Home Assistant's people, and since when.", size: 'm', sizes: ANY, removable: true, multiple: false, options: {} },
+  chores: { name: 'Chores', about: "Things done every so often, like watering the plants or changing a filter: the days since each was last done, amber once it's due, and Done to start the count again, from any screen, wall tablets too.", size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [choresField] } },
   countdown: { name: 'Countdown', about: 'Days until the dates you name: a trip, a birthday, the holidays. A date without a year comes around every year.', size: 's', sizes: ANY, removable: true, multiple: true, options: { fields: [eventsField] } },
   rss: { name: 'Feeds', about: 'The newest posts from any RSS or Atom feeds you list, no reader app needed. Patchboard fetches them every 15 minutes.', size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 2, 30], fields: [feedsField] } },
   releases: { name: 'Releases', about: "The newest release of the GitHub projects you follow, such as the apps you run, checked every hour.", size: 'm', sizes: ANY, removable: true, multiple: true, options: { limit: [8, 1, 20], fields: [reposField] } },
@@ -452,8 +468,8 @@ export function validateBoard(input: unknown): { board: Board } | { error: strin
       if ('error' in v) return { error: v.error };
       config = { json: JSON.stringify(v.config) };
     }
-    if (w.type === 'homeassistant') {
-      const ids = parseEntities((w.config as Record<string, unknown> | undefined)?.entities as string | undefined);
+    if (HA_WIDGETS[w.type as WidgetType]) {
+      const ids = parseEntities((w.config as Record<string, unknown> | undefined)?.entities as string | undefined, w.type as WidgetType);
       if (ids.length) config = { entities: ids.join(',') };
     }
     const common = commonOptions(info, w.config, w.type as WidgetType);

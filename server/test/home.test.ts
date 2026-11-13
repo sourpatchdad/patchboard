@@ -69,3 +69,27 @@ test('Tessie: a charging car reads as charging, with time to full', () => {
   );
   assert.equal(toCar({ vin: 'V2' }), null);
 });
+
+test('a thermostat may be set and blinds moved, but never a garage door, gate or door', async () => {
+  const { haAllows, haService, parseEntities: parse } = await import('../../shared/ha.ts');
+  assert.equal(haAllows('climate.living', 'set'), true);
+  assert.deepEqual(haService('climate.living', 'set'), ['climate', 'set_temperature']);
+  for (const cls of ['blind', 'shade', 'curtain', 'awning', 'shutter']) assert.equal(haAllows('cover.x', 'open', cls), true, cls);
+  for (const cls of ['garage', 'gate', 'door', 'window', undefined]) assert.equal(haAllows('cover.x', 'open', cls), false, String(cls));
+  assert.equal(haAllows('lock.front_door', 'open', 'blind'), false);
+  assert.equal(haAllows('light.kitchen', 'set'), false);
+  // Each widget pins only its own kind, and as many as it takes.
+  assert.deepEqual(parse('light.kitchen,climate.living,climate.upstairs', 'climate'), ['climate.living']);
+  assert.deepEqual(parse('person.sam,light.porch,person.jo', 'people'), ['person.sam', 'person.jo']);
+  assert.deepEqual(parse('todo.shopping_list', 'halist'), ['todo.shopping_list']);
+});
+
+test('chores keep a name and how often, and drop repeats and stray characters', async () => {
+  const { parseChores } = await import('../../shared/fields.ts');
+  assert.deepEqual(parseChores('Water Albus=7\nClean the gutters\nWater Albus=3\nFilter=900\n\u0007Odd=2'), [
+    { name: 'Water Albus', every: 7 },
+    { name: 'Clean the gutters', every: undefined },
+    { name: 'Filter', every: undefined },
+    { name: 'Odd', every: 2 },
+  ]);
+});

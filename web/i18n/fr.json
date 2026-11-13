@@ -275,5 +275,12 @@
  "of {n} on today": "sur {n} connectés aujourd'hui",
  "Open Paperless": "Ouvrir Paperless",
  "queued or missing subtitles": "en file ou sous-titres manquants",
- "repositories": "dépôts"
+ "repositories": "dépôts",
+ "{name} set to": "{name}, réglé sur",
+ "Chores": "Corvées",
+ "No one home": "Personne à la maison",
+ "People": "Personnes",
+ "Shades": "Stores",
+ "Thermostat": "Thermostat",
+ "to go on {name}": "restants sur {name}"
 }

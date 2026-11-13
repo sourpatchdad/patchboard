@@ -8,7 +8,8 @@ import type { CSSProperties } from 'react';
 import { daysUntil, nextDay } from '../../shared/almanac.ts';
 import { NUMBERS, type Widget } from '../../shared/board.ts';
 import type { Series } from '../../shared/types.ts';
-import type { ArrData, GiteaData, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import type { ArrData, GiteaData, HomeAssistantData, MonitorData, NextcloudData, PaperlessData } from '../../shared/types.ts';
+import { parseEntities } from '../../shared/ha.ts';
 import type { CarData, DnsData, FastmailData, ImmichData, MinifluxData, NutData, PortainerData, ScrutinyData, SeerrData, SpeedData, SyncthingData, SystemData, TruenasData, UnifiData, WeatherData } from '../../shared/types.ts';
 import { Empty, Section } from '../components/ui.tsx';
 import { Spark } from '../components/Spark.tsx';
@@ -219,6 +220,22 @@ function useReading(w: Widget, now: number): Reading | null | undefined {
       const d = data<GiteaData>('gitea');
       if (!d) return d;
       return which === 'repos' ? { value: count(d.repos), sub: t('repositories') } : { value: count(d.unread), sub: t('notifications') };
+    }
+    case 'halist':
+    case 'climate':
+    case 'people': {
+      const ha = data<HomeAssistantData>('homeassistant');
+      if (!ha) return ha;
+      const ids = parseEntities(w.config?.entities, w.type);
+      const found = ids.map((id) => ha.entities.find((e) => e.id === id)).filter((e): e is NonNullable<typeof e> => !!e);
+      if (!found.length) return null;
+      if (w.type === 'halist') return { value: count(Number(found[0].state) || 0), sub: t('to go on {name}', { name: found[0].name }) };
+      if (w.type === 'people') {
+        const home = found.filter((p) => p.state === 'home');
+        return { value: `${home.length}/${found.length}`, sub: home.length ? home.map((p) => p.name).join(', ') : t('No one home') };
+      }
+      const a = found[0].attrs ?? {};
+      return which === 'target' ? (a.target == null ? null : { value: `${a.target}°`, sub: t('{name} set to', { name: found[0].name }) }) : a.current == null ? null : { value: `${Math.round(a.current)}°`, sub: found[0].name };
     }
     case 'monitoring': {
       const lists = [data<MonitorData>('netdata'), data<MonitorData>('prometheus')].filter((x) => x !== undefined);

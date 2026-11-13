@@ -11,7 +11,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Adapter } from './adapters/adapter.ts';
-import type { ArrData, ContainerDetail, ProxmoxData, QbitData } from '../shared/types.ts';
+import type { ArrData, ContainerDetail, HaEntity, ProxmoxData, QbitData } from '../shared/types.ts';
 import { cleanBrand } from '../shared/brand.ts';
 import { radarrAdapter, sonarrAdapter, arrControl, type ArrControl } from './adapters/arr.ts';
 import { type ContainerAction, containerAction, dockerAdapter, followLogs, inspectContainer, statsAdapter } from './adapters/docker.ts';
@@ -19,7 +19,7 @@ import { fastmailAdapter } from './adapters/fastmail.ts';
 import { frigateAdapter, frigateImage, frigateLive, LIVE_MAX } from './adapters/frigate.ts';
 import { listEntries, markAllRead, markRead, minifluxAdapter } from './adapters/miniflux.ts';
 import { qbitClient } from './adapters/qbit.ts';
-import { haCall, haEntityList, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
+import { haCall, haEntity, haEntityList, haTodoChange, haTodoItems, homeAssistantAdapter, pinnedAnywhere } from './adapters/homeassistant.ts';
 import { boardList, exportExtras, getBoard, importExtras, putBoard, removeBoard, saveExtras, saveHome, sealSavedBoards } from './boards.ts';
 import { tessieAdapter } from './adapters/tessie.ts';
 import { uptimeKumaAdapter } from './adapters/uptimekuma.ts';
@@ -49,7 +49,8 @@ import { adguardClient, type DnsControl, PAUSE_MINUTES, piholeClient } from './a
 import { sendWake } from './wake.ts';
 import { adoptEnvironment, candidate, checkThresholds, describeThresholds, saveThresholds, savedThresholds, checkValues, clearIntegration, describeSetup, loadSavedSettings, missing, saveValues, setupIntegration } from './setup.ts';
 import { authLocked, authProblem, envHas, withConfig } from './config.ts';
-import { haActionFor } from '../shared/ha.ts';
+import { type HaAction, haActionFor, haAllows } from '../shared/ha.ts';
+import { parseChores } from '../shared/fields.ts';
 import { systemAdapter } from './adapters/system.ts';
 import { tautulliAdapter, tautulliImage } from './adapters/tautulli.ts';
 import { mediaImage, mediaServerAdapter } from './adapters/mediaserver.ts';
@@ -63,7 +64,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
+import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoSeerrAct, demoItemControl, demoAltSpeed, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
 import { runbookFor } from './notes.ts';
@@ -863,23 +864,110 @@ app.get('/api/ha/entities', async (c) => {
   }
 });
 
-// Toggle a light or run a scene. Only entities pinned on the saved board, and
-// only the domains shared/ha.ts allows, so a stolen session can't open a lock.
-app.post('/api/ha/:entity/:action', async (c) => {
-  const entity = c.req.param('entity');
-  const action = c.req.param('action');
+// Chores: when each one on a Chores widget was last done. Keyed by board and
+// widget, so two boards keep their own. Household devices may mark one done;
+// that's what a chore chart on the wall is for.
+type ChoreTimes = Record<string, Record<string, number>>;
+const choreWidget = (board: string, id: string) => getBoard(board)?.board.widgets.find((w) => w.id === id && w.type === 'chores');
+app.get('/api/chores/:board/:id', (c) => {
+  const w = choreWidget(c.req.param('board'), c.req.param('id'));
+  if (!w) return c.json({ error: 'No such Chores widget' }, 404);
+  return c.json({ done: (kvGet<ChoreTimes>('chores') ?? {})[`${c.req.param('board')}/${w.id}`] ?? {} });
+});
+app.post('/api/chores/:board/:id', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  if (action !== 'toggle' && action !== 'run') return c.json({ error: 'Unknown action' }, 400);
-  if (!pinnedAnywhere().has(entity)) return c.json({ error: 'Pin that entity to a Home Assistant widget first' }, 403);
-  if (haActionFor(entity) !== action) return c.json({ error: 'Patchboard does not change that kind of entity' }, 403);
+  const board = c.req.param('board');
+  const w = choreWidget(board, c.req.param('id'));
+  if (!w) return c.json({ error: 'No such Chores widget' }, 404);
+  const body = (await c.req.json().catch(() => ({}))) as { name?: unknown; at?: unknown };
+  const chore = parseChores(w.config?.chores).find((x) => x.name === body.name);
+  if (!chore) return c.json({ error: 'That chore is not on this widget' }, 400);
+  // Done now, or put back to when it was done before (Undo). Never in the future.
+  const at = body.at === null ? null : typeof body.at === 'number' && body.at > 0 && body.at <= Date.now() ? body.at : Date.now();
+  const all = kvGet<ChoreTimes>('chores') ?? {};
+  const key = `${board}/${w.id}`;
+  const mine = { ...(all[key] ?? {}) };
+  if (at === null) delete mine[chore.name];
+  else mine[chore.name] = at;
+  kvSet('chores', { ...all, [key]: mine });
+  recordAudit(who(c), 'chores.done', key, chore.name);
+  return c.json({ ok: true, done: mine });
+});
+
+// A Home Assistant to-do list pinned to a List widget: its items, then adding
+// one or ticking one off. Household devices may do both; that's the point of
+// a shopping list on the fridge.
+const isTodo = (entity: string) => entity.startsWith('todo.') && pinnedAnywhere().has(entity);
+app.get('/api/ha/todo/:entity', async (c) => {
+  const entity = c.req.param('entity');
+  if (!isTodo(entity)) return c.json({ error: 'Pin that list to a List widget first' }, 403);
   try {
-    if (config.demo) demoHaAction(entity, action);
-    else if (config.homeassistant) await haCall(entity, action);
+    if (config.demo) return c.json({ items: demoTodo(entity) });
+    if (!config.homeassistant) return c.json({ error: 'Home Assistant is not configured' }, 404);
+    return c.json({ items: await haTodoItems(entity) });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+app.post('/api/ha/todo/:entity', async (c) => {
+  const entity = c.req.param('entity');
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!isTodo(entity)) return c.json({ error: 'Pin that list to a List widget first' }, 403);
+  const body = (await c.req.json().catch(() => ({}))) as { add?: unknown; done?: unknown; undo?: unknown };
+  const text = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) : undefined);
+  const change = { add: text(body.add, 200), done: text(body.done, 200), undo: text(body.undo, 200) };
+  if (!change.add && !change.done && !change.undo) return c.json({ error: 'Say what to add or tick off' }, 400);
+  try {
+    if (config.demo) demoTodoChange(entity, change);
+    else if (config.homeassistant) await haTodoChange(entity, change);
     else return c.json({ error: 'Home Assistant is not configured' }, 404);
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
   }
-  recordAudit(who(c), `ha.${action}`, entity);
+  recordAudit(who(c), change.add ? 'ha.todo.add' : 'ha.todo.tick', entity, change.add ?? '');
+  return c.json({ ok: true });
+});
+
+// Toggle a light, run a scene, set a thermostat or move a shade. Only
+// entities pinned on the saved board, and only what shared/ha.ts allows, so a
+// stolen session can't open a lock or a garage door.
+const HA_ACTIONS = new Set(['toggle', 'run', 'set', 'open', 'close', 'stop']);
+app.post('/api/ha/:entity/:action', async (c) => {
+  const entity = c.req.param('entity');
+  const action = c.req.param('action') as HaAction;
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!HA_ACTIONS.has(action)) return c.json({ error: 'Unknown action' }, 400);
+  if (!pinnedAnywhere().has(entity)) return c.json({ error: 'Pin that entity to a Home Assistant widget first' }, 403);
+  const extra: Record<string, number> = {};
+  if (action === 'toggle' || action === 'run') {
+    if (haActionFor(entity) !== action) return c.json({ error: 'Patchboard does not change that kind of entity' }, 403);
+  } else {
+    // Its class and range come from Home Assistant now, not from the browser.
+    let e: HaEntity | undefined;
+    try {
+      e = config.demo ? demoHaList().find((x) => x.id === entity) : config.homeassistant ? await haEntity(entity) : undefined;
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 502);
+    }
+    if (!e) return c.json({ error: 'Home Assistant has no such entity' }, 404);
+    if (!haAllows(entity, action, e.deviceClass)) return c.json({ error: 'Patchboard does not change that kind of entity' }, 403);
+    if (action === 'set') {
+      const body = (await c.req.json().catch(() => ({}))) as { temperature?: unknown };
+      const t = Number(body.temperature);
+      const min = e.attrs?.min ?? 7;
+      const max = e.attrs?.max ?? 35;
+      if (!Number.isFinite(t) || t < min || t > max) return c.json({ error: `Pick a temperature from ${min} to ${max}` }, 400);
+      extra.temperature = Math.round(t * 2) / 2;
+    }
+  }
+  try {
+    if (config.demo) demoHaAction(entity, action, extra);
+    else if (config.homeassistant) await haCall(entity, action, extra);
+    else return c.json({ error: 'Home Assistant is not configured' }, 404);
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  recordAudit(who(c), `ha.${action}`, entity, extra.temperature != null ? `to ${extra.temperature}` : '');
   void hub.pollNow('homeassistant');
   return c.json({ ok: true });
 });

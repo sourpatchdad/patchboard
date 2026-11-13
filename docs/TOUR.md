@@ -166,6 +166,17 @@ guests, Docker hosts every Portainer environment, Network your UniFi devices
 and Tailscale machines. Each one raises its own trouble in Needs attention,
 at the thresholds in Settings, Alerts.
 
+**Home Assistant, for the family:** List keeps a Home Assistant to-do list,
+Shopping list or Chores, with a box to add to it and a tap to tick an item
+off. Thermostat shows the temperature inside and sets it with minus and plus.
+Shades opens, stops and closes blinds, while garage doors and gates only show
+their state. People shows who's home. Chores needs no Home Assistant: name
+the jobs and how often (Water the plants=7), and it counts the days since
+each, turns amber when one is due, and starts over at Done. A household
+tablet on the fridge can do all of it.
+
+![Shopping list, thermostat, shades, people and chores on one board](screenshots/family.webp)
+
 **The other apps:** Media managers gives Lidarr, Readarr, Prowlarr and
 Bazarr a line each, healthy or what's wrong, with the queue or the missing
 subtitles. Documents shows the Paperless inbox, Nextcloud its files, people

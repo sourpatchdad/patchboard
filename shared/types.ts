@@ -501,6 +501,16 @@ export interface HaEntity {
   unit?: string;
   deviceClass?: string;
   changedAt: number;
+  /** The few attributes the Thermostat and Shades widgets read. */
+  attrs?: { current?: number; target?: number; min?: number; max?: number; step?: number; action?: string; position?: number };
+}
+
+/** One item on a Home Assistant to-do list. */
+export interface TodoItem {
+  uid: string;
+  summary: string;
+  done: boolean;
+  due?: string;
 }
 
 export interface HomeAssistantData {

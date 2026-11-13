@@ -5,6 +5,20 @@
 - **Español:** the boards, the wall screens and the Monitor in Spanish, in
   Settings, Look, Language and region, or set for a wall device in Settings,
   Devices.
+- **Home Assistant, for the family:** four widgets beside the general one.
+  - **List:** a Home Assistant to-do list such as Shopping list: add an item,
+    tick one off, and the done ones fold away.
+  - **Thermostat:** the temperature inside, what it's set to with minus and
+    plus, and whether it's heating or cooling.
+  - **Shades:** blinds, shades and curtains, how far open, with open, stop and
+    close. Garage doors, gates and doors stay read-only: the server checks the
+    cover's class with Home Assistant before moving anything.
+  - **People:** who's home and who's out, and since when.
+- **Chores:** name the jobs and how often (Water the plants=7). The widget
+  counts the days since each, turns amber when one is due, and starts over at
+  Done, with a moment to undo. No Home Assistant needed.
+- **Household devices** can keep a list, set a thermostat, move shades and
+  mark chores done, all limited to what's pinned on a board.
 
 ## 1.12.0 (2026-11-12)
 

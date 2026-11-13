@@ -13,7 +13,11 @@ it anywhere.
   Trakt. With those integrations on: pause, resume or remove a download (its
   files stay) or pause a whole client, turn qBittorrent's speed limits on or
   off, try another release or search in Sonarr and Radarr, toggle the
-  Home Assistant lights and scenes you pinned, wake a machine you listed,
+  Home Assistant lights and scenes you pinned, set a pinned thermostat
+  within its own range, open, stop or close pinned blinds and shades (never
+  a garage door, gate or door: the server checks the cover's class with
+  Home Assistant first), add to or tick off a pinned to-do list, mark a
+  chore done, wake a machine you listed,
   pause Pi-hole or AdGuard Home for at most an hour, and approve or decline
   a waiting Overseerr request. Each is a POST with the action header, and
   each lands in the audit log.
@@ -43,8 +47,11 @@ Marking articles read still works.
 
 For one device instead of everyone, make it a household device: Settings,
 Devices, Make a link, then open the link once on that phone or tablet. It sees the boards, cameras, the Server
-and Monitor pages, reading and calendar, and can switch the Home Assistant
-lights and scenes pinned to a board. From the logs it gets only the Monitor
+and Monitor pages, reading and calendar. It can switch the Home Assistant
+lights and scenes pinned to a board, set a pinned thermostat, move pinned
+shades, keep a pinned to-do list and mark chores done: the things a family
+reaches for on a kitchen tablet. Locks, garage doors and alarms stay
+read-only to it, as to everyone. From the logs it gets only the Monitor
 feed: warning and error lines, masked like every log line, at most twelve a
 minute from each container. The server refuses every other change from it, and
 refuses the reads meant for you: logs, container pages, settings, keys and
