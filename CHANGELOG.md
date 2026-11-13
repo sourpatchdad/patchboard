@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Español:** the boards, the wall screens and the Monitor in Spanish, in
+  Settings, Look, Language and region, or set for a wall device in Settings,
+  Devices.
+
 ## 1.12.0 (2026-11-12)
 
 - **Five new widgets** for apps that had only a number on their tile:

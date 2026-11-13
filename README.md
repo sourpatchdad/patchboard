@@ -105,7 +105,7 @@ screen.
 
 **Your language and region.** Dates, times, numbers and prices follow your
 part of the world, from 28 regions. The boards, wall screens and Monitor
-speak French as well as English, and another language is one file.
+speak Spanish and French as well as English, and another language is one file.
 
 **Playback.** Hover, focus or tap a playback row for its artwork, details and
 a link to its app, with time left when the service reports it.

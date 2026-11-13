@@ -151,7 +151,7 @@ Section titles and their links go through `t()` in one place, `Section`.
 
 To add a language, copy `web/i18n/fr.json` to the new code, translate each
 value, keep every `{value}` its English has, and add the code to `LANGUAGES`
-in `web/lib/i18n.ts`. `npm run i18n:check` lists any string the catalog is
+and the file to `CATALOGS` in `web/lib/i18n.ts`. `npm run i18n:check` lists any string the catalog is
 missing, any it no longer needs, and any `{value}` changed; CI runs it.
 
 ## Themes

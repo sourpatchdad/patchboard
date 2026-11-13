@@ -5,14 +5,16 @@
 // Settings, Look picks the language for this device; until then it follows
 // the browser when Patchboard has that language.
 
+import es from '../i18n/es.json' with { type: 'json' };
 import fr from '../i18n/fr.json' with { type: 'json' };
 import { getAppearance } from './appearance.ts';
 
-const CATALOGS: Record<string, Record<string, string>> = { fr };
+const CATALOGS: Record<string, Record<string, string>> = { es, fr };
 
 /** Languages offered in Settings, each in its own words. */
 export const LANGUAGES: [string, string][] = [
   ['en', 'English'],
+  ['es', 'Español'],
   ['fr', 'Français'],
 ];
 
