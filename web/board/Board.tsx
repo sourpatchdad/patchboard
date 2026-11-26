@@ -441,7 +441,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
   const [boardEl, setBoardEl] = useState<HTMLDivElement | null>(null);
   /**
    * Each card's column as it's shown now, written into the board when it's
-   * saved: what you arranged is what stays, and a card whose neighbours grow
+   * saved: what you arranged is what stays, and a card whose neighbors grow
    * or shrink with live data never hops to another column.
    */
   const pinColumns = (ws: Widget[]): Widget[] => {

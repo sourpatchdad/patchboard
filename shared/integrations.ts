@@ -203,8 +203,8 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Tessie (Tesla)',
     adds: 'A Car widget: battery and range with the last 7 days of charge, charging and time to full, inside and outside temperatures with the last day, the four tire pressures with a soft one marked, locks and the odometer, where it’s parked (your saved name for the place, or the town), and the week’s drives. Reads Tessie’s cached state, so watching never wakes the car; a command you hold to confirm (lock, frunk, charging, climate, Sentry) wakes it if it must.',
     env: ['TESSIE_TOKEN'],
-    optional: ['TESSIE_VIN'],
-    where: 'Tessie: Settings, API, Generate access token. TESSIE_VIN picks one car when the account has several.',
+    optional: ['TESSIE_VIN', 'TESSIE_CAR'],
+    where: 'Tessie: Settings, API, Generate access token. TESSIE_VIN picks one car when the account has several. TESSIE_CAR picks the drawing the Car widget shows: auto matches the model Tessie reports, outline draws a plain car.',
     source: true,
   },
   {

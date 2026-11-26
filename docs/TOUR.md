@@ -176,13 +176,16 @@ right there; Escape, Close or switching tabs ends it.
 **The car:** through Tessie, the charge and range with a line of the last
 week, what it's doing (charging, full in an hour, at 11 kW), the inside and
 outside temperatures, and the four tires on a blueprint of the car with a
-soft one marked. Pictures puts the tires on your own drawings of your car:
-add a side, front, rear, top or three-quarter view, box the part of a sheet
-to use, and tap its tires and charge port.
+soft one marked. Patchboard ships drawings of the cars it knows, with the
+tires and charge port already placed, so there is nothing to upload. It
+matches the model Tessie reports; to pick one yourself, set Drawing on the
+Tessie connection in Settings (`TESSIE_CAR`). A car without a drawing yet
+gets a plain outline. The drawings are line art on a clear background, so
+they sit on any card in light or dark.
 
 Its Dashboard style makes the card a live engineering drawing. The views
 run across the top, the side view sits in the middle dimensioned in
-millimetres, the live figures and the odometer sit beside it, and panels
+millimeters, the live figures and the odometer sit beside it, and panels
 for status, charging, range and tires run along the bottom. Swipe across the
 car or press an arrow key to turn it through your drawings. Tap a metric, a
 panel or a tire for its detail, a sheet of its own with the part drawn and
@@ -193,7 +196,7 @@ household device sees all of it and sends no command.
 
 Shown alone on a screen (Settings, Devices), the sheet becomes a poster that
 fills it, 4:3 on a squarer e-ink frame. On a TV the remote drives it: up
-and down move between the metrics, the car and the panels, the centre
+and down move between the metrics, the car and the panels, the center
 button opens one and Back closes it. Left and right turn the car once it's
 marked, and otherwise turn the TV's pages, as rewind and fast-forward do. Status says where it's
 parked, by your name for the place or the town, and Range adds the last

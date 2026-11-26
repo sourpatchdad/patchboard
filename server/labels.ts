@@ -57,7 +57,7 @@ export function servicesFromLabels(containers: Container[], covered: Set<string>
 }
 
 /**
- * The YAML catalog plus label-registered services. Labelled services join a
+ * The YAML catalog plus label-registered services. Labeled services join a
  * YAML group of the same name (case-insensitive) or form new groups after
  * the YAML ones, ordered by patchboard.order and then name.
  */

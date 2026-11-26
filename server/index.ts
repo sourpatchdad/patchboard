@@ -115,7 +115,7 @@ import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
 import { auditCatalog, draftYaml, visitorHost } from './catalog-audit.ts';
 import { iconCache, urlIconCache } from './icon-cache.ts';
-import { type CarPicture, checkPictures } from '../shared/car-pictures.ts';
+import { CAR_ART } from '../shared/car-art.ts';
 import { feedPicture } from './feed-images.ts';
 
 /** Pause and resume for each configured download client. */
@@ -2420,21 +2420,18 @@ app.post('/api/car/:vin/command/:cmd', async (c) => {
   return c.json({ ok: true });
 });
 
-// Your own pictures of each car, with where its tires sit (shared/car-pictures.ts).
-app.get('/api/car-pictures', (c) => c.json(kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {}));
-app.put('/api/car-pictures/:vin', async (c) => {
-  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
-  if (config.readOnly) return c.json({ error: 'Read-only' }, 403);
-  const vin = c.req.param('vin');
-  if (!/^[A-Za-z0-9-]{1,40}$/.test(vin)) return c.json({ error: 'Bad car' }, 400);
-  const checked = checkPictures(await c.req.json().catch(() => null));
-  if (!checked.ok) return c.json({ error: checked.error }, 400);
-  const all = kvGet<Record<string, CarPicture[]>>('car-pictures') ?? {};
-  if (checked.pictures.length) all[vin] = checked.pictures;
-  else delete all[vin];
-  kvSet('car-pictures', all);
-  recordAudit(who(c), 'car.pictures', `${vin}: ${checked.pictures.length}`);
-  return c.json({ ok: true, pictures: checked.pictures });
+// The built-in drawings of each car (shared/car-art.ts). Only names the
+// catalog lists are served, so the path never leaves server/car-art.
+app.get('/api/car-art/:car/:file', (c) => {
+  const art = CAR_ART.find((a) => a.id === c.req.param('car'));
+  const view = /^([a-z0-9]+)\.webp$/.exec(c.req.param('file'))?.[1];
+  if (!art || !view || !art.views.some((v) => v.view === view)) return c.json({ error: 'No such drawing' }, 404);
+  try {
+    const data = readFileSync(new URL(`./car-art/${art.id}/${view}.webp`, import.meta.url));
+    return c.body(data, 200, { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=86400' });
+  } catch {
+    return c.json({ error: 'No such drawing' }, 404);
+  }
 });
 
 app.get('/api/icons/:file', (c) => {

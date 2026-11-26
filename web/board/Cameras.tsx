@@ -213,7 +213,7 @@ export function CamerasWidget({ config, now }: { config?: Record<string, string>
     setWatchingNow(name);
   };
   // On a wall screen, a TV remote moves between the cameras: up and down from the page, then the
-  // arrows go camera to camera and the centre button opens one live. Back, or an arrow past the
+  // arrows go camera to camera and the center button opens one live. Back, or an arrow past the
   // edge, lets go, and left and right turn the page again. Fast-forward and rewind always turn it.
   const wall = !!snap?.household;
   useEffect(() => {

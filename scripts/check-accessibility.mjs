@@ -96,7 +96,7 @@ try {
     await page.setViewportSize({ width: 1920, height: 1080 });
   }
   // A touch phone, the width of the smaller iPhones: a tap on the middle of a
-  // control lands on it, not on a neighbour's enlarged tap area, and every
+  // control lands on it, not on a neighbor's enlarged tap area, and every
   // placeholder fits its field. Touch makes field text 16px, so this runs
   // with touch on, not just a narrow window.
   const phone = await browser.newPage({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });

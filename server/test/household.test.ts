@@ -141,9 +141,8 @@ test('a household device may keep a list, set a thermostat, move a shade and mar
   assert.equal(allows('POST', '/api/chores/home/chores/extra'), false);
 });
 
-test('a household device sees the car and its pictures but never commands it', () => {
+test('a household device sees the car and its drawings but never commands it', () => {
   const allows = h.householdAllows;
-  assert.equal(allows('GET', '/api/car-pictures'), true);
+  assert.equal(allows('GET', '/api/car-art/model3-2017/side.webp'), true);
   for (const cmd of ['unlock', 'frunk', 'trunk', 'charge-stop', 'sentry-off', 'limit']) assert.equal(allows('POST', `/api/car/VIN/command/${cmd}`), false, cmd);
-  assert.equal(allows('PUT', '/api/car-pictures/VIN'), false);
 });

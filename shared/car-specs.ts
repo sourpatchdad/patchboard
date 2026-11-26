@@ -1,4 +1,4 @@
-// Published exterior dimensions, in millimetres, for the drawing sheet's
+// Published exterior dimensions, in millimeters, for the drawing sheet's
 // dimension lines. Only figures Tesla publishes go here; a figure a model
 // lacks is simply not drawn.
 
@@ -24,7 +24,7 @@ export function specFor(model?: string): CarSpec | undefined {
   return model ? SPECS[model] : undefined;
 }
 
-/** "4,694 mm". Drawing sheets dimension in millimetres whatever the car reads in. */
+/** "4,694 mm". Drawing sheets dimension in millimeters whatever the car reads in. */
 export function dim(mm: number, locale?: string): string {
   return `${mm.toLocaleString(locale)} mm`;
 }

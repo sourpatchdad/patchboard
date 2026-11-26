@@ -202,7 +202,7 @@ function build(str: Lookup) {
         ? { url: trimSlash(qbitUrl), username: qbitUser, password: qbitPass }
         : undefined,
     homeassistant: str('HA_URL') && str('HA_TOKEN') ? { url: trimSlash(str('HA_URL')!), token: str('HA_TOKEN')! } : undefined,
-    tessie: str('TESSIE_TOKEN') ? { token: str('TESSIE_TOKEN')!, vin: str('TESSIE_VIN') } : undefined,
+    tessie: str('TESSIE_TOKEN') ? { token: str('TESSIE_TOKEN')!, vin: str('TESSIE_VIN'), car: str('TESSIE_CAR') } : undefined,
     wake: {
       devices: parseDevices(str('WOL_DEVICES')),
       broadcast: str('WOL_BROADCAST') ?? '255.255.255.255',

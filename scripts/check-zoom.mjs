@@ -93,7 +93,7 @@ try {
     return issues;
   });
   assert.deepEqual(overlaps, [], 'enlarged weather, Reading and calendar text does not overlap');
-  assert.deepEqual(await setup(), before, 'zoom and cancelled editors preserve saved setup');
+  assert.deepEqual(await setup(), before, 'zoom and canceled editors preserve saved setup');
   assert.deepEqual(errors, [], 'no browser errors');
   console.log('Actual 100/200/400% browser zoom, editor reachability, 24px minimum text and saved setup passed.');
 } finally {

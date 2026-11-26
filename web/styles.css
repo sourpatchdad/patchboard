@@ -8516,7 +8516,7 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   stroke: var(--accent);
 }
 
-/* A detail sheet's own marks: a plotted history, the plan's centre line, and the reading under a finger. */
+/* A detail sheet's own marks: a plotted history, the plan's center line, and the reading under a finger. */
 .bp-trace,
 .bp-center,
 .bp-cursor line,
@@ -8612,15 +8612,9 @@ html[data-eink] :is(.car-wheel.is-soft .car-tire, .car-tread.is-soft, .car-hidde
   pointer-events: none;
 }
 
-/* A drawing on paper loses its paper here too. */
-.bp-img.is-drawing {
-  filter: grayscale(1) contrast(1.35) brightness(1.18);
-  mix-blend-mode: multiply;
-}
-
+/* Light lines on a dark sheet, as on the phone view. */
 :root[data-scheme='dark'] .bp-img.is-drawing {
-  filter: grayscale(1) contrast(1.35) brightness(1.18) invert(1);
-  mix-blend-mode: screen;
+  filter: invert(1);
 }
 
 /* While charging, dashes run along the charge port's leader toward the
@@ -8868,16 +8862,11 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
   background: var(--ink-2);
 }
 
-.car-edit {
-  margin-left: auto;
-  font-size: 13px;
-}
-
-.car-views > :first-child:not(.car-edit) {
+.car-views > :first-child {
   margin-left: auto;
 }
 
-/* Your own picture, the pressures drawn over it in its own units. */
+/* A drawing of the car, the pressures drawn over it in its own units. */
 .car-photo {
   position: relative;
   overflow: hidden;
@@ -8890,27 +8879,22 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
   overflow: hidden;
 }
 
-/* Placed inside the part's box, so only the part you chose shows. */
+/* The drawing fills its box: it is trimmed to the car already. */
 .car-photo .car-photo-img {
   position: absolute;
+  inset: 0;
   display: block;
-  height: auto;
-  max-width: none;
+  width: 100%;
+  height: 100%;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* A drawing on paper loses its paper: lifted to pure white and multiplied
-   on a light page, so only the lines are left; on a dark page the same,
-   inverted and screened, leaves light lines. No box around the car. */
-.car-photo.is-drawing img {
-  filter: grayscale(1) contrast(1.35) brightness(1.18);
-  mix-blend-mode: multiply;
-}
-
+/* The built-in drawings are dark lines on nothing, so any card shows
+   through them. A dark page inverts them to light lines. No blending, so
+   no paper box on a translucent card or a phone browser. */
 :root[data-scheme='dark'] .car-photo.is-drawing img {
-  filter: grayscale(1) contrast(1.35) brightness(1.18) invert(1);
-  mix-blend-mode: screen;
+  filter: invert(1);
 }
 
 .car-photo-marks {
@@ -8943,94 +8927,6 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
 
 .car-photo :is(.car-lead, .car-dot) {
   vector-effect: non-scaling-stroke;
-}
-
-/* Pictures of the car: tap each tire in turn. */
-.car-pictures {
-  width: min(640px, calc(calc(100vw / var(--zoom)) - 24px));
-}
-
-.car-place-ask {
-  font-weight: 600;
-  color: var(--head);
-}
-
-/* A picture shown cropped to its part: the image placed inside a box of the
-   part's shape. Uncropped, the same box holds the whole picture. */
-.car-place-pic {
-  position: relative;
-  overflow: hidden;
-  border-radius: 6px;
-  background: var(--raised);
-}
-
-.car-place-pic img {
-  position: absolute;
-  display: block;
-  height: auto;
-  max-width: none;
-  user-select: none;
-}
-
-.car-place-pic.is-tapping {
-  cursor: crosshair;
-}
-
-/* Choosing the part: the whole picture, a box drawn over it. */
-.car-crop {
-  cursor: crosshair;
-  touch-action: none;
-}
-
-.car-crop .car-crop-img {
-  position: static;
-  width: 100%;
-}
-
-.car-crop-box {
-  position: absolute;
-  border: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  pointer-events: none;
-}
-
-.car-place-dot {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--raised);
-  pointer-events: none;
-}
-
-.car-pic-list {
-  list-style: none;
-  margin: 12px 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.car-pic-list li {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-}
-
-.car-pic-about {
-  display: grid;
-  gap: 4px;
-}
-
-.car-place-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
 }
 
 html[data-eink] .car-callout.is-soft .car-num {
@@ -15280,7 +15176,7 @@ html.wall-swipe .widget-page {
 }
 
 /* The car's drawing sheet alone on a screen: a poster for a monitor or an
-   e-ink frame. The sheet takes the whole screen, centred; its title gives
+   e-ink frame. The sheet takes the whole screen, centered; its title gives
    way, unless it has a failure to report, and editing stays on the board. */
 .widget-page .widget-alone:has(.bp-stage, .wd-stage) {
   align-self: center;

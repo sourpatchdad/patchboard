@@ -1,6 +1,7 @@
 // Which integrations you can set up from Settings, and what each field is.
 // The environment still wins: a variable set there shows as locked.
 
+import { CAR_ART, CAR_AUTO, CAR_OUTLINE } from './car-art.ts';
 import type { Integration } from './integrations.ts';
 
 /**
@@ -85,6 +86,7 @@ export const CHOICES: Record<string, [value: string, label: string][]> = {
     ['warn', 'Problems and warnings'],
     ['critical', 'Outages only'],
   ],
+  TESSIE_CAR: [[CAR_AUTO, 'Match the model Tessie reports'], ...CAR_ART.map((a): [string, string] => [a.id, a.name]), [CAR_OUTLINE, 'A plain outline']],
 };
 
 export function fieldKind(name: string): FieldKind {
@@ -125,6 +127,7 @@ const LABELS: [RegExp, string][] = [
   [/_PASSWORD$/, 'Password'],
   [/_USER$/, 'Whose library'],
   [/_VIN$/, 'VIN'],
+  [/^TESSIE_CAR$/, 'Drawing'],
   [/_LAT$/, 'Latitude'],
   [/_LON$/, 'Longitude'],
   [/_LABEL$/, 'Place name'],

@@ -90,6 +90,7 @@ export function CarWidget() {
             vin: c.vin,
             name: c.name,
             model: c.model,
+            art: c.art,
             ro: !!readOnly,
             metric,
             unit: metric ? 'bar' : 'psi',
@@ -142,7 +143,7 @@ export function CarWidget() {
               sheet={sheet}
               fallback={
             <div className="car-dash">
-              <div className="car-dash-stage">{c.tires && <CarTires vin={c.vin} ro={!!readOnly} unit={metric ? 'bar' : 'psi'} tires={tireList} />}</div>
+              <div className="car-dash-stage">{c.tires && <CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} />}</div>
               <div className="car-dash-side">
                 {cars.length > 1 && <h3 className="car-name">{c.name}</h3>}
                 <div className="car-dash-charge">
@@ -248,7 +249,7 @@ export function CarWidget() {
                 )}
 
                 {c.tires && (
-                  <CarTires vin={c.vin} ro={!!readOnly} unit={metric ? 'bar' : 'psi'} tires={tireList} />
+                  <CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} />
                 )}
                 {c.tires && (
                   <div className="car-chart">

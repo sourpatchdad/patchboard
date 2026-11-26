@@ -936,6 +936,7 @@ function demoCarBase(): Car {
         setC: 21,
         tires: { fl: 2.9, fr: 2.9, rl: 2.86, rr: 2.62 },
         model: 'Model 3',
+        art: 'model3-2017',
         trim: '50',
         usable: 72,
         addedKwh: 12.4,

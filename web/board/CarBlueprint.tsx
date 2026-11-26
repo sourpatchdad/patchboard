@@ -1,6 +1,6 @@
 // The car as a live engineering drawing: a general-arrangement sheet with a
 // zoned border, the side view large with dimension lines from the model's
-// published figures, front, rear and top views where you've added them, the
+// published figures, front, rear and top views where the car has drawings, the
 // live metrics, and a row of panels for status, charging, range and tires.
 // Every panel and every tire opens its own detail sheet; Back returns to the
 // whole car. Everything is drawn in one SVG, so it scales as a piece, on a
@@ -8,14 +8,14 @@
 // it gives way to `fallback`.
 
 import { type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { artViews } from '../../shared/car-art.ts';
 import { type CarPicture, type CarView } from '../../shared/car-pictures.ts';
 import { dim, specFor } from '../../shared/car-specs.ts';
 import { type Series, TIRES, type TirePos } from '../../shared/types.ts';
 import { useJson } from '../lib/api.ts';
 import { msg, t as tr } from '../lib/i18n.ts';
 import { locale } from '../lib/region.ts';
-import { PictureEditor, SIDE_PORT, SIDE_TIRES, SideDrawing, type TireReading } from './CarSketch.tsx';
+import { SIDE_PORT, SIDE_TIRES, SideDrawing, type TireReading } from './CarSketch.tsx';
 import { type CarCommand, OPENS_CAR } from '../../shared/car-commands.ts';
 import { HoldButton } from '../components/Hold.tsx';
 
@@ -29,6 +29,8 @@ export interface CarSheet {
   vin: string;
   name: string;
   model?: string;
+  /** The built-in drawing (shared/car-art.ts); none draws the outline. */
+  art?: string;
   ro: boolean;
   metric: boolean;
   /** "psi" or "bar". */
@@ -109,9 +111,7 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const [rev, setRev] = useState(0);
-  const pics = useJson<Record<string, CarPicture[]>>(`/api/car-pictures?r=${rev}`).data?.[sheet.vin] ?? [];
-  const [editing, setEditing] = useState(false);
+  const pics = artViews(sheet.art);
   // What's open over the sheet: a part beside it, or a detail in its place. Each is a step in the
   // browser's history, so Back (a TV remote's, a phone's) closes it rather than leaving the page.
   const [layer, setLayerNow] = useState<Layer | null>(null);
@@ -172,27 +172,8 @@ export function CarBlueprint({ sheet, fallback }: { sheet: CarSheet; fallback: R
       ) : detail ? (
         <DetailSheet sheet={sheet} pics={pics} detail={detail} onBack={() => setDetail(null)} tall={tall} />
       ) : (
-        <>
-          <Sheet sheet={sheet} pics={pics} open={setDetail} pick={pick} setPick={setPick} big={big} turn={setBig} tall={tall} />
-          {!sheet.ro && (
-            <div className="car-views">
-              <button type="button" className="text-button car-edit" onClick={() => setEditing(true)}>
-                {tr('Pictures')}
-              </button>
-            </div>
-          )}
-        </>
+        <Sheet sheet={sheet} pics={pics} open={setDetail} pick={pick} setPick={setPick} big={big} turn={setBig} tall={tall} />
       )}
-      {editing &&
-        createPortal(
-          <PictureEditor
-            vin={sheet.vin}
-            pictures={pics}
-            onClose={() => setEditing(false)}
-            onSaved={() => setRev((r) => r + 1)}
-          />,
-          document.body,
-        )}
     </div>
   );
 }
@@ -206,68 +187,12 @@ interface Framed {
   ink: { x: number; y: number; w: number; h: number };
 }
 
-/**
- * Where the drawing is in a picture: everything darker than paper, inside
- * the part you boxed, with a little room around it.
- */
-function useFramed(src: string | null, part?: [number, number, number, number]): Framed | null {
-  const [framed, setFramed] = useState<Framed | null>(null);
-  const partKey = part?.join(',') ?? '';
-  useEffect(() => {
-    setFramed(null);
-    if (!src) return;
-    const im = new Image();
-    im.onload = () => {
-      const w = im.naturalWidth;
-      const h = im.naturalHeight;
-      const [px, py, pw, ph] = part ?? [0, 0, 100, 100];
-      const area = { x: (px / 100) * w, y: (py / 100) * h, w: (pw / 100) * w, h: (ph / 100) * h };
-      const whole = { w, h, crop: area, ink: area };
-      try {
-        const scale = Math.min(1, 360 / w);
-        const cw = Math.max(1, Math.round(w * scale));
-        const ch = Math.max(1, Math.round(h * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = cw;
-        canvas.height = ch;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) return setFramed(whole);
-        ctx.drawImage(im, 0, 0, cw, ch);
-        const px4 = ctx.getImageData(0, 0, cw, ch).data;
-        const luma = (i: number) => (px4[i] * 299 + px4[i + 1] * 587 + px4[i + 2] * 114) / 1000;
-        let paper = 0;
-        for (let i = 0; i < px4.length; i += 4 * 37) paper = Math.max(paper, luma(i));
-        const ink = paper - 48;
-        let [x0, y0, x1, y1] = [cw, ch, -1, -1];
-        const ax0 = Math.floor(area.x * scale);
-        const ay0 = Math.floor(area.y * scale);
-        const ax1 = Math.min(cw, Math.ceil((area.x + area.w) * scale));
-        const ay1 = Math.min(ch, Math.ceil((area.y + area.h) * scale));
-        for (let y = ay0; y < ay1; y++)
-          for (let x = ax0; x < ax1; x++) {
-            const i = (y * cw + x) * 4;
-            if (px4[i + 3] > 32 && luma(i) < ink) {
-              if (x < x0) x0 = x;
-              if (x > x1) x1 = x;
-              if (y < y0) y0 = y;
-              if (y > y1) y1 = y;
-            }
-          }
-        if (x1 < x0) return setFramed(whole);
-        const inkBox = { x: x0 / scale, y: y0 / scale, w: (x1 - x0) / scale, h: (y1 - y0) / scale };
-        const pad = 0.03 * Math.max(inkBox.w, inkBox.h);
-        const nx0 = Math.max(area.x, inkBox.x - pad);
-        const ny0 = Math.max(area.y, inkBox.y - pad);
-        const nx1 = Math.min(area.x + area.w, inkBox.x + inkBox.w + pad);
-        const ny1 = Math.min(area.y + area.h, inkBox.y + inkBox.h + pad);
-        setFramed({ w, h, crop: { x: nx0, y: ny0, w: nx1 - nx0, h: ny1 - ny0 }, ink: inkBox });
-      } catch {
-        setFramed(whole);
-      }
-    };
-    im.src = src;
-  }, [src, partKey]);
-  return framed;
+/** A built-in view's frame. Each drawing is trimmed to the car, so its part and its ink are the whole image, sized from its aspect without waiting for it to load. */
+function framedOf(pic: CarPicture | null): Framed | null {
+  if (!pic) return null;
+  const h = 1000;
+  const all = { x: 0, y: 0, w: Math.round((pic.aspect ?? 2) * h), h };
+  return { w: all.w, h, crop: all, ink: all };
 }
 
 /** The side drawing's own box, as if it were a picture. */
@@ -291,7 +216,7 @@ function place(framed: Framed, slot: Box) {
 /** One view of the car: your picture, cropped to its part, or the drawn side view. */
 function ViewImage({ pic, framed, box, soft, motion = '' }: { pic: CarPicture | null; framed: Framed; box: Box; soft: Record<TirePos, boolean>; motion?: string }) {
   const { crop } = framed;
-  // The part you boxed, clipped on the image itself: it travels with the image as it turns, so nothing
+  // The view's part, clipped on the image itself: it travels with the image as it turns, so nothing
   // from beyond the box slides in, and the image keeps its blend with the paper.
   const clip = `bp-crop-${useId().replace(/:/g, '')}`;
   const clipDef = (
@@ -311,7 +236,7 @@ function ViewImage({ pic, framed, box, soft, motion = '' }: { pic: CarPicture | 
         y="0"
         width={framed.w}
         height={framed.h}
-        className={`bp-img ${pic.drawing === false ? '' : 'is-drawing'} ${motion}`}
+        className={`bp-img is-drawing ${motion}`}
         clipPath={`url(#${clip})`}
         style={{ transformOrigin: `${crop.x + crop.w / 2}px ${crop.y + crop.h / 2}px` }}
       />
@@ -438,12 +363,12 @@ function Sheet({
   const rearPic = byView('rear');
   const front34Pic = byView('front34');
   const rear34Pic = byView('rear34');
-  const front34Framed = useFramed(front34Pic?.src ?? null, front34Pic?.crop);
-  const rear34Framed = useFramed(rear34Pic?.src ?? null, rear34Pic?.crop);
-  const sideLoaded = useFramed(sidePic?.src ?? null, sidePic?.crop);
-  const topFramed = useFramed(topPic?.src ?? null, topPic?.crop);
-  const frontFramed = useFramed(frontPic?.src ?? null, frontPic?.crop);
-  const rearFramed = useFramed(rearPic?.src ?? null, rearPic?.crop);
+  const front34Framed = framedOf(front34Pic);
+  const rear34Framed = framedOf(rear34Pic);
+  const sideLoaded = framedOf(sidePic);
+  const topFramed = framedOf(topPic);
+  const frontFramed = framedOf(frontPic);
+  const rearFramed = framedOf(rearPic);
   const sideFramed = sidePic ? sideLoaded : DRAWN;
   const soft = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
   const tire = Object.fromEntries(sheet.tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
@@ -482,7 +407,7 @@ function Sheet({
     return () => window.clearTimeout(t);
   }, [large.v]);
   // A poster on a TV, driven by its remote: up and down step through the metrics, the car and the
-  // panels (or an open part's buttons), the centre button opens what's marked, and left and right
+  // panels (or an open part's buttons), the center button opens what's marked, and left and right
   // turn the car: at once on a screen with one page, and once the car is marked on one with several.
   useEffect(() => {
     if (!stage.current?.closest('.widget-page')) return;
@@ -905,7 +830,7 @@ function Sheet({
         <line className="bp-rule" x1={px(3)} y1={panels.y + 8} x2={px(3) + panels.w} y2={panels.y + 8} />
         {(() => {
           const cx = px(3) + panels.w / 2;
-          // The plan keeps a car's shape however tall the panel: centred in the room it has.
+          // The plan keeps a car's shape however tall the panel: centered in the room it has.
           const planH = Math.min(panels.h - 13, 30);
           const car = { x: cx - 5, y: panels.y + 10.5 + (panels.h - 13 - planH) / 2, w: 10, h: planH };
           const corner: Record<TirePos, [number, number, boolean]> = {
@@ -1420,7 +1345,7 @@ function Plot({
   );
 }
 
-/** The car from above, nose to the left as the side view faces, in `car`: body, glass, mirrors and a centre line. */
+/** The car from above, nose to the left as the side view faces, in `car`: body, glass, mirrors and a center line. */
 function Plan({ car }: { car: Box }) {
   const { x, y, w, h } = car;
   const r = h * 0.3;
@@ -1451,7 +1376,7 @@ function DetailSheet({ sheet, pics, detail, onBack, tall }: { sheet: CarSheet; p
   // The car from above: your top-view drawing where you've added one, a drawn plan otherwise. Either
   // way, nose to the left, and the outline of the car itself for the tires and doors to sit on.
   const topPic = pics.find((p) => p.view === 'top') ?? null;
-  const topFramed = useFramed(topPic?.src ?? null, topPic?.crop);
+  const topFramed = framedOf(topPic);
   const softTires = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
   const above = (slot: Box): { car: Box; drawing: ReactNode; drawn: boolean } => {
     if (topPic && topFramed) {

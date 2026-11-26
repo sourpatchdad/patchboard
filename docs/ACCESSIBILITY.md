@@ -48,7 +48,7 @@ left out. Plain e-ink also fails on any colored text, fill or border.
 accent preset and the status colors on each neutral surface.
 
 A separate script, `npm run test:ui`, checks Home placement, full poster
-rows, Fit, keyboard containment, Escape, focus return, cancelled editor
+rows, Fit, keyboard containment, Escape, focus return, canceled editor
 drafts, import cancellation and the skip link. Unit tests cover theme text
 contrast.
 
@@ -84,7 +84,7 @@ something.
 zoom preference. It verifies the device pixel ratio changes at 100%, 200%
 and 400%, then visits the same eight views and opens the Server editor.
 The document must avoid horizontal scrolling, the editor must fit, and its
-Save action must scroll into view. Cancelling must leave the saved setup as
+Save action must scroll into view. Canceling must leave the saved setup as
 it was.
 
 It then sets Chromium's minimum font to 24px and checks those views again.

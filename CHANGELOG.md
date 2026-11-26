@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **The car draws itself:** the Car widget no longer asks you to upload
+  pictures. Patchboard ships the drawings (a Model 3, 2017 to 2023, for
+  now) with the tires and charge port already placed, and picks the one
+  for the model Tessie reports. Choose a different one, or a plain
+  outline, with Drawing on the Tessie connection in Settings
+  (`TESSIE_CAR`). Pictures you uploaded before are no longer used; you can
+  delete them from the data folder's `icons`.
+- **The car on a phone:** the drawing is line art on a clear background,
+  so it sits on the card without a white box around it in light or dark,
+  and the side view fits the card's width with the tires and figures
+  beside it.
 - **The car with a TV remote:** closing a part or a detail sheet marks
   the panel you opened it from again, so the next press carries on from
   there instead of starting over at the top.
@@ -25,7 +36,7 @@
   Fire TV draws its microphone indicator.
 - **Cameras from a TV remote:** on a wall screen, up and down mark a
   camera, the arrows move between them without turning the page, and the
-  centre button opens it live. Back, or an arrow past the last camera,
+  center button opens it live. Back, or an arrow past the last camera,
   lets go, so left and right turn the page again. In the live view, the
   arrows or the new previous and next buttons go camera to camera, and
   Back closes it.
@@ -40,7 +51,7 @@
   style turns the card into a drawing sheet for a wall screen, a TV or an
   e-ink frame.
   - **The sheet:** front, rear and top views across the top, the side view
-    in the middle with its real dimensions in millimetres, live charge,
+    in the middle with its real dimensions in millimeters, live charge,
     range, power and temperatures beside it, and panels for status,
     charging, range by charge and the four tires. The title block gives the
     odometer, and a callout at the charge port gives the rate while it
@@ -61,7 +72,7 @@
   - **A poster for any screen:** show the car widget alone on a device and
     the sheet fills the screen, 4:3 on a squarer e-ink frame. On a TV the
     remote drives it: up and down move between the metrics, the car and
-    the panels, the centre button opens one, and Back closes it. Left and
+    the panels, the center button opens one, and Back closes it. Left and
     right turn the car once it's marked.
   - **Where it's been:** where the car is parked, by your name for the
     place in Tessie or else the town, never the street; the last drive,

@@ -309,14 +309,14 @@ try {
   const setupImport = page.getByRole('button', { name: 'Import a setup file', exact: true });
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), setupImport.press('Enter')]);
   await chooser.setFiles([]);
-  assert.deepEqual(await setupState(), unedited, 'cancelling the keyboard file picker preserves setup');
+  assert.deepEqual(await setupState(), unedited, 'canceling the keyboard file picker preserves setup');
   await page.goto(base + '/settings?tab=connections&part=apps');
   const importButton = page.getByRole('button', { name: 'Import from Homepage', exact: true });
   await importButton.click();
   await page.getByRole('dialog', { name: 'Import from Homepage' }).getByLabel('services.yaml', { exact: true }).fill('- Test:\n    - Keyboard fixture:\n        href: https://example.org/');
   await page.getByRole('button', { name: 'Add to Patchboard', exact: true }).waitFor();
   await checkOverlay('Import from Homepage', importButton, 'Add to Patchboard');
-  assert.deepEqual(await setupState(), unedited, 'previewing then cancelling imports changes no saved setup');
+  assert.deepEqual(await setupState(), unedited, 'previewing then canceling imports changes no saved setup');
   const helpOrigin = page.locator('.wordmark');
   await helpOrigin.focus();
   await page.keyboard.press('?');

@@ -4,7 +4,7 @@ import { validateBoard } from '../../shared/board.ts';
 import { camerasField } from '../../shared/fields.ts';
 import { toEvents } from '../adapters/frigate.ts';
 
-test('Frigate events: newest first, in milliseconds, with a recognised name and the score as a percentage', () => {
+test('Frigate events: newest first, in milliseconds, with a recognized name and the score as a percentage', () => {
   const e = toEvents([
     { id: 'a', camera: 'driveway', label: 'car', start_time: 1_794_000_000.5, top_score: 0.81, zones: [] },
     { id: 'b', camera: 'front_door', label: 'person', sub_label: ['Sam', 0.9], start_time: 1_794_000_600, data: { top_score: 0.93 }, zones: ['porch'] },

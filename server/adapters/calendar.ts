@@ -132,7 +132,7 @@ export function parseIcs(ics: string, from: number, to: number, calendar?: strin
       else if (p.name === 'STATUS' && p.value.toUpperCase() === 'CANCELLED') cur.cancelled = true;
     }
   }
-  // A moved or cancelled single occurrence replaces that one start of its series.
+  // A moved or canceled single occurrence replaces that one start of its series.
   const overridden = new Set(raw.filter((e) => e.recurrenceId != null).map((e) => `${e.uid}|${e.recurrenceId}`));
   const out: CalendarEvent[] = [];
   for (const e of raw) {

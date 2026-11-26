@@ -3,6 +3,7 @@
 // nothing in battery. https://developer.tessie.com
 
 import { type Car, type CarData, type Drive, TIRES } from '../../shared/types.ts';
+import { artFor } from '../../shared/car-art.ts';
 import { config } from '../config.ts';
 import { CAR_COMMANDS, type CarCommand } from '../../shared/car-commands.ts';
 import { getJson, request } from '../http.ts';
@@ -158,7 +159,7 @@ export function placeName(loc: { saved_location?: string | null; address?: strin
 const EXTRA_EVERY = 30 * MINUTE;
 
 export function tessieAdapter(): Adapter<CarData> {
-  const { token, vin } = config.tessie!;
+  const { token, vin, car: picked } = config.tessie!;
   const headers = { Authorization: `Bearer ${token}` };
   const extra = new Map<string, { odo: number; at: number; parked?: string; drives?: Drive[] }>();
   const more = async (car: Car) => {
@@ -196,7 +197,8 @@ export function tessieAdapter(): Adapter<CarData> {
       const cars = r.results
         .filter((v) => !vin || v.vin === vin)
         .map(toCar)
-        .filter((c): c is Car => c !== null);
+        .filter((c): c is Car => c !== null)
+        .map((c) => ({ ...c, art: artFor(picked, c.model) }));
       for (const car of cars) {
         const x = await more(car);
         car.drives = x.drives;

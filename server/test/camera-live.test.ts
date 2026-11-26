@@ -47,7 +47,7 @@ test('a live view passes frames through, is capped, and ends with its viewer', a
   const again = await cam.frigateLive('porch', new AbortController().signal);
   assert(again instanceof Response, 'the freed place is usable');
 
-  // The browser going away (its stream cancelled) ends it too.
+  // The browser going away (its stream canceled) ends it too.
   await (streams[1] as Response).body!.cancel();
   await until(() => open.size === 2);
   viewers[2].abort();

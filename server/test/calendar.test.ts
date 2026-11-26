@@ -13,7 +13,7 @@ test('iCal times: UTC, a named zone, and all-day dates at local midnight', () =>
   assert.deepEqual(parseTime('20261106'), { at: new Date(2026, 10, 6).getTime(), allDay: true });
 });
 
-test('iCal events: folded lines, escapes, all-day, weekly repeats with exceptions, moved and cancelled occurrences', () => {
+test('iCal events: folded lines, escapes, all-day, weekly repeats with exceptions, moved and canceled occurrences', () => {
   const ics = [
     'BEGIN:VCALENDAR',
     'X-WR-CALNAME:Family',

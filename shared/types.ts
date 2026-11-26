@@ -381,7 +381,7 @@ export interface WeatherData {
   cloudNow?: number;
   /** hPa, at sea level. */
   pressureNow?: number;
-  /** The forecast point, to two decimals, and its height in metres. */
+  /** The forecast point, to two decimals, and its height in meters. */
   lat?: number;
   lon?: number;
   elevation?: number;
@@ -852,6 +852,8 @@ export interface Car {
   tires?: Record<TirePos, number>;
   /** "Model 3", from the car's own configuration. */
   model?: string;
+  /** The built-in drawing to show (shared/car-art.ts): the one picked in TESSIE_CAR, else matched by model. None draws the outline. */
+  art?: string;
   /** Tesla's trim badge, e.g. "50" or "74d". */
   trim?: string;
   /** Charge that can be used now, which reads lower than `battery` in the cold. */
@@ -1538,7 +1540,7 @@ export interface FrigateEvent {
   camera: string;
   /** What Frigate saw: person, car, dog. */
   label: string;
-  /** A face or plate Frigate recognised. */
+  /** A face or plate Frigate recognized. */
   name?: string;
   at: number;
   /** Confidence, 0 to 100. */

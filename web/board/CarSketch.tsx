@@ -1,17 +1,15 @@
-// The four tire pressures on a picture of the car. With pictures of your own
-// (Pictures, below) each pressure sits on a leader to where you tapped its
-// tire, and you swipe between them to turn the car. Without, the car is drawn
-// like a blueprint: from the side, the far tires in dashed hidden lines, or
-// from above. A low tire is the only thing in color. Each device remembers
-// which view it last showed.
+// The four tire pressures on a drawing of the car. With a built-in drawing of
+// your car (shared/car-art.ts, picked on the Tessie connection) each pressure
+// sits on a leader to its tire, and you swipe between the views to turn the
+// car. Without, the car is drawn like a blueprint: from the side, the far
+// tires in dashed hidden lines, or from above. A low tire is the only thing
+// in color. Each device remembers which view it last showed.
 
-import { type ChangeEvent, type MouseEvent, type PointerEvent, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { CAR_VIEWS, type CarPicture, type CarView, labelSpots, MAX_PICTURES } from '../../shared/car-pictures.ts';
+import { type PointerEvent, useRef, useState } from 'react';
+import { artViews } from '../../shared/car-art.ts';
+import { type CarPicture, labelSpots } from '../../shared/car-pictures.ts';
 import { TIRES, type TirePos } from '../../shared/types.ts';
-import { useJson } from '../lib/api.ts';
-import { msg, t as tr } from '../lib/i18n.ts';
-import { useModal } from '../lib/modal.ts';
+import { t as tr } from '../lib/i18n.ts';
 
 export interface TireReading {
   pos: TirePos;
@@ -32,12 +30,10 @@ function savedIndex(vin: string): number {
 }
 
 /** The pressures on the car, with arrows, dots and a swipe to turn it. */
-export function CarTires({ vin, tires, unit, ro }: { vin: string; tires: TireReading[]; unit: string; ro: boolean }) {
-  const [rev, setRev] = useState(0);
-  const pics = useJson<Record<string, CarPicture[]>>(`/api/car-pictures?r=${rev}`).data?.[vin] ?? [];
+export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string; tires: TireReading[]; unit: string }) {
+  const pics = artViews(art);
   const views: View[] = pics.length ? pics.map((pic) => ({ kind: 'picture', pic })) : [{ kind: 'side' }, { kind: 'above' }];
   const [index, setIndex] = useState(() => savedIndex(vin));
-  const [editing, setEditing] = useState(false);
   const at = ((index % views.length) + views.length) % views.length;
   const view = views[at];
   const start = useRef<number | null>(null);
@@ -79,54 +75,23 @@ export function CarTires({ vin, tires, unit, ro }: { vin: string; tires: TireRea
             </button>
           </>
         )}
-        {!ro && (
-          <button type="button" className="text-button car-edit" onClick={() => setEditing(true)}>
-            {tr('Pictures')}
-          </button>
-        )}
       </div>
-      {editing &&
-        createPortal(
-          <PictureEditor
-            vin={vin}
-            pictures={pics}
-            onClose={() => setEditing(false)}
-            onSaved={() => {
-              setRev((r) => r + 1);
-              setIndex(0);
-            }}
-          />,
-          document.body,
-        )}
     </div>
   );
 }
 
-/** One of your pictures, each pressure beside its tire on a short leader. */
-function PictureView({ pic: whole, tires, unit }: { pic: CarPicture; tires: TireReading[]; unit: string }) {
-  const [natural, setNatural] = useState(4 / 3);
-  // Only the part you boxed, with its spots read in that part's percent.
-  const [cx, cy, cw, ch] = whole.crop ?? WHOLE;
-  const rel = (xy: [number, number] | null | undefined): [number, number] | null => (xy ? [((xy[0] - cx) / cw) * 100, ((xy[1] - cy) / ch) * 100] : null);
-  const pic: CarPicture = { ...whole, at: { fl: rel(whole.at.fl), fr: rel(whole.at.fr), rl: rel(whole.at.rl), rr: rel(whole.at.rr) } };
-  const aspect = (natural * cw) / ch;
-  const h = 100 / aspect;
+/** One view of the drawing, each pressure beside its tire on a short leader. */
+function PictureView({ pic, tires, unit }: { pic: CarPicture; tires: TireReading[]; unit: string }) {
+  const h = 100 / (pic.aspect ?? 2);
   const spots = labelSpots(pic.at, h);
   // The picture is 100 wide, with a gutter each side for the figures and a
   // strip under it for the unit, so no figure ever sits on the car.
   const outW = 100 + 2 * GUTTER;
   const outH = h + FOOT;
   return (
-    <div className={`car-photo ${pic.drawing === false ? '' : 'is-drawing'}`} style={{ aspectRatio: `${outW} / ${outH}` }}>
+    <div className="car-photo is-drawing" style={{ aspectRatio: `${outW} / ${outH}` }}>
       <div className="car-photo-frame" style={{ left: `${(GUTTER / outW) * 100}%`, width: `${(100 / outW) * 100}%`, height: `${(h / outH) * 100}%` }}>
-        <img
-          src={pic.src}
-          alt=""
-          draggable={false}
-          className="car-photo-img"
-          style={{ width: `${(100 / cw) * 100}%`, left: `${(-cx / cw) * 100}%`, top: `${(-cy / ch) * 100}%` }}
-          onLoad={(e) => setNatural(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || 4 / 3)}
-        />
+        <img src={pic.src} alt="" draggable={false} className="car-photo-img" />
       </div>
       <svg className="car-photo-marks" viewBox={`${-GUTTER} 0 ${outW} ${outH}`}>
         {tires.map((t) => {
@@ -165,225 +130,6 @@ function PictureView({ pic: whole, tires, unit }: { pic: CarPicture; tires: Tire
 const GUTTER = 15;
 const FOOT = 5;
 
-const TIRE_WORDS: Record<TirePos, string> = { fl: msg('front left'), fr: msg('front right'), rl: msg('rear left'), rr: msg('rear right') };
-const VIEW_WORDS: Record<CarView, string> = { side: msg('Side'), top: msg('Top'), front: msg('Front'), rear: msg('Rear'), front34: msg('Front three-quarter'), rear34: msg('Rear three-quarter') };
-const empty = (): CarPicture['at'] => ({ fl: null, fr: null, rl: null, rr: null });
-type Crop = [number, number, number, number];
-const WHOLE: Crop = [0, 0, 100, 100];
-
-/** Setting up one picture: its view, the part to use, then four tires and the port. */
-type Step = { pic: CarPicture; at: 'view' | 'crop' | number };
-
-/** The part of a picture, shown large, with taps read back in the whole picture's percent. */
-function CropPane({ src, crop, spots, onTap }: { src: string; crop: Crop; spots: [number, number][]; onTap?: (spot: [number, number]) => void }) {
-  const [natural, setNatural] = useState<[number, number] | null>(null);
-  const [cx, cy, cw, ch] = crop;
-  const ratio = natural ? (cw * natural[0]) / (ch * natural[1]) : 4 / 3;
-  const tap = (e: MouseEvent<HTMLDivElement>) => {
-    if (!onTap) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const fx = (e.clientX - r.left) / r.width;
-    const fy = (e.clientY - r.top) / r.height;
-    onTap([Math.round((cx + fx * cw) * 10) / 10, Math.round((cy + fy * ch) * 10) / 10]);
-  };
-  return (
-    <div className={`car-place-pic ${onTap ? 'is-tapping' : ''}`} style={{ aspectRatio: String(ratio) }} onClick={tap}>
-      <img
-        src={src}
-        alt={tr('Your picture')}
-        draggable={false}
-        onLoad={(e) => setNatural([e.currentTarget.naturalWidth, e.currentTarget.naturalHeight])}
-        style={{ width: `${(100 / cw) * 100}%`, left: `${(-cx / cw) * 100}%`, top: `${(-cy / ch) * 100}%` }}
-      />
-      {spots.map(([x, y], i) => (
-        <i key={i} className="car-place-dot" style={{ left: `${((x - cx) / cw) * 100}%`, top: `${((y - cy) / ch) * 100}%` }} />
-      ))}
-    </div>
-  );
-}
-
-/** Drag a box around the part of the picture to use, a whole sheet of views, say. */
-function CropPicker({ src, onDone }: { src: string; onDone: (crop: Crop) => void }) {
-  const [box, setBox] = useState<Crop | null>(null);
-  const start = useRef<[number, number] | null>(null);
-  const at = (e: PointerEvent<HTMLDivElement>): [number, number] => {
-    const r = e.currentTarget.getBoundingClientRect();
-    return [Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)), Math.max(0, Math.min(100, ((e.clientY - r.top) / r.height) * 100))];
-  };
-  return (
-    <>
-      <div
-        className="car-place-pic car-crop"
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          start.current = at(e);
-          setBox(null);
-        }}
-        onPointerMove={(e) => {
-          if (!start.current) return;
-          const [x0, y0] = start.current;
-          const [x1, y1] = at(e);
-          setBox([Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)]);
-        }}
-        onPointerUp={() => (start.current = null)}
-      >
-        <img src={src} alt={tr('Your picture')} draggable={false} className="car-crop-img" />
-        {box && <i className="car-crop-box" style={{ left: `${box[0]}%`, top: `${box[1]}%`, width: `${box[2]}%`, height: `${box[3]}%` }} />}
-      </div>
-      <div className="car-place-actions">
-        <button type="button" className="button" disabled={!box || box[2] < 2 || box[3] < 2} onClick={() => box && onDone(box.map((n) => Math.round(n * 10) / 10) as Crop)}>
-          {tr('Use this part')}
-        </button>
-        <button type="button" className="button button-quiet" onClick={() => onDone(WHOLE)}>
-          {tr('Use the whole picture')}
-        </button>
-      </div>
-    </>
-  );
-}
-
-/** Add pictures of the car: pick each one's view, the part to use, then tap its tires and charge port. */
-export function PictureEditor({ vin, pictures, onClose, onSaved }: { vin: string; pictures: CarPicture[]; onClose: () => void; onSaved: () => void }) {
-  const modal = useModal<HTMLDivElement>(onClose);
-  const [list, setList] = useState<CarPicture[]>(pictures);
-  const [step, setStep] = useState<Step | null>(null);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const upload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setError('');
-    setBusy(true);
-    try {
-      const res = await fetch('/api/icons', { method: 'POST', headers: { 'content-type': file.type, 'x-patchboard': 'action' }, body: file });
-      const body = (await res.json().catch(() => ({}))) as { icon?: string; error?: string };
-      if (!res.ok || !body.icon) throw new Error(body.error ?? `HTTP ${res.status}`);
-      setStep({ pic: { src: body.icon, at: empty(), drawing: true }, at: 'view' });
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  // Four tires, then the charge port; then the picture joins the list.
-  const place = (spot: [number, number] | null) => {
-    if (!step || typeof step.at !== 'number') return;
-    if (step.at === TIRES.length) {
-      setList((l) => [...l, { ...step.pic, port: spot }]);
-      setStep(null);
-      return;
-    }
-    setStep({ pic: { ...step.pic, at: { ...step.pic.at, [TIRES[step.at]]: spot } }, at: step.at + 1 });
-  };
-  const save = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      const res = await fetch(`/api/car-pictures/${encodeURIComponent(vin)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(list) });
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
-      onSaved();
-      onClose();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  const crop = step?.pic.crop ?? WHOLE;
-  const placed = step ? ([...TIRES.map((t) => step.pic.at[t]), step.pic.port].filter(Boolean) as [number, number][]) : [];
-
-  return (
-    <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette drawer car-pictures" ref={modal} role="dialog" aria-label={tr('Pictures of the car')} onClick={(e) => e.stopPropagation()}>
-        <header className="drawer-head">
-          <h2>{tr('Pictures of the car')}</h2>
-          <button type="button" className="text-button" onClick={onClose}>
-            {tr('Close')}
-          </button>
-        </header>
-        {step?.at === 'view' ? (
-          <div className="car-place">
-            <p className="car-place-ask" role="status">
-              {tr('Which view is this?')}
-            </p>
-            <CropPane src={step.pic.src} crop={WHOLE} spots={[]} />
-            <div className="car-place-actions">
-              {CAR_VIEWS.map((v) => (
-                <button key={v} type="button" className="button button-quiet" onClick={() => setStep({ pic: { ...step.pic, view: v }, at: 'crop' })}>
-                  {tr(VIEW_WORDS[v])}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : step?.at === 'crop' ? (
-          <div className="car-place">
-            <p className="car-place-ask" role="status">
-              {tr('Drag a box around the car, or use the whole picture.')}
-            </p>
-            <CropPicker src={step.pic.src} onDone={(c) => setStep({ pic: { ...step.pic, ...(c === WHOLE ? {} : { crop: c }) }, at: 0 })} />
-          </div>
-        ) : step ? (
-          <div className="car-place">
-            <p className="car-place-ask" role="status">
-              {typeof step.at === 'number' && step.at < TIRES.length ? tr('Tap the {tire} tire.', { tire: tr(TIRE_WORDS[TIRES[step.at]]) }) : tr('Tap the charge port.')}
-            </p>
-            <CropPane src={step.pic.src} crop={crop} spots={placed} onTap={(s) => place(s)} />
-            <div className="car-place-actions">
-              <button type="button" className="button button-quiet" onClick={() => place(null)}>
-                {typeof step.at === 'number' && step.at < TIRES.length ? tr('Can’t see it') : tr('No port in this picture')}
-              </button>
-              <button type="button" className="text-button" onClick={() => setStep({ pic: { ...step.pic, at: empty(), port: undefined }, at: 0 })}>
-                {tr('Start over')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <p className="settings-note">
-              {tr('A drawing or picture of your car, from the side, top, front or rear. Pick its view, box the part to use (a sheet with several views works), then tap its tires and charge port. The drawing sheet puts each view in its place.')}
-            </p>
-            <ul className="car-pic-list">
-              {list.map((p, i) => (
-                <li key={`${p.src}-${i}`}>
-                  <CropPane src={p.src} crop={p.crop ?? WHOLE} spots={[]} />
-                  <div className="car-pic-about">
-                    <strong>{p.view ? tr(VIEW_WORDS[p.view]) : tr('Any view')}</strong>
-                    <label className="check">
-                      <input type="checkbox" checked={p.drawing !== false} onChange={(e) => setList((l) => l.map((x, j) => (j === i ? { ...x, drawing: e.target.checked } : x)))} />
-                      {tr('A drawing: light lines in dark mode')}
-                    </label>
-                  </div>
-                  <button type="button" className="text-button req-quiet" onClick={() => setList((l) => l.filter((_, j) => j !== i))}>
-                    {tr('Remove')}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="car-place-actions">
-              {list.length < MAX_PICTURES && (
-                <label className="button button-quiet">
-                  {busy ? tr('Adding...') : tr('Add a picture')}
-                  <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={busy} onChange={(e) => void upload(e)} />
-                </label>
-              )}
-              <button type="button" className="button" disabled={busy} onClick={() => void save()}>
-                {tr('Save')}
-              </button>
-            </div>
-          </>
-        )}
-        {error && (
-          <p className="crit-text" role="alert">
-            {error}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 const by = (tires: TireReading[]) => Object.fromEntries(tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
 

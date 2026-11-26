@@ -29,7 +29,7 @@ by part. Next for it:
 ### Polish
 
 - [ ] Accessibility audit: keyboard paths, screen-reader labels, contrast in every theme
-  - Covered: Home and editor keyboard paths, focus return, cancelled drafts, contrast of every text in every theme and e-ink, accessible names, a read-through of every page's accessibility tree, narrow reflow, forced-color graphics, actual Chromium zoom, Firefox text-only zoom, enlarged text, and phone tap targets and placeholders.
+  - Covered: Home and editor keyboard paths, focus return, canceled drafts, contrast of every text in every theme and e-ink, accessible names, a read-through of every page's accessibility tree, narrow reflow, forced-color graphics, actual Chromium zoom, Firefox text-only zoom, enlarged text, and phone tap targets and placeholders.
   - Remaining: a spoken screen-reader walkthrough and native Windows contrast themes. See [Accessibility checks](ACCESSIBILITY.md).
 
 Open an issue if you want something here sooner or don't see it here.
