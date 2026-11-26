@@ -11,11 +11,14 @@ test('car drawings: every view in the catalog ships as a transparent WebP, spots
     for (const v of art.views) {
       const file = new URL(`../car-art/${art.id}/${v.view}.webp`, import.meta.url);
       assert.ok(existsSync(file), `${art.id}/${v.view}.webp`);
-      const head = readFileSync(file).subarray(0, 30);
-      assert.equal(head.toString('latin1', 8, 12), 'WEBP');
-      // Lossless with an alpha channel: the VP8L header's alpha bit, so no paper shows on a card.
-      assert.equal(head.toString('latin1', 12, 16), 'VP8L', `${v.view} is lossless`);
-      assert.ok(head[24] & 0x10, `${v.view} has alpha`);
+      const body = readFileSync(file);
+      assert.equal(body.toString('latin1', 8, 12), 'WEBP');
+      // Lossless with an alpha channel (the VP8L header's alpha bit), so no paper shows on a card.
+      // Chrome wraps it in VP8X with a color profile; PIL writes it bare. Either way, find the VP8L chunk.
+      let at = 12;
+      while (at < body.length && body.toString('latin1', at, at + 4) !== 'VP8L') at += 8 + ((body.readUInt32LE(at + 4) + 1) & ~1);
+      assert.ok(at < body.length, `${v.view} is lossless`);
+      assert.ok(body[at + 12] & 0x10, `${v.view} has alpha`);
       assert.ok(v.aspect && v.aspect > 0.5 && v.aspect < 5);
       for (const xy of [...Object.values(v.at), v.port]) if (xy) assert.ok(xy.every((n) => n >= 0 && n <= 100), `${v.view} spot inside`);
     }

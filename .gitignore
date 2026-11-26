@@ -15,4 +15,6 @@ CLAUDE.md
 
 # Local one-off, not part of Patchboard
 scripts/audit-bets.sql
-
+# Source pictures for npm run car-art: large, and only the cut views ship.
+scripts/car-art/*
+!scripts/car-art/*.json

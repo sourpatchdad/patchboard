@@ -13,6 +13,10 @@
   so it sits on the card without a white box around it in light or dark,
   and the side view fits the card's width with the tires and figures
   beside it.
+- **Adding a car's drawing:** `npm run car-art -- scripts/car-art/<id>.json`
+  cuts a spec sheet and three-quarter renders into the widget's
+  transparent views and prints the entry for `shared/car-art.ts`. The
+  Model 3's spec is the example.
 - **The car with a TV remote:** closing a part or a detail sheet marks
   the panel you opened it from again, so the next press carries on from
   there instead of starting over at the top.

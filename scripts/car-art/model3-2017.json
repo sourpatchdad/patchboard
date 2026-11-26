@@ -1,0 +1,18 @@
+{
+  "id": "model3-2017",
+  "name": "Model 3, 2017 to 2023",
+  "model": "Model 3",
+  "sources": {
+    "sheet": "model3-2017-sheet.webp",
+    "front34": "model3-2017-front34.webp",
+    "rear34": "model3-2017-rear34.webp"
+  },
+  "views": [
+    { "view": "side", "source": "sheet", "crop": [23, 30.5, 64.3, 35.4], "at": { "fl": [35.5, 58.9], "rl": [75.7, 58.9] }, "port": [84.5, 43.5] },
+    { "view": "front", "source": "sheet", "crop": [25.5, 8.5, 15, 17.5] },
+    { "view": "rear", "source": "sheet", "crop": [45.8, 8.5, 14.6, 17.5] },
+    { "view": "top", "source": "sheet", "crop": [66.22, 7.2, 25.18, 19.1] },
+    { "view": "front34", "source": "front34", "at": { "fl": [45.9, 67.4], "fr": [14, 75.2], "rl": [89, 61] } },
+    { "view": "rear34", "source": "rear34", "at": { "fl": [10.4, 59.6], "rl": [46.9, 67.4], "rr": [83, 74.2] }, "port": [54.6, 40.8] }
+  ]
+}
