@@ -53,7 +53,8 @@ export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string;
     if (start.current !== null && Math.abs(e.clientX - start.current) > 40) turn(e.clientX < start.current ? 1 : -1);
     start.current = null;
   };
-  const label = `${tr('Tires')}, ${unit}: ${tires.map((t) => `${t.name} ${t.value}${t.soft ? `, ${tr('low')}` : ''}`).join(', ')}`;
+  // No pressures (a sleeping car often sends none): the car alone, named by its view.
+  const label = tires.length ? `${tr('Tires')}, ${unit}: ${tires.map((t) => `${t.name} ${t.value}${t.soft ? `, ${tr('low')}` : ''}`).join(', ')}` : tr(viewName(view));
   return (
     <div className="car-tires-wrap">
       <div className="car-tires-figure" role="img" aria-label={label} onPointerDown={down} onPointerUp={up} onPointerCancel={() => (start.current = null)}>
@@ -69,7 +70,7 @@ export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string;
             ))}
           </span>
         )}
-        <span className="car-views-unit">{unit}</span>
+        {tires.length > 0 && <span className="car-views-unit">{unit}</span>}
       </div>
     </div>
   );
@@ -138,7 +139,7 @@ const VIEW_NAMES: Record<NonNullable<CarPicture['view']>, string> = {
 };
 
 
-const by = (tires: TireReading[]) => Object.fromEntries(tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
+const by = (tires: TireReading[]) => Object.fromEntries(tires.map((t) => [t.pos, t])) as Partial<Record<TirePos, TireReading>>;
 
 /** A pressure and its tire's short name, at one end of a leader. */
 function Callout({ t, x, y, end, line, dot }: { t: TireReading; x: number; y: number; end?: boolean; line: string; dot: [number, number] }) {
@@ -208,16 +209,16 @@ export const SIDE_TIRES: CarPicture['at'] = { fl: [26.7, 65.3], fr: [28.6, 63.2]
 /** The drawn car's charge port: rear left, by the tail lamp. */
 export const SIDE_PORT: [number, number] = [86.5, 47];
 
-function CarSide({ tires, unit }: { tires: TireReading[]; unit: string }) {
+function CarSide({ tires }: { tires: TireReading[]; unit: string }) {
   const t = by(tires);
   return (
     <svg className="car-sketch car-side" viewBox="0 4 420 190">
-      <SideDrawing soft={{ fl: t.fl.soft, fr: t.fr.soft, rl: t.rl.soft, rr: t.rr.soft }} />
+      <SideDrawing soft={{ fl: !!t.fl?.soft, fr: !!t.fr?.soft, rl: !!t.rl?.soft, rr: !!t.rr?.soft }} />
       {/* Front tires on the left, rear on the right: near ones above, far ones below. */}
-      <Callout t={t.fl} x={6} y={28} line="M6 36 L64 36 L98 110" dot={[98, 110]} />
-      <Callout t={t.fr} x={6} y={178} line="M6 186 L78 186 L104 146" dot={[104, 146]} />
-      <Callout t={t.rl} x={414} y={28} end line="M414 36 L356 36 L326 110" dot={[326, 110]} />
-      <Callout t={t.rr} x={414} y={178} end line="M414 186 L362 186 L338 144" dot={[338, 144]} />
+      {t.fl && <Callout t={t.fl} x={6} y={28} line="M6 36 L64 36 L98 110" dot={[98, 110]} />}
+      {t.fr && <Callout t={t.fr} x={6} y={178} line="M6 186 L78 186 L104 146" dot={[104, 146]} />}
+      {t.rl && <Callout t={t.rl} x={414} y={28} end line="M414 36 L356 36 L326 110" dot={[326, 110]} />}
+      {t.rr && <Callout t={t.rr} x={414} y={178} end line="M414 186 L362 186 L338 144" dot={[338, 144]} />}
     </svg>
   );
 }
@@ -226,7 +227,7 @@ function CarSide({ tires, unit }: { tires: TireReading[]; unit: string }) {
 const WHEEL: Record<TirePos, [number, number]> = { fl: [87, 46], fr: [128, 46], rl: [87, 112], rr: [128, 112] };
 
 /** From above: the plan view, a pressure at each corner. */
-function CarAbove({ tires, unit }: { tires: TireReading[]; unit: string }) {
+function CarAbove({ tires }: { tires: TireReading[]; unit: string }) {
   const t = by(tires);
   return (
     <svg className="car-sketch car-above" viewBox="0 0 220 172">
@@ -246,12 +247,12 @@ function CarAbove({ tires, unit }: { tires: TireReading[]; unit: string }) {
         <path d="M102 26.5 Q110 24.5 118 26.5" />
       </g>
       {TIRES.map((p) => (
-        <rect key={p} className={`car-tread ${t[p].soft ? 'is-soft' : ''}`} x={WHEEL[p][0]} y={WHEEL[p][1]} width="5" height="14" rx="1.6" />
+        <rect key={p} className={`car-tread ${t[p]?.soft ? 'is-soft' : ''}`} x={WHEEL[p][0]} y={WHEEL[p][1]} width="5" height="14" rx="1.6" />
       ))}
-      <Callout t={t.fl} x={6} y={34} line="M6 42 L56 42 L86 52" dot={[86, 52]} />
-      <Callout t={t.fr} x={214} y={34} end line="M214 42 L164 42 L134 52" dot={[134, 52]} />
-      <Callout t={t.rl} x={6} y={138} line="M6 146 L56 146 L86 120" dot={[86, 120]} />
-      <Callout t={t.rr} x={214} y={138} end line="M214 146 L164 146 L134 120" dot={[134, 120]} />
+      {t.fl && <Callout t={t.fl} x={6} y={34} line="M6 42 L56 42 L86 52" dot={[86, 52]} />}
+      {t.fr && <Callout t={t.fr} x={214} y={34} end line="M214 42 L164 42 L134 52" dot={[134, 52]} />}
+      {t.rl && <Callout t={t.rl} x={6} y={138} line="M6 146 L56 146 L86 120" dot={[86, 120]} />}
+      {t.rr && <Callout t={t.rr} x={214} y={138} end line="M214 146 L164 146 L134 120" dot={[134, 120]} />}
     </svg>
   );
 }

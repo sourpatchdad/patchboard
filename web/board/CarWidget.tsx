@@ -143,7 +143,7 @@ export function CarWidget() {
               sheet={sheet}
               fallback={
             <div className="car-dash">
-              <div className="car-dash-stage">{c.tires && <CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} />}</div>
+              <div className="car-dash-stage"><CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} /></div>
               <div className="car-dash-side">
                 {cars.length > 1 && <h3 className="car-name">{c.name}</h3>}
                 <div className="car-dash-charge">
@@ -248,9 +248,8 @@ export function CarWidget() {
                   </div>
                 )}
 
-                {c.tires && (
-                  <CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} />
-                )}
+                {/* The car always: a sleeping car often reports no tire pressures, and then only the figures are missing. */}
+                <CarTires vin={c.vin} art={c.art} unit={metric ? 'bar' : 'psi'} tires={tireList} />
                 {c.tires && (
                   <div className="car-chart">
                     <Lines

@@ -9,6 +9,10 @@
   outline, with Drawing on the Tessie connection in Settings
   (`TESSIE_CAR`). Pictures you uploaded before are no longer used; you can
   delete them from the data folder's `icons`.
+- **The car shows while it sleeps:** on a phone the Car widget drew no
+  car at all whenever Tessie had no tire pressures, which a sleeping car
+  often sends. The car is drawn either way now, with the figures when
+  there are readings.
 - **The car on a phone:** the drawing is line art on a clear background,
   so it sits on the card without a white box or halo in light or dark. The
   car takes more of the width, each tire's position sits under its figure,
