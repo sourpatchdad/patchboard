@@ -373,7 +373,7 @@ function Sheet({
   const soft = Object.fromEntries(sheet.tires.map((t) => [t.pos, t.soft])) as Record<TirePos, boolean>;
   const tire = Object.fromEntries(sheet.tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
   const spec = specFor(sheet.model);
-  // Every view there is, in the order the car turns through them. The side always is: your picture or the drawn one.
+  // Every view there is, in the order the car turns through them. The side always is: the car's drawing, or the plain outline.
   const sideView: View = { v: 'side', pic: sidePic, framed: sideFramed, at: sidePic ? sidePic.at : SIDE_TIRES, port: sidePic ? sidePic.port : SIDE_PORT, label: msg('Side view') };
   const others = (
     [
@@ -720,18 +720,23 @@ function Sheet({
             })()}
           </g>
           {/* The way round, when there's more than one view: a quiet turn mark either side. */}
-          {views.length > 1 && (
+          {views.length > 1 && (() => {
+            // The height is dimensioned to the right of a side, front or rear view: the next mark goes past its figure.
+            const heightEnd = spec && side && (large.v === 'side' || large.v === 'front' || large.v === 'rear') ? side.ink.x1 + 7.2 + dim(spec.height, locale()).length * 2 + 1.5 : 0;
+            const nextX = Math.max(mainSlot.x + mainSlot.w + 1, heightEnd);
+            return (
             <>
               <Hit label={tr('Turn the car back')} onOpen={() => step(-1)}>
                 <path className="bp-turn-mark" d={`M${mainSlot.x - 1} ${mainSlot.y + mainSlot.h / 2 - 3} l-2.4 3 l2.4 3`} />
                 <rect className="bp-hit-area" x={mainSlot.x - 6} y={mainSlot.y + mainSlot.h / 2 - 6} width="8" height="12" />
               </Hit>
               <Hit label={tr('Turn the car on')} onOpen={() => step(1)}>
-                <path className="bp-turn-mark" d={`M${mainSlot.x + mainSlot.w + 1} ${mainSlot.y + mainSlot.h / 2 - 3} l2.4 3 l-2.4 3`} />
-                <rect className="bp-hit-area" x={mainSlot.x + mainSlot.w - 2} y={mainSlot.y + mainSlot.h / 2 - 6} width="8" height="12" />
+                <path className="bp-turn-mark" d={`M${nextX} ${mainSlot.y + mainSlot.h / 2 - 3} l2.4 3 l-2.4 3`} />
+                <rect className="bp-hit-area" x={nextX - 3} y={mainSlot.y + mainSlot.h / 2 - 6} width="8" height="12" />
               </Hit>
             </>
-          )}
+            );
+          })()}
         </g>
       )}
 

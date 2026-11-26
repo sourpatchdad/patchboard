@@ -21,12 +21,12 @@ export const CAR_ART: CarArt[] = [
     name: 'Model 3, 2017 to 2023',
     model: 'Model 3',
     views: [
-      { view: 'side', aspect: 3.228, at: { fl: [19.5, 80.3], fr: null, rl: [81.9, 80.3], rr: null }, port: [95.6, 36.7] },
-      { view: 'front', aspect: 1.549, at: { fl: null, fr: null, rl: null, rr: null } },
-      { view: 'rear', aspect: 1.506, at: { fl: null, fr: null, rl: null, rr: null } },
-      { view: 'top', aspect: 2.346, at: { fl: null, fr: null, rl: null, rr: null } },
-      { view: 'front34', aspect: 2.123, at: { fl: [45.4, 74.3], fr: [12.1, 85.8], rl: [90.5, 64.8], rr: null } },
-      { view: 'rear34', aspect: 1.953, at: { fl: [7.3, 64.2], fr: null, rl: [46.7, 75.1], rr: [85.5, 84.6] }, port: [55, 37.8] },
+      { view: 'side', aspect: 3.228, at: { fl: [19.4, 76], fr: null, rl: [81.9, 76], rr: null }, port: [95.6, 36.7] },
+      { view: 'front', aspect: 1.549, at: { fl: [88, 90], fr: [14, 90], rl: null, rr: null } },
+      { view: 'rear', aspect: 1.506, at: { fl: null, fr: null, rl: [13, 91], rr: [87, 91] } },
+      { view: 'top', aspect: 2.246, at: { fl: [18, 84.3], fr: [18, 11.5], rl: [79, 84.3], rr: [79, 11.5] } },
+      { view: 'front34', aspect: 2.123, at: { fl: [45.5, 71.9], fr: [12.1, 85.8], rl: [91.5, 64.6], rr: null } },
+      { view: 'rear34', aspect: 1.953, at: { fl: [7.3, 64.2], fr: null, rl: [45.3, 73.5], rr: [85.5, 84.6] }, port: [55.1, 38.8] },
     ],
   },
 ];

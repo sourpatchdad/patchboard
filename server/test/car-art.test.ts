@@ -49,10 +49,31 @@ test('each pressure sits beside its tire, on its nearer side, clear of the next'
   assert.equal(l.fl.left, true);
   assert.equal(l.fr.left, true);
   assert.equal(l.rr.left, false);
-  assert.equal(l.rl.left, false, 'the hidden tire takes the emptier side');
+  assert.equal(l.rl.left, false, 'the hidden tire sits with its axle partner');
   assert.ok(Math.abs(l.fl.y - l.fr.y) >= 11, 'two on one side clear each other');
   assert.ok(Math.abs(l.rr.y - (55 * h) / 100) < 1, 'a lone label sits at its tire');
   for (const s of Object.values(l)) assert.ok(s.y >= 8 && s.y <= h - 4);
+});
+
+test('a hidden tire labels on the side it is really on: behind its partner, or on its own flank', () => {
+  // Side view, driver side: the far tires go with the near ones on their axle.
+  const side = labelSpots({ fl: [19.4, 76], fr: null, rl: [81.9, 76], rr: null }, 31);
+  assert.equal(side.fr.left, true);
+  assert.equal(side.rr.left, false);
+  // Front view: the car's left is on your right, and the rear tires sit behind the front ones.
+  const front = labelSpots({ fl: [88, 90], fr: [14, 90], rl: null, rr: null }, 65);
+  assert.deepEqual([front.fl.left, front.fr.left, front.rl.left, front.rr.left], [false, true, false, true]);
+  // Nothing in sight: the emptier side, as before.
+  const none = labelSpots({ fl: null, fr: null, rl: null, rr: null }, 60);
+  assert.equal([none.fl, none.fr, none.rl, none.rr].filter((x) => x.left).length, 2);
+});
+
+test('car drawings: front, rear and top views put each tire on the side of the picture it is really on', () => {
+  const views = artViews('model3-2017');
+  const at = (v: string) => views.find((x) => x.view === v)!.at;
+  assert.ok(at('front').fl![0] > 50 && at('front').fr![0] < 50, 'facing you, its left is on your right');
+  assert.ok(at('rear').rl![0] < 50 && at('rear').rr![0] > 50, 'from behind, its left is on your left');
+  assert.ok(at('top').fl![1] > 50 && at('top').fl![0] < 50, 'from above, nose left: the driver side runs along the bottom');
 });
 
 test('car commands: only the ones Tessie takes, and a charge limit Tesla accepts', async () => {

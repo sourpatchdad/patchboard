@@ -9,7 +9,7 @@ import { type PointerEvent, useRef, useState } from 'react';
 import { artViews } from '../../shared/car-art.ts';
 import { type CarPicture, labelSpots } from '../../shared/car-pictures.ts';
 import { TIRES, type TirePos } from '../../shared/types.ts';
-import { t as tr } from '../lib/i18n.ts';
+import { msg, t as tr } from '../lib/i18n.ts';
 
 export interface TireReading {
   pos: TirePos;
@@ -29,7 +29,7 @@ function savedIndex(vin: string): number {
   }
 }
 
-/** The pressures on the car, with arrows, dots and a swipe to turn it. */
+/** The pressures on the car: swipe to turn it, or tap a dot for a view. */
 export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string; tires: TireReading[]; unit: string }) {
   const pics = artViews(art);
   const views: View[] = pics.length ? pics.map((pic) => ({ kind: 'picture', pic })) : [{ kind: 'side' }, { kind: 'above' }];
@@ -37,8 +37,7 @@ export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string;
   const at = ((index % views.length) + views.length) % views.length;
   const view = views[at];
   const start = useRef<number | null>(null);
-  const turn = (by: number) => {
-    const next = (((at + by) % views.length) + views.length) % views.length;
+  const show = (next: number) => {
     setIndex(next);
     try {
       localStorage.setItem(viewKey(vin), String(next));
@@ -46,6 +45,7 @@ export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string;
       // Private mode: it turns for this visit only.
     }
   };
+  const turn = (by: number) => show((((at + by) % views.length) + views.length) % views.length);
   const down = (e: PointerEvent) => {
     start.current = e.clientX;
   };
@@ -61,20 +61,15 @@ export function CarTires({ vin, art, tires, unit }: { vin: string; art?: string;
       </div>
       <div className="car-views">
         {views.length > 1 && (
-          <>
-            <button type="button" className="text-button car-turn" aria-label={tr('Previous view')} onClick={() => turn(-1)}>
-              ‹
-            </button>
-            <span className="car-dots" aria-hidden="true">
-              {views.map((_, i) => (
-                <i key={i} className={i === at ? 'is-on' : ''} />
-              ))}
-            </span>
-            <button type="button" className="text-button car-turn" aria-label={tr('Next view')} onClick={() => turn(1)}>
-              ›
-            </button>
-          </>
+          <span className="car-dots">
+            {views.map((v, i) => (
+              <button key={i} type="button" className={`car-dot-btn ${i === at ? 'is-on' : ''}`} aria-label={tr(viewName(v))} aria-current={i === at || undefined} onClick={() => show(i)}>
+                <i />
+              </button>
+            ))}
+          </span>
         )}
+        <span className="car-views-unit">{unit}</span>
       </div>
     </div>
   );
@@ -97,8 +92,8 @@ function PictureView({ pic, tires, unit }: { pic: CarPicture; tires: TireReading
         {tires.map((t) => {
           const { left, y } = spots[t.pos];
           const tx = left ? 1 - GUTTER : 99 + GUTTER;
-          // The leader runs under the label to the picture's edge, then bends once to the tire.
-          const ly = y + 2;
+          // The position sits under the figure; the leader runs under both to the picture's edge, then bends once to the tire.
+          const ly = y + 4.6;
           const reach = left ? 0 : 100;
           const spot = pic.at[t.pos];
           return (
@@ -111,24 +106,36 @@ function PictureView({ pic, tires, unit }: { pic: CarPicture; tires: TireReading
               )}
               <text className="car-num" x={tx} y={y} textAnchor={left ? 'start' : 'end'}>
                 {t.value}
-                <tspan className="car-pos" dx="1.2">
-                  {t.pos.toUpperCase()}
-                </tspan>
+              </text>
+              <text className="car-pos" x={tx} y={y + 3.5} textAnchor={left ? 'start' : 'end'}>
+                {t.pos.toUpperCase()}
               </text>
             </g>
           );
         })}
-        <text className="car-unit" x="50" y={outH - 1.4} textAnchor="middle">
-          {unit}
-        </text>
       </svg>
     </div>
   );
 }
 
-/** Room beside a picture for the figures, and under it for the unit, in the picture's own units (it is 100 wide). */
-const GUTTER = 15;
-const FOOT = 5;
+/** Room beside a picture for the figures, and under it for the lowest one's leader, in the picture's own units (it is 100 wide). */
+const GUTTER = 9;
+const FOOT = 2;
+
+/** A view's name, for its dot. */
+function viewName(v: View): string {
+  if (v.kind === 'side') return VIEW_NAMES.side;
+  if (v.kind === 'above') return VIEW_NAMES.top;
+  return VIEW_NAMES[v.pic.view ?? 'side'];
+}
+const VIEW_NAMES: Record<NonNullable<CarPicture['view']>, string> = {
+  side: msg('Side view'),
+  front: msg('Front view'),
+  rear: msg('Rear view'),
+  top: msg('Top view'),
+  front34: msg('Front three-quarter'),
+  rear34: msg('Rear three-quarter'),
+};
 
 
 const by = (tires: TireReading[]) => Object.fromEntries(tires.map((t) => [t.pos, t])) as Record<TirePos, TireReading>;
@@ -211,9 +218,6 @@ function CarSide({ tires, unit }: { tires: TireReading[]; unit: string }) {
       <Callout t={t.fr} x={6} y={178} line="M6 186 L78 186 L104 146" dot={[104, 146]} />
       <Callout t={t.rl} x={414} y={28} end line="M414 36 L356 36 L326 110" dot={[326, 110]} />
       <Callout t={t.rr} x={414} y={178} end line="M414 186 L362 186 L338 144" dot={[338, 144]} />
-      <text className="car-unit" x="210" y="184" textAnchor="middle">
-        {unit}
-      </text>
     </svg>
   );
 }
@@ -248,9 +252,6 @@ function CarAbove({ tires, unit }: { tires: TireReading[]; unit: string }) {
       <Callout t={t.fr} x={214} y={34} end line="M214 42 L164 42 L134 52" dot={[134, 52]} />
       <Callout t={t.rl} x={6} y={138} line="M6 146 L56 146 L86 120" dot={[86, 120]} />
       <Callout t={t.rr} x={214} y={138} end line="M214 146 L164 146 L134 120" dot={[134, 120]} />
-      <text className="car-unit" x="110" y="168" textAnchor="middle">
-        {unit}
-      </text>
     </svg>
   );
 }

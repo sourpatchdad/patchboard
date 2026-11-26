@@ -10,9 +10,17 @@
   (`TESSIE_CAR`). Pictures you uploaded before are no longer used; you can
   delete them from the data folder's `icons`.
 - **The car on a phone:** the drawing is line art on a clear background,
-  so it sits on the card without a white box around it in light or dark,
-  and the side view fits the card's width with the tires and figures
-  beside it.
+  so it sits on the card without a white box or halo in light or dark. The
+  car takes more of the width, each tire's position sits under its figure,
+  and the arrows are gone: swipe to turn the car, or tap one of the dots
+  under it. The unit shows once at the end of that row.
+- **Every tire where it is:** each view marks all four tires, and a tire
+  a view hides is listed beside the one it shares an axle with. The front
+  view puts the car's left on your right, the top view runs the driver side
+  along the bottom, and the leaders land on the hubs. The top view keeps
+  both mirrors, and the stray guide lines by the mirrors are gone.
+- **The drawing sheet's height:** the arrow that turns the car to the next
+  view sits past the height figure instead of over it.
 - **Adding a car's drawing:** `npm run car-art -- scripts/car-art/<id>.json`
   cuts a spec sheet and three-quarter renders into the widget's
   transparent views and prints the entry for `shared/car-art.ts`. The

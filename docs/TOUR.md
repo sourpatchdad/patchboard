@@ -187,7 +187,7 @@ Its Dashboard style makes the card a live engineering drawing. The views
 run across the top, the side view sits in the middle dimensioned in
 millimeters, the live figures and the odometer sit beside it, and panels
 for status, charging, range and tires run along the bottom. Swipe across the
-car or press an arrow key to turn it through your drawings. Tap a metric, a
+car or press an arrow key to turn it through its views. Tap a metric, a
 panel or a tire for its detail, a sheet of its own with the part drawn and
 its history on ruled axes you can drag along. Tap a door, the frunk, the
 trunk, the glass or the charge port, and hold to lock or unlock, open it,

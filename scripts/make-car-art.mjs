@@ -6,7 +6,8 @@
 // The spec names the source pictures (dark lines on white paper: a spec
 // sheet with several views, or one picture per view) and, per view, the part
 // of its source to use and where its tires and charge port sit, all in
-// percent of the source picture. The script turns paper into transparency,
+// percent of the source picture, and any `erase` boxes for leftovers the
+// rules below can't tell from the car. The script turns paper into transparency,
 // erases the dimension and extension lines a sheet crop catches (thin,
 // straight ink running in from the crop's edge), trims each view to its ink
 // and re-expresses the spots in percent of the new image.
@@ -40,7 +41,7 @@ const entries = [];
 for (const v of spec.views) {
   const file = resolve(dirname(specPath), spec.sources[v.source]);
   const src = `data:image/${file.split('.').pop()};base64,${readFileSync(file).toString('base64')}`;
-  const r = await page.evaluate(cut, { src, crop: v.crop ?? null, at: v.at ?? {}, port: v.port ?? null });
+  const r = await page.evaluate(cut, { src, crop: v.crop ?? null, erase: v.erase ?? [], at: v.at ?? {}, port: v.port ?? null });
   writeFileSync(resolve(out, `${v.view}.webp`), Buffer.from(r.webp.split(',')[1], 'base64'));
   const entry = { view: v.view, aspect: Math.round((r.w / r.h) * 1000) / 1000, at: r.at };
   if (r.port) entry.port = r.port;
@@ -60,7 +61,7 @@ ${entries.map((e) => `      { view: '${e.view}', aspect: ${e.aspect}, at: { fl: 
   },`);
 
 /** Runs in the page: paper to transparency, guides out, trimmed; WebP back. */
-async function cut({ src, crop, at, port }) {
+async function cut({ src, crop, erase, at, port }) {
   const im = new Image();
   im.src = src;
   await im.decode();
@@ -73,6 +74,9 @@ async function cut({ src, crop, at, port }) {
   const c = new OffscreenCanvas(w, h);
   const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.drawImage(im, box.x, box.y, w, h, 0, 0, w, h);
+  // Bits of guide the rules can't tell from the car, painted out by hand: [x, y, width, height] in percent of the source.
+  ctx.fillStyle = '#fff';
+  for (const [ex, ey, ew, eh] of erase) ctx.fillRect((ex / 100) * W - box.x, (ey / 100) * H - box.y, (ew / 100) * W, (eh / 100) * H);
   const px = ctx.getImageData(0, 0, w, h).data;
   // Ink strength: 0 on paper, 255 on a solid line.
   const PAPER = 232;
@@ -82,6 +86,8 @@ async function cut({ src, crop, at, port }) {
     a[i] = l >= PAPER ? 0 : Math.min(255, Math.round(((PAPER - l) * 255) / (PAPER - 40)));
   }
   if (crop) dropGuides(a, w, h);
+  // Ink this faint is paper grain or a guide's ghost, never a line: off, so nothing hangs in the air.
+  for (let i = 0; i < a.length; i++) if (a[i] <= 12) a[i] = 0;
   // Trim to the ink, with a little room.
   let [x0, y0, x1, y1] = [w, h, -1, -1];
   for (let y = 0; y < h; y++)
@@ -175,6 +181,44 @@ async function cut({ src, crop, at, port }) {
         let r = start;
         while (r < h && ink(r, x) && !beside(r)) r++;
         if (r - start >= 10) for (let k = 0; k < r - 2; k++) for (let nx = Math.max(0, x - 2); nx <= Math.min(w - 1, x + 2); nx++) a[row(k) * w + nx] = 0;
+      }
+    }
+    // What those leave of a guide where it met the car: a speck near the edge, a few pixels long,
+    // joined to the car only by faint edge pixels. So pieces join here through solid ink only.
+    const solid = (i) => a[i] > 40;
+    const band = Math.round(0.06 * Math.max(w, h));
+    const seen2 = new Uint8Array(w * h);
+    for (let s = 0; s < w * h; s++) {
+      if (seen2[s] || !solid(s)) continue;
+      const stack = [s];
+      const part = [];
+      seen2[s] = 1;
+      let [mx0, my0, mx1, my1] = [w, h, -1, -1];
+      while (stack.length) {
+        const i = stack.pop();
+        part.push(i);
+        const x = i % w;
+        const y = (i - x) / w;
+        mx0 = Math.min(mx0, x);
+        mx1 = Math.max(mx1, x);
+        my0 = Math.min(my0, y);
+        my1 = Math.max(my1, y);
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            const j = ny * w + nx;
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h && !seen2[j] && solid(j)) {
+              seen2[j] = 1;
+              stack.push(j);
+            }
+          }
+      }
+      const nearEdge = mx0 < band || my0 < band || mx1 >= w - band || my1 >= h - band;
+      if (nearEdge && part.length <= 24 && Math.max(mx1 - mx0, my1 - my0) <= 12 && Math.min(mx1 - mx0, my1 - my0) <= 3) {
+        for (const i of part) a[i] = 0;
+        // And the faint pixels around it, which would otherwise hang on as a ghost.
+        for (let y = Math.max(0, my0 - 1); y <= Math.min(h - 1, my1 + 1); y++) for (let x = Math.max(0, mx0 - 1); x <= Math.min(w - 1, mx1 + 1); x++) if (!solid(y * w + x)) a[y * w + x] = 0;
       }
     }
   }

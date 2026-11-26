@@ -30,8 +30,11 @@ export interface LabelSpot {
 /**
  * Each pressure beside its tire, on the side the tire is nearer, at the
  * tire's own height, so every leader is short. Two on one side are moved
- * apart until they clear; a tire this angle hides takes the emptier side.
- * `h` is the picture's height when its width is 100.
+ * apart until they clear. A tire this angle hides sits with the tire that
+ * shares its axle, else the one on its side of the car, so its label lands on
+ * the side of the picture it's really on: behind its partner in a side view,
+ * on the car's own side in a front or rear view. With neither in sight it
+ * takes the emptier side. `h` is the picture's height when its width is 100.
  */
 export function labelSpots(at: CarPicture['at'], h: number, gap = 11): Record<TirePos, LabelSpot> {
   const top = 8;
@@ -41,8 +44,15 @@ export function labelSpots(at: CarPicture['at'], h: number, gap = 11): Record<Ti
     const xy = at[t];
     if (xy) sides[xy[0] < 50 ? 'left' : 'right'].push({ t, y: (xy[1] * h) / 100 });
   }
+  const axle: Record<TirePos, TirePos> = { fl: 'fr', fr: 'fl', rl: 'rr', rr: 'rl' };
+  const flank: Record<TirePos, TirePos> = { fl: 'rl', rl: 'fl', fr: 'rr', rr: 'fr' };
   for (const t of TIRES) {
     if (at[t]) continue;
+    const mate = at[axle[t]] ?? at[flank[t]];
+    if (mate) {
+      sides[mate[0] < 50 ? 'left' : 'right'].push({ t, y: (mate[1] * h) / 100 });
+      continue;
+    }
     const side = sides.left.length <= sides.right.length ? 'left' : 'right';
     // A front tire reads first: a hidden one sits high, a rear one low.
     sides[side].push({ t, y: t.startsWith('f') ? top : bottom });

@@ -8830,7 +8830,7 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
   fill: #000 !important;
 }
 
-/* Arrows and dots to turn the car, and Pictures to set it up. */
+/* Arrows and dots to turn the car. */
 .car-views {
   display: flex;
   align-items: center;
@@ -8839,31 +8839,46 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
   width: 100%;
 }
 
-.car-turn {
-  min-width: 44px;
-  min-height: 32px;
-  font-size: 20px;
-  line-height: 1;
-}
-
+/* A phone's paging dots: each one a view, and a 24px target round a 6px mark. */
 .car-dots {
   display: flex;
-  gap: 6px;
 }
 
-.car-dots i {
+.car-dot-btn {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.car-dot-btn i,
+.car-dots > i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--line);
 }
 
-.car-dots i.is-on {
+.car-dot-btn.is-on i,
+.car-dots > i.is-on {
   background: var(--ink-2);
 }
 
-.car-views > :first-child {
-  margin-left: auto;
+/* The unit once, quietly, at the end of the row, instead of a line of its own under the car. */
+.car-views {
+  position: relative;
+}
+
+.car-views-unit {
+  position: absolute;
+  right: 0;
+  font: 400 11px var(--f-mono);
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
 }
 
 /* A drawing of the car, the pressures drawn over it in its own units. */
@@ -8910,10 +8925,6 @@ html[data-eink] :is(.bp-sheet text.is-soft, .bp-sheet tspan.is-soft, .bp-tire.is
 .car-photo .car-num {
   font-size: 5.8px;
   font-weight: 400;
-  paint-order: stroke;
-  stroke: var(--raised);
-  stroke-width: 0.35px;
-  stroke-linejoin: round;
 }
 
 .car-photo :is(.car-pos, .car-unit) {
