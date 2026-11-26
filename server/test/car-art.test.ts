@@ -30,6 +30,7 @@ test('car drawings: the one picked wins, else the model, else the outline', () =
   assert.equal(artFor('auto', 'Model 3'), 'model3-2017');
   assert.equal(artFor('model3-2017', 'Model Y'), 'model3-2017', 'a pick overrides what Tessie reports');
   assert.equal(artFor(CAR_OUTLINE, 'Model 3'), undefined);
+  assert.equal(artFor(undefined, 'Model Y'), 'modely-2020');
   assert.equal(artFor(undefined, 'Cybertruck'), undefined, 'no drawing yet: the outline');
   assert.equal(artFor('model9', 'Model 3'), undefined, 'an unknown pick draws the outline');
   assert.equal(artViews('model3-2017')[0].src, '/api/car-art/model3-2017/side.webp');
@@ -69,11 +70,14 @@ test('a hidden tire labels on the side it is really on: behind its partner, or o
 });
 
 test('car drawings: front, rear and top views put each tire on the side of the picture it is really on', () => {
-  const views = artViews('model3-2017');
-  const at = (v: string) => views.find((x) => x.view === v)!.at;
-  assert.ok(at('front').fl![0] > 50 && at('front').fr![0] < 50, 'facing you, its left is on your right');
-  assert.ok(at('rear').rl![0] < 50 && at('rear').rr![0] > 50, 'from behind, its left is on your left');
-  assert.ok(at('top').fl![1] > 50 && at('top').fl![0] < 50, 'from above, nose left: the driver side runs along the bottom');
+  for (const art of CAR_ART) {
+    const views = artViews(art.id);
+    const at = (v: string) => views.find((x) => x.view === v)!.at;
+    assert.ok(at('front').fl![0] > 50 && at('front').fr![0] < 50, `${art.id}: facing you, its left is on your right`);
+    assert.ok(at('rear').rl![0] < 50 && at('rear').rr![0] > 50, `${art.id}: from behind, its left is on your left`);
+    assert.ok(at('top').fl![1] > 50 && at('top').fl![0] < 50, `${art.id}: from above, nose left, the driver side runs along the bottom`);
+    assert.ok(at('side').fl![0] < at('side').rl![0], `${art.id}: the side view faces left`);
+  }
 });
 
 test('car commands: only the ones Tessie takes, and a charge limit Tesla accepts', async () => {

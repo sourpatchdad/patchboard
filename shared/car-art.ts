@@ -29,6 +29,19 @@ export const CAR_ART: CarArt[] = [
       { view: 'rear34', aspect: 1.953, at: { fl: [7.3, 64.2], fr: null, rl: [45.3, 73.5], rr: [85.5, 84.6] }, port: [55.1, 38.8] },
     ],
   },
+  {
+    id: 'modely-2020',
+    name: 'Model Y, 2020 to 2024',
+    model: 'Model Y',
+    views: [
+      { view: 'side', aspect: 2.476, at: { fl: [19.5, 73.5], fr: null, rl: [79.7, 74.6], rr: null }, port: [94.1, 39.6] },
+      { view: 'front', aspect: 1.235, at: { fl: [88.1, 93.8], fr: [11.4, 93.8], rl: null, rr: null } },
+      { view: 'rear', aspect: 1.181, at: { fl: null, fr: null, rl: [10.4, 93.8], rr: [88.6, 93.8] } },
+      { view: 'top', aspect: 1.971, at: { fl: [18.8, 87.8], fr: [18.8, 13.9], rl: [78.6, 87.8], rr: [78.6, 13.9] } },
+      { view: 'front34', aspect: 1.778, at: { fl: [58.8, 76.2], fr: [11.9, 89.9], rl: [92.7, 63.7], rr: null } },
+      { view: 'rear34', aspect: 1.957, at: { fl: [7.9, 65.9], fr: null, rl: [45.3, 73.6], rr: [86.2, 86.9] }, port: [53.7, 37.1] },
+    ],
+  },
 ];
 
 /** TESSIE_CAR: match the model (the default), one car by id, or the plain outline. */

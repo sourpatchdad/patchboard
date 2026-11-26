@@ -3,9 +3,9 @@
 ## Unreleased
 
 - **The car draws itself:** the Car widget no longer asks you to upload
-  pictures. Patchboard ships the drawings (a Model 3, 2017 to 2023, for
-  now) with the tires and charge port already placed, and picks the one
-  for the model Tessie reports. Choose a different one, or a plain
+  pictures. Patchboard ships the drawings (Model 3, 2017 to 2023, and
+  Model Y, 2020 to 2024, so far) with the tires and charge port already
+  placed, and picks the one for the model Tessie reports. Choose a different one, or a plain
   outline, with Drawing on the Tessie connection in Settings
   (`TESSIE_CAR`). Pictures you uploaded before are no longer used; you can
   delete them from the data folder's `icons`.

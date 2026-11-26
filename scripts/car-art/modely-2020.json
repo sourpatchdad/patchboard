@@ -1,0 +1,18 @@
+{
+  "id": "modely-2020",
+  "name": "Model Y, 2020 to 2024",
+  "model": "Model Y",
+  "sources": {
+    "sheet": "modely-2020-sheet.png",
+    "front34": "modely-2020-front34.png",
+    "composite": "modely-2020-composite.png"
+  },
+  "views": [
+    {"view": "side", "source": "sheet", "crop": [18, 52, 63, 46], "at": {"fl": [30.2, 86], "rl": [67.8, 86.5]}, "port": [76.8, 70.8]},
+    {"view": "front", "source": "sheet", "crop": [1, 8, 27, 39], "at": {"fl": [24, 44], "fr": [4, 44]}},
+    {"view": "rear", "source": "sheet", "crop": [28, 8, 26, 39], "at": {"rl": [31, 44], "rr": [50.5, 44]}},
+    {"view": "top", "source": "sheet", "crop": [54.5, 6, 45, 41], "at": {"fl": [62.96, 42], "fr": [62.96, 12], "rl": [89.9, 42], "rr": [89.9, 12]}},
+    {"view": "front34", "source": "front34", "at": {"fl": [58.7, 72.5], "fr": [12, 84], "rl": [92.5, 62]}},
+    {"view": "rear34", "source": "composite", "crop": [51, 60.5, 47.5, 38.5], "at": {"fl": [55.1, 86.4], "rl": [72.7, 89.2], "rr": [92, 94]}, "port": [76.7, 76]}
+  ]
+}
