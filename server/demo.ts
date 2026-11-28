@@ -1610,3 +1610,28 @@ export function demoReleases(repos: string[]): import('../shared/types.ts').Rele
   const known: Record<string, string> = { 'immich-app/immich': 'v2.2.3', 'jellyfin/jellyfin': 'v10.11.2', 'sourpatchdad/patchboard': 'v1.20.0' };
   return repos.map((repo, i) => ({ repo, version: known[repo] ?? `v1.${(i * 7) % 12}.${i % 5}`, at: now - (i * 2 + 1) * 86_400_000, url: `https://github.com/${repo}/releases` }));
 }
+
+/** Demo: what an update brings, for any container, with made-up notes in a real release's shape. */
+export function demoNotes(name: string): { repo: string; running: string; releases: import('../shared/types.ts').ReleaseNote[] } {
+  const day = 86_400_000;
+  const app = name.replace(/@.*$/, '');
+  return {
+    repo: `example/${app}`,
+    running: '4.0.10',
+    releases: [
+      { version: 'v4.0.12', at: Date.now() - 2 * day, url: `https://github.com/example/${app}/releases`, prerelease: false, body: '### Fixed\n- Imports no longer stall when a download client restarts mid-transfer\n- Calendar shows the right air date across time zones\n\n### Changed\n- Faster startup on large libraries' },
+      { version: 'v4.0.11', at: Date.now() - 9 * day, url: `https://github.com/example/${app}/releases`, prerelease: false, body: '### Security\n- Updated a dependency with a known vulnerability (CVE-2026-0000)\n\n### Fixed\n- Health check reports the right disk when paths are mapped' },
+    ],
+  };
+}
+
+/** Demo: a week to summarize, with what's live now and a made-up week behind it. */
+export function demoDigestInput(live: { name: string; running: number; alerts: import('../shared/types.ts').Alert[]; pendingUpdates: string[] }): import('./digest.ts').DigestInput {
+  const at = Date.now() - 3 * 86_400_000;
+  const e = (id: number, kind: import('../shared/types.ts').ChangeEvent['kind'], subject: string, detail?: string) => ({ id, at: at + id * 3_600_000, kind, subject, detail });
+  return {
+    ...live,
+    events: [e(1, 'container.restarted', 'sonarr', 'updated'), e(2, 'container.restarted', 'immich', 'updated'), e(3, 'container.stopped', 'unpackerr'), e(4, 'container.started', 'unpackerr'), e(5, 'container.stopped', 'unpackerr')],
+    pool: { now: 87.2, weekAgo: 85.4 },
+  };
+}

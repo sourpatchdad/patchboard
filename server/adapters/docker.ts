@@ -281,6 +281,8 @@ export async function inspectContainer(name: string, all: Container[]): Promise<
     project: labels[PROJECT],
     service: labels[SERVICE],
     workingDir: labels['com.docker.compose.project.working_dir'],
+    source: labels['org.opencontainers.image.source'] || undefined,
+    version: labels['org.opencontainers.image.version'] || undefined,
     ports: Object.entries(r.NetworkSettings?.Ports ?? {}).map(([port, binds]) => ({ container: port, host: hostBinding(binds) })),
     mounts: (r.Mounts ?? [])
       .map((m) => ({ source: m.Type === 'volume' ? (m.Name ?? m.Source) : m.Source, target: m.Destination, rw: m.RW, type: m.Type }))

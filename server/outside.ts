@@ -4,6 +4,7 @@
 // link-local), follow at most three redirects, each checked again, and stop
 // at one megabyte. Both cache, so a board full of feeds doesn't hammer anyone.
 
+import { GITHUB_REPO } from './release-notes.ts';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import type { FeedItem, ReleaseInfo } from '../shared/types.ts';
@@ -117,7 +118,8 @@ const releaseCache = new Map<string, { at: number; info: ReleaseInfo | null }>()
 /** The newest release of each project, from GitHub's public API, cached for an hour. */
 export async function latestReleases(repos: string[], now = Date.now()): Promise<ReleaseInfo[]> {
   const out = await Promise.all(
-    repos.map(async (repo) => {
+    // Only owner/name ever reaches the URL: a saved board can't steer the request elsewhere.
+    repos.filter((repo) => GITHUB_REPO.test(repo) && !repo.includes('..')).map(async (repo) => {
       const hit = releaseCache.get(repo);
       if (hit && now - hit.at < 60 * 60_000) return hit.info;
       try {

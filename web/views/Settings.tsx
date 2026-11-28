@@ -354,6 +354,7 @@ export function Settings() {
       {tab === 'alerts' && (
         <>
           <Integrations which="notify" />
+          <Digest />
           <Alerts />
         </>
       )}
@@ -818,6 +819,9 @@ const ACTION_TEXT: Record<string, string> = {
   'board.add': msg('added a board'),
   'brand.save': msg('renamed the dashboard'),
   'setup.save': msg('saved the settings for'),
+  'setup.find-key': msg('connected with the key from its settings'),
+  'digest.save': msg('changed the weekly summary'),
+  'digest.send': msg('sent the weekly summary'),
   'setup.remove': msg('removed the connection'),
   'setup.test': msg('tested the connection to'),
   'setup.thresholds': msg('changed the alert thresholds'),
@@ -1259,6 +1263,85 @@ function SetupFile() {
 }
 
 /** Settings, Alerts: thresholds with sensible defaults, one form, saved together. */
+/**
+ * The weekly summary: off until turned on, sent on the day and hour picked to
+ * the channels above. The preview is what it would say right now.
+ */
+function Digest() {
+  const ro = !!useStore().snap?.readOnly;
+  const [d, setD] = useState<{ on: boolean; day: number; hour: number; preview: { title: string; body: string }; channels: string[] } | null>(null);
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const load = () =>
+    void fetch('/api/digest')
+      .then((r) => r.json())
+      .then(setD)
+      .catch(() => {});
+  useEffect(load, []);
+  if (!d) return null;
+  const save = async (patch: Partial<{ on: boolean; day: number; hour: number }>) => {
+    setNote(null);
+    const res = await fetch('/api/digest', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-patchboard': 'action' }, body: JSON.stringify(patch) }).catch(() => null);
+    if (!res?.ok) return setNote({ ok: false, text: (await res?.json().catch(() => ({})))?.error ?? tr('Not saved: Patchboard did not answer') });
+    load();
+  };
+  const sendNow = async () => {
+    setBusy(true);
+    setNote(null);
+    const res = await fetch('/api/digest/send', { method: 'POST', headers: { 'x-patchboard': 'action' } }).catch(() => null);
+    setNote(res?.ok ? { ok: true, text: tr('Sent. It should land wherever alerts do.') } : { ok: false, text: (await res?.json().catch(() => ({})))?.error ?? tr('Not sent: Patchboard did not answer') });
+    setBusy(false);
+  };
+  const none = !d.channels.length;
+  // Sunday, November 29, 2026 starts the week the names are read from.
+  const weekday = (i: number) => new Date(2026, 10, 29 + i).toLocaleDateString(locale(), { weekday: 'long' });
+  const hourName = (h: number) => new Date(2026, 10, 29, h).toLocaleTimeString(locale(), { hour: 'numeric' });
+  return (
+    <Section title="Weekly summary" className="span-all digest">
+      <label className="check">
+        <input type="checkbox" checked={d.on} disabled={ro || none} onChange={(e) => void save({ on: e.target.checked })} />
+        {tr('Send a summary of the week')}
+      </label>
+      {none ? (
+        <p className="settings-note">{tr('Set up a way to be told above first.')}</p>
+      ) : (
+        <div className="choice-row digest-when">
+          <select className="field" aria-label={tr('Day')} value={d.day} disabled={ro || !d.on} onChange={(e) => void save({ day: Number(e.target.value) })}>
+            {Array.from({ length: 7 }, (_, i) => (
+              <option key={i} value={i}>
+                {weekday(i)}
+              </option>
+            ))}
+          </select>
+          <select className="field" aria-label={tr('Hour')} value={d.hour} disabled={ro || !d.on} onChange={(e) => void save({ hour: Number(e.target.value) })}>
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>
+                {hourName(h)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      <figure className="digest-preview" aria-label={tr('What it would say now')}>
+        <strong>{d.preview.title}</strong>
+        {d.preview.body.split('\n').map((l) => (
+          <span key={l}>{l}</span>
+        ))}
+      </figure>
+      {!ro && !none && (
+        <button type="button" className="button button-quiet" disabled={busy} onClick={() => void sendNow()}>
+          {busy ? tr('Sending...') : tr('Send one now')}
+        </button>
+      )}
+      {note && (
+        <p className={note.ok ? 'settings-note' : 'crit-text'} role="status">
+          {note.text}
+        </p>
+      )}
+    </Section>
+  );
+}
+
 function Alerts() {
   const readOnly = !!useStore().snap?.readOnly;
   const { temp: unit } = useAppearance();

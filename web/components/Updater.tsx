@@ -5,7 +5,10 @@
 // one line after you dismiss the panel.
 
 import { HoldButton } from './Hold.tsx';
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+
+/** What an update brings: loaded only for a container with one waiting. */
+const UpdateNotes = lazy(() => import('./UpdateNotes.tsx'));
 import { Link } from 'react-router-dom';
 import type { UpdateJob } from '../../shared/types.ts';
 import { agoLong, duration } from '../lib/format.ts';
@@ -132,6 +135,7 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
   if (stale) return <p className="update-notice">{tr('A newer copy is downloaded and this container still runs the old one.')}{!ro && ` ${tr('Update switches it over.')}`}</p>;
   if (!u) return null;
   return (
+    <>
     <p className="update-notice">
       {tr('Update available, found {when}.', { when: agoLong(u.at, now) })}
       {u.link && u.link !== '#' && (
@@ -151,6 +155,10 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
         </button>
       )}
     </p>
+    <Suspense fallback={null}>
+      <UpdateNotes name={name} />
+    </Suspense>
+    </>
   );
 }
 

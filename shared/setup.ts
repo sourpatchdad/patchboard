@@ -9,6 +9,9 @@ import type { Integration } from './integrations.ts';
  * (a path needs a matching volume mount in compose anyway), and Diun's
  * webhook token, which guards a door into Patchboard.
  */
+/** Apps whose API key Patchboard can read from their own settings, through Docker (server/keyfind.ts). */
+export const KEY_FIND_APPS = ['sonarr', 'radarr', 'lidarr', 'readarr', 'prowlarr'] as const;
+
 export const UI_SETUP = new Set([
   'truenas',
   'weather',

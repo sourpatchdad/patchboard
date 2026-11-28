@@ -10457,6 +10457,109 @@ html[data-eink] .car-callout.is-soft .car-num {
   padding: 0;
 }
 
+/* The weekly summary: what it would say now, as it would read in a notification. */
+.digest .check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.digest-when {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.digest-preview {
+  display: grid;
+  gap: 2px;
+  max-width: 560px;
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.digest-preview strong {
+  color: var(--head);
+}
+
+/* What an update brings, folded under its notice. */
+.update-notes {
+  margin: 4px 0 12px;
+  font-size: 14px;
+}
+
+.update-notes summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+
+.update-notes[open] summary {
+  margin-bottom: 8px;
+}
+
+.update-note {
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.update-note h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+/* Release notes run long: their own headings stay the size of the text around them. */
+.update-note .prose {
+  font-size: 14px;
+}
+
+.update-note .prose :is(h1, h2, h3, h4, h5, h6) {
+  margin: 10px 0 4px;
+  font: 600 14px/1.4 var(--f-body, inherit);
+  color: var(--head);
+}
+
+.update-note .prose :is(ul, ol) {
+  margin: 4px 0;
+}
+
+.update-note .prose li {
+  margin: 2px 0;
+}
+
+.update-note-day {
+  font: 400 12.5px/1.4 var(--f-mono);
+  color: var(--ink-3);
+}
+
+/* Connect for me: the one-press way in, above the fields it replaces. */
+.setup-auto {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.setup-auto small {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
 /* The address filled in from the app running here. */
 .setup-found {
   grid-column: 2;

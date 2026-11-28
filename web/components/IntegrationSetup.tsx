@@ -7,7 +7,7 @@ import { PlacePicker } from './FirstRun.tsx';
 import { HoldButton } from './Hold.tsx';
 import { useEffect, useState } from 'react';
 import type { Integration } from '../../shared/integrations.ts';
-import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
+import { CHOICES, KEY_FIND_APPS, type SetupIntegration } from '../../shared/setup.ts';
 import { DEFAULT_ON } from '../../shared/setup.ts';
 import { t as tr } from '../lib/i18n.ts';
 import { sourceOf } from '../../shared/feeds.ts';
@@ -20,13 +20,13 @@ import { useStore } from '../lib/store.tsx';
  * the address its link opens. Set up from Docker's published port when
  * Patchboard found the app, so the address field arrives filled in.
  */
-export function foundAt(integration: Integration, snap: Snapshot | null): { name: string; url: string } | null {
+export function foundAt(integration: Integration, snap: Snapshot | null): { name: string; url: string; container?: string } | null {
   for (const s of snap?.catalog.groups.flatMap((g) => g.services) ?? []) {
     const i = integrationOf(s);
     if (!i || sourceOf(i.id) !== sourceOf(integration.id) || !s.href) continue;
     try {
       const u = new URL(s.href);
-      if (u.protocol === 'http:' || u.protocol === 'https:') return { name: s.name, url: u.origin };
+      if (u.protocol === 'http:' || u.protocol === 'https:') return { name: s.name, url: u.origin, container: s.container };
     } catch {
       // Not an address: nothing to offer.
     }
@@ -80,7 +80,26 @@ export function IntegrationForm({
       return next;
     });
   }, [setup]);
-  const [busy, setBusy] = useState<'test' | 'save' | 'remove' | null>(null);
+  const [busy, setBusy] = useState<'test' | 'save' | 'remove' | 'find' | null>(null);
+  // Running here, and an app whose key Patchboard can read from its own settings.
+  const canFind = !!found?.container && !readOnly && !demo && (KEY_FIND_APPS as readonly string[]).includes(integration.id);
+
+  /** Connect with the key in the app's settings: the server reads, tests and saves it; the key never comes here. */
+  async function connectForMe() {
+    if (!found?.container) return;
+    setBusy('find');
+    setResult(null);
+    try {
+      const r = await call(`/api/setup/integrations/${integration.id}/find-key`, 'POST', { container: found.container });
+      onSaved(r.integrations as SetupIntegration[]);
+      const check = r.check as { text: string } | undefined;
+      setResult({ ok: true, text: tr('Connected with the key from its own settings. {summary}', { summary: check?.text ?? '' }).trim() });
+    } catch (err) {
+      setResult({ ok: false, text: (err as Error).message });
+    } finally {
+      setBusy(null);
+    }
+  }
 
   // Only fields you can edit, and secrets only when typed in, go to the server.
   const payload = () => Object.fromEntries(setup.fields.filter((f) => !f.locked && (f.kind !== 'secret' || values[f.name])).map((f) => [f.name, values[f.name] ?? '']));
@@ -149,6 +168,14 @@ export function IntegrationForm({
         if (!busy) void save();
       }}
     >
+      {canFind && (
+        <div className="setup-auto">
+          <button type="button" className="button board-save" disabled={!!busy} onClick={() => void connectForMe()}>
+            {busy === 'find' ? tr('Connecting...') : tr('Connect {name} for me', { name: found!.name })}
+          </button>
+          <small>{tr('Reads its API key from its own settings through Docker. The key stays on this server. Or fill in the key below.')}</small>
+        </div>
+      )}
       {/* Weather: find the town by name; the coordinates below fill in. */}
       {integration.id === 'weather' && !readOnly && (
         <div className="setup-field">

@@ -125,7 +125,10 @@ large as the panel allows, with its line along the bottom.
 ![Server](screenshots/server.webp)
 
 **A container:** what's wrong and the runbook's fix on the left, the live
-logs beside them, and buttons to start, restart, update or roll back.
+logs beside them, and buttons to start, restart, update or roll back. With
+an update waiting, What's new lists the releases since the version it runs,
+read from the image's own source on GitHub, and marks a security fix or a
+breaking change before you press Update.
 
 ![A container page](screenshots/container.webp)
 
@@ -472,6 +475,11 @@ is big enough for a fingertip. Installed on the home screen, pull the page down 
 reload it. Tap an alert without a link to read why. Pages don't zoom on a
 phone, pinch or double tap; Density in Settings, Look makes everything
 bigger.
+
+**One widget as its own app.** Open a single widget (Settings, Devices
+lists every one, or /w/home/<widget>) and Add to Home Screen: it installs
+under the widget's name and opens straight to it, so the car or the
+weather is one tap from the phone's home screen. Sign-in still guards it.
 
 | | | | | |
 |---|---|---|---|---|

@@ -51,7 +51,7 @@ import { bazarrAdapter, giteaAdapter, nextcloudAdapter, paperlessAdapter, starrA
 import { audiobookshelfAdapter, audiobookshelfCover, navidromeAdapter } from './adapters/listening.ts';
 import { calendarAdapter } from './adapters/calendar.ts';
 import { booksAdapter } from './adapters/books.ts';
-import { send } from './notify.ts';
+import { anyNotifier, channels, send } from './notify.ts';
 import { pendingIds, type SeerrClient, seerrClient } from './adapters/seerr.ts';
 import { mediaControl, plexSections } from './adapters/media-control.ts';
 import { prowlarrControl } from './adapters/indexers.ts';
@@ -78,7 +78,7 @@ import { weatherAdapter } from './adapters/weather.ts';
 import { initCatalog } from './catalog.ts';
 import { config } from './config.ts';
 import { series } from './db.ts';
-import { demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, demoCarCommand, DEMO_PRINT_SVG } from './demo.ts';
+import { demoDigestInput, demoNotes, demoProxmoxAct, demoAdapters, demoDownloadControl, demoFeeds, demoFeedsResponse, demoHaAction, demoHaHistory, demoHaList, demoTodo, demoTodoChange, demoInspect, demoLogs, demoReadIds, demoRunbook, demoDnsControl, demoDnsDomains, demoIndexers, demoSubtitles, demoRequestsApi, demoMediaControl, demoItemControl, demoAltSpeed, demoManager, demoArrControl, demoFeedItems, demoReleases, demoFrigateImage, demoContainerAction, demoHostDetail, demoCarCommand, DEMO_PRINT_SVG } from './demo.ts';
 import { APP_VERSION, Hub, seedDemoHistory, seedDemoSamples } from './hub.ts';
 import { seedDemoCar } from './demo-car.ts';
 import { demoSelfReleases, selfReleases } from './self-releases.ts';
@@ -99,6 +99,9 @@ import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
 import { samples } from './samples.ts';
+import { canFindKey, findKey, keyAddresses, keyContainer } from './keyfind.ts';
+import { releaseNotes, repoOf, since } from './release-notes.ts';
+import { composeDigest, digestSettings, gatherDigest, saveDigest } from './digest.ts';
 import { bmp, drawPanel, png, drawNumberPanel, PANEL_FORMAT } from './panel.ts';
 import { historyFor, type Reading, readingOf } from '../shared/reading.ts';
 import { addHouseholdDevice, cleanLook, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newJoinToken, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
@@ -584,6 +587,32 @@ app.post('/api/widgets/preview', async (c) => {
   return c.json(await fetchJsonWidget(v.config, true));
 });
 
+// One widget as its own app on a phone's home screen: the install manifest
+// for /w/<board>/<widget>, named after the widget, opening it and nothing
+// else. Behind sign-in like the rest of the API (the page asks for it with
+// credentials), and built from one of the four shipped manifests, so the
+// icon matches the one picked in Look.
+const MANIFESTS = new Set(['manifest', 'manifest-light', 'manifest-mono', 'manifest-mono-dark']);
+app.get('/api/manifest/w/:board/:widget', (c) => {
+  const found = getBoard(c.req.param('board'));
+  const w = found?.board.widgets.find((x) => x.id === c.req.param('widget'));
+  if (!found || !w) return c.json({ error: 'No such widget' }, 404);
+  const base = MANIFESTS.has(c.req.query('base') ?? '') ? c.req.query('base')! : 'manifest';
+  let shipped: Record<string, unknown> = {};
+  try {
+    shipped = JSON.parse(readFileSync(join(config.staticDir, `${base}.webmanifest`), 'utf8'));
+  } catch {
+    // Not built yet (dev): the fields below are enough to install.
+  }
+  const name = (w.config?.title || WIDGET_INFO[w.type]?.name || 'Widget').slice(0, 40);
+  const at = `/w/${encodeURIComponent(c.req.param('board'))}/${encodeURIComponent(w.id)}`;
+  const brand = kvGet<{ name?: string }>('brand')?.name || 'Patchboard';
+  return c.body(JSON.stringify({ ...shipped, id: at, name: `${name}, ${brand}`, short_name: name, description: WIDGET_INFO[w.type]?.about ?? '', start_url: at, scope: at }), 200, {
+    'Content-Type': 'application/manifest+json',
+    'Cache-Control': 'no-cache',
+  });
+});
+
 // The widget gallery's previews: what a widget looks like before its app is
 // connected. Made-up data, the same demo mode shows, and never a request to
 // anything real; the gallery labels it Sample.
@@ -726,6 +755,24 @@ app.get('/api/monitor/feed', (c) =>
 );
 
 // One container's detail: inspect (without env), plus who depends on it.
+// What an update to this container brings: the releases of the project its
+// image names as its source, newer than the version it runs. GitHub only.
+app.get('/api/containers/:name/notes', async (c) => {
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
+  if (config.demo) return c.json(demoNotes(name));
+  let detail: ContainerDetail;
+  try {
+    detail = await inspectContainer(name, hub.containers());
+  } catch {
+    return c.json({ error: 'No such container' }, 404);
+  }
+  const repo = repoOf(detail.source);
+  if (!repo) return c.json({ repo: null, running: detail.version ?? null, releases: [] });
+  const notes = await releaseNotes(repo);
+  return c.json({ repo, running: detail.version ?? null, releases: notes ? since(notes, detail.version) : null });
+});
+
 app.get('/api/containers/:name', async (c) => {
   const name = c.req.param('name');
   if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
@@ -1793,6 +1840,86 @@ app.put('/api/setup/integrations/:id', async (c) => {
   return c.json({ integrations: describeSetup(), ...(check ? { check } : {}) });
 });
 const NOTIFY_IDS = ['ntfy', 'gotify', 'pushover', 'email', 'discord', 'webhook'];
+
+// The weekly summary: its settings, and what it would say now.
+app.get('/api/digest', (c) => {
+  const now = Date.now();
+  const { lastSent: _, ...settings } = digestSettings();
+  const preview = composeDigest(config.demo ? demoDigestInput(hub.digestNow()) : gatherDigest(now, hub.digestNow()));
+  return c.json({ ...settings, preview: { title: preview.title, body: preview.body }, channels: channels() });
+});
+app.put('/api/digest', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const r = saveDigest(await c.req.json().catch(() => null));
+  if ('error' in r) return c.json(r, 400);
+  recordAudit(who(c), 'digest.save', r.on ? `weekly, day ${r.day} at ${r.hour}:00` : 'off');
+  const { lastSent: _, ...settings } = r;
+  return c.json(settings);
+});
+// Send one now, to see it where it lands.
+app.post('/api/digest/send', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  if (!anyNotifier()) return c.json({ error: 'Set up a way to be told first, under Where alerts go.' }, 400);
+  // One a minute: enough to see it land, too slow to flood a channel.
+  if (Date.now() - lastDigestTry < 60_000) return c.json({ error: 'Sent one a moment ago. Try again in a minute.' }, 429);
+  lastDigestTry = Date.now();
+  try {
+    await send(composeDigest(config.demo ? demoDigestInput(hub.digestNow()) : gatherDigest(Date.now(), hub.digestNow())));
+    recordAudit(who(c), 'digest.send', 'now');
+    return c.json({ ok: true });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+});
+let lastDigestTry = 0;
+
+// Connect an *arr app with the key in its own settings (server/keyfind.ts).
+// The key goes from the container to the encrypted store and nowhere else:
+// it's tested first, saved only if the app answers, and the browser hears
+// the outcome. Each try counts toward the same pause as Test.
+app.post('/api/setup/integrations/:id/find-key', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const i = setupIntegration(c.req.param('id'));
+  if (!i || !canFindKey(i.id)) return c.json({ error: "Patchboard can't read this app's key." }, 404);
+  if (config.demo) return c.json({ error: 'Demo mode has no settings file to read. Paste a key to try the form.' }, 400);
+  if (Date.now() - (lastTest.get(i.id) ?? 0) < 2000) return c.json({ error: 'One try at a time. Try again in a moment.' }, 429);
+  const body = (await c.req.json().catch(() => null)) as { container?: unknown; url?: unknown } | null;
+  const which = keyContainer(i.id, body?.container, hub.containers());
+  if ('error' in which) return c.json({ error: which.error }, 400);
+  const [urlVar, keyVar] = i.env;
+  lastTest.set(i.id, Date.now());
+  let key: string;
+  let addresses: string[];
+  try {
+    // Where the key may go comes from Docker, never from the request.
+    addresses = await keyAddresses(i.id, which.container.name);
+    if (!addresses.length) throw new Error(`${which.container.name} publishes no port Patchboard can reach, and shares no network with it. Fill in its address and key by hand.`);
+    key = await findKey(i.id, which.container.name);
+  } catch (err) {
+    recordAudit(who(c), 'setup.find-key', i.id, `from ${which.container.name}: not found`);
+    return c.json({ error: (err as Error).message }, 400);
+  }
+  // The first of its own addresses that answers with the key is the one kept.
+  let values: Record<string, string> | null = null;
+  let why = '';
+  for (const url of addresses) {
+    try {
+      await withConfig(candidate({ [urlVar]: url, [keyVar]: key }), () => testIntegration(i.id));
+      values = { [urlVar]: url, [keyVar]: key };
+      break;
+    } catch (err) {
+      why = (err as Error).message;
+    }
+  }
+  if (!values) {
+    recordAudit(who(c), 'setup.find-key', i.id, `from ${which.container.name}: found, did not connect`);
+    return c.json({ error: `Found the key, but ${i.name} didn't answer at ${addresses.join(' or ')}. ${why}`.trim() }, 400);
+  }
+  saveValues(values);
+  recordAudit(who(c), 'setup.find-key', i.id, `from ${which.container.name}: saved`);
+  hub.replaceAdapters(realAdapters());
+  return c.json({ integrations: describeSetup(), check: { ok: true, text: await testIntegration(i.id).catch(() => 'Connected.') } });
+});
 
 // Copy every integration value from the environment into Patchboard, so the
 // .env lines can be removed. Values never leave the server.

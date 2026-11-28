@@ -38,6 +38,24 @@
   the Update button. Check now also clears the mark when you already run
   the newest image, and an image an Update proved current is not flagged
   again an hour later.
+- **Connect for me:** Sonarr, Radarr, Lidarr, Readarr and Prowlarr running
+  here connect with one press. Patchboard reads the key from the app's own
+  settings through Docker, tests it, and saves it encrypted; the key never
+  reaches a browser, and the audit log records who did it and from which
+  container. A socket proxy needs `ARCHIVE=1` for this; without it you
+  paste the key as before.
+- **What an update brings:** a container with an update waiting lists the
+  releases since the version it runs, read from its image's source on
+  GitHub, with Security fix or Breaking change marked up front.
+- **A weekly summary:** turn it on in Settings, Alerts and it lands where
+  your alerts do on the day and hour you pick: what needs you, what
+  updated, what went down by itself, what waits, and how storage moved.
+  The preview shows what it would say now, and Send one now tries it.
+- **A widget on your home screen:** open one widget on its own and Add to
+  Home Screen installs it under its own name, opening straight to it.
+- **Safer Releases widget:** a repository name has to be a GitHub
+  owner/name before it reaches the request, so a saved board can't steer
+  the server to another address.
 - **It knows what you run:** connecting an app Patchboard already found in
   Docker starts with its address filled in, and says so, so you paste
   only the key. Settings, Connections opens on Running here when any app

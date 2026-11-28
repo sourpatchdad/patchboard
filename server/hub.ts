@@ -13,7 +13,8 @@ import { carKey, type MinerData, minerKey, TIRES } from '../shared/types.ts';
 import { computeAlerts } from './alerts.ts';
 import { dockerCli } from './cli.ts';
 import { checkSelfImage, composeMounted, selfCheckStatus, whoAmI } from './updater.ts';
-import { notifyAlerts } from './notify.ts';
+import { anyNotifier, notifyAlerts, send } from './notify.ts';
+import { composeDigest, digestDue, digestSettings, gatherDigest } from './digest.ts';
 import { getCatalog, setCatalogContainers } from './catalog.ts';
 import { config } from './config.ts';
 import { firstEventAt, kvGet, kvSet, lastEventAt, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
@@ -165,6 +166,8 @@ export class Hub {
     setInterval(() => this.sample(), 60_000).unref();
     // A problem waits two minutes before it notifies; this tick sends it on time.
     setInterval(() => void notifyAlerts(this.alerts), 30_000).unref();
+    // The weekly summary, when it's on and its hour has come.
+    setInterval(() => void this.sendDigestIfDue(), 60_000).unref();
   }
 
   /** The data every minute-by-minute chart is drawn from. */
@@ -226,6 +229,24 @@ export class Hub {
   }
 
   /** Current containers, for routes that need them (detail pages, runbook lookup). */
+  /** What the weekly summary says about right now: the rest comes from history. */
+  digestNow(): { name: string; running: number; alerts: Alert[]; pendingUpdates: string[] } {
+    return {
+      name: kvGet<{ name?: string }>('brand')?.name || 'Patchboard',
+      running: this.containers().filter((c) => c.state === 'running').length,
+      alerts: this.alerts,
+      pendingUpdates: Object.keys(pendingUpdates()),
+    };
+  }
+
+  /** Send the summary once its hour has passed. Marked sent first, so a failing channel can't make it repeat. */
+  async sendDigestIfDue(now = Date.now()): Promise<void> {
+    const s = digestSettings();
+    if (config.demo || !digestDue(s, now) || !anyNotifier()) return;
+    kvSet('digest', { ...s, lastSent: now });
+    await send(composeDigest(gatherDigest(now, this.digestNow()))).catch(() => {});
+  }
+
   containers(): Container[] {
     return (this.sources.docker?.data as DockerData | null)?.containers ?? [];
   }

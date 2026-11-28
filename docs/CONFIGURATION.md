@@ -68,7 +68,7 @@ services.yaml.
 
 | Variable | Default | |
 |---|---|---|
-| `TZ` | `UTC` | Time zone for clocks and calendars. |
+| `TZ` | `UTC` | Time zone for clocks, calendars and the weekly summary, so Monday at 8 is your Monday at 8. |
 | `ALLOWED_HOSTS` | empty | Other names you reach Patchboard by, such as `dash.example.com`; Settings, Connections, Sign-in and keys sets them too. IP addresses, `localhost` and home names (`nas`, `nas.local`, `.lan`, `.home.arpa`, `.internal`) always work. Patchboard refuses any other name, which blocks DNS rebinding. |
 | `PORT` | `3200` | Port inside the container. |
 | `LISTEN_HOST` | every address | The address to answer on. Set it with `network_mode: host` (Wake-on-LAN), where `ports:` doesn't apply. |

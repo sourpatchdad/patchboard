@@ -7,7 +7,11 @@ it anywhere.
 
 - **Read:** container state, stats, logs and inspect data through the Docker
   API (never containers' environment variables), host CPU and memory,
-  read-only mounts of notes and logs, and the APIs you connect.
+  read-only mounts of notes and logs, and the APIs you connect. When you
+  press Connect for me on Sonarr, Radarr, Lidarr, Readarr or Prowlarr, it
+  also reads that one app's `/config/config.xml` through Docker's archive
+  endpoint, and only from a running container whose image or name is that
+  app.
 - **Change:** start, stop, restart, update or roll back a container; save the
   board, the app layout and page settings; store keys you paste; sign in to
   Trakt. With those integrations on: pause, resume or remove a download (its
@@ -92,7 +96,28 @@ change that. For a narrower boundary, run a
 read-only access and runs Patchboard as the unprivileged `node` user with a
 read-only root filesystem. For restart buttons, the proxy needs `POST=1`,
 `ALLOW_START`, `ALLOW_STOP` and `ALLOW_RESTARTS`. Updates need image pulls and
-container creation, which comes close to full access.
+container creation, which comes close to full access. Connect for me needs
+`ARCHIVE=1`; without it the button says so and you paste the key instead.
+
+**Connect for me, in detail.** Patchboard reads at most 256 KB of the one
+settings file and keeps only a 32-character hex `ApiKey` from it. The key
+is only ever sent to an address Docker reports for that container: its
+name on a network Patchboard shares with it, or its published port through
+the Docker host (the gateway, loopback, or a configured remote host). The
+request names the container, never an address, so nobody can point the
+key at a server of their own. It is tested there before anything is saved,
+and kept encrypted: never logged, never sent to a browser, and the audit
+log records who pressed the button and which container it read, not the
+key. Each try counts toward the same one-per-two-seconds limit as Test.
+
+- **Keys don't follow redirects off their host.** A request that carries a
+  key, token or cookie follows a redirect only on the same host (http to
+  https included), three at most; one that points elsewhere is refused, so
+  a service can't hand your key on with a 302.
+- **Release notes are text and links.** Notes come from other people's
+  repositories, so images, embeds, inline styles and forms are stripped
+  before they're drawn, and their links open in a new tab with no
+  referrer.
 
 ## Protections that are always on
 
@@ -111,7 +136,10 @@ container creation, which comes close to full access.
   Trakt, Fastmail, TVmaze and TMDB for posters). For its own updates it asks
   the GitHub container registry about its image and reads its release notes
   from GitHub, at most once an hour; neither request carries anything about
-  you.
+  you. A container with an update waiting has its project's release notes
+  read from GitHub's API, once an hour at most, and only when the image's
+  `org.opencontainers.image.source` label names a github.com owner/name:
+  a label can't point the server at any other address.
   Patchboard fetches app icons named from the dashboard-icons set from
   jsDelivr once (and again monthly, in case the set redrew one) and keeps
   them in `DATA_DIR`, so your browser gets them from Patchboard. Fonts ship inside the image. Article pictures in Reading load

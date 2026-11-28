@@ -11,11 +11,42 @@ export class HttpError extends Error {
   }
 }
 
+/** A header that carries a credential: fetch forwards custom ones like X-Api-Key across redirects. */
+const CREDENTIAL = /^(authorization|cookie|x-api-key|x-gotify-key|x-plex-token|x-emby-token|x-mediabrowser-token|.*(api-?key|token|secret|password).*)$/i;
+
+/** Whether a request carries a key, a token or a cookie. */
+export function carriesCredential(headers: RequestInit['headers']): boolean {
+  if (!headers) return false;
+  const names = headers instanceof Headers ? [...headers.keys()] : Array.isArray(headers) ? headers.map(([k]) => k) : Object.keys(headers);
+  return names.some((n) => CREDENTIAL.test(n));
+}
+
+/**
+ * fetch, but a request that carries a credential follows a redirect only to
+ * the same host (http to https included), three at most: a service that
+ * answers with a redirect can't walk the key off to another address.
+ */
+async function guardedFetch(url: string, init: RequestInit): Promise<Response> {
+  if (init.redirect || !carriesCredential(init.headers)) return fetch(url, init);
+  const host = new URL(url).hostname;
+  let at = url;
+  for (let hop = 0; hop <= 3; hop++) {
+    const res = await fetch(at, { ...init, redirect: 'manual' });
+    const to = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+    if (!to) return res;
+    const next = new URL(to, at);
+    if (next.hostname !== host || !/^https?:$/.test(next.protocol)) throw new Error('Redirected to another address, which Patchboard does not follow with a key');
+    at = next.toString();
+  }
+  throw new Error('Too many redirects');
+}
+
 export async function request(url: string, init: RequestInit = {}, timeoutMs = 8000): Promise<Response> {
   let res: Response;
   try {
-    res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+    res = await guardedFetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
   } catch (err) {
+    if ((err as Error).message.startsWith('Redirected to another address') || (err as Error).message === 'Too many redirects') throw err;
     const cause = (err as { cause?: { code?: string } }).cause?.code;
     if ((err as Error).name === 'TimeoutError') throw new Error(`Timed out after ${timeoutMs / 1000}s`);
     throw new Error(cause ? `Unreachable (${cause})` : 'Unreachable');

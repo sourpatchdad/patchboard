@@ -17,17 +17,18 @@ export const SETTLE_MS = 2 * 60_000;
 export interface Message {
   title: string;
   body: string;
-  level: 'critical' | 'warn' | 'resolved' | 'test';
+  level: 'critical' | 'warn' | 'resolved' | 'test' | 'digest';
   /** Where a tap goes: a page on Patchboard, or an outside link. */
   href?: string;
 }
 
-const NTFY_PRIORITY = { critical: 5, warn: 4, resolved: 2, test: 3 } as const;
-const NTFY_TAGS = { critical: ['rotating_light'], warn: ['warning'], resolved: ['white_check_mark'], test: ['wave'] } as const;
-const GOTIFY_PRIORITY = { critical: 8, warn: 5, resolved: 2, test: 4 } as const;
-const PUSHOVER_PRIORITY = { critical: 1, warn: 0, resolved: -1, test: 0 } as const;
+// The weekly summary is the quietest thing Patchboard sends: low priority, no sound where the app allows.
+const NTFY_PRIORITY = { critical: 5, warn: 4, resolved: 2, test: 3, digest: 2 } as const;
+const NTFY_TAGS = { critical: ['rotating_light'], warn: ['warning'], resolved: ['white_check_mark'], test: ['wave'], digest: ['bar_chart'] } as const;
+const GOTIFY_PRIORITY = { critical: 8, warn: 5, resolved: 2, test: 4, digest: 2 } as const;
+const PUSHOVER_PRIORITY = { critical: 1, warn: 0, resolved: -1, test: 0, digest: -1 } as const;
 /** Discord embed colors: the same red, amber and green the app uses. */
-const DISCORD_COLOR = { critical: 0xef5b4c, warn: 0xf0a43a, resolved: 0x4caf7a, test: 0x5b8def } as const;
+const DISCORD_COLOR = { critical: 0xef5b4c, warn: 0xf0a43a, resolved: 0x4caf7a, test: 0x5b8def, digest: 0x8d929b } as const;
 
 export type Channel = 'ntfy' | 'gotify' | 'pushover' | 'discord' | 'email' | 'webhook';
 

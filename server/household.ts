@@ -215,7 +215,7 @@ const READS = new Set([
   // Warning and error lines only, masked: the Monitor page's feed.
   '/api/monitor/feed',
 ]);
-const READ_PREFIXES = ['/api/rss/', '/api/releases/', '/api/markets/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/car-art/', '/api/img/', '/api/live/'];
+const READ_PREFIXES = ['/api/manifest/', '/api/rss/', '/api/releases/', '/api/markets/', '/api/widgets/', '/api/feed-img/', '/api/boards/', '/api/art/', '/api/icons/', '/api/icon/', '/api/car-art/', '/api/img/', '/api/live/'];
 // The changes it may make, all to what's pinned on a board: switching a
 // light or scene, setting a thermostat, moving a shade, a list's items, and
 // marking a chore done.

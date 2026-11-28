@@ -268,6 +268,10 @@ export interface ContainerDetail {
   healthLog: { at: number; exitCode: number; output: string }[];
   project?: string;
   service?: string;
+  /** The image's org.opencontainers.image.source label: where it was built from. */
+  source?: string;
+  /** The image's org.opencontainers.image.version label: the version it runs. */
+  version?: string;
   workingDir?: string;
   ports: { container: string; host: string | null }[];
   mounts: { source: string; target: string; rw: boolean; type: string }[];
@@ -704,6 +708,17 @@ export interface FeedItem {
 }
 
 /** A GitHub project's newest release. */
+/** One release of an image's project, for what an update brings. */
+export interface ReleaseNote {
+  version: string;
+  name?: string;
+  at: number;
+  url: string;
+  /** Markdown, capped; the browser sanitizes it before drawing. */
+  body: string;
+  prerelease: boolean;
+}
+
 export interface ReleaseInfo {
   repo: string;
   version: string;

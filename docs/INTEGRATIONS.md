@@ -68,6 +68,11 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 
 ## Built-in integrations
 
+Sonarr, Radarr, Lidarr, Readarr and Prowlarr running here connect with one
+press: **Connect for me** reads the key from the app's own settings through
+Docker, tests it and saves it, and the key stays on the server (see
+SECURITY.md). For anything else:
+
 Set one up in **Settings, Connections, All connections**, or in **Apps**:
 open the app (or **Add an app** and pick it). Press **Connect**, fill in the
 address and key, **Test connection**, then **Save**. Notifications (Discord,
