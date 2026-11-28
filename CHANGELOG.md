@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **A bad update undoes itself:** when an update's container doesn't come
+  back healthy and answering within two minutes, Patchboard puts the
+  previous image back on its own, and Changes says "rolled back on its own
+  after a failed update". `AUTO_ROLLBACK=0` leaves it for you instead.
 - **Recently added shows a show once:** when Plex lists new episodes under
   the show with its year ("Victorious, 2010") and Jellyfin lists the same
   ones as "38 new", they now merge into one poster that names both servers.

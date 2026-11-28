@@ -128,7 +128,9 @@ large as the panel allows, with its line along the bottom.
 logs beside them, and buttons to start, restart, update or roll back. With
 an update waiting, What's new lists the releases since the version it runs,
 read from the image's own source on GitHub, and marks a security fix or a
-breaking change before you press Update.
+breaking change before you press Update. If the new image doesn't come back
+healthy and answering within two minutes, Patchboard puts the old one back
+on its own.
 
 ![A container page](screenshots/container.webp)
 

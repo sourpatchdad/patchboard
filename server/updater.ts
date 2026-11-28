@@ -57,7 +57,7 @@ function dockerJson<T>(path: string): Promise<T> {
 const inspect = (name: string) => dockerJson<Inspect>(`/containers/${encodeURIComponent(name)}/json`);
 
 /** How jobs reach Docker. Tests swap in a stand-in CLI and shorter waits. */
-const runner = { command: 'docker', prefix: [] as string[], cli: dockerCli, pollMs: 3000, healthMs: 120_000 };
+const runner = { command: 'docker', prefix: [] as string[], cli: dockerCli, pollMs: 3000, healthMs: 120_000, autoRollback: config.autoRollback };
 
 /** Tests only: a stand-in docker CLI, CLI presence and health timing. Also forgets which container is Patchboard. */
 export function useDockerForTests(o: Partial<typeof runner>): void {
@@ -420,16 +420,25 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
       j.status = 'failed';
     } finally {
       j.finishedAt = Date.now();
+      // Recreated on the new image and it never came back healthy: put the
+      // previous one back now, instead of leaving it broken until someone looks.
+      const unhealthy = j.status === 'failed' && j.steps.find((s) => s.key === 'healthy')?.status === 'failed';
+      if (unhealthy && runner.autoRollback) j.log.push('Not healthy on the new image: putting the previous one back.');
       emit(j);
       onDone();
       release();
+      if (unhealthy && runner.autoRollback)
+        void startRollback(j.id, onDone, true).catch((err) => {
+          j.log.push(`Couldn't roll back on its own: ${(err as Error).message}`);
+          emit(j);
+        });
     }
   });
   return publicJob(j);
 }
 
-/** Put the previous image back under the same tag and recreate on it. */
-export async function startRollback(fromJobId: string, onDone: () => void): Promise<UpdateJob> {
+/** Put the previous image back under the same tag and recreate on it. `auto`: Patchboard did it after a failed update. */
+export async function startRollback(fromJobId: string, onDone: () => void, auto = false): Promise<UpdateJob> {
   const prev = jobs.get(fromJobId);
   if (!prev?.oldImageId || !prev.compose) throw new Error('Nothing to roll back to.');
   // Only after a recreate: a failed pull left the container on its old image.
@@ -485,7 +494,7 @@ export async function startRollback(fromJobId: string, onDone: () => void): Prom
       });
       step(j, 'tag', 'done');
       step(j, 'recreate', 'running');
-      recordEvent('container.action', prev.container, 'rollback');
+      recordEvent('container.action', prev.container, auto ? 'auto-rollback' : 'rollback');
       await run(j, [...prev.compose!, 'up', '-d', '--no-deps', '--pull', 'never', service], dir);
       step(j, 'recreate', 'done');
       step(j, 'healthy', 'running');

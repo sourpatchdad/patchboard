@@ -15,7 +15,7 @@ import type { Container, UpdateJob } from '../../shared/types.ts';
 import { withConfig } from '../config.ts';
 import { clearUpdate, pendingUpdates, recordDiunNotice } from '../updates.ts';
 import { changesLink } from '../selfcheck.ts';
-import { checkSelfImage, eligibility, rememberSameImage, selfCheckStatus, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
+import { checkSelfImage, eligibility, latestJobFor, rememberSameImage, selfCheckStatus, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'pb-update-'));
 const composeFile = join(dir, 'compose.yml');
@@ -113,7 +113,7 @@ const server: Server = createServer((req, res) => {
 
 before(async () => {
   await new Promise<void>((ok) => server.listen(sock, ok));
-  useDockerForTests({ command: process.execPath, prefix: [cli, sock], cli: true, pollMs: 15, healthMs: 400 });
+  useDockerForTests({ command: process.execPath, prefix: [cli, sock], cli: true, pollMs: 15, healthMs: 400, autoRollback: false });
 });
 after(() => {
   server.close();
@@ -217,6 +217,28 @@ test('an unhealthy container fails the update, and rollback puts the old image b
   assert.equal(rb.kind, 'rollback');
   assert.equal(images[REF].Id, OLD, 'the tag points at the previous image again');
   assert.equal(containers.sonarr.Image, OLD, 'and the container runs it');
+});
+
+test('an update that never comes back healthy puts the previous image back on its own', async () => {
+  plan.health = 'unhealthy';
+  useDockerForTests({ autoRollback: true });
+  try {
+    const j = await docker(async () => settled(await startUpdate(ctr('sonarr'), async () => true, () => {})));
+    assert.equal(j.status, 'failed');
+    assert.match(j.log.join('\n'), /putting the previous one back/);
+    plan.health = 'healthy';
+    // The rollback starts as the update ends: wait for it to finish, healthy, on the old image.
+    const done = () => {
+      const rb = latestJobFor('sonarr');
+      return rb?.kind === 'rollback' && rb.status !== 'running' && rb.status !== 'queued' ? rb : null;
+    };
+    for (let i = 0; i < 300 && !done(); i++) await new Promise((r) => setTimeout(r, 20));
+    assert.equal(done()?.status, 'done', 'the rollback ran to the end');
+    assert.equal(containers.sonarr.Image, OLD, 'back on the image it ran before');
+    assert.equal(images[REF].Id, OLD, 'and the tag points there again');
+  } finally {
+    useDockerForTests({ autoRollback: false });
+  }
 });
 
 test('an app that never answers fails the update even when Docker calls it healthy', async () => {

@@ -846,6 +846,7 @@ const actionText: Record<string, string> = {
   start: 'started by hand',
   update: 'updated by hand',
   rollback: 'rolled back by hand',
+  'auto-rollback': 'rolled back on its own after a failed update',
 };
 
 /** One row per container and happening: the same thing again folds into it, counted, at its newest time. */

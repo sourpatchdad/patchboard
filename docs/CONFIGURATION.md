@@ -75,6 +75,7 @@ services.yaml.
 | `DATA_DIR` | `/data` | Patchboard's own state: `patchboard.db` (SQLite: the boards, apps, history, integration settings, keys) `secret.key`, which encrypts the keys, `icon-cache/`, the app icons it has fetched, and `app-icon/`, your own icon if you upload one. Mount it, back it up, keep it owner-only. A few megabytes. |
 | `PATCHBOARD_SECRET_KEY` | a random `secret.key` | Any long string. Encrypts keys saved in the UI instead of the generated file, so the database and the key can live on different disks. Set it later and Patchboard moves saved keys over to it on the next start, as long as `secret.key` is still in `DATA_DIR`. Back up `DATA_DIR` whole: the database and its key together. |
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
+| `AUTO_ROLLBACK` | `1` | An update whose container doesn't come back healthy within two minutes puts the previous image back on its own, and Changes says so. `0` leaves it on the new image for you to look at and roll back by hand. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze, pictures from Wikimedia and app icons from jsDelivr. |
 | `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |
 | `DEMO_RESET_MINUTES` | `0` | With `DEMO=1`, starts over this often so a public demo's visitors never see each other's changes: it exits, and Docker's restart policy brings it back on an empty data folder. [examples/public-demo.yml](../examples/public-demo.yml) sets it to 30. |

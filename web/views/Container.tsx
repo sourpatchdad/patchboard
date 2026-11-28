@@ -55,6 +55,7 @@ const actionWord: Record<string, string> = {
   start: 'Started by hand',
   update: 'Updated by hand',
   rollback: 'Rolled back by hand',
+  'auto-rollback': 'Rolled back on its own after a failed update',
 };
 
 export function ContainerPage() {

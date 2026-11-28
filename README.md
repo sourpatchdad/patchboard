@@ -18,7 +18,7 @@ download at the top, one click from the fix.
 - **The fix is one click away.** Every problem links to its container:
   live logs, your runbook's section for it, restart, and an update that shows
   the release notes first, marks security fixes and breaking changes, and
-  offers a roll back if the new image fails its health check.
+  rolls back on its own if the new image doesn't come back healthy.
 - **It sets itself up.** It finds your apps in Docker, fills in their
   addresses, and connects Sonarr, Radarr, Prowlarr, Lidarr and Readarr with
   one press, reading the key from the app's own settings without it ever
