@@ -132,6 +132,19 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
   const now = useNow(60_000);
   const u = snap?.updates[name];
   const ro = !!snap?.readOnly;
+  const hold = (on: boolean) => void fetch(`/api/updates/${encodeURIComponent(name)}/hold`, { method: 'POST', headers: { 'X-Patchboard': 'action', 'content-type': 'application/json' }, body: JSON.stringify({ on }) });
+  // Held: say so, so a quiet container is never a mystery.
+  if (snap?.held?.includes(name))
+    return (
+      <p className="update-notice">
+        {tr('Held at this version: its updates stay quiet.')}
+        {!ro && (
+          <button type="button" className="text-button" onClick={() => hold(false)}>
+            {tr('Release')}
+          </button>
+        )}
+      </p>
+    );
   if (stale) return <p className="update-notice">{tr('A newer copy is downloaded and this container still runs the old one.')}{!ro && ` ${tr('Update switches it over.')}`}</p>;
   if (!u) return null;
   return (
@@ -152,6 +165,11 @@ export function UpdateNotice({ name, stale, busy = false }: { name: string; stal
           onClick={() => void fetch(`/api/updates/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'X-Patchboard': 'action' } })}
         >
           {tr('Dismiss')}
+        </button>
+      )}
+      {!ro && !busy && (
+        <button type="button" className="text-button" title={tr('Keep it on the version it runs: no update marks or alerts until you release it')} onClick={() => hold(true)}>
+          {tr('Hold at this version')}
         </button>
       )}
     </p>

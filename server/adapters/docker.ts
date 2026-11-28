@@ -8,6 +8,7 @@ import type { Container, ContainerDetail, ContainerStats, DockerData, DockerHost
 import { config, dockerTarget } from '../config.ts';
 import { type Adapter, SECOND } from './adapter.ts';
 import { pickLabels } from '../labels.ts';
+import { heldContainers } from '../updates.ts';
 
 type Target = { socketPath: string } | { host: string; port: number };
 
@@ -136,7 +137,7 @@ async function listFrom(target: Target, host?: string): Promise<Container[]> {
         id: c.Id.slice(0, 12),
         name: nameOf(c),
         image: names.get(c.Id) ?? c.Image,
-        ...(names.get(c.Id) ? { staleImage: true } : {}),
+        ...(names.get(c.Id) && !heldContainers().has(nameOf(c)) ? { staleImage: true } : {}),
         imageId: c.ImageID?.replace(/^sha256:/, '').slice(0, 12),
         state: c.State,
         status: c.Status,

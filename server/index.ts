@@ -113,7 +113,7 @@ import { checkUrl } from './adapters/checks.ts';
 import { getCatalog, getYamlCatalog, setCatalogOrder } from './catalog.ts';
 import { catalogYaml } from '../shared/catalog-yaml.ts';
 import { poster } from './art.ts';
-import { clearUpdate } from './updates.ts';
+import { clearUpdate, setHold } from './updates.ts';
 import { adoptYaml, type AppOrder, validateOrder } from '../shared/order.ts';
 import { fromHomepage } from './homepage.ts';
 import { redact } from './redact.ts';
@@ -2254,6 +2254,22 @@ app.delete('/api/boards/:id', (c) => {
 });
 
 // Dismiss an image-update mark you know is wrong (a re-published tag).
+// Hold a container at the version it runs, or release it: a held one shows no
+// update anywhere until released. Updating it by hand still works.
+app.post('/api/updates/:name/hold', async (c) => {
+  if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
+  const name = c.req.param('name');
+  if (!NAME.test(name)) return c.json({ error: 'Bad container name' }, 400);
+  if (!hub.containers().some((x) => x.name === name)) return c.json({ error: 'No such container' }, 404);
+  const on = ((await c.req.json().catch(() => null)) as { on?: unknown } | null)?.on === true;
+  if (setHold(name, on)) {
+    recordAudit(who(c), on ? 'update.hold' : 'update.release', name);
+    void hub.pollNow('docker');
+    hub.emitUpdates();
+  }
+  return c.json({ ok: true, held: on });
+});
+
 app.delete('/api/updates/:name', (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   const name = c.req.param('name');

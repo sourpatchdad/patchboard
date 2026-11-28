@@ -1657,6 +1657,8 @@ export interface Snapshot {
   links: Links;
   /** Container name -> pending image update. */
   updates: Record<string, ImageUpdate>;
+  /** Containers held at the version they run: their updates stay quiet. */
+  held?: string[];
   /** READ_ONLY=1, or a household device: the UI hides every control that changes something. */
   readOnly: boolean;
   /** Stopped containers left out of Needs attention until they run again. */
@@ -1688,7 +1690,7 @@ export type ServerEvent =
   | { type: 'sources'; sources: Snapshot['sources'] }
   | { type: 'alerts'; alerts: Alert[]; ignored?: string[] }
   | { type: 'changes'; changes: ChangeEvent[] }
-  | { type: 'updates'; updates: Record<string, ImageUpdate> }
+  | { type: 'updates'; updates: Record<string, ImageUpdate>; held?: string[] }
   | { type: 'catalog'; catalog: Catalog }
   | { type: 'pages'; pages: import('./pages.ts').Pages }
   | { type: 'brand'; brand: Brand }

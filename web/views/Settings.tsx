@@ -821,6 +821,8 @@ const ACTION_TEXT: Record<string, string> = {
   'setup.save': msg('saved the settings for'),
   'setup.find-key': msg('connected with the key from its settings'),
   'digest.save': msg('changed the weekly summary'),
+  'update.hold': msg('held the version of'),
+  'update.release': msg('released the version hold on'),
   'digest.send': msg('sent the weekly summary'),
   'setup.remove': msg('removed the connection'),
   'setup.test': msg('tested the connection to'),
@@ -872,7 +874,7 @@ function Activity() {
                 {auditSubject(r) && !['board.save', 'board.reset', 'apps.order', 'apps.order.reset', 'icon.upload', 'pages.save', 'brand.save', 'trakt.connect', 'trakt.disconnect', 'setup.import', 'setup.thresholds'].includes(r.action) && (
                   <>
                     {' '}
-                    <span className={r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action === 'update.dismiss' ? 'ident' : undefined}>{auditSubject(r)}</span>
+                    <span className={r.action.startsWith('container.') || r.action.startsWith('secret.') || r.action.startsWith('update.') ? 'ident' : undefined}>{auditSubject(r)}</span>
                   </>
                 )}
                 {r.detail && r.action.startsWith('auth.') ? <span className="ledger-aside"> {tr('from {place}', { place: r.detail })}</span> : null}

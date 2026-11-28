@@ -1445,5 +1445,11 @@
  "What's new since {version}": "Novidades desde a {version}",
  "{n} episode": "{n} episódio",
  "{n} time": "{n} vez",
- "{n} times": "{n} vezes"
+ "{n} times": "{n} vezes",
+ "Held at this version: its updates stay quiet.": "Mantido nesta versão: as atualizações ficam em silêncio.",
+ "held the version of": "manteve a versão de",
+ "Hold at this version": "Manter nesta versão",
+ "Keep it on the version it runs: no update marks or alerts until you release it": "Mantê-lo na versão atual: sem marcas de atualização nem alertas até você liberar",
+ "Release": "Liberar",
+ "released the version hold on": "liberou a versão de"
 }

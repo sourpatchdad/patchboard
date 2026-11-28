@@ -1445,5 +1445,11 @@
  "What's new since {version}": "Nieuw sinds {version}",
  "{n} episode": "{n} aflevering",
  "{n} time": "{n} keer",
- "{n} times": "{n} keer"
+ "{n} times": "{n} keer",
+ "Held at this version: its updates stay quiet.": "Op deze versie gehouden: updates blijven stil.",
+ "held the version of": "heeft de versie vastgehouden van",
+ "Hold at this version": "Op deze versie houden",
+ "Keep it on the version it runs: no update marks or alerts until you release it": "Op de huidige versie houden: geen updatemarkeringen of meldingen tot je hem vrijgeeft",
+ "Release": "Vrijgeven",
+ "released the version hold on": "heeft de versievergrendeling opgeheven voor"
 }

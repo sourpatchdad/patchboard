@@ -20,7 +20,7 @@ import { config } from './config.ts';
 import { firstEventAt, kvGet, kvSet, lastEventAt, latestSample, pruneAudit, listChanges, prune, pruneSamples, recordEvent, recordSamples } from './db.ts';
 import { demoContainers, demoSampleHistory } from './demo.ts';
 import { seedPoolHistoryFromAudits } from './notes.ts';
-import { pendingUpdates, settleUpdates } from './updates.ts';
+import { heldContainers, pendingUpdates, settleUpdates } from './updates.ts';
 import { watchContainerEvents } from './adapters/docker.ts';
 
 type Listener = (e: ServerEvent) => void;
@@ -355,7 +355,7 @@ export class Hub {
   }
 
   emitUpdates(): void {
-    this.emit({ type: 'updates', updates: pendingUpdates() });
+    this.emit({ type: 'updates', updates: pendingUpdates(), held: [...heldContainers()] });
     this.refreshAlerts();
   }
 
@@ -378,6 +378,7 @@ export class Hub {
       changes: this.changes,
       catalog: getCatalog(),
       updates: pendingUpdates(),
+      held: [...heldContainers()],
       readOnly: config.readOnly,
       ignored: kvGet<string[]>('ignored') ?? [],
       self: { version: APP_VERSION, container: config.demo ? 'patchboard' : selfContainer, ...(config.demo ? { check: { at: Date.now(), state: 'current' as const } } : selfCheckStatus() ? { check: selfCheckStatus() } : {}) },

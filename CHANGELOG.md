@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Hold a container at its version:** on a container with an update
+  waiting, Hold at this version keeps it where it is: no update mark, badge,
+  alert or summary line until you press Release. Updating it by hand still
+  works, and the audit log records who held it.
 - **A bad update undoes itself:** when an update's container doesn't come
   back healthy and answering within two minutes, Patchboard puts the
   previous image back on its own, and Changes says "rolled back on its own

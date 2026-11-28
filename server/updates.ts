@@ -64,7 +64,26 @@ export function settleUpdates(containers: Container[]): boolean {
 
 export function pendingUpdates(): Record<string, ImageUpdate> {
   const all = kvGet<Record<string, Stored>>(KEY) ?? {};
-  return Object.fromEntries(Object.entries(all).map(([k, { imageIdAtNotice: _drop, ...u }]) => [k, u]));
+  const held = heldContainers();
+  // A container held at its version never shows an update: not on Home, in Stacks, an alert or the summary.
+  return Object.fromEntries(Object.entries(all).filter(([k]) => !held.has(k)).map(([k, { imageIdAtNotice: _drop, ...u }]) => [k, u]));
+}
+
+const HOLDS = 'update-holds';
+
+/** Containers kept at the version they run: their updates stay quiet until released. */
+export function heldContainers(): Set<string> {
+  return new Set(Object.keys(kvGet<Record<string, { at: number }>>(HOLDS) ?? {}));
+}
+
+/** Hold a container at its version, or release it. True when that changed anything. */
+export function setHold(name: string, on: boolean): boolean {
+  const all = kvGet<Record<string, { at: number }>>(HOLDS) ?? {};
+  if (on === name in all) return false;
+  if (on) all[name] = { at: Date.now() };
+  else delete all[name];
+  kvSet(HOLDS, all);
+  return true;
 }
 
 /** Flag one container as Diun would: Patchboard found its own newer image. */
