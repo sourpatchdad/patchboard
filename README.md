@@ -10,6 +10,32 @@ download at the top, one click from the fix.
 
 ![Patchboard's Home on one 1920 by 1080 screen: what needs you, the server, a rack of apps, Right now, the week's releases, reading and what changed](docs/screenshots/home.webp)
 
+## Why Patchboard
+
+- **Problems first.** Home opens on what needs you: a crashed container, a
+  pool filling up, a stalled download, an app that stopped answering. When
+  nothing does, it says so in two words and gets out of the way.
+- **The fix is one click away.** Every problem links to its container:
+  live logs, your runbook's section for it, restart, and an update that shows
+  the release notes first, marks security fixes and breaking changes, and
+  offers a roll back if the new image fails its health check.
+- **It sets itself up.** It finds your apps in Docker, fills in their
+  addresses, and connects Sonarr, Radarr, Prowlarr, Lidarr and Readarr with
+  one press, reading the key from the app's own settings without it ever
+  reaching a browser.
+- **It tells you when you're not looking.** Problems that last two minutes
+  reach your phone through ntfy, Gotify, Pushover, Discord, email or a
+  webhook, and again when they clear. A weekly summary says what updated,
+  what broke and came back, and where storage is heading.
+- **No YAML needed, YAML welcome.** Everything is set up in the app, with a
+  live gallery of every widget at the size it will be. `services.yaml`,
+  Docker labels and environment variables keep working, and Homepage's
+  config imports in one step.
+- **Built to be trusted with the Docker socket.** Keys are encrypted at
+  rest, every change is in an audit log, there's a read-only mode and a
+  socket-proxy profile, and [SECURITY.md](SECURITY.md) says exactly what it
+  can touch. In English and six other languages, keyboard and screen-reader tested.
+
 ## Try the demo
 
 Fake data, nothing saved:
