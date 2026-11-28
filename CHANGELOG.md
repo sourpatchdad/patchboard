@@ -32,6 +32,12 @@
 - **The car with a TV remote:** closing a part or a detail sheet marks
   the panel you opened it from again, so the next press carries on from
   there instead of starting over at the top.
+- **Updating Patchboard says one thing at a time:** Settings could show
+  "A newer image is out" next to "Already the newest image", the result of
+  an earlier Update. A newer image that comes out after that brings back
+  the Update button. Check now also clears the mark when you already run
+  the newest image, and an image an Update proved current is not flagged
+  again an hour later.
 - **Code scanning:** the check that sends a magnet link or `.torrent` to a
   torrent client, the demo's rule for which files start skipped, and the
   Pi-hole test's fake server now read in a way CodeQL can follow. Nothing

@@ -15,7 +15,7 @@ import type { Container, UpdateJob } from '../../shared/types.ts';
 import { withConfig } from '../config.ts';
 import { clearUpdate, pendingUpdates, recordDiunNotice } from '../updates.ts';
 import { changesLink } from '../selfcheck.ts';
-import { checkSelfImage, eligibility, selfCheckStatus, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
+import { checkSelfImage, eligibility, rememberSameImage, selfCheckStatus, startRollback, startUpdate, useDockerForTests, watchJob } from '../updater.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'pb-update-'));
 const composeFile = join(dir, 'compose.yml');
@@ -300,6 +300,15 @@ test('Patchboard spots a newer image of itself on the registry, and links to wha
     assert.equal(pendingUpdates().patchboard?.link, 'https://github.com/sourpatchdad/patchboard/commits/main');
     assert.equal(selfCheckStatus()?.state, 'newer');
     assert.equal(await docker(() => checkSelfImage([me])), false, 'flagged once, not every check');
+    served = 'sha256:old';
+    assert.equal(await docker(() => checkSelfImage([me])), true, 'a check that finds the image it runs clears the mark');
+    assert.equal(pendingUpdates().patchboard, undefined);
+    served = 'sha256:republished';
+    rememberSameImage(OLD, 'sha256:republished');
+    assert.equal(await docker(() => checkSelfImage([me])), false, 'a digest a pull proved is this image is not flagged again');
+    assert.equal(selfCheckStatus()?.state, 'current');
+    rememberSameImage('sha256:other', 'sha256:x');
+    assert.equal(await docker(() => checkSelfImage([me])), true, 'what a pull proved holds only for that image');
   } finally {
     globalThis.fetch = realFetch;
     clearUpdate('patchboard');

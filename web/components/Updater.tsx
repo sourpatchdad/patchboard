@@ -315,6 +315,9 @@ export function SelfUpdate({ name, waiting }: { name: string; waiting: boolean }
       </span>
     );
   if (j && active(j)) return <span role="status"><JobProgress job={j} /></span>;
+  // A newer image marked after the last job ended outdates that job's result.
+  const markedAt = snap?.updates[name]?.at ?? 0;
+  if (j?.finishedAt && markedAt > j.finishedAt) return <UpdateButton name={name} busy={false} waiting={waiting} onStart={() => void u.start()} />;
   if (j?.status === 'done' && j.to && j.from !== j.to) return <span>Updated.</span>;
   if (j?.status === 'failed') return <Link to={`/c/${encodeURIComponent(name)}`} className="crit-text">{tr('Update failed. Open it')}</Link>;
   if (j?.status === 'done' && j.steps.find((s) => s.key === 'pull')?.note === 'Already the newest image') return <span>{tr('Already the newest image.')}</span>;

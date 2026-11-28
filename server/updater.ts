@@ -27,7 +27,7 @@ import { isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { Container, UpdateEligibility, UpdateJob, UpdateStep } from '../shared/types.ts';
 import { dockerCli } from './cli.ts';
 import { config, dockerTarget } from './config.ts';
-import { recordEvent } from './db.ts';
+import { kvGet, kvSet, recordEvent } from './db.ts';
 import { clearUpdate, flagUpdate } from './updates.ts';
 import { redact } from './redact.ts';
 import { changesLink, localDigests, remoteDigest, verdict } from './selfcheck.ts';
@@ -87,8 +87,26 @@ let lastCheck: SelfCheck | undefined;
 export const selfCheckStatus = (): SelfCheck | undefined => lastCheck;
 
 /**
+ * Registry digests a pull proved are the image Patchboard runs. Docker
+ * doesn't always record the digest the registry reports for a tag, and
+ * without this the hourly check would flag the same image again after every
+ * "Already the newest image". Kept per image, so an update starts it over.
+ */
+const SAME_KEY = 'self.same-digests';
+export function rememberSameImage(imageId: string, digest: string): void {
+  const prev = kvGet<{ imageId: string; digests: string[] }>(SAME_KEY);
+  const digests = prev?.imageId === imageId ? prev.digests : [];
+  if (!digests.includes(digest)) kvSet(SAME_KEY, { imageId, digests: [...digests.slice(-9), digest] });
+}
+function sameDigests(imageId: string): string[] {
+  const prev = kvGet<{ imageId: string; digests: string[] }>(SAME_KEY);
+  return prev?.imageId === imageId ? prev.digests : [];
+}
+
+/**
  * Ask the registry whether Patchboard's own tag has moved past the image it
- * runs, and flag it if so. True when it flagged something new. The result,
+ * runs. A newer image gets the update mark; the image it runs clears one, so
+ * Check now settles a stale mark. True when the mark changed. The result,
  * including why it couldn't tell, is kept for Settings.
  */
 export async function checkSelfImage(containers: Container[]): Promise<boolean> {
@@ -102,7 +120,8 @@ export async function checkSelfImage(containers: Container[]): Promise<boolean> 
     const r = await inspect(c.name);
     const ref = r.Config.Image;
     const img = await dockerJson<{ RepoDigests?: string[] }>(`/images/${encodeURIComponent(r.Image)}/json`);
-    lastCheck = verdict(await remoteDigest(ref), localDigests(img.RepoDigests));
+    lastCheck = verdict(await remoteDigest(ref), [...localDigests(img.RepoDigests), ...sameDigests(r.Image)]);
+    if (lastCheck.state === 'current') return clearUpdate(c.name);
     return lastCheck.state === 'newer' && flagUpdate(c, changesLink(ref));
   } catch {
     lastCheck = { at: Date.now(), state: 'unknown', reason: 'Couldn\'t read Patchboard\'s own container from Docker.' };
@@ -356,12 +375,20 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
 
   schedule(j, async () => {
     try {
+      const self = c.name === (await whoAmI());
+      // Asked before the pull: if the pull then brings nothing new, this
+      // digest is the image Patchboard runs, and the hourly check knows it.
+      const before = self ? await remoteDigest(r.Config.Image) : null;
       await run(j, [...compose, 'pull', service], dir);
       const fresh = await imageId(r.Config.Image);
       if (fresh === r.Image) {
         // Diun flags a new digest for the tag even when the image you run is
         // the same one (a re-published tag). Pulling proves it: clear the mark.
         clearUpdate(c.name);
+        if (before && 'digest' in before) {
+          rememberSameImage(r.Image, before.digest);
+          lastCheck = { at: Date.now(), state: 'current' };
+        }
         step(j, 'pull', 'done', 'Already the newest image');
         step(j, 'recreate', 'skipped');
         step(j, 'healthy', 'skipped');
@@ -373,7 +400,7 @@ export async function startUpdate(c: Container, isAnswering: () => Promise<boole
       step(j, 'pull', 'done', `New image ${j.to}`);
       step(j, 'recreate', 'running');
       recordEvent('container.action', c.name, 'update');
-      if (c.name === (await whoAmI())) {
+      if (self) {
         // Recreating our own container ends this process, so a helper does it.
         await run(j, helperArgs({ sock: (await selfSocket())!, dir, files, image: r.Config.Image, project, service, at: Date.now() }), dir);
         step(j, 'recreate', 'done', 'Handed to a helper. Patchboard restarts on the new image and this page reconnects.');

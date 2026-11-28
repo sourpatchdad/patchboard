@@ -2023,7 +2023,8 @@ app.get('/api/jobs/:id', (c) => {
 // Patchboard's releases with their notes, so Home can say what an update brings.
 app.get('/api/self/releases', async (c) => c.json({ version: APP_VERSION, releases: config.demo ? demoSelfReleases(APP_VERSION) : await selfReleases() }));
 
-// Check for a newer Patchboard now, instead of waiting for the six-hourly look.
+// Check for a newer Patchboard now, instead of waiting for the hourly look.
+// The answer also settles the update mark, both ways.
 app.post('/api/self/check', async (c) => {
   if (c.req.header('x-patchboard') !== 'action') return c.json({ error: 'Missing action header' }, 403);
   if (config.demo) return c.json({ check: { at: Date.now(), state: 'current' } });
