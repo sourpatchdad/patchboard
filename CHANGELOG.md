@@ -1,7 +1,79 @@
 # Changelog
 
-## Unreleased
+## 1.21.0 (2026-11-28)
 
+Setting Patchboard up now shows you what you get before you get it, and
+does most of the connecting for you. Updates say what they bring, and a
+weekly summary tells you how the server did.
+
+- **Add widget shows you the widget:** every widget appears as it will on
+  your board, live, in five groups you can search. One whose app isn't
+  connected shows made-up data marked Sample, and says what it needs. Pick
+  one and it opens large: choose its width and the preview follows, set
+  its options beside it, and Add to Home. If it needs an app, Connect sits
+  first, and Add turns on once it's connected. Add widget is also at
+  the foot of every board now, so adding one no longer means arranging
+  first. Clocks, Countdown, Markets, RSS feeds and Releases show sample
+  entries until you type your own; nothing sample is saved.
+- **Connect for me:** Sonarr, Radarr, Lidarr, Readarr and Prowlarr running
+  here connect with one press. Patchboard reads the key from the app's own
+  settings through Docker, tests it, and saves it encrypted; the key never
+  reaches a browser, and the audit log records who did it and from which
+  container. A socket proxy needs `ARCHIVE=1` for this; without it you
+  paste the key as before.
+- **It knows what you run:** connecting an app Patchboard already found in
+  Docker starts with its address filled in, and says so, so you paste
+  only the key. Settings, Connections opens on Running here when any app
+  runs here unconnected: the whole server, one key each, on one page. A
+  widget waiting on an app that is running says so by name, and its
+  Connect opens that app.
+- **Every connection in one list:** Settings, Connections, All connections
+  lists every service Patchboard can connect, each set up in place, one
+  line each, where it used to list a few and send you to Apps for the rest.
+  A field's variable name shows when you point at it, not under it. A
+  link to one (an alert, a widget) opens its row there. Discord, email,
+  ntfy and the other ways to be told about trouble moved to Alerts, as
+  Where alerts go, first on that tab; thresholds show only for what you
+  have, so no tire pressures without a car. Home's "Can't see Docker." leads
+  to Docker's connection.
+- **What an update brings:** a container with an update waiting lists the
+  releases since the version it runs, read from its image's source on
+  GitHub, with Security fix or Breaking change marked up front.
+- **A weekly summary:** turn it on in Settings, Alerts and it lands where
+  your alerts do on the day and hour you pick: what needs you, what
+  updated, what went down by itself, what waits, and how storage moved.
+  The preview shows what it would say now, and Send one now tries it.
+- **A widget says what it's waiting for:** a widget on a board whose app
+  isn't connected used to draw nothing, so a new Home looked half empty.
+  It now shows its name, which apps it needs, and Connect. Household
+  screens keep it hidden, since they can't connect anything.
+- **A new board says where to start:** a board with nothing to show yet
+  has Add widget, Add an app and Connections where its widgets would be,
+  and it goes away once anything shows. The gallery's Notes, Links and
+  Chores show sample content instead of their empty state, and a sample
+  preview leaves out setup hints.
+- **Widget settings show the widget:** a widget's settings open beside a
+  large preview of it, so a change shows before you keep it, and Cancel
+  puts it back as it was. A Container widget picks its container in the
+  same place.
+- **A widget on your home screen:** open one widget on its own and Add to
+  Home Screen installs it under its own name, opening straight to it.
+- **Connect one goes somewhere:** an empty Downloads, Library, Media,
+  Requests or Ad blocking page used to send you to a Settings list those
+  apps aren't on. Connect one now asks which one you run, with the ones
+  running here first, and opens its connection in place. Home's "Can't
+  reach" line opens the one connection it means, TrueNAS's note opens
+  TrueNAS, and the Wake widget and Trakt's sign-in offer to set themselves
+  up instead of naming a variable.
+- **Add an app adds apps:** Weather, Calendar, Trakt, Books, Wake-on-LAN and
+  Other Docker hosts have nothing to open, so they're no longer offered as
+  apps. Connect them from their widget or from Settings, Connections.
+- **Updating Patchboard says one thing at a time:** Settings could show
+  "A newer image is out" next to "Already the newest image", the result of
+  an earlier Update. A newer image that comes out after that brings back
+  the Update button. Check now also clears the mark when you already run
+  the newest image, and an image an Update proved current is not flagged
+  again an hour later.
 - **The car draws itself:** the Car widget no longer asks you to upload
   pictures. Patchboard ships the drawings (Model 3, 2017 to 2023, and
   Model Y, 2020 to 2024, so far) with the tires and charge port already
@@ -32,77 +104,9 @@
 - **The car with a TV remote:** closing a part or a detail sheet marks
   the panel you opened it from again, so the next press carries on from
   there instead of starting over at the top.
-- **Updating Patchboard says one thing at a time:** Settings could show
-  "A newer image is out" next to "Already the newest image", the result of
-  an earlier Update. A newer image that comes out after that brings back
-  the Update button. Check now also clears the mark when you already run
-  the newest image, and an image an Update proved current is not flagged
-  again an hour later.
-- **Connect for me:** Sonarr, Radarr, Lidarr, Readarr and Prowlarr running
-  here connect with one press. Patchboard reads the key from the app's own
-  settings through Docker, tests it, and saves it encrypted; the key never
-  reaches a browser, and the audit log records who did it and from which
-  container. A socket proxy needs `ARCHIVE=1` for this; without it you
-  paste the key as before.
-- **What an update brings:** a container with an update waiting lists the
-  releases since the version it runs, read from its image's source on
-  GitHub, with Security fix or Breaking change marked up front.
-- **A weekly summary:** turn it on in Settings, Alerts and it lands where
-  your alerts do on the day and hour you pick: what needs you, what
-  updated, what went down by itself, what waits, and how storage moved.
-  The preview shows what it would say now, and Send one now tries it.
-- **A widget on your home screen:** open one widget on its own and Add to
-  Home Screen installs it under its own name, opening straight to it.
 - **Safer Releases widget:** a repository name has to be a GitHub
   owner/name before it reaches the request, so a saved board can't steer
   the server to another address.
-- **It knows what you run:** connecting an app Patchboard already found in
-  Docker starts with its address filled in, and says so, so you paste
-  only the key. Settings, Connections opens on Running here when any app
-  runs here unconnected: the whole server, one key each, on one page. A
-  widget waiting on an app that is running says so by name, and its
-  Connect opens that app.
-- **A new board says where to start:** a board with nothing to show yet
-  has Add widget, Add an app and Connections where its widgets would be,
-  and it goes away once anything shows. The gallery's Notes, Links and
-  Chores show sample content instead of their empty state, and a sample
-  preview leaves out setup hints.
-- **Add widget shows you the widget:** every widget appears as it will on
-  your board, live, in five groups you can search. One whose app isn't
-  connected shows made-up data marked Sample, and says what it needs. Pick
-  one and it opens large: choose its width and the preview follows, set
-  its options beside it, and Add to Home. If it needs an app, Connect sits
-  first, and Add turns on once it's connected. Add widget is also at
-  the foot of every board now, so adding one no longer means arranging
-  first. Clocks, Countdown, Markets, RSS feeds and Releases show sample
-  entries until you type your own; nothing sample is saved.
-- **Widget settings show the widget:** a widget's settings open beside a
-  large preview of it, so a change shows before you keep it, and Cancel
-  puts it back as it was. A Container widget picks its container in the
-  same place.
-- **Every connection in one list:** Settings, Connections, All connections
-  lists every service Patchboard can connect, each set up in place, one
-  line each, where it used to list a few and send you to Apps for the rest.
-  A field's variable name shows when you point at it, not under it. A
-  link to one (an alert, a widget) opens its row there. Discord, email,
-  ntfy and the other ways to be told about trouble moved to Alerts, as
-  Where alerts go, first on that tab; thresholds show only for what you
-  have, so no tire pressures without a car. Home's "Can't see Docker." leads
-  to Docker's connection.
-- **Add an app adds apps:** Weather, Calendar, Trakt, Books, Wake-on-LAN and
-  Other Docker hosts have nothing to open, so they're no longer offered as
-  apps. Connect them from their widget or from Settings, Connections.
-- **A widget says what it's waiting for:** a widget on a board whose app
-  isn't connected used to draw nothing, so a new Home looked half empty.
-  It now shows its name, which apps it needs, and Connect. Household
-  screens keep it hidden, since they can't connect anything.
-- **Connect one goes somewhere:** an empty Downloads, Library, Media,
-  Requests or Ad blocking page used to send you to a Settings list those
-  apps aren't on. Connect one now asks which one you run, with the ones
-  running here first, and opens its connection in place. Home's "Can't
-  reach" line opens the one connection it means, TrueNAS's note opens
-  TrueNAS, and the Wake widget and Trakt's sign-in offer to set themselves
-  up instead of naming a variable.
 - **One name for each thing:** the RSS widget is RSS feeds, so it no
   longer shares a name with Reading. Restore a setup file is one action in
   first run and in Settings. Help says connecting your apps, and the rest

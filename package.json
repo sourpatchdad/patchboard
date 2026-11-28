@@ -1,6 +1,6 @@
 {
   "name": "patchboard",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "private": true,
   "description": "A self-hosted homelab dashboard and start page: what needs you, live numbers, and the fix one click away.",
   "license": "AGPL-3.0-only",
