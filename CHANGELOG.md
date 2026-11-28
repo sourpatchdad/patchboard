@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **A public demo you can host:** examples/public-demo.yml runs demo mode
+- **A public demo you can host:** `examples/public-demo.yml` runs demo mode
   for anyone on the internet, with no Docker socket, a read-only
   filesystem, dropped privileges and memory caps. Visitors can change
   anything, and `DEMO_RESET_MINUTES` starts it over on a schedule so no
