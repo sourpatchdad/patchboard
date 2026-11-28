@@ -94,7 +94,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Trakt',
     adds: 'Your Trakt calendar for shows and films Sonarr and Radarr don’t track, merged without doubles.',
     env: ['TRAKT_CLIENT_ID'],
-    where: 'Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then connect Trakt in Apps with the code it shows.',
+    where: 'Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then sign in under Settings, Connections, Signed-in accounts, with the code it shows.',
     source: true,
   },
   {

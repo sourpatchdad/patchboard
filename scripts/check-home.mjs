@@ -306,7 +306,7 @@ try {
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.deepEqual(await setupState(), unedited, 'Escape leaves app settings untouched');
   await page.goto(base + '/settings?tab=connections&part=backup');
-  const setupImport = page.getByRole('button', { name: 'Import a setup file', exact: true });
+  const setupImport = page.getByRole('button', { name: 'Restore a setup file', exact: true });
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), setupImport.press('Enter')]);
   await chooser.setFiles([]);
   assert.deepEqual(await setupState(), unedited, 'canceling the keyboard file picker preserves setup');

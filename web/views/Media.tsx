@@ -4,6 +4,8 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { PAGE_SOURCES } from '../../shared/feeds.ts';
 import type { LibraryDetail, MediaLibraries, MediaLibrary, Stream } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Ago, Empty, Episode, Meter, Poster, PosterRow as Row } from '../components/ui.tsx';
@@ -44,7 +46,7 @@ export function Media() {
           <h1 className="page-title">{tr('Media')}</h1>
         </div>
         <Empty>
-          {tr('Plex, Jellyfin and Emby are not set up.')} <Link to="/settings?tab=connections">{tr('Connect one')}</Link>
+          {tr('Plex, Jellyfin and Emby are not set up.')} <ConnectOne sources={PAGE_SOURCES['/media']} />
         </Empty>
       </div>
     );
@@ -235,7 +237,7 @@ function Libraries({ ro, onSaid, onErr }: { ro: boolean; onSaid: (s: string) => 
           {server.error && <p className="crit-text">{server.error}</p>}
           {!server.canScan && !ro && (
             <p className="lib-total">
-              {tr('To scan from here, add Plex’s address and token.')} <Link to="/settings?tab=connections">{tr('Connections')}</Link>
+              {tr('To scan from here, add Plex’s address and token.')} <Link to="/settings?tab=connections&setup=plex">{tr('Connect Plex')}</Link>
             </p>
           )}
           {!server.error && server.libraries.length === 0 ? (

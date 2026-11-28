@@ -502,7 +502,7 @@ function KeyboardHelp({ mac, household, version, path, onClose }: { mac: boolean
         <header className="drawer-head"><h2>Help</h2><button type="button" className="text-button" onClick={onClose}>Close</button></header>
         <p className="help-links">
           <a href={HELP.tour} target="_blank" rel="noreferrer">A tour of every page</a>
-          <a href={HELP.integrations} target="_blank" rel="noreferrer">Setting up integrations</a>
+          <a href={HELP.integrations} target="_blank" rel="noreferrer">Connecting your apps</a>
           <a href={HELP.configuration} target="_blank" rel="noreferrer">Configuration</a>
         </p>
         {!household && (

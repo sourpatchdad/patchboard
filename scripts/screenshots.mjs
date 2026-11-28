@@ -361,6 +361,12 @@ try {
   await page.getByRole('button', { name: 'Edit Reading' }).click();
   await settle(page, 400);
   await shoot(page, 'widget-settings');
+  await page.getByRole('dialog', { name: 'Edit Reading' }).getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Add widget', exact: true }).first().click();
+  await page.getByRole('dialog', { name: 'Add widget' }).waitFor();
+  await settle(page, 1500);
+  await shoot(page, 'widget-gallery');
+  await page.keyboard.press('Escape');
   await go('/apps');
   await page.getByRole('button', { name: 'Edit apps' }).first().click();
   await settle(page, 600);

@@ -134,8 +134,8 @@ export function HomepageImport({ onClose }: { onClose: () => void }) {
         {names.length > 0 && (
           <p className="settings-note">
             {names.length === 1
-              ? tr('Homepage had a widget for {names}. Connect it under Integrations on this page for live numbers and alerts.', { names: names[0] })
-              : tr('Homepage had widgets for {names}. Connect them under Integrations on this page for live numbers and alerts.', { names: names.join(', ') })}
+              ? tr('Homepage had a widget for {names}. Connect it from its tile in Apps for live numbers and alerts.', { names: names[0] })
+              : tr('Homepage had widgets for {names}. Connect each from its tile in Apps for live numbers and alerts.', { names: names.join(', ') })}
           </p>
         )}
       </div>

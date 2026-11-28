@@ -60,7 +60,9 @@ there. Coming from Homepage? Settings imports its `services.yaml`.
 ![First run: one sheet with the name, icon, town, language and units, and the apps Patchboard found](docs/screenshots/first-run.webp)
 
 Then connect what you run from Apps: open an app, or **Add an app** and
-pick it, then paste the address and key, test, save. It connects at once, and the server
+pick it, then paste the address and key, test, save. Settings, Connections
+lists every service in one place, and a widget that needs one has Connect
+on its card. It connects at once, and the server
 stores the key encrypted. There are 71 integrations, among them Sonarr,
 Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
 Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,
@@ -102,9 +104,10 @@ hide what you don't use, upload icons. Paste an API key and a tile shows
 
 ![Edit apps: drag between groups, rename them, hide or edit any app](docs/screenshots/edit-apps.webp)
 
-**Boards.** Home is a board of widgets on 2 to 6 columns. Start from a
-layout, drag to move, drag an edge to resize, and turn on Fit the window to
-trim lists to one screen. Add more boards: one for the TV, one for the rack.
+**Boards.** Home is a board of widgets on 2 to 6 columns. Add widget shows
+every widget as a live preview at the size it will be, with sample data for
+apps you haven't connected yet. Start from a layout, drag to move, drag an
+edge to resize, and turn on Fit the window to trim lists to one screen. Add more boards: one for the TV, one for the rack.
 Six themes come in dark and light, Blueprint among them, or build a Custom one from three colors.
 
 **Wall screens.** Hang a tablet, an e-ink reader or an e-paper panel and
@@ -153,7 +156,7 @@ boards, cameras and lights and none of the server controls.
 
 | | |
 |---|---|
-| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Links, Search, Clocks, Feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, chores, books, the car, Home Assistant lists, thermostat, shades, people and rooms, media managers, documents, Nextcloud, Git, monitoring alerts, miners, any container or JSON API. |
+| **Home** | The board: apps, Needs attention, Right now, Downloads, Watched, Listening, Links, Search, Clocks, RSS feeds, Releases, Markets, Sun and moon, Countdown, This week, inbox, reading, server, weather, changes, recently added, Next up, hosts, storage, power, drives, Proxmox, Docker hosts, network, photos, cameras, calendar, notes, chores, books, the car, Home Assistant lists, thermostat, shades, people and rooms, media managers, documents, Nextcloud, Git, monitoring alerts, miners, any container or JSON API. |
 | **Server** | Pools, datasets, disks, temperatures, scrubs, backups, CPU by hour, and when the pool fills at this rate (TrueNAS, or any mounted folder). |
 | **Stacks** | Every container by compose project, sortable by problems, CPU or memory. |
 | **Reading** | A Miniflux reader with search, feed and time filters, and keyboard navigation. |

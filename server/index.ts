@@ -98,6 +98,7 @@ import { listAudit, recordAudit, recordEvent } from './db.ts';
 import { ProblemFeed } from './problems.ts';
 import { MAX_PAGES } from '../shared/wall.ts';
 import { demoQuotes, quotes } from './markets.ts';
+import { samples } from './samples.ts';
 import { bmp, drawPanel, png, drawNumberPanel, PANEL_FORMAT } from './panel.ts';
 import { historyFor, type Reading, readingOf } from '../shared/reading.ts';
 import { addHouseholdDevice, cleanLook, deviceByPanelToken, householdDevices, householdGuard, householdOf, joinHousehold, newJoinToken, newPanelToken, removeHouseholdDevice, setHouseholdView } from './household.ts';
@@ -522,6 +523,7 @@ app.delete('/api/household/:id', (c) => {
 // Feeds and Releases widgets: the server reads the addresses saved in the
 // board; the browser names only the board and the widget.
 app.get('/api/rss/:board/:id', async (c) => {
+  if (c.req.param('board') === SAMPLE_BOARD) return c.json(demoFeedItems());
   const found = getBoard(c.req.param('board'));
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'rss') : undefined;
   const feeds = w?.config?.feeds?.split('\n').filter(Boolean) ?? [];
@@ -532,6 +534,7 @@ app.get('/api/rss/:board/:id', async (c) => {
 });
 
 app.get('/api/releases/:board/:id', async (c) => {
+  if (c.req.param('board') === SAMPLE_BOARD) return c.json({ releases: demoReleases(['immich-app/immich', 'home-assistant/core', 'jellyfin/jellyfin']) });
   const found = getBoard(c.req.param('board'));
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'releases') : undefined;
   const repos = w?.config?.repos?.split('\n').filter(Boolean) ?? [];
@@ -540,10 +543,14 @@ app.get('/api/releases/:board/:id', async (c) => {
   return c.json({ releases: await latestReleases(repos) });
 });
 
+/** The widget gallery's previews ask for this board: they get made-up items. */
+const SAMPLE_BOARD = 'sample';
+
 const CURRENCY_CODES = new Set(Intl.supportedValuesOf('currency'));
 // Markets widgets: prices for the lines saved in the board, never for a
 // symbol the browser names. Coins are priced in the currency asked for.
 app.get('/api/markets/:board/:id', async (c) => {
+  if (c.req.param('board') === SAMPLE_BOARD) return c.json({ quotes: demoQuotes(['AAPL', 'VTI', 'BTC'], 'USD') });
   const found = getBoard(c.req.param('board'));
   const w = found?.custom ? found.board.widgets.find((x) => x.id === c.req.param('id') && x.type === 'markets') : undefined;
   const lines = w?.config?.symbols?.split('\n').filter(Boolean) ?? [];
@@ -576,6 +583,11 @@ app.post('/api/widgets/preview', async (c) => {
   if (config.demo) return c.json(v.config.title === 'custom' || PRESETS.some((p) => p.id === v.config.title) ? demoAppStat('preview', v.config) : demoJson(v.config, true));
   return c.json(await fetchJsonWidget(v.config, true));
 });
+
+// The widget gallery's previews: what a widget looks like before its app is
+// connected. Made-up data, the same demo mode shows, and never a request to
+// anything real; the gallery labels it Sample.
+app.get('/api/samples', async (c) => c.json({ sources: await samples((c.req.query('sources') ?? '').split(',').filter(Boolean)) }));
 
 // A household device gets the same picture with every control turned off,
 // except the lights and scenes it may still switch.

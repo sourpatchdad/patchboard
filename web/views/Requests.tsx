@@ -3,7 +3,8 @@
 // Lists come straight from the app while the page is open.
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { PAGE_SOURCES } from '../../shared/feeds.ts';
 import type { AskItem, RequestList, SeerrData, SeerrRequest } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, PosterRow as Row } from '../components/ui.tsx';
@@ -53,7 +54,7 @@ export function Requests() {
           <h1 className="page-title">{tr('Requests')}</h1>
         </div>
         <Empty>
-          {tr('Overseerr or Jellyseerr is not set up.')} <Link to="/settings?tab=connections">{tr('Connect one')}</Link>
+          {tr('Overseerr or Jellyseerr is not set up.')} <ConnectOne sources={PAGE_SOURCES['/requests']} />
         </Empty>
       </div>
     );

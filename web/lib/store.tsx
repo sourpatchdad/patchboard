@@ -113,6 +113,17 @@ export function SnapshotProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={{ snap, live, failed, auth }}>{children}</Ctx.Provider>;
 }
 
+/**
+ * A preview's own view of the snapshot: these sources in place of what the
+ * server sends. The widget gallery uses it to show a widget with sample data
+ * before its app is connected; nothing outside the preview sees them.
+ */
+export function WithSources({ sources, children }: { sources: Partial<Snapshot['sources']> | null | undefined; children: ReactNode }) {
+  const store = useContext(Ctx);
+  if (!store.snap || !sources || !Object.keys(sources).length) return <>{children}</>;
+  return <Ctx.Provider value={{ ...store, snap: { ...store.snap, sources: { ...store.snap.sources, ...sources } } }}>{children}</Ctx.Provider>;
+}
+
 /** Settings, Alerts thresholds, with the defaults until the snapshot arrives. */
 export function useLimits(): import('../../shared/types.ts').Limits {
   const { snap } = useStore();

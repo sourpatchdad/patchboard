@@ -6,10 +6,8 @@ import { HELP } from '../lib/docs.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { sourceOf } from '../../shared/feeds.ts';
-import { integrationOf } from '../lib/connect.ts';
-import { appLike } from '../components/ServiceSheet.tsx';
+import { Link, useLocation } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
@@ -47,7 +45,7 @@ type Tab = 'look' | 'home' | 'devices' | 'alerts' | 'connections' | 'activity';
 
 type Part = 'integrations' | 'access' | 'apps' | 'backup';
 const PARTS: [Part, string][] = [
-  ['integrations', msg('Integrations')],
+  ['integrations', msg('All connections')],
   ['access', msg('Sign-in and keys')],
   ['apps', msg('App catalog')],
   ['backup', msg('Backup')],
@@ -56,7 +54,7 @@ const TABS: [Tab, string, string][] = [
   ['look', msg('Look'), msg('This browser only. A new browser starts from the last look you saved.')],
   ['home', msg('Home'), msg("This browser only. A board's widgets are shared.")],
   ['devices', msg('Devices'), msg('Wall tablets, e-ink panels and family phones, set up from here.')],
-  ['alerts', msg('Alerts'), msg('When storage, drives, tires and links count as trouble. Shared by every device.')],
+  ['alerts', msg('Alerts'), msg('What counts as trouble, and where you hear about it. Shared by every device.')],
   ['connections', msg('Connections'), msg('Shared by every device.')],
   ['activity', msg('Activity'), msg('Who changed what, newest first.')],
 ];
@@ -87,6 +85,11 @@ export function Settings() {
   useEffect(() => {
     if (hash === '#catalog' || new URLSearchParams(search).get('import') === 'homepage') setPart('apps');
   }, [hash, search]);
+  // A way to be told about trouble lives under Alerts: a link to one in Connections lands there.
+  useEffect(() => {
+    const setup = new URLSearchParams(search).get('setup');
+    if (setup && NOTIFY.has(setup) && tab !== 'alerts') setTab('alerts');
+  }, [search]);
   // Older links point at #catalog.
   useEffect(() => {
     if (hash === '#catalog' && tab !== 'connections') setTab('connections');
@@ -347,7 +350,12 @@ export function Settings() {
         </>
       )}
       {tab === 'devices' && <Devices />}
-      {tab === 'alerts' && <Alerts />}
+      {tab === 'alerts' && (
+        <>
+          <Integrations which="notify" />
+          <Alerts />
+        </>
+      )}
       {tab === 'activity' && <Activity />}
       </div>
       <AppVersion />
@@ -450,7 +458,7 @@ function AppVersion() {
         </a>
         ,{' '}
         <a href={HELP.integrations} target="_blank" rel="noreferrer">
-          {tr('integrations')}
+          {tr('connecting apps')}
         </a>
         ,{' '}
         <a href={HELP.configuration} target="_blank" rel="noreferrer">
@@ -611,7 +619,7 @@ function Connections() {
           <dd>
             {!s.configured ? (
               <span className="ledger-aside">
-                {tr('Patchboard can\'t see TRAKT_CLIENT_ID. Add it to the environment, then recreate the container (a restart doesn\'t reload it).')}
+                {tr('Add your Trakt app\'s Client ID first.')} <ConnectOne sources={['trakt']} label={tr('Add it')} />
               </span>
             ) : s.pending ? (
               <span className="trakt-code">
@@ -794,7 +802,7 @@ const ACTION_TEXT: Record<string, string> = {
   'secret.delete': msg('removed the key'),
   'icon.upload': msg('uploaded an icon'),
   'pages.save': msg('customized a page'),
-  'setup.import': msg('imported a setup file'),
+  'setup.import': msg('restored a setup file'),
   'update.dismiss': msg('dismissed an image update mark for'),
   'trakt.connect': msg('started a Trakt sign-in'),
   'trakt.disconnect': msg('disconnected Trakt'),
@@ -809,7 +817,7 @@ const ACTION_TEXT: Record<string, string> = {
   'board.add': msg('added a board'),
   'brand.save': msg('renamed the dashboard'),
   'setup.save': msg('saved the settings for'),
-  'setup.remove': msg('removed the integration'),
+  'setup.remove': msg('removed the connection'),
   'setup.test': msg('tested the connection to'),
   'setup.thresholds': msg('changed the alert thresholds'),
   'wake': msg('woke'),
@@ -937,12 +945,17 @@ function Keys() {
   );
 }
 
+/** The ways Patchboard tells you about trouble: listed under Alerts, beside the thresholds. */
+const NOTIFY = new Set(CATEGORIES.find(([name]) => name === 'Notifications')?.[1] ?? []);
+
 /**
- * Every built-in integration: what's on (and whether it's answering), then
- * what you could turn on and exactly how. The list lives in
- * shared/integrations.ts, the same one docs/INTEGRATIONS.md is built from.
+ * Every connection: what's on (and whether it's answering), then what you
+ * could turn on and exactly how, each set up in place. The apps and services
+ * are under Connections; the ways to be told about trouble, under Alerts. The
+ * list lives in shared/integrations.ts, the same one docs/INTEGRATIONS.md is
+ * built from.
  */
-function Integrations() {
+function Integrations({ which = 'services' }: { which?: 'services' | 'notify' }) {
   const { snap } = useStore();
   const [setup, setSetup] = useState<{ integrations: SetupIntegration[]; demo: boolean } | null>(null);
   const [adopting, setAdopting] = useState(false);
@@ -954,23 +967,6 @@ function Integrations() {
   const wanted = new URLSearchParams(useLocation().search).get('setup');
   const [open, setOpen] = useState<string | null>(wanted);
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string } | null>>({});
-  // An app already on Apps is set up in its own sheet: a link here for it
-  // (an alert, a widget's "Check the connection") goes there instead.
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!wanted || !snap || snap.readOnly) return;
-    const app = snap.catalog.groups.flatMap((g) => g.services).find((s) => {
-      const i = integrationOf(s);
-      return !!i && sourceOf(i.id) === sourceOf(wanted);
-    });
-    if (app) {
-      void navigate(`/apps?app=${encodeURIComponent(app.name)}&connect=1`, { replace: true });
-      return;
-    }
-    // No tile: the service's own sheet in Apps, unless it's a way to be notified.
-    const i = INTEGRATIONS.find((x) => x.id === wanted);
-    if (i && appLike(i)) void navigate(`/apps?service=${encodeURIComponent(wanted)}&connect=1`, { replace: true });
-  }, [wanted, !!snap]);
   useEffect(() => {
     fetch('/api/setup/integrations')
       .then((r) => r.json())
@@ -981,9 +977,6 @@ function Integrations() {
     if (setup && wanted) land(`int-${wanted}`);
   }, [!!setup]);
   if (!snap) return null;
-  // On its way to an app's sheet: draw nothing rather than a list that vanishes.
-  const forwarding = INTEGRATIONS.find((x) => x.id === wanted);
-  if (wanted && !snap.readOnly && forwarding && appLike(forwarding)) return null;
   const status = (i: Integration): { on: boolean; text: string; tone: 'ok' | 'warn' | 'off'; why?: string } => {
     if (i.id === 'updates' && snap.features?.includes('no-docker-cli'))
       return { on: false, text: tr('Off'), tone: 'off', why: tr('This is the slim image, which has no Docker CLI. Use the full image to update containers from here.') };
@@ -997,9 +990,7 @@ function Integrations() {
     return { on: true, text: s.updatedAt ? tr('On, updated {when}', { when: agoLong(s.updatedAt) }) : tr('On'), tone: 'ok' };
   };
   const setupOf = (id: string) => setup?.integrations.find((x) => x.id === id);
-  // Apps hold every app and its connection; what's left here is how alerts
-  // reach you and what only the server's environment can set.
-  const rows = INTEGRATIONS.filter((i) => !appLike(i)).map((i) => ({ i, st: status(i) }));
+  const rows = INTEGRATIONS.filter((i) => (which === 'notify') === NOTIFY.has(i.id)).map((i) => ({ i, st: status(i) }));
   const on = rows.filter((r) => r.st.on);
   const off = rows.filter((r) => !r.st.on);
   const row = ({ i, st }: { i: Integration; st: ReturnType<typeof status> }) => {
@@ -1022,12 +1013,13 @@ function Integrations() {
       >
         <span className="integration-name">{i.name}</span>
         <span className="integration-adds">
-          {foundIn(i.adds, tr(i.adds), find.trim().toLowerCase()) ?? tr(i.adds)}
+          <span className="integration-line" title={tr(i.adds)}>{foundIn(i.adds, tr(i.adds), find.trim().toLowerCase()) ?? tr(i.adds)}</span>
           {st.why ? <small>{st.why}</small> : !su && !st.on && i.where && <small>{i.where}</small>}
         </span>
         <span className="integration-end">
           <span className={`integration-status tone-${st.tone}`}>
-            {st.text}
+            {/* Off says nothing Set up doesn't. */}
+            {st.on || st.why || !su ? st.text : ''}
             {su?.fromUi && <small>{' '}{tr('Set up here')}</small>}
             {locked && st.on && <small>{' '}{tr('From the environment')}</small>}
           </span>
@@ -1087,16 +1079,13 @@ function Integrations() {
     }
   };
   return (
-    <Section title="Integrations" count={tr('{on} of {all} on', { on: on.length, all: rows.length })} className="span-all" id="integrations">
-      <p className="settings-note integrations-moved">
-        {tx('Apps and their connections are in {apps}: open one to connect it, or Add an app. Here: notifications, and what the server sets itself.', {
-          apps: <Link to="/apps">{tr('Apps')}</Link>,
-        })}
-      </p>
-      <p className="settings-note">
-        {tr('Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as locked.')}
-      </p>
-      {!setup?.demo && !snap.readOnly && envOnly.length > 0 && (
+    <Section title={which === 'notify' ? msg('Where alerts go') : msg('Connections')} count={tr('{on} of {all} on', { on: on.length, all: rows.length })} className="span-all" id={which === 'notify' ? 'notifications' : 'integrations'}>
+      {which === 'services' && (
+        <p className="settings-note">
+          {tr('Keys stay encrypted on this server and never reach a browser. A variable in your environment wins over this page and shows here as locked.')}
+        </p>
+      )}
+      {which === 'services' && !setup?.demo && !snap.readOnly && envOnly.length > 0 && (
         <div className="adopt">
           <p>
             <strong>{tn(envOnly.length, '{n} setting comes from your .env.', '{n} settings come from your .env.')}</strong>{' '}
@@ -1116,8 +1105,8 @@ function Integrations() {
           })}
         </p>
       )}
-      <div className="int-tools">
-        <input className="field" type="search" value={find} placeholder={tr('Find an integration')} aria-label={tr('Find an integration')} onChange={(e) => setFind(e.target.value)} />
+      {which === 'services' && <div className="int-tools">
+        <input className="field" type="search" value={find} placeholder={tr('Find a connection')} aria-label={tr('Find a connection')} onChange={(e) => setFind(e.target.value)} />
         <span className="seg" role="group" aria-label={tr('Show')}>
           {(
             [
@@ -1131,7 +1120,7 @@ function Integrations() {
             </button>
           ))}
         </span>
-      </div>
+      </div>}
       {/* Categories in a set order, A to Z inside, in two columns that stand on
           their own: opening a form grows only its column, so nothing beside it moves. */}
       {(() => {
@@ -1158,7 +1147,8 @@ function Integrations() {
             {cols.map((col, k) => (
               <ul className="integrations" key={k}>
                 {col.flatMap(({ cat, list }) => [
-                  <li key={`cat-${cat}`} className="integrations-divider">
+                  // Where alerts go is one group: it needs no heading of its own.
+                  which === 'services' && <li key={`cat-${cat}`} className="integrations-divider">
                     <h3 className="jw-sub">
                       {tr(cat)} <span className="int-cat-count">{tr('{n} on', { n: list.filter((r) => r.st.on).length })}</span>
                     </h3>
@@ -1225,7 +1215,7 @@ function SetupFile() {
         </a>
         {!readOnly && (
           <>
-            <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>{tr('Import a setup file')}</button>
+            <button type="button" className="button button-quiet" onClick={() => fileInput.current?.click()}>{tr('Restore a setup file')}</button>
             <input ref={fileInput} type="file" accept="application/json,.json,.yaml,.yml,application/yaml,text/yaml" hidden onChange={(e) => {
               const f = e.target.files?.[0];
               // Cleared, so choosing the same file again after Cancel still counts.
@@ -1292,7 +1282,11 @@ function Alerts() {
   };
   // Drive temperatures are stored in °C; show the °F equivalent beside them.
   const asF = (c: string) => (c && Number.isFinite(Number(c)) ? `${Math.round(Number(c) * 1.8 + 32)}°F` : '');
-  const groups = [...new Set(THRESHOLDS.map((t) => t.group))];
+  // Thresholds for things this server has: no tire pressures without a car.
+  const { snap } = useStore();
+  const has = (ids: string[]) => ids.some((id) => !!snap?.sources[id as keyof NonNullable<typeof snap>['sources']]);
+  const shown = (g: string) => (g === 'Car' ? has(['tessie']) : g === 'Drives' ? has(['truenas', 'scrutiny', 'unraid', 'synology', 'qnap']) : true);
+  const groups = [...new Set(THRESHOLDS.map((t) => t.group))].filter(shown);
   return (
     <>
       {groups.map((g) => (

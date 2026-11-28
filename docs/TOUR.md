@@ -265,14 +265,14 @@ progress and albums played lately on Audiobookshelf and Navidrome.
 **No setup needed:** Links puts your links on the board, Search sends
 words to the engine you pick or, with `!yt`, `!sonarr` and the like, straight
 to a site or one of your apps, Clocks shows the time where your people are
-(or one big clock and the date), Feeds reads any RSS or Atom feed without a
+(or one big clock and the date), RSS feeds reads any RSS or Atom feed without a
 reader app, and Releases follows the newest version of the GitHub projects
 you name. Markets follows coins, stocks, funds, indexes and currencies with
 the day's line, no key needed: write `BTC`, `AAPL`, `^GSPC` or `EUR/USD`.
 Sun and moon shows sunrise, sunset, the day getting longer or shorter, and
 tonight's moon. Countdown counts the days to the dates you name.
 
-![Links, Search, Clocks, Feeds and Releases on the board](screenshots/everyday.webp)
+![Links, Search, Clocks, RSS feeds and Releases on the board](screenshots/everyday.webp)
 
 **Downloads:** everything in qBittorrent, Transmission, Deluge, SABnzbd and
 NZBGet on one list, running or failed first: progress, speeds down and
@@ -380,7 +380,19 @@ tabs; Settings, Devices lists each one to edit.
 
 ![Arrange board with clear card gutters](screenshots/customize.webp)
 
-**Widget settings:** a name, how wide, which column, and how many items.
+**Add widget.** At the foot of any board, or in its arrange bar. Every
+widget shows as it would on your board, live, grouped into Everyday, Media,
+Server, Files and work, and House and network. A widget whose app isn't
+connected yet shows made-up data marked Sample, with what it needs under
+it. Pick one and it opens large: choose its width and watch the preview
+change, set its options beside it, then Add to Home. If it needs an app,
+Connect is right there, and Add turns on once it's connected.
+
+![Add widget: every widget as a live preview](screenshots/widget-gallery.webp)
+
+**Widget settings** open the same way, the widget large beside its name,
+width, column and items, so each change shows before you keep it. Cancel
+puts it back as it was.
 
 ![Widget settings](screenshots/widget-settings.webp)
 

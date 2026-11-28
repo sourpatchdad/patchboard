@@ -19,6 +19,11 @@ import { Icon } from './ui.tsx';
 
 /** Ways to be told about trouble, not apps: they belong with Alerts. */
 const NOT_APPS = new Set(CATEGORIES.find(([name]) => name === 'Notifications')?.[1] ?? []);
+/**
+ * Services with nothing to open: they feed a widget, so they're connected from
+ * its Add widget card or from Settings, Connections, never added as an app.
+ */
+const NOT_TILES = new Set(['weather', 'calendar', 'trakt', 'hardcover', 'goodreads', 'wake', 'dockerhosts']);
 
 export interface Running {
   name: string;
@@ -39,7 +44,7 @@ export function AddAppPicker({ listed, running, onPick, onOpen, onClose }: { lis
   const known = (ids: string[]) =>
     ids
       .map((id) => INTEGRATIONS.find((i) => i.id === id))
-      .filter((i): i is Integration => !!i && UI_SETUP.has(i.id) && !NOT_APPS.has(i.id) && !covered.has(sourceOf(i.id)) && match(i.name, i.adds));
+      .filter((i): i is Integration => !!i && UI_SETUP.has(i.id) && !NOT_APPS.has(i.id) && !NOT_TILES.has(i.id) && !covered.has(sourceOf(i.id)) && match(i.name, i.adds));
   const here = running.filter((r) => match(r.name, r.container));
   // A running container already offered above isn't offered again by name (Pihole and Pi-hole).
   for (const r of running) {

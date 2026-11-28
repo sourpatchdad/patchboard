@@ -8,6 +8,7 @@ import type { Container, StatsData, UptimeData } from '../../shared/types.ts';
 import { HealthStrip } from '../components/Squares.tsx';
 import { Icon } from '../components/ui.tsx';
 import { useJson } from '../lib/api.ts';
+import { t } from '../lib/i18n.ts';
 import { pct, plural, size } from '../lib/format.ts';
 import { containerMap, ctrState, stackKey, type JackState, serviceFor, statusLine } from '../lib/services.ts';
 import { useSource, useStore } from '../lib/store.tsx';
@@ -225,7 +226,7 @@ export function Stacks() {
           </section>
         );
       })}
-      {!all.length && <p className="empty">{snap.sources.docker?.ok ? 'No containers.' : "Can't see Docker."}</p>}
+      {!all.length && <p className="empty">{snap.sources.docker?.ok ? 'No containers.' : <>{"Can't see Docker."} <Link to="/settings?tab=connections&setup=docker">{t('Check the connection')}</Link></>}</p>}
       {all.length > 0 && ordered.length === 0 && (
         <p className="empty">{onlyUpdates && !updateCount ? 'No image updates left. Every container runs its newest image.' : 'Nothing matches that filter.'}</p>
       )}

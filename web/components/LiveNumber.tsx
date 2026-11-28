@@ -195,7 +195,7 @@ export function LiveNumberFields({ app, d, onChange }: { app: { name: string; hr
         <>
           {linked ? (
             <p className="live-conn">
-              Uses {d.conn!.name}'s address and key from Connections.{' '}
+              Uses {d.conn!.name}'s connection.{' '}
               <button type="button" className="text-button" onClick={() => (setTest(null), onChange({ ...d, useConn: false }))}>
                 Use another address
               </button>

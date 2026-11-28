@@ -7,7 +7,8 @@
 // refreshes every few seconds while it's in view.
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { PAGE_SOURCES } from '../../shared/feeds.ts';
 import type { ArrApp, ArrOptions, ArrQueueItem, EpisodeInfo, FoundItem, HistoryEvent, HistoryItem, Indexer, IndexerList, IndexerTest, LibraryItem, SubtitleItem, SubtitleKind, ShowDetail, SubtitleLang, SubtitleList, WantedList } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter, PosterRow as Row } from '../components/ui.tsx';
@@ -67,7 +68,7 @@ export function Library() {
           <h1 className="page-title">{tr('Library')}</h1>
         </div>
         <Empty>
-          {tr('Sonarr and Radarr are not set up.')} <Link to="/settings?tab=connections">{tr('Connect one')}</Link>
+          {tr('Sonarr and Radarr are not set up.')} <ConnectOne sources={PAGE_SOURCES['/library']} />
         </Empty>
       </div>
     );

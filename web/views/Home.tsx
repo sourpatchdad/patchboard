@@ -140,8 +140,8 @@ function Masthead({ now, weatherOnBoard, attentionCard, attentionOff, slim }: { 
           ? { tone: 'warn', text: blind }
           : { tone: 'ok', text: tn(running, 'All quiet. {n} container running.', 'All quiet. {n} containers running.') }
       : { tone: alerts.some((a) => a.level === 'critical') ? 'crit' : 'warn', text: tn(alerts.length, 'One thing needs you.', '{n} things need you.') };
-  // A quiet line leads to what's running, or to the integrations it can't reach.
-  const quietTo = blind ? '/settings?tab=connections' : '/stacks';
+  // A quiet line leads to what's running, or to the connection it can't reach.
+  const quietTo = !dockerOk ? '/settings?tab=connections&setup=docker' : blind ? `/settings?tab=connections${blindIds(snap!).length === 1 ? `&setup=${blindIds(snap!)[0]}` : ''}` : '/stacks';
 
   if (slim) {
     return (
@@ -387,10 +387,14 @@ function Overnight({ now }: { now: number }) {
  */
 const NOT_WATCHING = new Set(['weather', 'calendar', 'books', 'trakt', 'miniflux', 'fastmail']);
 
+/** The sources Patchboard watches through and can't reach. */
+const blindIds = (snap: NonNullable<ReturnType<typeof useStore>['snap']>): string[] =>
+  snap.alerts.filter((a) => a.id.startsWith('src-') && a.source && !NOT_WATCHING.has(a.source)).map((a) => a.source!);
+
 function blindSpot(snap: NonNullable<ReturnType<typeof useStore>['snap']>): string | null {
-  const down = snap.alerts.filter((a) => a.id.startsWith('src-') && !NOT_WATCHING.has(a.source ?? '')).map((a) => snap.sources[a.source as keyof typeof snap.sources]?.label ?? a.source);
+  const down = blindIds(snap).map((id) => snap.sources[id as keyof typeof snap.sources]?.label ?? id);
   if (!down.length) return null;
-  return down.length === 1 ? t("Can't reach {name}.", { name: down[0] }) : t("Can't reach {n} integrations.", { n: count(down.length) });
+  return down.length === 1 ? t("Can't reach {name}.", { name: down[0] }) : t("Can't reach {n} connections.", { n: count(down.length) });
 }
 
 export function Attention({ alerts, now }: { alerts: Alert[]; now: number }) {
@@ -885,7 +889,8 @@ function useShelf(items: MergedItem[], limit: number) {
     const el = shelf.current;
     if (!el) return;
     const measure = () => {
-      const w = el.getBoundingClientRect().width / (parseFloat(getComputedStyle(document.body).zoom) || 1);
+      // Layout width: the same under page zoom, and under the gallery's scaled-down previews.
+      const w = el.offsetWidth;
       // A poster column and its gap, as the stylesheet sets them.
       const col = parseFloat(getComputedStyle(el.querySelector('.posters') ?? el).getPropertyValue('--poster-w')) || 138;
       setFit(window.innerWidth > 760 ? Math.max(1, Math.floor((w + 20) / (col + 20))) : null);

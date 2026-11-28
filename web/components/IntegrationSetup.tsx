@@ -166,13 +166,15 @@ export function IntegrationForm({
               type={f.kind === 'secret' ? 'password' : f.kind === 'url' ? 'url' : 'text'}
               autoComplete={f.kind === 'secret' ? 'new-password' : 'off'}
               spellCheck={false}
+              title={f.name}
               disabled={readOnly}
               placeholder={f.kind === 'secret' ? (f.set ? tr('Saved. Type to replace it.') : tr('Paste it here')) : (f.hint ?? (f.kind === 'url' ? tr('For example {address}', { address: 'http://192.168.1.10:port' }) : ''))}
               value={values[f.name] ?? ''}
               onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
             />
           )}
-          <code className="setup-name" id={`${setup.id}-${f.name}-env`}>{f.name}</code>
+          {/* The variable behind it, for whoever sets it in the environment: read out, not a label under every field. */}
+          <code className="setup-name sr-only" id={`${setup.id}-${f.name}-env`}>{f.name}</code>
         </label>
       ))}
       {/* Right under the fields it's about; a problem is announced at once. */}

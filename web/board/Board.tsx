@@ -22,7 +22,6 @@ import {
   NUMBERS,
   spanOf,
   STARTERS,
-  viewsOf,
   WIDGET_INFO,
   type Widget,
   type WidgetType,
@@ -32,14 +31,13 @@ import { CarWidget } from './CarWidget.tsx';
 import { PrinterWidget } from './PrinterWidget.tsx';
 import { DocumentsWidget, GitWidget, ManagersWidget, MinersWidget, MonitoringWidget, NextcloudWidget } from './AppWidgets.tsx';
 import { ChoresWidget, ListWidget, PeopleWidget, RoomsWidget, ShadesWidget, ThermostatWidget } from './HaWidgets.tsx';
-import { HA_WIDGETS } from '../../shared/ha.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { BoardColors } from '../components/BoardColors.tsx';
-import { forThisServer, leftOut, NEEDS, setupHref, widgetReady } from './ready.ts';
-import { appLike, ServiceSheet } from '../components/ServiceSheet.tsx';
+import { forThisServer, leftOut } from './ready.ts';
 import { HeaderPanel } from '../components/HeaderSettings.tsx';
-import { INTEGRATIONS } from '../../shared/integrations.ts';
 import { WidgetCtx } from './widget-context.ts';
+import { NeedsApp, type RenderWidget, useSheetSamples, waitsForApp, WidgetGallery, WidgetSheet } from './Gallery.tsx';
+import { spanLabel } from './WidgetOptions.tsx';
 import { DownloadsWidget } from './Downloads.tsx';
 import { ListeningWidget, WatchedWidget } from './Media.tsx';
 import { CamerasWidget } from './Cameras.tsx';
@@ -48,9 +46,7 @@ import { CountdownWidget, MarketsWidget, SkyWidget } from './Kiosk.tsx';
 import { t } from '../lib/i18n.ts';
 import { canTrimHeight } from './fit.ts';
 import { useDragSort } from '../lib/dragsort.ts';
-import type { FrigateData, NutData, Service, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
-import { sourceOf, WIDGET_SOURCES } from '../../shared/feeds.ts';
-import { integrationOf } from '../lib/connect.ts';
+import type { NutData, StatsData, SystemData, TruenasData, UptimeData, WeatherData } from '../../shared/types.ts';
 import { headlineUps, upsLabel, upsLevel } from '../../shared/ups.ts';
 import { AppTiles } from '../components/AppTiles.tsx';
 import { PatchRow } from '../components/PatchRow.tsx';
@@ -68,12 +64,11 @@ import { checkFor, containerMap, serviceFor, statusLine } from '../lib/services.
 import { storageLevel, useLimits, useNow, useSource, useStore } from '../lib/store.tsx';
 import { JsonEditor, JsonWidgetView, parseConfig } from './JsonWidget.tsx';
 import { Attention, Changes, FeedsBrief, Inbox, NextUp, NowPlaying, RecentlyAdded, UpcomingBrief } from '../views/Home.tsx';
-import { HaPicker, HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
+import { HomeAssistantWidget, WakeWidget, UptimeWidget, DnsWidget, SpeedWidget, PhotosWidget, ProxmoxWidget, DrivesWidget, SyncWidget, HostsWidget, PowerWidget, StorageWidget, DockerHostsWidget, NetworkWidget, CalendarWidget, NotesWidget, BooksWidget, RequestsWidget } from './HomeWidgets.tsx';
 import { locale } from '../lib/region.ts';
 
 const ACTION = { 'Content-Type': 'application/json', 'X-Patchboard': 'action' };
 const GAP_PX = 24;
-const spanLabel = (n: number, cols: number) => (n >= cols ? 'Full' : String(n));
 const NONE: Widget[] = [];
 
 // Boards seen on this device, so going back to one draws it at once and the
@@ -404,6 +399,8 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     if (leaving && !draft) navigate(backTo);
   }, [leaving, draft]);
   const [adding, setAdding] = useState(false);
+  /** Add widget from the board's foot: the new widget is saved at once, without arranging. */
+  const [quickAdd, setQuickAdd] = useState(false);
   const [addFind, setAddFind] = useState('');
   const [creating, setCreating] = useState(false);
   // The header's controls, over the board instead of a trip to Settings.
@@ -463,7 +460,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
     return () => ro.disconnect();
   }, [boardEl]);
   const chosen = shown?.columns ?? DEFAULT_COLUMNS;
+  /** One column's width, for previews drawn at the size they'll be on this board. */
   const cols = boardW ? Math.min(chosen, Math.max(1, Math.floor((boardW + GAP_PX) / (MIN_COLUMN_PX + GAP_PX)))) : chosen;
+  /** One column's width as drawn, for previews at the size they'll be on this board. */
+  const colWidth = boardW ? (boardW - GAP_PX * (cols - 1)) / cols : 380;
   const { trim, posters, over } = useFit(!!shown?.fit && cols > 1, boardEl, shown?.widgets ?? NONE, editing);
   const alignedHeights = useListCardAlignment(boardEl, shown?.widgets.map((w) => `${w.id}:${w.column ?? ''}:${w.span ?? ''}`).join(',') ?? '');
   const short = over;
@@ -628,7 +628,7 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
                 if (!st) return;
                 setDraft({ ...forThisServer(st.board, snap), name: draft.name });
                 const gone = leftOut(st.board, snap);
-                setNotice(gone.length ? `Left out ${gone.join(', ')} until their integrations are set up.` : '');
+                setNotice(gone.length ? `Left out ${gone.join(', ')} until their apps are connected.` : '');
               }}
             >
               <option value="" disabled>
@@ -732,7 +732,10 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
               {t('Edit header')}
             </button>
           )}
-          {!snap?.readOnly && <><button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
+          {!snap?.readOnly && <><button type="button" className="text-button board-customize board-add-widget" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)), setQuickAdd(true), setAdding(true))}>
+            {t('Add widget')}
+          </button>
+          <button type="button" className="text-button board-customize" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)))}>
             {t('Arrange board')}
           </button>
           <button type="button" className="text-button board-customize" onClick={() => setCreating(true)}>
@@ -744,14 +747,37 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       {creating && <NewBoard onClose={() => setCreating(false)} />}
 
       {adding && draft && (
-        <AddDrawer
+        <WidgetGallery
           board={draft}
+          boardName={draft.name || t('Home')}
+          columns={chosen}
+          colWidth={colWidth}
+          onScreen={cols}
           initialFind={addFind}
-          onClose={() => (setAdding(false), setAddFind(''))}
+          render={renderWidget}
+          onClose={() => {
+            setAdding(false);
+            setAddFind('');
+            // Opened from the board's foot: nothing was arranged, so nothing is left open.
+            if (quickAdd) (setQuickAdd(false), setDraft(null));
+          }}
           onAdd={(w) => {
             setAdding(false);
-            if (w.type === 'json') setJsonEdit('new');
-            else {
+            setAddFind('');
+            if (w.type === 'json') {
+              // API numbers has its own editor; the board stays open to save it.
+              setQuickAdd(false);
+              setJsonEdit('new');
+            } else if (quickAdd) {
+              setQuickAdd(false);
+              const d = draftRef.current;
+              if (d)
+                void save({ ...d, widgets: [...pinColumns(d.widgets), w] }).then((err) => {
+                  if (err) return setError(err);
+                  setDraft(null);
+                  setTimeout(() => document.getElementById(`w-${w.id}`)?.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }), 120);
+                });
+            } else {
               update((ws) => [...ws, w]);
               // Show where it landed, with its controls ready.
               setTimeout(() => {
@@ -765,21 +791,27 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
       )}
 
       {setting && draft && draft.widgets.some((x) => x.id === setting) && (
-        <SettingsDrawer
+        <EditSheet
           w={draft.widgets.find((x) => x.id === setting)!}
+          quick={quick}
+          boardName={draft.name || t('Home')}
+          columns={chosen}
+          colWidth={colWidth}
+          onScreen={cols}
           fitShows={trim[setting]}
-          onCancel={quick ? () => (setSetting(null), setQuick(false), setDraft(null)) : undefined}
-          onClose={() => {
+          onWidget={(next) => update((ws) => ws.map((x) => (x.id === setting ? next : x)))}
+          onCancel={(was) => {
+            setSetting(null);
+            if (quick) return (setQuick(false), setDraft(null));
+            update((ws) => ws.map((x) => (x.id === was.id ? was : x)));
+          }}
+          onDone={() => {
             setSetting(null);
             if (!quick) return;
             setQuick(false);
             const d = draftRef.current;
             if (d) void save({ ...d, widgets: pinColumns(d.widgets) }).then((err) => (err ? setError(err) : setDraft(null)));
           }}
-          columns={chosen}
-          onColumn={(column) => update((ws) => ws.map((x) => x.id === setting ? { ...x, column } : x))}
-          onChange={(cfg) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, config: cfg } : x)))}
-          onSpan={(n) => update((ws) => ws.map((x) => (x.id === setting ? { ...x, span: n } : x)))}
         />
       )}
 
@@ -963,6 +995,20 @@ function Cell(props: {
   );
 }
 
+/** A widget drawn on its own, outside the board's grid: the gallery's and the edit sheet's previews. */
+const renderWidget: RenderWidget = (w, board, now) => (
+  <WidgetCtx.Provider value={settingsOf(w)}>
+    <WidgetBody w={w} board={board} now={now} saved={false} />
+  </WidgetCtx.Provider>
+);
+
+/** A widget on the board, edited beside its preview. Cancel puts back what it was when opened. */
+function EditSheet({ w, quick, boardName, columns, colWidth, onScreen, fitShows, onWidget, onCancel, onDone }: { w: Widget; quick: boolean; boardName: string; columns: number; colWidth: number; onScreen: number; fitShows?: number; onWidget: (w: Widget) => void; onCancel: (was: Widget) => void; onDone: () => void }) {
+  const [was] = useState(w);
+  const samples = useSheetSamples(w.type);
+  return <WidgetSheet w={w} mode={quick ? 'quick' : 'edit'} boardName={boardName} columns={columns} colWidth={colWidth} onScreen={onScreen} samples={samples} render={renderWidget} fitShows={fitShows} onWidget={onWidget} onPrimary={onDone} onCancel={() => onCancel(was)} />;
+}
+
 /** What a widget's own settings ask of what's inside it. */
 function settingsOf(w: Widget, fitLimit?: number) {
   const own = fitLimit ?? (w.config?.limit ? Number(w.config.limit) : undefined);
@@ -998,6 +1044,8 @@ function WidgetBody({ w, board, now, saved, editing, downloadsOnBoard }: { w: Wi
   const { snap } = useStore();
   const { homeApps, homeStatusSize } = useAppearance();
   if (!snap) return null;
+  // No app it reads is connected: say what it needs, rather than a gap. A household screen can't connect anything.
+  if (waitsForApp(w.type, snap)) return snap.readOnly ? null : <NeedsApp w={w} />;
   // One number: every widget in NUMBERS but Markets, which fetches its own prices.
   if (w.config?.view === 'number' && NUMBERS[w.type] && w.type !== 'markets') return <NumberView w={w} now={now} name={WIDGET_INFO[w.type].name} />;
   switch (w.type) {
@@ -1148,61 +1196,11 @@ function backToArrange(): void {
   }, 50);
 }
 
-/** Words people search Add widget with that a widget's own description doesn't use. */
-const ALSO: Partial<Record<WidgetType, string>> = {
-  drives: 'disks hard drives smart health',
-  storage: 'disks pool space',
-  hosts: 'disks machines computers',
-  now: 'playing streams watching',
-  cameras: 'frigate nvr security',
-  halist: 'home assistant shopping grocery todo to-do chores checklist',
-  climate: 'home assistant thermostat heat cool temperature hvac',
-  shades: 'home assistant blinds curtains covers',
-  people: 'home assistant presence family who is home',
-  chores: 'plants watering filter recurring days since household',
-  rooms: 'home assistant temperature sensors heatmap climate history',
-  miners: 'bitaxe nerdqaxe axeos bitcoin mining hashrate asic',
-  managers: 'arr lidarr readarr prowlarr bazarr music books subtitles indexers',
-  documents: 'paperless scans paper',
-  git: 'gitea forgejo code repositories',
-  monitoring: 'netdata prometheus alertmanager alarms',
-};
-
 /** The groups an apps widget shows: those ticked, or every group when none are. */
 const pickedGroups = (raw?: string) => {
   const list = (raw ?? '').split('\n').map((x) => x.trim()).filter(Boolean);
   return list.length ? list : undefined;
 };
-
-/**
- * Tick boxes for a setting Patchboard can fill in itself (app groups,
- * cameras). Stored one per line; nothing ticked means all. A name ticked
- * earlier that's gone now (a renamed group) still shows, so it can be cleared.
- */
-function PickField({ label, hint, names, value, onChange }: { label: string; hint?: string; names: string[]; value: string; onChange: (v: string) => void }) {
-  const picked = value.split('\n').map((x) => x.trim()).filter(Boolean);
-  const all = [...names, ...picked.filter((p) => !names.includes(p))];
-  const toggle = (n: string, on: boolean) => onChange((on ? [...picked, n] : picked.filter((p) => p !== n)).join('\n'));
-  return (
-    <fieldset className="ws-pick">
-      <legend>{label}</legend>
-      {all.length === 0 ? (
-        <p className="ws-hint">Nothing to pick from yet.</p>
-      ) : (
-        <div className="ws-pick-list">
-          {all.map((n) => (
-            <label key={n} className="check">
-              <input type="checkbox" checked={picked.includes(n)} onChange={(e) => toggle(n, e.target.checked)} />
-              {n}
-              {!names.includes(n) && <small className="ws-hint"> (not found)</small>}
-            </label>
-          ))}
-        </div>
-      )}
-      {hint && <small className="ws-hint">{hint}</small>}
-    </fieldset>
-  );
-}
 
 export function Vitals({ compact = false }: { compact?: boolean }) {
   const limits = useLimits();
@@ -1368,421 +1366,6 @@ function NewBoard({ onClose }: { onClose: () => void }) {
           </button>
         </footer>
       </form>
-    </div>
-  );
-}
-
-/** Add widget sorts its list into a few kinds, so 40 widgets read as four short lists. */
-const KINDS: [string, WidgetType[]][] = [
-  ['Everyday', ['attention', 'apps', 'calendar', 'inbox', 'feeds', 'rss', 'notes', 'chores', 'bookmarks', 'search', 'clocks', 'weather', 'sky', 'countdown', 'markets']],
-  ['Media', ['now', 'upcoming', 'recent', 'nextup', 'watched', 'listening', 'requests', 'downloads', 'managers', 'books', 'photos']],
-  ['Server', ['vitals', 'storage', 'drives', 'container', 'changes', 'uptime', 'monitoring', 'proxmox', 'dockerhosts', 'hosts', 'power', 'sync', 'releases', 'json']],
-  ['Files and work', ['documents', 'nextcloud', 'git']],
-  ['House and network', ['homeassistant', 'halist', 'climate', 'shades', 'people', 'rooms', 'cameras', 'car', 'printer', 'wake', 'network', 'dns', 'speed', 'miners']],
-];
-const kindOf = (t: WidgetType) => KINDS.find(([, list]) => list.includes(t))?.[0] ?? 'Other';
-
-function AddDrawer({ board, initialFind = '', onClose, onAdd }: { board: BoardData; initialFind?: string; onClose: () => void; onAdd: (w: Widget) => void }) {
-  const { snap } = useStore();
-  const modal = useModal<HTMLDivElement>(onClose);
-  const [picking, setPicking] = useState(false);
-  const [q, setQ] = useState('');
-  const [find, setFind] = useState(initialFind);
-  // A widget waiting on a connection: its service's sheet, over the board.
-  const [setting, setSetting] = useState<{ t: WidgetType; id: string } | null>(null);
-  // A widget several services can feed: which one you run, asked first.
-  const [choosing, setChoosing] = useState<WidgetType | null>(null);
-  const providers = (t: WidgetType) => INTEGRATIONS.filter((i) => appLike(i) && (WIDGET_SOURCES[t] ?? []).includes(sourceOf(i.id)));
-  // What runs here, by the integration it is: marked in the choice.
-  const runningHere = new Set([...containerMap(snap).keys()].map((c) => integrationOf({ name: c, container: c } as Service)?.id).filter((x): x is string => !!x).map(sourceOf));
-  const setUp = (t: WidgetType) => {
-    const list = providers(t);
-    if (list.length > 1) setChoosing(t);
-    else setSetting({ t, id: list[0]?.id ?? NEEDS[t]!.setup });
-  };
-  // The widget the list points at, shown live with this server's data.
-  const [peek, setPeek] = useState<WidgetType | null>(null);
-  const now = useNow(15_000);
-  const present = new Set(board.widgets.map((w) => w.type));
-  // Search by name or by what it shows: "plex", "disk", "camera".
-  const matches = (t: WidgetType) => {
-    const f = find.trim().toLowerCase();
-    return !f || `${WIDGET_INFO[t].name} ${WIDGET_INFO[t].about} ${NEEDS[t]?.label ?? ''} ${ALSO[t] ?? ''}`.toLowerCase().includes(f);
-  };
-  // Integration widgets appear once their integration is on, so nothing lands empty.
-  const ready = widgetReady(snap);
-  const open = (Object.keys(WIDGET_INFO) as WidgetType[]).filter((t) => WIDGET_INFO[t].multiple || !present.has(t));
-  const types = open.filter((t) => ready[t] !== false && matches(t));
-  // The rest wait on an integration: listed after, each leading to its setup.
-  const waiting = open.filter((t) => ready[t] === false && matches(t));
-  const containers = [...containerMap(snap).values()].filter((c) => c.name.includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
-  const id = (base: string) => {
-    let n = 1;
-    while (board.widgets.some((w) => w.id === `${base}-${n}`)) n++;
-    return `${base}-${n}`;
-  };
-
-  return (
-    <>
-    <div className="palette-backdrop" onClick={onClose}>
-      <div className={`palette drawer ${picking ? '' : 'drawer-wide'}`} ref={modal} role="dialog" aria-label="Add widget" onClick={(e) => e.stopPropagation()}>
-        <header className="drawer-head">
-          <h2>{picking ? 'Which container?' : choosing ? t('Which do you run?') : 'Add widget'}</h2>
-          <button type="button" className="text-button" onClick={picking ? () => setPicking(false) : choosing ? () => setChoosing(null) : onClose}>
-            {picking || choosing ? 'Back' : 'Close'}
-          </button>
-        </header>
-        {choosing && (
-          <ul className="drawer-list" aria-label={t('Which do you run?')}>
-            {providers(choosing)
-              .sort((a, b) => Number(runningHere.has(sourceOf(b.id))) - Number(runningHere.has(sourceOf(a.id))))
-              .map((i) => (
-                <li key={i.id}>
-                  <button type="button" onClick={() => setSetting({ t: choosing, id: i.id })}>
-                    <strong>{i.name}</strong>
-                    <span>{runningHere.has(sourceOf(i.id)) ? t('Running here') : t(i.adds)}</span>
-                  </button>
-                </li>
-              ))}
-          </ul>
-        )}
-        {!picking && !choosing && (
-          <input
-            className="field palette-input"
-            type="search"
-            placeholder="Search widgets: plex, disks, cameras"
-            aria-label="Search widgets"
-            value={find}
-            onChange={(e) => setFind(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key !== 'ArrowDown') return;
-              e.preventDefault();
-              e.currentTarget.parentElement?.querySelector<HTMLElement>('.drawer-list button, .drawer-list a')?.focus();
-            }}
-            autoFocus
-          />
-        )}
-        {choosing ? null : !picking ? (
-          <div className="drawer-split">
-          <ul className="drawer-list">
-            {[...KINDS.map(([k]) => k), 'Other'].map((kind) => {
-              const list = types.filter((t) => kindOf(t) === kind);
-              if (!list.length) return null;
-              return (
-                <Fragment key={kind}>
-                  <li className="drawer-sub drawer-kind" role="presentation">
-                    {kind}
-                  </li>
-                  {list.map((t) => (
-                    <li key={t}>
-                      <button
-                        type="button"
-                        onMouseEnter={() => setPeek(t)}
-                        onFocus={() => setPeek(t)}
-                        onClick={() => (t === 'container' ? setPicking(true) : onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size }))}
-                      >
-                        <strong>{WIDGET_INFO[t].name}</strong>
-                        <span>{WIDGET_INFO[t].about}</span>
-                      </button>
-                    </li>
-                  ))}
-                </Fragment>
-              );
-            })}
-            {types.length === 0 && waiting.length === 0 && <li className="settings-note">{find.trim() ? `No widget matches "${find.trim()}".` : 'Every widget is on the board.'}</li>}
-            {waiting.length > 0 && <li className="drawer-sub drawer-kind" role="presentation">Set up first</li>}
-            {waiting.map((t) => {
-              const setup = INTEGRATIONS.find((i) => i.id === NEEDS[t]?.setup);
-              const body = (
-                <>
-                  <strong>{WIDGET_INFO[t].name}</strong>
-                  <span>Needs {NEEDS[t]?.label}. Set it up</span>
-                </>
-              );
-              return (
-                <li key={t} className="is-waiting">
-                  {/* Set up in place, so the board being arranged stays as it is. */}
-                  {setup && appLike(setup) ? (
-                    <button type="button" onClick={() => setUp(t)}>
-                      {body}
-                    </button>
-                  ) : (
-                    <Link to={setupHref(t)} onClick={onClose}>
-                      {body}
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {/* What the pointed-at widget looks like here, now: a picture, not a control. */}
-          {(() => {
-            const t = peek && types.includes(peek) ? peek : types.find((x) => x !== 'container');
-            if (!t) return null;
-            const w: Widget = { id: 'peek', type: t, size: WIDGET_INFO[t].size };
-            return (
-              <aside className="drawer-peek" aria-hidden inert>
-                <div className="drawer-peek-body cell-body">
-                  <WidgetCtx.Provider value={settingsOf(w)}>
-                    <WidgetBody w={w} board="peek" now={now} saved={false} />
-                  </WidgetCtx.Provider>
-                </div>
-              </aside>
-            );
-          })()}
-          </div>
-        ) : (
-          <>
-            <input className="field palette-input" placeholder="Filter containers" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-            <ul className="drawer-list drawer-containers">
-              {containers.map((c) => (
-                <li key={c.name}>
-                  <button type="button" onClick={() => onAdd({ id: id('ctr'), type: 'container', size: 's', config: { container: c.name } })}>
-                    <strong className="mono">{c.name}</strong>
-                    <span>{c.project ? `${c.project} stack` : c.image}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
-    </div>
-      {setting && (
-        <ServiceSheet
-          id={setting.id}
-          connect
-          feeds={false}
-          onSaved={() => {
-            const { t } = setting;
-            setSetting(null);
-            setChoosing(null);
-            onAdd({ id: WIDGET_INFO[t].multiple ? id(t) : t, type: t, size: WIDGET_INFO[t].size });
-          }}
-          onClose={() => setSetting(null)}
-        />
-      )}
-    </>
-  );
-}
-
-/**
- * One widget's settings: its name, width, how many items, its look. Changes
- * go into the draft board; Save on the board bar keeps them.
- */
-function SettingsDrawer({
-  w,
-  onColumn,
-  columns,
-  onClose,
-  onChange,
-  onSpan,
-  onCancel,
-  fitShows,
-}: {
-  w: Widget;
-  columns: number;
-  /** Fit the window is showing fewer than the setting right now. */
-  fitShows?: number;
-  onClose: () => void;
-  /** Opened from the widget itself: Escape and Cancel throw the change away; Save keeps it. */
-  onCancel?: () => void;
-  onChange: (cfg: Record<string, string> | undefined) => void;
-  onSpan: (n: number) => void;
-  onColumn: (n: number | undefined) => void;
-}) {
-  // What the pickers offer: this server's app groups and cameras.
-  const { snap } = useStore();
-  const dismiss = onCancel ?? onClose;
-  const modal = useModal<HTMLDivElement>(dismiss);
-  const info = WIDGET_INFO[w.type];
-  const o = info.options;
-  const cfg = w.config ?? {};
-  // Apps: the look in effect, this widget's own or the Settings default it follows.
-  const { homeApps } = useAppearance();
-  const appsLook = cfg.style || homeApps;
-  const limitN = Number(cfg.limit);
-  const badLimit = !!o.limit && !!cfg.limit && !(Number.isInteger(limitN) && limitN >= o.limit[1] && limitN <= o.limit[2]);
-  const set = (k: string, v: string) => {
-    const next = { ...cfg, [k]: v };
-    if (!v) delete next[k];
-    onChange(Object.keys(next).length ? next : undefined);
-  };
-  return (
-    <div className="palette-backdrop" onClick={dismiss}>
-      <div className="palette drawer widget-settings" ref={modal} role="dialog" aria-label={`Edit ${info.name}`} onClick={(e) => e.stopPropagation()}>
-        <header className="drawer-head">
-          <h2>{cfg.title || info.name}</h2>
-          {onCancel ? (
-            <span className="drawer-head-actions">
-              <button type="button" className="text-button" onClick={onCancel}>
-                Cancel
-              </button>
-              <button type="button" className="button board-save" onClick={onClose}>
-                Save
-              </button>
-            </span>
-          ) : (
-            <button type="button" className="button board-save" onClick={onClose} title="Back to the board; its Save keeps this">
-              Done
-            </button>
-          )}
-        </header>
-        <p className="settings-note">{info.about}</p>
-        <div className="ws-form">
-          {o.title !== false && (
-            <label>
-              <span>Name</span>
-              <input className="field" value={cfg.title ?? ''} maxLength={40} placeholder={info.name} onChange={(e) => set('title', e.target.value)} />
-            </label>
-          )}
-          <div className="ws-row">
-            <span>Columns wide, of {columns}</span>
-            <span className="seg" role="group" aria-label="Columns wide">
-              {Array.from({ length: columns }, (_, k) => k + 1).map((n) => (
-                <button key={n} type="button" aria-pressed={spanOf(w, columns) === n} aria-label={n === columns ? 'Full width' : `${n} of ${columns} columns wide`} onClick={() => onSpan(n)}>
-                  {spanLabel(n, columns)}
-                </button>
-              ))}
-            </span>
-          </div>
-          {/* What it is, its name, then where it sits: Column after width. */}
-          <label>
-            <span>Column</span>
-            <select className="field" value={w.column ?? ''} onChange={(e) => onColumn(e.target.value ? Number(e.target.value) : undefined)}>
-              <option value="">Automatic</option>
-              {Array.from({ length: Math.max(1, columns - spanOf(w, columns) + 1) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
-            </select>
-          </label>
-          {o.limit && (
-            <label>
-              <span>Items to show, {o.limit[1]} to {o.limit[2]}</span>
-              <input
-                className="field"
-                type="number"
-                min={o.limit[1]}
-                max={o.limit[2]}
-                value={cfg.limit ?? ''}
-                placeholder={String(o.limit[0])}
-                aria-invalid={badLimit || undefined}
-                onChange={(e) => set('limit', e.target.value)}
-              />
-              {!badLimit && fitShows !== undefined && fitShows < Number(cfg.limit || o.limit[0]) && (
-                <small className="ws-hint">Fit the window shows {fitShows} right now, to keep the board on one screen.</small>
-              )}
-              {badLimit && (
-                <small className="ws-hint warn-text" role="alert">
-                  Use a whole number from {o.limit[1]} to {o.limit[2]}. Until then it shows {o.limit[0]}.
-                </small>
-              )}
-            </label>
-          )}
-          {(o.fields ?? []).map((f) =>
-            f.pick ? (
-              <PickField key={f.key} label={f.label} hint={f.hint} names={f.pick === 'groups' ? (snap?.catalog.groups.map((g) => g.name) ?? []) : ((snap?.sources.frigate?.data as FrigateData | null)?.cameras.map((c) => c.name) ?? [])} value={cfg[f.key] ?? ''} onChange={(v) => set(f.key, v)} />
-            ) : f.choices ? (
-              <label key={f.key}>
-                <span>{f.label}</span>
-                <select className="field" value={cfg[f.key] ?? f.choices[0][0]} onChange={(e) => set(f.key, e.target.value)}>
-                  {f.choices.map(([v, label]) => (
-                    <option key={v} value={v}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <label key={f.key}>
-                <span>{f.label}</span>
-                {f.multiline ? (
-                  <textarea className="field" rows={4} value={cfg[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
-                ) : (
-                  <input className="field" value={cfg[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
-                )}
-                {cfg[f.key]?.trim() && f.check(cfg[f.key]) === null ? (
-                  <small className="ws-hint warn-text" role="alert">
-                    Nothing here can be used yet. {f.hint}
-                  </small>
-                ) : (
-                  f.hint && <small className="ws-hint">{f.hint}</small>
-                )}
-              </label>
-            ),
-          )}
-          {o.days && (
-            <div className="ws-row">
-              <span>Look ahead</span>
-              <span className="seg" role="group" aria-label="Look ahead">
-                {[
-                  ['', 'One week'],
-                  ['14', 'Two weeks'],
-                ].map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={(cfg.days ?? '') === v || (v === '' && cfg.days === '7')} onClick={() => set('days', v)}>
-                    {label}
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-          {viewsOf(w.type).length > 0 && (
-            <div className="ws-row">
-              <span>{t('Show as')}</span>
-              <span className="seg" role="group" aria-label={t('Show as')}>
-                {viewsOf(w.type).map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={(cfg.view ?? '') === v} onClick={() => set('view', v)}>
-                    {t(label)}
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-          {cfg.view === 'number' && (NUMBERS[w.type]?.length ?? 0) > 1 && (
-            <label>
-              <span>Which number</span>
-              <select className="field" value={cfg.number ?? NUMBERS[w.type]![0][0]} onChange={(e) => set('number', e.target.value)}>
-                {NUMBERS[w.type]!.map(([v, label]) => (
-                  <option key={v} value={v}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {o.styles && cfg.view !== 'number' && (
-            <div className="ws-row">
-              <span>Look</span>
-              <span className="seg" role="group" aria-label="Look">
-                {o.styles.map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={(cfg.style ?? '') === v} onClick={() => set('style', v)}>
-                    {v === '' && w.type === 'apps' ? `${label} (${homeApps === 'patchbay' ? 'icons' : 'tiles'})` : label}
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-          {o.names && appsLook === 'patchbay' && (
-            <div className="ws-row">
-              <span>Names under icons</span>
-              <span className="seg" role="group" aria-label="Names under icons">
-                {[
-                  ['', 'On hover'],
-                  ['show', 'Always'],
-                ].map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={(cfg.names ?? '') === v} onClick={() => set('names', v)}>
-                    {label}
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-          {HA_WIDGETS[w.type] && <HaPicker type={w.type} value={cfg.entities} onChange={(v) => set('entities', v)} />}
-          {w.type === 'apps' && (
-            <p className="settings-note">
-              Save this board, then <Link to="/apps?arrange=1">Edit apps</Link> to change the apps themselves.
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

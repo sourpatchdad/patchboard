@@ -38,7 +38,7 @@ never rewrite your files.
    labels work as they are. Patchboard ignores `homepage.widget.*`, which
    carry credentials.
 4. **A catalog file**, `config/services.yaml`, for the whole list in one
-   place. Settings, Connections, Apps downloads your current apps as one.
+   place. Settings, Connections, App catalog downloads your current apps as one.
    Coming from Homepage? Settings, Connections, Import from Homepage takes
    its `services.yaml` and `bookmarks.yaml` and saves the apps in Patchboard,
    leaving the credentials out.
@@ -50,10 +50,11 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 ## Three ways to add numbers
 
 1. **Built-in integrations** feed whole parts of Patchboard: Needs attention,
-   the calendar, Right now, the Server page. You turn them on in Apps: open
-   the app, or Add an app and pick it. Its sheet connects it and lists
-   everything it shows up in. Services with no page of their own, like
-   Weather or a calendar, list under Also connected.
+   the calendar, Right now, the Server page. Settings, Connections, All
+   connections lists every one; an app's own sheet in Apps connects it too, and
+   a widget that needs one has Connect on its card. Services with nothing to
+   open, like Weather or a calendar, are connected from there or from their
+   widget, never added as an app.
 2. **A live number on an app's tile.** On Apps, press the pencil on the
    app's tile, and pick a preset or Any JSON API under Live number. An app
    already connected uses that address and key, so
@@ -67,9 +68,10 @@ which covers about 2,000 self-hosted apps: `sonarr.png`, `jellyfin.svg` or
 
 ## Built-in integrations
 
-Set one up in **Apps**: open the app (or **Add an app** and pick it), press
-**Connect**, fill in the address and key, **Test connection**, then
-**Save**. Patchboard connects at
+Set one up in **Settings, Connections, All connections**, or in **Apps**:
+open the app (or **Add an app** and pick it). Press **Connect**, fill in the
+address and key, **Test connection**, then **Save**. Notifications (Discord,
+email, ntfy and the rest) are under **Settings, Alerts, Where alerts go**. Patchboard connects at
 once, with no restart. Keys you type there are encrypted on the server and
 never shown again.
 
@@ -89,7 +91,7 @@ into Patchboard later, see [Moving off files](CONFIGURATION.md#moving-off-files)
 | **Weather** | Now, the next 24 hours, the week, sunrise and sunset; US weather alerts. Free, no key. | `WEATHER_LAT`, `WEATHER_LON`; optional `WEATHER_LABEL` | Find your town, or type its latitude and longitude. Open-Meteo provides the forecast and the National Weather Service the alerts. |
 | **Sonarr** | Episodes on the calendar, the queue, stuck imports and health warnings. Try another release for a stuck download, Search for an episode that aired without arriving, or search for everything missing. The Library page lists every show, what’s missing and the whole queue, and adds new ones. | `SONARR_URL`, `SONARR_KEY` | Sonarr: Settings, General, API Key. |
 | **Radarr** | Films on the calendar (cinema, digital, physical), the queue, stuck imports and health warnings. Try another release for a stuck download, Search for a film that is out without arriving, or search for everything missing. The Library page lists every film, what’s missing and the whole queue, and adds new ones. | `RADARR_URL`, `RADARR_KEY` | Radarr: Settings, General, API Key. |
-| **Trakt** | Your Trakt calendar for shows and films Sonarr and Radarr don’t track, merged without doubles. | `TRAKT_CLIENT_ID` | Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then connect Trakt in Apps with the code it shows. |
+| **Trakt** | Your Trakt calendar for shows and films Sonarr and Radarr don’t track, merged without doubles. | `TRAKT_CLIENT_ID` | Create an app at app.trakt.tv/settings/apps and copy its Client ID. Then sign in under Settings, Connections, Signed-in accounts, with the code it shows. |
 | **Tautulli (Plex)** | Who is watching Plex right now, recently added posters, what was watched lately and by whom, and how big the library is. | `TAUTULLI_URL`, `TAUTULLI_KEY` | Tautulli: Settings, Web Interface, API Key. |
 | **Plex** | Right now, Recently added and Watched straight from Plex, with no Tautulli needed. Scan a library and stop a stream from the Media page; stopping needs Plex Pass. With Tautulli set up too, Tautulli feeds the board. | `PLEX_URL`, `PLEX_TOKEN` | Plex Web: open any title, the three dots, Get Info, View XML; the address ends in X-Plex-Token=. Copy what follows it. |
 | **Jellyfin** | Who is watching, the moment it changes, recently added, Next up, what you watched lately and how big the library is, with posters that open the item in Jellyfin. | `JELLYFIN_URL`, `JELLYFIN_KEY`; optional `JELLYFIN_USER` | Jellyfin: Dashboard, API Keys, +. JELLYFIN_USER picks whose Next up to show; blank uses the first admin. |

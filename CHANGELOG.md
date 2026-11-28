@@ -38,6 +38,46 @@
   the Update button. Check now also clears the mark when you already run
   the newest image, and an image an Update proved current is not flagged
   again an hour later.
+- **Add widget shows you the widget:** every widget appears as it will on
+  your board, live, in five groups you can search. One whose app isn't
+  connected shows made-up data marked Sample, and says what it needs. Pick
+  one and it opens large: choose its width and the preview follows, set
+  its options beside it, and Add to Home. If it needs an app, Connect sits
+  first, and Add turns on once it's connected. Add widget is also at
+  the foot of every board now, so adding one no longer means arranging
+  first. Clocks, Countdown, Markets, RSS feeds and Releases show sample
+  entries until you type your own; nothing sample is saved.
+- **Widget settings show the widget:** a widget's settings open beside a
+  large preview of it, so a change shows before you keep it, and Cancel
+  puts it back as it was. A Container widget picks its container in the
+  same place.
+- **Every connection in one list:** Settings, Connections, All connections
+  lists every service Patchboard can connect, each set up in place, one
+  line each, where it used to list a few and send you to Apps for the rest.
+  A field's variable name shows when you point at it, not under it. A
+  link to one (an alert, a widget) opens its row there. Discord, email,
+  ntfy and the other ways to be told about trouble moved to Alerts, as
+  Where alerts go, first on that tab; thresholds show only for what you
+  have, so no tire pressures without a car. Home's "Can't see Docker." leads
+  to Docker's connection.
+- **Add an app adds apps:** Weather, Calendar, Trakt, Books, Wake-on-LAN and
+  Other Docker hosts have nothing to open, so they're no longer offered as
+  apps. Connect them from their widget or from Settings, Connections.
+- **A widget says what it's waiting for:** a widget on a board whose app
+  isn't connected used to draw nothing, so a new Home looked half empty.
+  It now shows its name, which apps it needs, and Connect. Household
+  screens keep it hidden, since they can't connect anything.
+- **Connect one goes somewhere:** an empty Downloads, Library, Media,
+  Requests or Ad blocking page used to send you to a Settings list those
+  apps aren't on. Connect one now asks which one you run, with the ones
+  running here first, and opens its connection in place. Home's "Can't
+  reach" line opens the one connection it means, TrueNAS's note opens
+  TrueNAS, and the Wake widget and Trakt's sign-in offer to set themselves
+  up instead of naming a variable.
+- **One name for each thing:** the RSS widget is RSS feeds, so it no
+  longer shares a name with Reading. Restore a setup file is one action in
+  first run and in Settings. Help says connecting your apps, and the rest
+  of the app says connection where it said integration.
 - **Code scanning:** the check that sends a magnet link or `.torrent` to a
   torrent client, the demo's rule for which files start skipped, and the
   Pi-hole test's fake server now read in a way CodeQL can follow. Nothing

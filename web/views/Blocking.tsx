@@ -3,7 +3,8 @@
 // lists. The log is read from the blocker while the page is open.
 
 import { type FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { PAGE_SOURCES } from '../../shared/feeds.ts';
 import type { DnsBlockedBy, DnsData, DnsLists, DnsLog, DnsQuery } from '../../shared/types.ts';
 import { Empty } from '../components/ui.tsx';
 import { clock } from '../lib/format.ts';
@@ -65,7 +66,7 @@ export function Blocking() {
           <h1 className="page-title">{tr('Ad blocking')}</h1>
         </div>
         <Empty>
-          {tr('Pi-hole and AdGuard Home are not set up.')} <Link to="/settings?tab=connections">{tr('Connect one')}</Link>
+          {tr('Pi-hole and AdGuard Home are not set up.')} <ConnectOne sources={PAGE_SOURCES['/blocking']} />
         </Empty>
       </div>
     );

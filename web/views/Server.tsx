@@ -262,7 +262,7 @@ function FallbackStorage({ sys, configured, error }: { sys: SystemData | null; c
         {configured
           ? `Can't reach TrueNAS: ${error ?? 'no answer yet'}.`
           : 'Connect your NAS for real pool capacity, health, disks and alerts.'}{' '}
-        <Link to={configured ? '/settings?tab=connections&setup=truenas' : '/settings?tab=connections#integrations'}>{configured ? 'Check TrueNAS' : 'Connect it'}</Link>
+        <Link to="/settings?tab=connections&setup=truenas">{configured ? 'Check TrueNAS' : 'Connect it'}</Link>
       </p>
     </Section>
   );

@@ -44,11 +44,11 @@ uploaded icons stay behind.
 If you started with a `.env` full of integration keys and a `services.yaml`,
 Patchboard can take both over, so the UI is the one place you change things.
 
-1. **Settings, Connections, Integrations: Save them in Patchboard.**
+1. **Settings, Connections, All connections: Save them in Patchboard.**
    Patchboard copies every integration value in your `.env` into its
    encrypted store. The `.env` keeps winning while it still has them, so
    nothing changes yet. Each field it copied now reads "Saved here too".
-2. **Settings, Connections, Apps: Copy into Patchboard.** Every app in
+2. **Settings, Connections, App catalog: Copy into Patchboard.** Every app in
    `services.yaml` becomes one saved in Patchboard, with its group, order,
    short name, icon, check and one-shot flag, and the links join the
    Links row. Patchboard never edits the file.
@@ -61,7 +61,7 @@ Patchboard can take both over, so the UI is the one place you change things.
    connections are all still there, and from now on you change them in the
    UI.
 
-To keep a copy in git, Settings, Connections, Apps has Download
+To keep a copy in git, Settings, Connections, App catalog has Download
 services.yaml.
 
 ## Server
@@ -97,7 +97,7 @@ services.yaml.
 | `HOOK_TOKEN` | generated | What webhooks send when sign-in is on. Settings, Connections, Sign-in and keys shows Diun's address with it. |
 | `READ_ONLY` | `0` | `1` refuses every change and hides the controls for them. For one family phone or tablet, make it a household device instead ([SECURITY.md](../SECURITY.md)). |
 | `DOCKER_HOST` | empty | `tcp://host:port` of a Docker socket proxy, used instead of the socket. |
-| `DOCKER_HOSTS` | empty | Other machines running Docker, each a socket proxy: `pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375`. Their containers are named like `pihole@pi`. Apps, Add an app, Other Docker hosts sets them too. |
+| `DOCKER_HOSTS` | empty | Other machines running Docker, each a socket proxy: `pi=tcp://192.168.1.20:2375, nuc=tcp://192.168.1.21:2375`. Their containers are named like `pihole@pi`. Settings, Connections, All connections, Other Docker hosts sets them too. |
 
 ## Alerts
 
@@ -163,7 +163,8 @@ services:
       test: ["CMD", "wget", "-qO-", "http://192.168.1.10:3200/healthz"]
 ```
 
-Then add your machines in Apps: Add an app, Wake-on-LAN.
+Then add your machines in Settings, Connections, All connections,
+Wake-on-LAN, or with Add one on the Wake widget.
 
 ## HTTPS for the phone app
 
@@ -193,7 +194,7 @@ dash.example.com {
 
 Optional: you can add apps with one click and Edit apps instead. To keep
 the list in git, `config/services.yaml` lists apps in groups, plus
-bookmarks. Settings, Connections, Apps, Download services.yaml gives you
+bookmarks. Settings, Connections, App catalog, Download services.yaml gives you
 your current apps as a starting file.
 
 | Field | |
@@ -206,7 +207,7 @@ your current apps as a starting file.
 | `expectStopped` | `true` for one-shot jobs, so their exit raises no alert. |
 | `check` | `false` skips the reachability check; a URL checks that address instead of `href`. |
 
-Patchboard reloads the file when you save it. Settings, Connections, Apps
+Patchboard reloads the file when you save it. Settings, Connections, App catalog
 lists entries that name a missing container and running apps the file doesn't
 list. **Download services.yaml** there writes the apps as you arranged them in
 the UI, ready to commit.

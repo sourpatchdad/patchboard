@@ -8,6 +8,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { PAGE_SOURCES } from '../../shared/feeds.ts';
 import type { DownloadClientId, DownloadEntry, DownloadList, DownloadState, EntryAction, FilePriority, TorrentDetail } from '../../shared/types.ts';
 import { HoldButton } from '../components/Hold.tsx';
 import { Empty, Meter } from '../components/ui.tsx';
@@ -135,7 +137,7 @@ export function Downloads() {
           <h1 className="page-title">{tr('Downloads')}</h1>
         </div>
         <Empty>
-          {tr('No download client is set up.')} <Link to="/settings?tab=connections">{tr('Connect one')}</Link>
+          {tr('No download client is set up.')} <ConnectOne sources={PAGE_SOURCES['/downloads']} />
         </Empty>
       </div>
     );

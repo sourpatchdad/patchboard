@@ -133,7 +133,7 @@ export function Palette({ open, onClose, onKeys }: { open: boolean; onClose: () 
       // Every board, wall boards too, which stay off Home's tabs.
       ...(snap.boards ?? []).filter((b) => b.id !== 'home').map((b) => ({ id: `brd-${b.id}`, label: b.name, hint: b.wall ? 'Wall board' : 'Board', terms: 'board dashboard page', run: go(`/b/${b.id}`), subs: snap.readOnly || snap.household ? undefined : [{ label: 'Arrange', run: go(`/b/${b.id}?arrange=1`) }] })),
       { id: 'h-tour', label: 'Help: a tour of every page', hint: 'Help', run: openUrl(HELP.tour) },
-      { id: 'h-integrations', label: 'Help: setting up integrations', hint: 'Help', run: openUrl(HELP.integrations) },
+      { id: 'h-integrations', label: 'Help: connecting your apps', hint: 'Help', run: openUrl(HELP.integrations) },
       ...(onKeys ? [{ id: 'h-keys', label: 'Keyboard shortcuts', hint: 'Help', run: onKeys }] : []),
       { id: 'a-dark', label: 'Dark mode', hint: 'Appearance', run: () => setAppearance({ scheme: 'dark' }) },
       { id: 'a-light', label: 'Light mode', hint: 'Appearance', run: () => setAppearance({ scheme: 'light' }) },

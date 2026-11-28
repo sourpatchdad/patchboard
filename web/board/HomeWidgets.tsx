@@ -11,6 +11,8 @@ import { NAS_SOURCES } from '../../shared/types.ts';
 import type { BooksData, CalendarData, CarData, DnsData, GlancesData, NasSystem, NutData, PortainerData, TailnetData, UnifiData, HaEntity, ImmichData, ProxmoxData, ScrutinyData, SeerrData, SpeedData, SyncDevice, SyncFolder, SyncthingData, HomeAssistantData, KumaMonitor, KumaState, SourceState, UptimeKumaData } from '../../shared/types.ts';
 import { Spark } from '../components/Spark.tsx';
 import { Empty, Meter, Section } from '../components/ui.tsx';
+import { ConnectOne } from '../components/ConnectOne.tsx';
+import { t as tr } from '../lib/i18n.ts';
 import { useAppearance } from '../lib/appearance.ts';
 import { ago, agoLong, deg, pct, size, uptime } from '../lib/format.ts';
 import { storageLevel, useLimits, useSource, useStore } from '../lib/store.tsx';
@@ -251,7 +253,7 @@ export function WakeWidget() {
   return (
     <Section title="Wake" className="wake">
       {names.length === 0 ? (
-        <Empty>Add machines to WOL_DEVICES to wake them from here.</Empty>
+        <Empty>{tr('No machines to wake yet.')} <ConnectOne sources={['wake']} label={tr('Add one')} /></Empty>
       ) : (
         <ul className="wake-list">
           {names.map((n) => (
