@@ -1,0 +1,33 @@
+# A public demo anyone on the internet can open: made-up data, no Docker
+# socket, nothing of yours behind it. Visitors can try everything, Add widget
+# and Arrange board included, and every 30 minutes it starts over, so one
+# visitor's changes never reach the next. Put it behind your tunnel or
+# reverse proxy as its own hostname, never on the same one as your real
+# Patchboard.
+
+services:
+  patchboard-demo:
+    image: ghcr.io/sourpatchdad/patchboard:latest-slim
+    container_name: patchboard-demo
+    # Leaving every 30 minutes is how it starts over: always brings it back.
+    restart: always
+    user: node
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 128
+    environment:
+      - DEMO=1
+      - DEMO_RESET_MINUTES=30
+      # The hostname visitors use. Patchboard refuses any other name.
+      - ALLOWED_HOSTS=demo.example.com
+    ports:
+      # Only your tunnel or proxy on this machine reaches it.
+      - "127.0.0.1:3201:3200"
+    tmpfs:
+      # Everything a visitor changes lives here, and goes at each restart.
+      - /data:size=64m,uid=1000,gid=1000,mode=0700
+      - /tmp:size=16m

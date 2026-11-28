@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **A public demo you can host:** examples/public-demo.yml runs demo mode
+  for anyone on the internet, with no Docker socket, a read-only
+  filesystem, dropped privileges and memory caps. Visitors can change
+  anything, and `DEMO_RESET_MINUTES` starts it over on a schedule so no
+  one sees another visitor's changes. In demo mode Patchboard never fetches
+  an icon address a visitor typed, and doesn't warn that it's open to the
+  internet, since it is on purpose.
+
 ## 1.21.0 (2026-11-28)
 
 Setting Patchboard up now shows you what you get before you get it, and

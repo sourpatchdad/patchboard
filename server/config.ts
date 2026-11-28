@@ -103,6 +103,8 @@ function build(str: Lookup) {
     demo: env.DEMO === '1' || env.DEMO === 'true',
     /** Demo as a fresh install: no catalog, so the first-run welcome shows. */
     demoEmpty: env.DEMO_EMPTY === '1',
+    /** A public demo starts over this often (minutes): it exits and Docker restarts it on an empty tmpfs. 0 never. */
+    demoResetMinutes: Math.max(0, Math.min(24 * 60, Number(env.DEMO_RESET_MINUTES) || 0)),
     dataDir: str('DATA_DIR') ?? './data',
     catalogPath: str('CATALOG_PATH') ?? './config/services.yaml',
     staticDir: str('STATIC_DIR') ?? './dist/web',

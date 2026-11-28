@@ -2635,6 +2635,8 @@ function catalogIconUrls(): Set<string> {
 }
 app.get('/api/icon-url', async (c) => {
   const url = c.req.query('u') ?? '';
+  // A demo anyone can open never fetches an address a visitor typed.
+  if (config.demo) return c.json({ error: 'No such icon' }, 404);
   if (!catalogIconUrls().has(url)) return c.json({ error: 'No such icon' }, 404);
   const got = await urlIcons.get(url);
   if (!got) return c.json({ error: 'No such icon' }, 404);
@@ -2978,6 +2980,17 @@ if (config.auth.mode === 'oidc' && !config.auth.oidc.allowed.length && !config.a
 const httpServer = serve({ fetch: app.fetch, port: config.port, ...(config.listenHost ? { hostname: config.listenHost } : {}) }, (info) => {
   console.log(`patchboard: listening on :${info.port}`);
 });
+
+// A public demo starts over on a schedule: it leaves, Docker's restart
+// policy brings it back, and its data tmpfs comes back empty, so one
+// visitor's changes never linger for the next (examples/public-demo.yml).
+if (config.demo && config.demoResetMinutes > 0) {
+  setTimeout(() => {
+    console.log('patchboard: demo reset');
+    httpServer.close();
+    setTimeout(() => process.exit(0), 500).unref();
+  }, config.demoResetMinutes * 60_000);
+}
 
 // Docker stops a container with SIGTERM. Node running as the container's
 // first process ignores it unless told otherwise, so every update used to

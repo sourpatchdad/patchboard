@@ -77,6 +77,7 @@ services.yaml.
 | `CATALOG_PATH` | `/config/services.yaml` | The optional catalog file. |
 | `DEMO` | `0` | `1` runs on demo data. Its only outside requests load posters from TVmaze, pictures from Wikimedia and app icons from jsDelivr. |
 | `DEMO_EMPTY` | `0` | With `DEMO=1`, starts like a fresh install so you can see the first run. |
+| `DEMO_RESET_MINUTES` | `0` | With `DEMO=1`, starts over this often so a public demo's visitors never see each other's changes: it exits, and Docker's restart policy brings it back on an empty data folder. [examples/public-demo.yml](../examples/public-demo.yml) sets it to 30. |
 
 ## Sign-in and safety
 

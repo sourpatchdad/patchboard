@@ -48,6 +48,10 @@ Open `http://your-server:3200` (or <http://localhost:3200> on the same
 machine). Ctrl-C stops it. Its only outside requests load posters from
 TVmaze, pictures from Wikimedia and app icons from jsDelivr.
 
+To put a demo on the internet for others to try,
+[examples/public-demo.yml](examples/public-demo.yml) runs it with no Docker
+socket, a read-only filesystem, and a fresh start every 30 minutes.
+
 ## Install
 
 ```sh

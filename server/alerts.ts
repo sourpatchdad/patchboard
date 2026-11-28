@@ -546,7 +546,8 @@ export function computeAlerts(sources: Sources, catalog: Catalog, updates: Recor
 
   // Sign-in off, and someone reached Patchboard from the internet.
   const open = openToInternetAt();
-  if (config.auth.mode === 'none' && open && now - open < 24 * 3_600_000) {
+  // A demo is open to the internet on purpose, with nothing real behind it.
+  if (config.auth.mode === 'none' && !config.demo && open && now - open < 24 * 3_600_000) {
     alerts.push({
       id: 'open-to-internet',
       level: 'critical',
