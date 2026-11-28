@@ -39,7 +39,7 @@ export function PatchRow({ names = false, groups }: { names?: boolean; groups?: 
               const raised = alertLevelFor(snap.alerts, s);
               const base = jackState(s, containers, ck);
               const state = base === 'up' && raised ? (raised === 'crit' ? 'down' : 'warn') : base;
-              const words = state === 'idle' && isParked(s.container) ? 'stopped from Patchboard' : jackStateText[state];
+              const words = state === 'idle' && isParked(s.container) ? 'stopped by hand' : jackStateText[state];
               const live = numberText(nums[s.name])?.text;
               const label = `${s.name}${live ? `: ${live}` : ''}, ${ck && !ck.ok ? checkText(ck) : words}${ck?.ok ? `, ${checkText(ck)}` : ''}`;
               const inner = (

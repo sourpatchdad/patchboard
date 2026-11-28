@@ -8,6 +8,8 @@ import { agoLong } from '../lib/format.ts';
 import { itemHref, useMediaServers } from '../lib/media.ts';
 import { useSource, useStore } from '../lib/store.tsx';
 import { useWidget } from './widget-context.ts';
+import { foldBinges } from '../../shared/media.ts';
+import { tn } from '../lib/i18n.ts';
 
 /** An app's address from your catalog, by name. */
 function appHref(snap: ReturnType<typeof useStore>['snap'], name: string): string | undefined {
@@ -19,11 +21,10 @@ export function WatchedWidget({ now }: { now: number }) {
   const { servers, configured } = useMediaServers();
   const { limit = 8 } = useWidget();
   if (!configured) return null;
-  const plays = servers
-    .flatMap((server) => (server.data.watched ?? []).map((p) => ({ ...p, server })))
-    .sort((a, b) => b.at - a.at)
-    .slice(0, limit);
-  const today = plays.filter((p) => now - p.at < 86_400_000).length;
+  const all = servers.flatMap((server) => (server.data.watched ?? []).map((p) => ({ ...p, server }))).sort((a, b) => b.at - a.at);
+  // A binge reads as one line; the limit counts lines, so the list shows more than one show.
+  const plays = foldBinges(all, (a, b) => a.server.id === b.server.id).slice(0, limit);
+  const today = all.filter((p) => now - p.at < 86_400_000).length;
   return (
     <Section title="Watched" count={today ? `${today} today` : undefined} className="watched">
       {plays.length === 0 ? (
@@ -37,6 +38,7 @@ export function WatchedWidget({ now }: { now: number }) {
                 <span className="play-main">
                   <span className="play-title">{p.title}</span>
                   {p.subtitle && <span className="play-sub">{p.subtitle}</span>}
+                  {p.episodes && <span className="play-sub">{tn(p.episodes, '{n} episode', '{n} episodes')}</span>}
                 </span>
                 <span className="play-meta">
                   {p.user}, {agoLong(p.at, now)}

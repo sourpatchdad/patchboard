@@ -1442,5 +1442,8 @@
  "Weekly summary": "Weekoverzicht",
  "What it would say now": "Wat het nu zou zeggen",
  "What's new": "Wat is er nieuw",
- "What's new since {version}": "Nieuw sinds {version}"
+ "What's new since {version}": "Nieuw sinds {version}",
+ "{n} episode": "{n} aflevering",
+ "{n} time": "{n} keer",
+ "{n} times": "{n} keer"
 }

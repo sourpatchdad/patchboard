@@ -69,3 +69,34 @@ export function dedupeRecent<T extends RecentItem>(items: T[]): { item: T; also:
   }
   return out;
 }
+
+/** "S01E06" from an episode's subtitle, as season and episode numbers. */
+function episodeOf(subtitle: string | undefined): [number, number] | null {
+  const m = /S(\d+)E(\d+)/i.exec(subtitle ?? '');
+  return m ? [Number(m[1]), Number(m[2])] : null;
+}
+
+const code = ([s, e]: [number, number]) => `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
+
+/**
+ * A binge as one line: plays of the same show by the same person, one after
+ * another, fold into the newest, with the episode range and how many. Plays
+ * come newest first; anything in between (another show, another person)
+ * starts a new line.
+ */
+export function foldBinges<T extends { user: string; title: string; subtitle?: string; at: number }>(plays: T[], sameSource: (a: T, b: T) => boolean = () => true): (T & { episodes?: number })[] {
+  const out: (T & { episodes?: number; _from?: [number, number]; _to?: [number, number] })[] = [];
+  for (const p of plays) {
+    const ep = episodeOf(p.subtitle);
+    const last = out.at(-1);
+    if (ep && last && last._from && last.title === p.title && last.user === p.user && sameSource(last, p)) {
+      last.episodes = (last.episodes ?? 1) + 1;
+      if (ep[0] < last._from[0] || (ep[0] === last._from[0] && ep[1] < last._from[1])) last._from = ep;
+      if (ep[0] > last._to![0] || (ep[0] === last._to![0] && ep[1] > last._to![1])) last._to = ep;
+      last.subtitle = `${code(last._from)} to ${code(last._to!)}`;
+      continue;
+    }
+    out.push({ ...p, ...(ep ? { _from: ep, _to: ep } : {}) });
+  }
+  return out.map(({ _from: _f, _to: _t, ...p }) => p as T & { episodes?: number });
+}

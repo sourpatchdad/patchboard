@@ -839,13 +839,26 @@ const changeText: Record<ChangeEvent['kind'], string> = {
   'container.action': 'was sent a command',
 };
 
+/** What someone did on purpose, as opposed to Docker or a crash. */
 const actionText: Record<string, string> = {
-  restart: 'restarted from Patchboard',
-  stop: 'stopped from Patchboard',
-  start: 'started from Patchboard',
-  update: 'updated from Patchboard',
-  rollback: 'rolled back from Patchboard',
+  restart: 'restarted by hand',
+  stop: 'stopped by hand',
+  start: 'started by hand',
+  update: 'updated by hand',
+  rollback: 'rolled back by hand',
 };
+
+/** One row per container and happening: the same thing again folds into it, counted, at its newest time. */
+export function foldChanges(changes: ChangeEvent[]): { c: ChangeEvent; text: string; times: number }[] {
+  const rows: { c: ChangeEvent; text: string; times: number }[] = [];
+  for (const c of changes) {
+    const text = c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind];
+    const same = rows.find((r) => r.c.subject === c.subject && r.text === text);
+    if (same) same.times++;
+    else rows.push({ c, text, times: 1 });
+  }
+  return rows;
+}
 
 export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number }) {
   const { snap } = useStore();
@@ -860,11 +873,12 @@ export function Changes({ changes, now }: { changes: ChangeEvent[]; now: number 
   return (
     <Section title="Changes" className="changes-sec" count="last 48 hours">
       <ul className="changes">
-        {changes.slice(0, limit).map((c) => (
+        {foldChanges(changes).slice(0, limit).map(({ c, text, times }) => (
           <li key={c.id} className={`change change-${c.kind.split('.')[1]} ${c.kind === 'container.stopped' && over(c.subject) ? 'is-over' : ''}`}>
             <Link to={`/c/${c.subject}`}>
               <span className="change-text">
-                <Ident>{c.subject}</Ident> {c.kind === 'container.action' ? (actionText[c.detail ?? ''] ?? changeText[c.kind]) : c.kind === 'container.restarted' && c.detail === 'updated' ? 'updated' : changeText[c.kind]}
+                <Ident>{c.subject}</Ident> {text}
+                {times > 1 && <span className="change-times"> {tn(times, '{n} time', '{n} times')}</span>}
               </span>
               <Ago at={c.at} now={now} />
             </Link>
@@ -956,7 +970,11 @@ function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now
               <Poster title={r.title} thumb={r.thumb} />
               <span className="poster-title">{r.title}</span>
               <span className="poster-sub">
-                {r.subtitle && <Episode text={r.subtitle} />}
+                {r.subtitle && (
+                  <span className="poster-ep">
+                    <Episode text={r.subtitle} />
+                  </span>
+                )}
                 {now !== undefined && <Ago at={r.addedAt} now={now} />}
                 {showServer && <span className="poster-src">{(r.servers ?? [r.server]).map((s) => s.label).join(' + ')}</span>}
               </span>

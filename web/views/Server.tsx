@@ -52,6 +52,9 @@ function useGlance(): boolean {
   return on;
 }
 
+/** A size as du writes it ("17G", "1.5M") in words people read: "17 GB". */
+const duSize = (s: string) => s.replace(/^([\d.]+)([KMGTP])i?B?$/i, (_, n: string, u: string) => `${n} ${u.toUpperCase()}B`);
+
 export function Server() {
   const { snap } = useStore();
   const now = useNow(30_000);
@@ -587,8 +590,8 @@ function BackupSet({ title, runs, now }: { title: string; runs: BackupRun[]; now
           ? <span className="crit-text">{failed} of {last.items.length} failed</span>
           : `${last.items.length} of ${last.items.length}`}
         , {dayWord(last.startedAt, now)} at {when}
-        {last.finishedAt && last.finishedAt > last.startedAt ? ` in ${duration(last.finishedAt - last.startedAt)}` : ''}
-        {last.size ? `. ${last.stored} files, ${last.size}.` : '.'}
+        {last.finishedAt && last.finishedAt > last.startedAt ? `, took ${duration(last.finishedAt - last.startedAt).replace(/(\d) m\b/g, '$1 min')}` : ''}
+        {last.size ? `. ${last.stored} files, ${duSize(last.size)}.` : '.'}
       </p>
       <ul className="backup-grid">
         {labels.map((label) => {

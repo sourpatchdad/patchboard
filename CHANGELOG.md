@@ -6,6 +6,17 @@
   the show with its year ("Victorious, 2010") and Jellyfin lists the same
   ones as "38 new", they now merge into one poster that names both servers.
   A film keeps its year, so two films of one name stay apart.
+- **Changes says it once:** the same thing happening to the same container
+  again (an app updated four times today) is one line with a count, and
+  something done on purpose reads "restarted by hand" instead of "restarted
+  from Patchboard", which read oddly on Patchboard's own row.
+- **A binge is one line:** Watched folds episodes of one show, watched one
+  after another by the same person, into "S01E06 to S01E12, 7 episodes",
+  so the list shows more than one show.
+- **Backups read as a sentence:** "today at 1:00 AM, took 2 min. 384
+  files, 17 GB." instead of "in 2 m. 384 files, 17G."
+- **Poster captions keep their size:** a long episode name under a poster
+  stops at two lines, so one title no longer stretches the whole row.
 - **Listening in its service's colors:** an audiobook's progress bar is
   Audiobookshelf amber, as Right now already colors Plex, Jellyfin and the
   rest.

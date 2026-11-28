@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { dedupeRecent, sameRelease, titleWords } from '../../shared/media.ts';
+import { dedupeRecent, foldBinges, sameRelease, titleWords } from '../../shared/media.ts';
 
 // Pairs taken from a real Plex and Jellyfin library holding the same files.
 const r = (title: string, subtitle: string, addedAt = 0, type = 'movie') => ({ id: title, title, subtitle, type, addedAt });
@@ -53,4 +53,18 @@ test("a show Plex labels with its year and Jellyfin as \"38 new\" shows once, an
   assert.ok(!sameRelease(r('Victorious', '2010', 12 * H), show('Victorious', '38 new', 12 * H)), 'a film is still told apart by its year');
   const out = dedupeRecent([show('Victorious', '2010', 12 * H), show('Victorious', '38 new', 12 * H), show('Full House', '1987', 13 * H), show('Full House', '71 new', 13 * H)]);
   assert.deepEqual(out.map((o) => [o.item.title, o.also.length]), [['Full House', 1], ['Victorious', 1]]);
+});
+
+test('a binge reads as one line with its episode range, and anything in between starts a new one', () => {
+  const p = (title: string, subtitle: string, user: string, at: number) => ({ title, subtitle, user, at });
+  const plays = [p('Victorious', 'S01E12 Cat', 'Hadden', 9), p('Victorious', 'S01E11 Ping', 'Hadden', 8), p('Victorious', 'S01E10 Beck', 'Hadden', 7), p('Industry', 'S02E01 Daddy', 'Nathan', 6), p('Victorious', 'S01E09 Wi-Fi', 'Hadden', 5), p('Dune', '2021', 'Nathan', 4), p('Dune', '2021', 'Nathan', 3)];
+  const out = foldBinges(plays);
+  assert.deepEqual(out.map((o) => [o.title, o.subtitle, o.episodes ?? 1, o.at]), [
+    ['Victorious', 'S01E10 to S01E12', 3, 9],
+    ['Industry', 'S02E01 Daddy', 1, 6],
+    ['Victorious', 'S01E09 Wi-Fi', 1, 5],
+    ['Dune', '2021', 1, 4],
+    ['Dune', '2021', 1, 3],
+  ]);
+  assert.equal(foldBinges([p('Victorious', 'S01E02 x', 'Hadden', 2), p('Victorious', 'S01E01 y', 'Sam', 1)]).length, 2, 'two people are two lines');
 });

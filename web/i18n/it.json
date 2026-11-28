@@ -1442,5 +1442,8 @@
  "Weekly summary": "Riepilogo settimanale",
  "What it would say now": "Cosa direbbe ora",
  "What's new": "Novità",
- "What's new since {version}": "Novità dalla {version}"
+ "What's new since {version}": "Novità dalla {version}",
+ "{n} episode": "{n} episodio",
+ "{n} time": "{n} volta",
+ "{n} times": "{n} volte"
 }

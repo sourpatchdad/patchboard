@@ -50,11 +50,11 @@ const changeText = {
 } as const;
 
 const actionWord: Record<string, string> = {
-  restart: 'Restarted from Patchboard',
-  stop: 'Stopped from Patchboard',
-  start: 'Started from Patchboard',
-  update: 'Updated from Patchboard',
-  rollback: 'Rolled back from Patchboard',
+  restart: 'Restarted by hand',
+  stop: 'Stopped by hand',
+  start: 'Started by hand',
+  update: 'Updated by hand',
+  rollback: 'Rolled back by hand',
 };
 
 export function ContainerPage() {

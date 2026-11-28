@@ -1442,5 +1442,8 @@
  "Weekly summary": "Résumé hebdomadaire",
  "What it would say now": "Ce qu'il dirait maintenant",
  "What's new": "Nouveautés",
- "What's new since {version}": "Nouveautés depuis {version}"
+ "What's new since {version}": "Nouveautés depuis {version}",
+ "{n} episode": "{n} épisode",
+ "{n} time": "{n} fois",
+ "{n} times": "{n} fois"
 }
