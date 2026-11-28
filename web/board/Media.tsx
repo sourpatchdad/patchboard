@@ -95,11 +95,11 @@ export function ListeningWidget({ now }: { now: number }) {
               return (
                 <li key={b.id}>
                   {absHref ? (
-                    <a href={`${absHref}/item/${encodeURIComponent(b.id)}`} target="_blank" rel="noreferrer" className="play has-meter">
+                    <a href={`${absHref}/item/${encodeURIComponent(b.id)}`} target="_blank" rel="noreferrer" className="play has-meter" data-service="audiobookshelf">
                       {body}
                     </a>
                   ) : (
-                    <div className="play has-meter">{body}</div>
+                    <div className="play has-meter" data-service="audiobookshelf">{body}</div>
                   )}
                 </li>
               );
@@ -113,7 +113,7 @@ export function ListeningWidget({ now }: { now: number }) {
           <ul className="play-list">
             {albums.map((a) => (
               <li key={`${a.title}:${a.artist ?? ''}`}>
-                <div className="play">
+                <div className="play" data-service="navidrome">
                   <span className="play-main">
                     <span className="play-title">{a.title}</span>
                     {a.artist && <span className="play-sub">{a.artist}</span>}

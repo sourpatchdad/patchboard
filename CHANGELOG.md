@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Recently added shows a show once:** when Plex lists new episodes under
+  the show with its year ("Victorious, 2010") and Jellyfin lists the same
+  ones as "38 new", they now merge into one poster that names both servers.
+  A film keeps its year, so two films of one name stay apart.
+- **Listening in its service's colors:** an audiobook's progress bar is
+  Audiobookshelf amber, as Right now already colors Plex, Jellyfin and the
+  rest.
 - **A public demo you can host:** `examples/public-demo.yml` runs demo mode
   for anyone on the internet, with no Docker socket, a read-only
   filesystem, dropped privileges and memory caps. Visitors can change

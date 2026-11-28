@@ -46,3 +46,11 @@ test('batches stay apart from movies, other years and a different week', () => {
   assert.ok(!sameRelease(show('Camp Snoopy', 'Season 1', 0), show('Camp Snoopy', 'Season 2', 8 * 24 * H)));
   assert.ok(!sameRelease(show('Bluey', '4 new', 0), show('Bluey Minisodes', '2 new', 0)), 'a short title never swallows another show');
 });
+
+test("a show Plex labels with its year and Jellyfin as \"38 new\" shows once, and a film of that year doesn't join it", () => {
+  assert.ok(sameRelease(show('Victorious', '2010', 12 * H), show('Victorious', '38 new', 12 * H)));
+  assert.ok(sameRelease(show('Full House', '1987', 13 * H), show('Full House', '71 new', 13 * H)));
+  assert.ok(!sameRelease(r('Victorious', '2010', 12 * H), show('Victorious', '38 new', 12 * H)), 'a film is still told apart by its year');
+  const out = dedupeRecent([show('Victorious', '2010', 12 * H), show('Victorious', '38 new', 12 * H), show('Full House', '1987', 13 * H), show('Full House', '71 new', 13 * H)]);
+  assert.deepEqual(out.map((o) => [o.item.title, o.also.length]), [['Full House', 1], ['Victorious', 1]]);
+});

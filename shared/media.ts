@@ -17,16 +17,22 @@ export function titleWords(title: string): string {
     .replace(/^(the|a|an) /, '');
 }
 
+/** A whole show or a season: what a server puts on the shelf for new episodes. */
+const SHOWISH = /^(show|series|season)$/i;
+
 /**
  * What tells two releases of a title apart: the episode code, the year, or
- * neither, for a batch ("13 new", "Season 1") that a server groups its own way.
+ * neither, for a batch ("13 new", "Season 1") that a server groups its own
+ * way. A show's year is a batch too: Plex labels new episodes grouped under
+ * their show with the show's first year ("Victorious, 2010"), where Jellyfin
+ * says "38 new"; only a film's year tells two releases apart.
  */
 function marker(r: RecentItem): { kind: 'ep' | 'year' | 'batch'; key: string } {
   const sub = r.subtitle ?? '';
   const ep = /S(\d+)E(\d+)/i.exec(sub);
   if (ep) return { kind: 'ep', key: `${Number(ep[1])}x${Number(ep[2])}` };
   const year = /\b(19|20)\d{2}\b/.exec(sub);
-  return year ? { kind: 'year', key: year[0] } : { kind: 'batch', key: '' };
+  return year && !SHOWISH.test(r.type) ? { kind: 'year', key: year[0] } : { kind: 'batch', key: '' };
 }
 
 /** A batch matches what lands from the same show within three days. */

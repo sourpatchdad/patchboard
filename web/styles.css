@@ -11736,6 +11736,10 @@ html[data-eink] .car-callout.is-soft .car-num {
 .playback[data-service='audiobookshelf'] { --playback-accent: var(--media-audiobookshelf); }
 .playback[data-service='navidrome'] { --playback-accent: var(--media-navidrome); }
 .playback .meter > span { background: var(--playback-accent); }
+/* Listening's books and albums: the same service colors as Right now. */
+.play[data-service='audiobookshelf'] { --playback-accent: var(--media-audiobookshelf); }
+.play[data-service='navidrome'] { --playback-accent: var(--media-navidrome); }
+.play[data-service] .meter > span { background: var(--playback-accent); }
 .playback-trigger {
   display: grid;
   width: 100%;
