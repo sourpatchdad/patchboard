@@ -7,7 +7,8 @@ import { HoldButton } from '../components/Hold.tsx';
 import { CATEGORIES, INTEGRATIONS, type Integration } from '../../shared/integrations.ts';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ConnectOne } from '../components/ConnectOne.tsx';
+import { ConnectOne, runningHere } from '../components/ConnectOne.tsx';
+import { sourceOf } from '../../shared/feeds.ts';
 import { useUrlChoice } from '../lib/url.ts';
 import { land, useLanding } from '../lib/landing.ts';
 import type { CatalogAudit, SelfCheck } from '../../shared/types.ts';
@@ -962,7 +963,9 @@ function Integrations({ which = 'services' }: { which?: 'services' | 'notify' })
   // Every hook before the early return below: React needs the same hooks on every render.
   const [moveErr, setMoveErr] = useState('');
   const [find, setFind] = useState('');
-  const [show, setShow] = useState<'all' | 'on' | 'off'>('all');
+  const [show, setShow] = useState<'here' | 'all' | 'on' | 'off'>('all');
+  /** Running here and not connected: shown first, once, when there are any. */
+  const ledWithHere = useRef(false);
   // A link from elsewhere (an empty page, a storage note) opens one integration.
   const wanted = new URLSearchParams(useLocation().search).get('setup');
   const [open, setOpen] = useState<string | null>(wanted);
@@ -993,6 +996,13 @@ function Integrations({ which = 'services' }: { which?: 'services' | 'notify' })
   const rows = INTEGRATIONS.filter((i) => (which === 'notify') === NOTIFY.has(i.id)).map((i) => ({ i, st: status(i) }));
   const on = rows.filter((r) => r.st.on);
   const off = rows.filter((r) => !r.st.on);
+  const here = runningHere(snap);
+  const isHere = (r: (typeof rows)[number]) => !r.st.on && here.has(sourceOf(r.i.id)) && !!setupOf(r.i.id);
+  const waiting = rows.filter(isHere);
+  if (which === 'services' && setup && !ledWithHere.current) {
+    ledWithHere.current = true;
+    if (waiting.length && !wanted) queueMicrotask(() => setShow('here'));
+  }
   const row = ({ i, st }: { i: Integration; st: ReturnType<typeof status> }) => {
     const su = setupOf(i.id);
     const locked = su ? su.fields.every((f) => f.locked) : false;
@@ -1011,7 +1021,9 @@ function Integrations({ which = 'services' }: { which?: 'services' | 'notify' })
           }
         }}
       >
-        <span className="integration-name">{i.name}</span>
+        <span className="integration-name">
+          {i.name} {which === 'services' && !st.on && here.has(sourceOf(i.id)) && <span className="quiet-tag">{tr('Running here')}</span>}
+        </span>
         <span className="integration-adds">
           <span className="integration-line" title={tr(i.adds)}>{foundIn(i.adds, tr(i.adds), find.trim().toLowerCase()) ?? tr(i.adds)}</span>
           {st.why ? <small>{st.why}</small> : !su && !st.on && i.where && <small>{i.where}</small>}
@@ -1110,6 +1122,7 @@ function Integrations({ which = 'services' }: { which?: 'services' | 'notify' })
         <span className="seg" role="group" aria-label={tr('Show')}>
           {(
             [
+              ...(waiting.length ? [['here', tr('Running here {n}', { n: waiting.length })] as const] : []),
               ['all', tr('All {n}', { n: rows.length })],
               ['on', tr('On {n}', { n: on.length })],
               ['off', tr('Not set up {n}', { n: off.length })],
@@ -1130,7 +1143,7 @@ function Integrations({ which = 'services' }: { which?: 'services' | 'notify' })
           list: rows
             .filter((r) => ids.includes(r.i.id))
             // An open form stays put whatever the filter; search also knows the variable names (SONARR_KEY).
-            .filter((r) => (show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true) || open === r.i.id)
+            .filter((r) => (show === 'here' ? isHere(r) : show === 'on' ? r.st.on : show === 'off' ? !r.st.on : true) || open === r.i.id)
             .filter((r) => !q || `${r.i.name} ${r.i.adds} ${[...r.i.env, ...(r.i.optional ?? [])].join(' ')}`.toLowerCase().includes(q) || open === r.i.id)
             .sort((a, b) => a.i.name.localeCompare(b.i.name)),
         })).filter((c) => c.list.length);

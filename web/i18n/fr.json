@@ -1414,5 +1414,10 @@
  "Check the connection": "Vérifier la connexion",
  "Connect an app and this shows your own.": "Connectez une appli et il affichera vos propres données.",
  "Connect an app to fill this in.": "Connectez une appli pour le remplir.",
- "Find a connection": "Trouver une connexion"
+ "Find a connection": "Trouver une connexion",
+ "An empty board": "Un tableau vide",
+ "Fill this board with your own": "Remplissez ce tableau avec vos données",
+ "Found {name} running here.": "{name} tourne ici.",
+ "{name} is running here.": "{name} tourne ici.",
+ "Running here {n}": "Tourne ici {n}"
 }

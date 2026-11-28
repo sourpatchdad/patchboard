@@ -16,14 +16,20 @@ import { containerMap } from '../lib/services.ts';
 import { useStore } from '../lib/store.tsx';
 import { appLike, ServiceSheet } from './ServiceSheet.tsx';
 
-/** The services that can feed these sources, the ones running here first. */
-export function providersFor(sources: string[], snap: Snapshot | null | undefined): { list: Integration[]; running: Set<string> } {
-  const running = new Set(
-    [...containerMap(snap ?? null).keys()]
-      .map((c) => integrationOf({ name: c, container: c } as Service)?.id)
+/** The sources whose app runs in a container here, by the container's name. */
+export function runningHere(snap: Snapshot | null | undefined): Set<string> {
+  return new Set(
+    [...containerMap(snap ?? null).values()]
+      .filter((c) => c.state === 'running')
+      .map((c) => integrationOf({ name: c.name, container: c.name } as Service)?.id)
       .filter((x): x is string => !!x)
       .map(sourceOf),
   );
+}
+
+/** The services that can feed these sources, the ones running here first. */
+export function providersFor(sources: string[], snap: Snapshot | null | undefined): { list: Integration[]; running: Set<string> } {
+  const running = runningHere(snap);
   const list = INTEGRATIONS.filter((i) => sources.includes(sourceOf(i.id))).sort(
     // The catalog's own order after that: the main apps (Plex, Jellyfin) before the rarer ones.
     (a, b) => Number(running.has(sourceOf(b.id))) - Number(running.has(sourceOf(a.id))),

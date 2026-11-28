@@ -1414,5 +1414,10 @@
  "Check the connection": "Verbinding controleren",
  "Connect an app and this shows your own.": "Verbind een app en dit toont je eigen gegevens.",
  "Connect an app to fill this in.": "Verbind een app om dit te vullen.",
- "Find a connection": "Zoek een verbinding"
+ "Find a connection": "Zoek een verbinding",
+ "An empty board": "Een leeg bord",
+ "Fill this board with your own": "Vul dit bord met je eigen gegevens",
+ "Found {name} running here.": "{name} draait hier.",
+ "{name} is running here.": "{name} draait hier.",
+ "Running here {n}": "Draait hier {n}"
 }

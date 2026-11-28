@@ -6,7 +6,7 @@
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { type Board, spanOf, WIDGET_INFO, type Widget, type WidgetType } from '../../shared/board.ts';
-import { ALSO_READ, WIDGET_SOURCES } from '../../shared/feeds.ts';
+import { ALSO_READ, sourceOf, WIDGET_SOURCES } from '../../shared/feeds.ts';
 import { HA_WIDGETS } from '../../shared/ha.ts';
 import type { HomeAssistantData, Snapshot, SourceState } from '../../shared/types.ts';
 import { ConnectOne, providersFor } from '../components/ConnectOne.tsx';
@@ -59,7 +59,7 @@ export const ALSO: Partial<Record<WidgetType, string>> = {
 };
 
 /** Beyond what decides whether a widget is offered: Right now also shows downloads, and Weather and Sun and moon need a town. */
-const MORE_READS: Partial<Record<WidgetType, string[]>> = { now: ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'], weather: ['weather'], sky: ['weather'] };
+const MORE_READS: Partial<Record<WidgetType, string[]>> = { now: ['qbit', 'transmission', 'deluge', 'sabnzbd', 'nzbget'], weather: ['weather'], sky: ['weather'], changes: ['docker'] };
 
 /** The apps a widget shows, any one of which gives it something to show. None: it needs no app. */
 export const widgetReads = (w: WidgetType): string[] => [...(WIDGET_SOURCES[w] ?? ALSO_READ[w] ?? []), ...(MORE_READS[w] ?? [])];
@@ -84,10 +84,13 @@ export function appsFor(sources: string[], snap: Snapshot | null | undefined): s
 export function NeedsApp({ w }: { w: Widget }) {
   const { snap } = useStore();
   const reads = widgetReads(w.type);
+  const { list, running } = providersFor(reads, snap);
+  // One of its apps runs here already: name it, and Connect goes straight to it.
+  const here = list.find((i) => running.has(sourceOf(i.id)));
   return (
     <Section title={w.config?.title || WIDGET_INFO[w.type].name} className="needs-app">
       <p className="settings-note">
-        {providersFor(reads, snap).list.length > 3 ? t('Connect an app to fill this in.') : t('Shows once {apps} is connected.', { apps: appsFor(reads, snap) })} <ConnectOne sources={reads} label={t('Connect')} />
+        {here ? t('{name} is running here.', { name: here.name }) : list.length > 3 ? t('Connect an app to fill this in.') : t('Shows once {apps} is connected.', { apps: appsFor(reads, snap) })} <ConnectOne sources={here ? [sourceOf(here.id)] : reads} label={t('Connect')} />
       </p>
     </Section>
   );
@@ -106,6 +109,7 @@ export function sampleSources(w: WidgetType, snap: Snapshot | null | undefined):
 const SAMPLE_FIELDS: Partial<Record<WidgetType, Record<string, string>>> = {
   clocks: { zones: 'Home=America/Chicago\nLondon=Europe/London\nTokyo=Asia/Tokyo' },
   countdown: { events: 'Vacation=2027-03-14\nBirthday=06-21' },
+  chores: { chores: 'Water the plants=7\nChange the furnace filter=90' },
   rss: { feeds: 'https://example.com/feed.xml' },
   releases: { repos: 'immich-app/immich' },
   markets: { symbols: 'Apple=AAPL\nBitcoin=BTC' },

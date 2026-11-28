@@ -554,6 +554,8 @@ export function BooksWidget() {
 
 // ---------- Notes ----------
 
+const SAMPLE_NOTE = ['Groceries', '- [ ] Milk', '- [x] Coffee', '- [ ] Furnace filter', 'Guest Wi-Fi: on the fridge'].join('\n');
+
 /** A shared note. Lines starting "- [ ]" or "- [x]" are checkboxes you can tick. */
 export function NotesWidget({ id }: { id: string }) {
   const readOnly = !!useStore().snap?.readOnly;
@@ -561,11 +563,14 @@ export function NotesWidget({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [err, setErr] = useState('');
+  const { preview } = useWidget();
+  // A preview with nothing written yet shows what a note looks like, not an empty one.
+  const own = (text: string) => text || (preview ? SAMPLE_NOTE : '');
   const load = () =>
     void fetch('/api/notes')
       .then((r) => r.json())
-      .then((all: Record<string, { text: string }>) => setText(all[id]?.text ?? ''))
-      .catch(() => setText(''));
+      .then((all: Record<string, { text: string }>) => setText(own(all[id]?.text ?? '')))
+      .catch(() => setText(own('')));
   useEffect(() => {
     load();
     const t = setInterval(() => !editing && load(), 30_000);

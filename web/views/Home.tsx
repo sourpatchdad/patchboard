@@ -940,6 +940,7 @@ export function NextUp() {
 }
 
 function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now?: number; showServer: boolean; fit?: boolean }) {
+  const { preview } = useWidget();
   const { snap } = useStore();
   // The demo's apps have no address: its posters open the title on TMDB, as its release rows do.
   const hrefOf = (r: MergedItem) => itemHref(r.server, r.id) ?? (snap?.demo ? `https://www.themoviedb.org/search?query=${encodeURIComponent(r.title)}` : undefined);
@@ -974,7 +975,7 @@ function PosterShelf({ items, now, showServer, fit }: { items: MergedItem[]; now
           );
         })}
       </ul>
-      {nowhere.length > 0 && (
+      {nowhere.length > 0 && !preview && (
         <p className="settings-note poster-hint">
           Give {nowhere.join(' and ')} an address in <Link to="/apps">Edit apps</Link> and these open there.
         </p>

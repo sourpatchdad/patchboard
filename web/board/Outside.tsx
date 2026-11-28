@@ -19,9 +19,21 @@ import { useAppearance } from '../lib/appearance.ts';
 import { locale } from '../lib/region.ts';
 import { t } from '../lib/i18n.ts';
 
+/** What Links looks like in the gallery before you've added any. */
+const SAMPLE_LINKS = [
+  { name: 'Router', href: 'http://192.168.1.1', icon: 'unifi' },
+  { name: 'GitHub', href: 'https://github.com', icon: 'github' },
+  { name: 'Cloudflare', href: 'https://dash.cloudflare.com', icon: 'cloudflare' },
+  { name: 'Tailscale', href: 'https://login.tailscale.com', icon: 'tailscale' },
+  { name: 'YouTube', href: 'https://www.youtube.com', icon: 'youtube' },
+  { name: 'Backblaze', href: 'https://secure.backblaze.com', icon: 'backblaze' },
+];
+
 export function BookmarksWidget() {
   const { snap } = useStore();
-  const dock = snap?.catalog.dock ?? [];
+  const { preview } = useWidget();
+  const own = snap?.catalog.dock ?? [];
+  const dock = own.length || !preview ? own : SAMPLE_LINKS;
   return (
     <Section title="Links" action={snap?.readOnly ? undefined : { label: 'Edit', to: '/apps?arrange=1' }} className="bookmarks">
       {dock.length === 0 ? (

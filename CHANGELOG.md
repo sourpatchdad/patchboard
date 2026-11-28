@@ -38,6 +38,17 @@
   the Update button. Check now also clears the mark when you already run
   the newest image, and an image an Update proved current is not flagged
   again an hour later.
+- **It knows what you run:** connecting an app Patchboard already found in
+  Docker starts with its address filled in, and says so, so you paste
+  only the key. Settings, Connections opens on Running here when any app
+  runs here unconnected: the whole server, one key each, on one page. A
+  widget waiting on an app that is running says so by name, and its
+  Connect opens that app.
+- **A new board says where to start:** a board with nothing to show yet
+  has Add widget, Add an app and Connections where its widgets would be,
+  and it goes away once anything shows. The gallery's Notes, Links and
+  Chores show sample content instead of their empty state, and a sample
+  preview leaves out setup hints.
 - **Add widget shows you the widget:** every widget appears as it will on
   your board, live, in five groups you can search. One whose app isn't
   connected shows made-up data marked Sample, and says what it needs. Pick

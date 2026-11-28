@@ -5459,6 +5459,29 @@ a.jw-title:hover {
   flex-wrap: wrap;
 }
 
+/* A board with nothing to show yet: its first moves, in the space the widgets will take. */
+.board-start {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--card-edge);
+}
+
+.board-start h2 {
+  font: var(--display-weight) 20px/1.2 var(--f-display);
+  color: var(--head);
+}
+
+.board-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 /* ---------- Widget gallery and widget sheet ----------
    Every widget as a picture of itself, then one large beside its options.
    Previews are drawn at their board width and scaled down to fit. */
@@ -5562,6 +5585,7 @@ a.jw-title:hover {
   color: var(--ink-3);
 }
 
+.quiet-tag,
 .gallery-tag {
   margin-left: 4px;
   padding: 1px 6px;
@@ -10431,6 +10455,13 @@ html[data-eink] .car-callout.is-soft .car-num {
   color: var(--ink-3);
   background: none;
   padding: 0;
+}
+
+/* The address filled in from the app running here. */
+.setup-found {
+  grid-column: 2;
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
 
 .setup-locked {

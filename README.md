@@ -61,8 +61,9 @@ there. Coming from Homepage? Settings imports its `services.yaml`.
 
 Then connect what you run from Apps: open an app, or **Add an app** and
 pick it, then paste the address and key, test, save. Settings, Connections
-lists every service in one place, and a widget that needs one has Connect
-on its card. It connects at once, and the server
+lists every service in one place, opens on the apps it found running and
+hasn't connected, and fills in their addresses, so most take one pasted
+key. A widget that needs an app has Connect on its card. It connects at once, and the server
 stores the key encrypted. There are 71 integrations, among them Sonarr,
 Radarr, Plex through Tautulli, Jellyfin, Emby, qBittorrent, Transmission,
 Deluge, SABnzbd, NZBGet, Home Assistant, Tessie, Uptime Kuma, Pi-hole,

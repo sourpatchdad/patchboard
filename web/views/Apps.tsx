@@ -100,6 +100,14 @@ export function Apps() {
     for (const k of ['app', 'connect']) next.delete(k);
     setParams(next, { replace: true });
   }, [params, !!snap]);
+  // ?add=1, from a board's start panel: open Add an app.
+  useEffect(() => {
+    if (params.get('add') !== '1' || !snap || snap.readOnly) return;
+    setAdding(true);
+    const next = new URLSearchParams(params);
+    next.delete('add');
+    setParams(next, { replace: true });
+  }, [params, !!snap]);
   useEffect(() => {
     const id = params.get('service');
     if (!id) return;

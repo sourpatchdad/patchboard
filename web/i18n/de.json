@@ -1414,5 +1414,10 @@
  "Check the connection": "Verbindung prüfen",
  "Connect an app and this shows your own.": "Verbinde eine App, dann zeigt das Widget deine eigenen Daten.",
  "Connect an app to fill this in.": "Verbinde eine App, um dies zu füllen.",
- "Find a connection": "Verbindung suchen"
+ "Find a connection": "Verbindung suchen",
+ "An empty board": "Ein leeres Board",
+ "Fill this board with your own": "Füll dieses Board mit deinen Daten",
+ "Found {name} running here.": "{name} läuft hier.",
+ "{name} is running here.": "{name} läuft hier.",
+ "Running here {n}": "Läuft hier {n}"
 }

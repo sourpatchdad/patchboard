@@ -10,6 +10,29 @@ import type { Integration } from '../../shared/integrations.ts';
 import { CHOICES, type SetupIntegration } from '../../shared/setup.ts';
 import { DEFAULT_ON } from '../../shared/setup.ts';
 import { t as tr } from '../lib/i18n.ts';
+import { sourceOf } from '../../shared/feeds.ts';
+import type { Snapshot } from '../../shared/types.ts';
+import { integrationOf } from '../lib/connect.ts';
+import { useStore } from '../lib/store.tsx';
+
+/**
+ * Where this service already runs, from the app on Apps that stands for it:
+ * the address its link opens. Set up from Docker's published port when
+ * Patchboard found the app, so the address field arrives filled in.
+ */
+export function foundAt(integration: Integration, snap: Snapshot | null): { name: string; url: string } | null {
+  for (const s of snap?.catalog.groups.flatMap((g) => g.services) ?? []) {
+    const i = integrationOf(s);
+    if (!i || sourceOf(i.id) !== sourceOf(integration.id) || !s.href) continue;
+    try {
+      const u = new URL(s.href);
+      if (u.protocol === 'http:' || u.protocol === 'https:') return { name: s.name, url: u.origin };
+    } catch {
+      // Not an address: nothing to offer.
+    }
+  }
+  return null;
+}
 
 async function call(url: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const res = await fetch(url, {
@@ -42,8 +65,12 @@ export function IntegrationForm({
   result: { ok: boolean; text: string } | null;
   setResult: (r: { ok: boolean; text: string } | null) => void;
 }) {
+  const { snap } = useStore();
+  // Not set up yet and running here: its address is already known.
+  const found = !setup.fields.some((f) => f.set || f.value) ? foundAt(integration, snap) : null;
+  const urlField = setup.fields.find((f) => f.kind === 'url' && !f.locked)?.name;
   const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(setup.fields.filter((f) => !f.locked && f.kind !== 'secret').map((f) => [f.name, f.value ?? ''])),
+    Object.fromEntries(setup.fields.filter((f) => !f.locked && f.kind !== 'secret').map((f) => [f.name, f.value || (found && f.name === urlField ? found.url : '')])),
   );
   // After a save, show what the server now holds in any field you haven't touched.
   useEffect(() => {
@@ -175,6 +202,7 @@ export function IntegrationForm({
           )}
           {/* The variable behind it, for whoever sets it in the environment: read out, not a label under every field. */}
           <code className="setup-name sr-only" id={`${setup.id}-${f.name}-env`}>{f.name}</code>
+          {found && f.name === urlField && values[f.name] === found.url && <small className="setup-found">{tr('Found {name} running here.', { name: found.name })}</small>}
         </label>
       ))}
       {/* Right under the fields it's about; a problem is announced at once. */}

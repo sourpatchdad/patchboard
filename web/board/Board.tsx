@@ -725,6 +725,24 @@ export function Board({ id = HOME_ID, now, onWidgets }: { id?: string; now: numb
         {said}
       </p>
 
+      {/* Nothing here shows anything yet: the three ways to fill it, where the widgets would be. */}
+      {!editing && !snap?.readOnly && snap && visibleWidgets.every((w) => waitsForApp(w.type, snap) || (NEEDS_APPS.has(w.type) && !snap.catalog.groups.some((g) => g.services.length))) && (
+        <div className="board-start">
+          <h2>{visibleWidgets.length ? t('Fill this board with your own') : t('An empty board')}</h2>
+          <div className="board-start-actions">
+            <button type="button" className="button board-save" onClick={() => (setError(''), setNotice(''), setDraft(structuredClone(board!)), setQuickAdd(true), setAdding(true))}>
+              {t('Add widget')}
+            </button>
+            <Link className="button" to="/apps?add=1">
+              {t('Add an app')}
+            </Link>
+            <Link className="button button-quiet" to="/settings?tab=connections">
+              {t('Connections')}
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="board-foot" inert={editing || undefined}>
           <VersionLine />
           {!snap?.readOnly && (
@@ -995,9 +1013,12 @@ function Cell(props: {
   );
 }
 
+/** Widgets that show the apps on this server: blank until there are some. */
+const NEEDS_APPS = new Set<WidgetType>(['apps', 'changes']);
+
 /** A widget drawn on its own, outside the board's grid: the gallery's and the edit sheet's previews. */
 const renderWidget: RenderWidget = (w, board, now) => (
-  <WidgetCtx.Provider value={settingsOf(w)}>
+  <WidgetCtx.Provider value={{ ...settingsOf(w), preview: true }}>
     <WidgetBody w={w} board={board} now={now} saved={false} />
   </WidgetCtx.Provider>
 );

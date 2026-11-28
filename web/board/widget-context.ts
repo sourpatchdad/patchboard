@@ -17,6 +17,8 @@ export interface WidgetSettings {
   editing?: boolean;
   /** Opens this widget's settings straight from the board; closing them saves. */
   configure?: () => void;
+  /** Drawn in the widget gallery or a settings sheet: a picture of the widget, so setup hints stay out and empty ones show sample content. */
+  preview?: boolean;
 }
 
 export const WidgetCtx = createContext<WidgetSettings | null>(null);
