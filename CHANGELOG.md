@@ -32,6 +32,10 @@
 - **The car with a TV remote:** closing a part or a detail sheet marks
   the panel you opened it from again, so the next press carries on from
   there instead of starting over at the top.
+- **Code scanning:** the check that sends a magnet link or `.torrent` to a
+  torrent client, the demo's rule for which files start skipped, and the
+  Pi-hole test's fake server now read in a way CodeQL can follow. Nothing
+  behaves differently.
 
 ## 1.20.0 (2026-11-24)
 

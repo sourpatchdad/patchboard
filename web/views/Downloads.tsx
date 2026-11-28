@@ -488,7 +488,7 @@ function AltSpeed({ client }: { client: DownloadClient }) {
 /** Which clients take this: torrents to a torrent client, NZBs to a usenet one. */
 function fits(c: DownloadClient, what: string): boolean {
   const usenet = c.data.kind === 'usenet';
-  if (/^magnet:|\.torrent$/i.test(what)) return !usenet;
+  if (/^magnet:/i.test(what) || /\.torrent$/i.test(what)) return !usenet;
   if (/\.nzb(\?|$)/i.test(what)) return usenet;
   return true;
 }

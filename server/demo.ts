@@ -1082,7 +1082,7 @@ function demoFiles(e: DownloadEntry): TorrentFile[] {
     : [[`${base}.mkv`, e.size * 0.995], [`${base}.en.srt`, 90_000], [`${base}.nfo`, 3_000]];
   const set = demoPrio.get(e.id);
   return list.map(([name, size], index) => {
-    const priority = set?.get(index) ?? (/sample|\.nfo$/i.test(name) ? 'skip' : 'normal');
+    const priority = set?.get(index) ?? (/sample/i.test(name) || /\.nfo$/i.test(name) ? 'skip' : 'normal');
     // Earlier files fill first, the way most clients fetch them.
     const progress = priority === 'skip' ? 0 : Math.max(0, Math.min(1, e.progress * list.length - index * 0.6));
     return { index, name, size: Math.round(size), progress, priority };

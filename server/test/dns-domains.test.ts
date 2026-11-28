@@ -36,22 +36,23 @@ test('AdGuard: your lists are its exact Block and Unblock rules, and other rules
 
 test('Pi-hole: allowing a domain you blocked takes it off your block list first', async () => {
   const asked: string[] = [];
-  const lists: Record<string, string[]> & { readOnly?: boolean } = { allow: [], deny: ['ads.x.com'] };
+  const lists: { allow: string[]; deny: string[]; readOnly?: boolean } = { allow: [], deny: ['ads.x.com'] };
   const server = http.createServer((req, res) => {
     asked.push(`${req.method} ${req.url}`);
     const json = (v: unknown) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(v));
     const m = /^\/api\/domains\/(allow|deny)\/exact(?:\/(.+))?$/.exec(req.url ?? '');
     if (!m) return res.writeHead(404).end();
+    const list = m[1] === 'allow' ? 'allow' : 'deny';
     if (req.method !== 'GET' && lists.readOnly) return res.writeHead(403).end();
-    if (req.method === 'GET') return json({ domains: lists[m[1]].map((domain) => ({ domain })) });
+    if (req.method === 'GET') return json({ domains: lists[list].map((domain) => ({ domain })) });
     if (req.method === 'DELETE') {
-      lists[m[1]] = lists[m[1]].filter((d) => d !== decodeURIComponent(m[2]));
+      lists[list] = lists[list].filter((d) => d !== decodeURIComponent(m[2]));
       return res.writeHead(204).end();
     }
     let body = '';
     req.on('data', (c) => (body += c));
     req.on('end', () => {
-      lists[m[1]].push(JSON.parse(body).domain);
+      lists[list].push(JSON.parse(body).domain);
       json({ processed: { success: [{ item: 'x' }], errors: [] } });
     });
   });
