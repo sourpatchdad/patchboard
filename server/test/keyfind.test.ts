@@ -6,7 +6,8 @@ import type { Container } from '../../shared/types.ts';
 import { withConfig } from '../config.ts';
 import { apiKeyIn, findKey, firstFile, keyContainer, MAX_BYTES } from '../keyfind.ts';
 
-const KEY = '0123456789abcdef0123456789abcdef';
+// A made-up key, built here so no secret-shaped string sits in the source.
+const KEY = 'a1'.repeat(16);
 const XML = `<Config>\n  <BindAddress>*</BindAddress>\n  <Port>8989</Port>\n  <ApiKey>${KEY.toUpperCase()}</ApiKey>\n  <AuthenticationMethod>Forms</AuthenticationMethod>\n</Config>\n`;
 
 /** A tar entry the way Docker's archive endpoint writes one. */
@@ -24,7 +25,7 @@ const tar = (...entries: Buffer[]) => Buffer.concat([...entries, Buffer.alloc(10
 test('the key is the ApiKey in the settings file, 32 hex characters and nothing else', () => {
   assert.equal(apiKeyIn(XML), KEY);
   assert.equal(apiKeyIn('<ApiKey>not-a-key</ApiKey>'), null);
-  assert.equal(apiKeyIn('<ApiKey>0123456789abcdef0123456789abcdef00</ApiKey>'), null, 'too long is not a key');
+  assert.equal(apiKeyIn(`<ApiKey>${KEY}00</ApiKey>`), null, 'too long is not a key');
   assert.equal(apiKeyIn('<Config></Config>'), null);
 });
 
